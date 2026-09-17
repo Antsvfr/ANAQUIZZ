@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Révisions — Étude de marché</title>
+<title>EM Lyon Révision</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -17,6 +17,9 @@
     --ink:#14151A;
     --ink-soft:#5A5C68;
     --muted:#787A87;
+    --navy:#0F1F3D;
+    --navy-dark:#0A1630;
+    --navy-tint:#EAEEF6;
     --red:#E31C3D;
     --red-dark:#B4152F;
     --red-tint:#FDECEF;
@@ -92,21 +95,26 @@
   .brand-text{ display:flex; align-items:center; gap: 13px; }
   .brand-mark{
     width: 38px; height: 38px; flex-shrink:0; border-radius: 11px;
-    background: linear-gradient(150deg, var(--red) 0%, var(--red-dark) 100%);
-    box-shadow: 0 3px 8px rgba(227,28,61,0.28), inset 0 1px 0 rgba(255,255,255,0.25);
-    color:#fff; font-family:"Inter",sans-serif; font-weight:800; font-size:16px;
-    display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(150deg, var(--navy) 0%, var(--navy-dark) 100%);
+    box-shadow: 0 3px 8px rgba(15,31,61,0.32), inset 0 1px 0 rgba(255,255,255,0.15);
+    color:#fff; font-family:"Inter",sans-serif; font-weight:800; font-size:15px;
+    display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  }
+  .brand-mark::after{
+    content:""; position:absolute; right:-6px; bottom:-6px; width:20px; height:20px;
+    border-radius:50%; border:2.5px solid var(--red); border-right-color:transparent; border-top-color:transparent;
+    transform: rotate(-45deg);
   }
   .brand-text .eyebrow{
     font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--red); font-weight: 800; margin-bottom: 3px;
+    color: var(--navy); font-weight: 800; margin-bottom: 3px;
   }
   .brand-text h1{ font-size: 19px; font-weight: 800; margin: 0; letter-spacing:-0.015em; line-height:1.2; }
   .brand-text p{ margin: 2px 0 0; font-size: 12.5px; color: var(--ink-soft); }
 
   .tabnav{
-    display:grid; grid-auto-flow:column; grid-auto-columns: max-content;
-    gap: 2px; background: var(--bg); padding: 4px; border-radius: 999px;
+    display:flex; flex-wrap: wrap;
+    gap: 2px; background: var(--bg); padding: 4px; border-radius: 14px;
     border: 1px solid var(--border); flex-shrink:0;
   }
   .tabnav button{
@@ -118,8 +126,8 @@
   .tabnav button:hover:not(.active){ color: var(--ink); background: rgba(20,21,26,0.05); }
   .tabnav button:active{ transform: scale(0.96); }
   .tabnav button.active{
-    background: var(--ink); color: #fff;
-    box-shadow: 0 2px 6px rgba(20,21,26,0.18);
+    background: var(--navy); color: #fff;
+    box-shadow: 0 2px 6px rgba(15,31,61,0.28);
   }
 
   /* ===== STAT BAR ===== */
@@ -883,22 +891,25 @@
   <div class="topbar-inner">
     <div class="brandrow">
       <div class="brand-text">
-        <div class="brand-mark" aria-hidden="true">M</div>
+        <div class="brand-mark" aria-hidden="true">EM</div>
         <div>
-          <div class="eyebrow">Analyser et comprendre le marché — L1 · L2 · L3</div>
-          <h1>Révisions — Étude de marché</h1>
-          <p>Quiz, fiches et flashcards organisés par niveau et par chapitre.</p>
+          <div class="eyebrow">Plateforme de révision</div>
+          <h1>EM Lyon Révision</h1>
+          <p>Toutes tes matières, tes chapitres et tes révisions au même endroit.</p>
         </div>
       </div>
       <div class="tabnav">
         <button id="tab-dashboard">🏠 Accueil</button>
-        <button id="tab-library">📚 Matières</button>
-        <button id="tab-review">🎯 À revoir</button>
-        <button id="tab-exam">📝 Examen</button>
+        <button id="tab-library">📚 Mes matières</button>
+        <button id="tab-review">🎯 Mes révisions</button>
         <button id="tab-quiz">🧠 Quiz</button>
-        <button id="tab-fiches">📖 Fiches</button>
         <button id="tab-flash">🃏 Flashcards</button>
+        <button id="tab-exam">📝 Examens</button>
+        <button id="tab-oral">🎤 Oral</button>
+        <button id="tab-progress">📈 Progression</button>
+        <button id="tab-fiches">📖 Bibliothèque</button>
         <button id="tab-ai">🤖 Assistant IA</button>
+        <button id="tab-settings">⚙️ Paramètres</button>
       </div>
     </div>
   </div>
@@ -1834,7 +1845,10 @@ const FLASHCARDS = {
    4. ÉTAT GLOBAL
    ============================================================ */
 let state = {
-  tab: "dashboard", // dashboard | library | review | exam | quiz | fiches | flash | ai
+  tab: "dashboard", // dashboard | library | review | exam | quiz | fiches | flash | ai | oral | progress | settings
+
+  // --- bibliothèque de cours (recherche/filtre) ---
+  catalog: { query: "", subjectId: "all", semesterId: "all" },
 
   // --- quiz ---
   quizLevel: "all",
@@ -2035,6 +2049,7 @@ function subjectOfChapter(ch){
   if(!ch) return null;
   return findSubject(ch.subjectId);
 }
+function allChaptersFlat(){ return CHAPTERS.concat(state.userChapters); }
 
 /* Progression d'un chapitre "utilisateur" : basée sur les tentatives de quiz/flashcards
    générés par IA, enregistrées sous la même clé que le reste du site ("chapter:<id>"). */
@@ -2523,7 +2538,7 @@ function switchTab(tab){
 }
 
 function render(){
-  ["dashboard","library","review","exam","quiz","fiches","flash","ai"].forEach(t=>{
+  ["dashboard","library","review","exam","quiz","fiches","flash","ai","oral","progress","settings"].forEach(t=>{
     const el = document.getElementById("tab-"+t);
     if(el) el.classList.toggle("active", state.tab === t);
   });
@@ -2584,6 +2599,27 @@ function render(){
     content.className = "wrap";
     content.innerHTML = renderAI();
     attachAIEvents();
+    return;
+  }
+
+  if(state.tab === "oral"){
+    content.className = "wrap";
+    content.innerHTML = renderOral();
+    attachOralEvents();
+    return;
+  }
+
+  if(state.tab === "progress"){
+    content.className = "wrap";
+    content.innerHTML = renderProgress();
+    attachProgressEvents();
+    return;
+  }
+
+  if(state.tab === "settings"){
+    content.className = "wrap";
+    content.innerHTML = renderSettings();
+    attachSettingsEvents();
     return;
   }
 
@@ -2697,19 +2733,19 @@ function renderDashboard(){
   html += `<div class="dash-hero">
     <div class="dash-hero-top">
       <div>
-        <div class="dash-hero-eyebrow">Vue d'ensemble</div>
-        <h1 class="dash-hero-title">${hasAnyActivity ? "Ta progression" : "Bienvenue 👋"}</h1>
-        <p class="dash-hero-sub">${hasAnyActivity ? "Ton niveau de maîtrise est recalculé après chaque réponse, question par question." : "Lance ton premier quiz : chaque réponse alimentera ton niveau de maîtrise."}</p>
+        <div class="dash-hero-eyebrow">Bienvenue sur EM Lyon Révision</div>
+        <h1 class="dash-hero-title">${hasAnyActivity ? "Ta progression" : "Organise tes cours. Révise efficacement."}</h1>
+        <p class="dash-hero-sub">${hasAnyActivity ? "Ton niveau de maîtrise est recalculé après chaque réponse, question par question." : "Retrouve toutes tes matières, tes chapitres, tes quiz, tes flashcards et tes examens au même endroit. Progresse à ton rythme."}</p>
       </div>
       <div class="dash-ring" style="background:conic-gradient(var(--red) ${globalPct}%, var(--border) 0);">
         <div class="dash-ring-inner"><span class="dash-ring-pct">${globalPct}%</span><span class="dash-ring-lbl">maîtrise</span></div>
       </div>
     </div>
     <div class="dash-cta-row">
-      <button class="btn red dash-cta" id="dash-continue-btn">▶️ Continuer ma révision</button>
-      <button class="btn outline dash-cta" id="dash-library-btn">📚 Mes matières</button>
-      <button class="btn outline dash-cta" id="dash-review-btn" ${reviewList.length===0 ? "disabled" : ""}>🎯 À revoir${reviewList.length>0 ? " ("+poolReview().length+")" : ""}</button>
-      <button class="btn outline dash-cta" id="dash-exam-btn">📝 Mode examen</button>
+      <button class="btn red dash-cta" id="dash-continue-btn">▶️ Reprendre mes révisions</button>
+      <button class="btn outline dash-cta" id="dash-library-btn">📚 Voir mes matières</button>
+      <button class="btn outline dash-cta" id="dash-addcourse-btn">➕ Ajouter un cours</button>
+      <button class="btn outline dash-cta" id="dash-progress-btn">📈 Voir ma progression</button>
     </div>
   </div>`;
 
@@ -2884,10 +2920,10 @@ function attachDashboardEvents(){
   if(cbtn) cbtn.addEventListener("click", continueRevision);
   const libbtn = document.getElementById("dash-library-btn");
   if(libbtn) libbtn.addEventListener("click", ()=>{ state.library.view = "subjects"; switchTab("library"); });
-  const rbtn = document.getElementById("dash-review-btn");
-  if(rbtn && !rbtn.disabled) rbtn.addEventListener("click", ()=> switchTab("review"));
-  const xbtn = document.getElementById("dash-exam-btn");
-  if(xbtn) xbtn.addEventListener("click", ()=>{ state.exam.screen = "setup"; switchTab("exam"); });
+  const addbtn = document.getElementById("dash-addcourse-btn");
+  if(addbtn) addbtn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
+  const progbtn = document.getElementById("dash-progress-btn");
+  if(progbtn) progbtn.addEventListener("click", ()=> switchTab("progress"));
   attachModeEvents();
   document.querySelectorAll("[data-goto-chapter]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -4230,34 +4266,71 @@ function attachResultsEvents(){
    9. FICHES — RENDU
    ============================================================ */
 function renderFiches(){
-  let html = levelChips(state.fichesLevel, "lvl");
+  const q = (state.catalog.query || "").trim().toLowerCase();
+  const subjFilter = state.catalog.subjectId || "all";
+  const semFilter = state.catalog.semesterId || "all";
+  const subjects = allSubjects();
 
-  const levelsToShow = state.fichesLevel === "all" ? LEVELS : [state.fichesLevel];
+  let html = `
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Bibliothèque de cours</h1>
+    <p class="ai-intro">Recherche, filtre et ouvre n'importe quel cours de ton année, toutes matières confondues.</p>
+    <div class="card" style="margin-bottom:22px;display:flex;flex-direction:column;gap:12px;">
+      <input type="text" id="catalog-search" class="ai-select" placeholder="Rechercher un cours..." value="${escapeHtml(state.catalog.query||"")}">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <select id="catalog-subject" class="ai-select" style="flex:1;min-width:180px;">
+          <option value="all">Toutes les matières</option>
+          ${subjects.map(s=>`<option value="${s.id}" ${subjFilter===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}
+        </select>
+        <select id="catalog-semester" class="ai-select" style="flex:1;min-width:180px;">
+          <option value="all">Tous les semestres</option>
+          ${SEMESTERS.map(sm=>`<option value="${sm.id}" ${semFilter===sm.id?"selected":""}>${escapeHtml(sm.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+        <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours</button>
+        <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer des cours<input type="file" id="catalog-import-input" accept="application/json" style="display:none;"></label>
+      </div>
+    </div>
+  `;
 
-  levelsToShow.forEach(lv => {
-    const chs = CHAPTERS.filter(c => c.level === lv);
-    if(chs.length === 0) return;
-    html += `<div class="level-heading"><span class="tag ${lv}">${lv}</span><span class="name">${levelName(lv)}</span><span class="desc">${levelDesc(lv)}</span><span class="line"></span></div>`;
-    chs.forEach(ch => {
-      html += `<div class="fiche-card">
-        <div class="fiche-card-head">
-          <div class="chapter-num">${ch.num}</div>
-          <div>
-            <div class="title-row">
-              <h2>${ch.title}</h2>
-              <span class="level-badge ${ch.level}">${ch.level}</span>
-            </div>
-            <p>${ch.desc}</p>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-              <button class="ai-inline-btn" data-aifiche="summary" data-ch="${ch.id}">🤖 Résumer ce chapitre</button>
-              <button class="ai-inline-btn" data-aifiche="drill" data-ch="${ch.id}">🎤 Me faire réviser</button>
-              <button class="ai-inline-btn" data-aifiche="cards" data-ch="${ch.id}">🃏 Créer des flashcards</button>
-            </div>
+  const chapters = allChaptersFlat().filter(ch=>{
+    const subj = findSubject(ch.subjectId);
+    if(subjFilter !== "all" && ch.subjectId !== subjFilter) return false;
+    if(semFilter !== "all" && (!subj || subj.semesterId !== semFilter)) return false;
+    if(q){
+      const hay = ((ch.title||"") + " " + (ch.desc||"") + " " + (subj?subj.name:"")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if(chapters.length === 0){
+    html += `<div class="empty-state"><div class="big">🔍</div>Aucun cours ne correspond à ta recherche.</div>`;
+    return html;
+  }
+
+  chapters.forEach(ch=>{
+    const subj = findSubject(ch.subjectId);
+    const isUser = isUserChapter(ch.id);
+    html += `<div class="fiche-card">
+      <div class="fiche-card-head">
+        <div class="chapter-num">${ch.num||""}</div>
+        <div>
+          <div class="title-row">
+            <h2>${escapeHtml(ch.title)}</h2>
+            ${subj ? `<span class="level-badge" style="background:${subj.color}22;color:${subj.color};">${escapeHtml(subj.name)}</span>` : ""}
+            ${ch.level ? `<span class="level-badge ${ch.level}">${ch.level}</span>` : ""}
+          </div>
+          <p>${escapeHtml(ch.desc || "")}</p>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button class="ai-inline-btn" data-catalog-open="${ch.id}" data-catalog-subject="${ch.subjectId}">📖 Ouvrir ce cours</button>
+            ${!isUser ? `<button class="ai-inline-btn" data-aifiche="summary" data-ch="${ch.id}">🤖 Résumer ce chapitre</button>
+            <button class="ai-inline-btn" data-aifiche="drill" data-ch="${ch.id}">🎤 Me faire réviser</button>` : ""}
           </div>
         </div>
-        ${FICHES[ch.id]}
-      </div>`;
-    });
+      </div>
+      ${!isUser && FICHES[ch.id] ? FICHES[ch.id] : ""}
+    </div>`;
   });
 
   html += `<footer class="hint">Fiches synthétiques — à utiliser en complément des quiz et des flashcards pour ancrer les notions clés.</footer>`;
@@ -4269,11 +4342,37 @@ function attachFichesEvents(){
   document.querySelectorAll("[data-aifiche]").forEach(btn=>{
     btn.addEventListener("click", ()=> aiOpenFromChapter(btn.dataset.aifiche, btn.dataset.ch));
   });
-  document.querySelectorAll("[data-lvl]").forEach(btn=>{
+  document.querySelectorAll("[data-catalog-open]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      state.fichesLevel = btn.dataset.lvl;
-      render();
+      libGoto("chapterDetail", {subjectId: btn.dataset.catalogSubject, chapterId: btn.dataset.catalogOpen});
+      switchTab("library");
     });
+  });
+  const search = document.getElementById("catalog-search");
+  if(search) search.addEventListener("input", ()=>{
+    state.catalog.query = search.value;
+    const pos = search.selectionStart;
+    render();
+    const el = document.getElementById("catalog-search");
+    if(el){ el.focus(); el.setSelectionRange(pos,pos); }
+  });
+  const subjSel = document.getElementById("catalog-subject");
+  if(subjSel) subjSel.addEventListener("change", ()=>{ state.catalog.subjectId = subjSel.value; render(); });
+  const semSel = document.getElementById("catalog-semester");
+  if(semSel) semSel.addEventListener("change", ()=>{ state.catalog.semesterId = semSel.value; render(); });
+  const exportBtn = document.getElementById("catalog-export-btn");
+  if(exportBtn) exportBtn.addEventListener("click", exportUserCourses);
+  const importInput = document.getElementById("catalog-import-input");
+  if(importInput) importInput.addEventListener("change", async ()=>{
+    const file = importInput.files[0];
+    if(!file) return;
+    try{
+      const res = await importUserCoursesFromFile(file);
+      alert("Import terminé : " + res.addedSubjects + " matière(s) et " + res.addedChapters + " chapitre(s) ajouté(s).");
+      render();
+    }catch(e){
+      alert("Erreur lors de l'import : " + e.message);
+    }
   });
 }
 
@@ -5664,9 +5763,265 @@ function attachAIEvents(){
 }
 
 /* ============================================================
+   15bis. INTERROGATION ORALE — sélection matière/chapitre
+   ============================================================ */
+function startOralDrill(ch){
+  if(!ch) return;
+  if(isUserChapter(ch.id)) libRunUserChapterAI(ch, "drill");
+  else aiOpenFromChapter("drill", ch.id);
+}
+
+function renderOral(){
+  const subjects = allSubjects();
+  let html = `
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Interrogation orale</h1>
+    <p class="ai-intro">Choisis une matière et un chapitre : l'assistant IA te posera des questions ouvertes à l'oral, une par une, et corrigera tes réponses.</p>
+  `;
+
+  if(subjects.length === 0){
+    html += `<div class="empty-state"><div class="big">📭</div>Aucune matière pour l'instant.<br>Ajoute une matière et un chapitre pour commencer à t'entraîner à l'oral.</div>`;
+    return html;
+  }
+
+  let anyChapter = false;
+  subjects.forEach(s=>{
+    const chs = chaptersOfSubject(s.id);
+    if(chs.length === 0) return;
+    anyChapter = true;
+    html += `<div class="level-heading"><span class="icon" style="background:${s.color}22;border-radius:8px;padding:2px 6px;">${s.icon||"📘"}</span><span class="name">${escapeHtml(s.name)}</span><span class="line"></span></div>`;
+    chs.forEach(ch=>{
+      html += `<div class="chapter" data-oral-chapter="${ch.id}" style="cursor:pointer;">
+        <div class="chapter-head">
+          <div class="chapter-num">${ch.num||""}</div>
+          <div class="chapter-headtext">
+            <div class="title-row"><h2>${escapeHtml(ch.title)}</h2></div>
+            <p>${escapeHtml(ch.desc||"")}</p>
+          </div>
+          <div class="chapter-headright">
+            <span class="btn red small" style="pointer-events:none;">🎤 Réviser à l'oral</span>
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+
+  if(!anyChapter){
+    html += `<div class="empty-state"><div class="big">📄</div>Aucun chapitre pour l'instant.<br>Ajoute des chapitres à tes matières pour t'entraîner à l'oral.</div>`;
+  }
+
+  return html;
+}
+
+function attachOralEvents(){
+  document.querySelectorAll("[data-oral-chapter]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const ch = findAnyChapter(el.dataset.oralChapter);
+      startOralDrill(ch);
+    });
+  });
+}
+
+/* ============================================================
+   15ter. PROGRESSION — vue d'ensemble globale
+   ============================================================ */
+function renderProgress(){
+  const g = globalMetrics();
+  const streaks = computeStreaks(state.dash.activityDates);
+  const subjects = allSubjects();
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ta progression</h1>
+  <p class="ai-intro">Vue d'ensemble de ta maîtrise, matière par matière et chapitre par chapitre.</p>`;
+
+  html += `<div class="dash-statgrid">
+    <div class="dash-stat"><div class="dash-stat-icon">📈</div><div class="dash-stat-num">${g.mastery}%</div><div class="dash-stat-lbl">Maîtrise globale</div></div>
+    <div class="dash-stat"><div class="dash-stat-icon">✅</div><div class="dash-stat-num">${g.successRate===null?"—":g.successRate+"%"}</div><div class="dash-stat-lbl">Taux de réussite</div></div>
+    <div class="dash-stat"><div class="dash-stat-icon">📝</div><div class="dash-stat-num">${g.answered}/${g.total}</div><div class="dash-stat-lbl">Questions travaillées</div></div>
+    <div class="dash-stat"><div class="dash-stat-icon">📚</div><div class="dash-stat-num">${masteredChaptersCount()}/${CHAPTERS.length}</div><div class="dash-stat-lbl">Chapitres maîtrisés (intégré)</div></div>
+    <div class="dash-stat"><div class="dash-stat-icon">🔥</div><div class="dash-stat-num">${streaks.current}</div><div class="dash-stat-lbl">Série actuelle (jours)</div></div>
+    <div class="dash-stat"><div class="dash-stat-icon">⏱️</div><div class="dash-stat-num">${fmtDuration(state.dash.timeSpentSeconds)}</div><div class="dash-stat-lbl">Temps de révision</div></div>
+  </div>`;
+
+  html += `<div class="dash-section"><div class="section-title">Progression par matière</div>`;
+  if(subjects.length === 0){
+    html += `<p class="dash-empty">Aucune matière pour l'instant.</p>`;
+  } else {
+    subjects.forEach(s=>{
+      const chs = chaptersOfSubject(s.id);
+      const prog = subjectProgress(s.id);
+      const tier = statusTier(prog === null ? null : {best:prog});
+      html += `<div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-weight:700;">${s.icon||"📘"} ${escapeHtml(s.name)}</span>
+          <span class="mastery ${tier.key}">${prog===null?"Pas encore commencé":prog+"%"}</span>
+        </div>
+        <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${s.color};"></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${chs.length} chapitre${chs.length>1?"s":""}</div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  html += renderBadgesSection();
+
+  return html;
+}
+
+function attachProgressEvents(){}
+
+/* ============================================================
+   15quater. PARAMÈTRES — export / import / réinitialisation
+   ============================================================ */
+function downloadJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportUserCourses(){
+  downloadJSON({
+    app: "EM Lyon Révision", type: "courses-export", exportedAt: new Date().toISOString(),
+    subjects: state.userSubjects, chapters: state.userChapters,
+  }, "em-lyon-revision-mes-cours-" + todayKey() + ".json");
+}
+
+async function importUserCoursesFromFile(file){
+  const text = await readFileAsText(file);
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ throw new Error("Fichier JSON invalide."); }
+  const subjects = Array.isArray(parsed.subjects) ? parsed.subjects : [];
+  const chapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
+  let addedSubjects = 0, addedChapters = 0;
+  subjects.forEach(s=>{
+    if(!s || !s.id) return;
+    if(state.userSubjects.some(x=>x.id===s.id) || SUBJECTS.some(x=>x.id===s.id)) return;
+    state.userSubjects.push(s); addedSubjects++;
+  });
+  chapters.forEach(c=>{
+    if(!c || !c.id) return;
+    if(state.userChapters.some(x=>x.id===c.id) || CHAPTERS.some(x=>x.id===c.id)) return;
+    state.userChapters.push(c); addedChapters++;
+  });
+  saveUserSubjects(); saveUserChapters();
+  return {addedSubjects, addedChapters};
+}
+
+function exportAllData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf(LS_PREFIX) === 0){
+      try{ data[k.slice(LS_PREFIX.length)] = JSON.parse(localStorage.getItem(k)); }catch(e){}
+    }
+  }
+  downloadJSON({
+    app: "EM Lyon Révision", type: "full-backup", exportedAt: new Date().toISOString(), data,
+  }, "em-lyon-revision-sauvegarde-" + todayKey() + ".json");
+}
+
+async function importAllDataFromFile(file){
+  const text = await readFileAsText(file);
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ throw new Error("Fichier JSON invalide."); }
+  const data = parsed && parsed.data ? parsed.data : parsed;
+  if(!data || typeof data !== "object") throw new Error("Format de sauvegarde non reconnu.");
+  Object.keys(data).forEach(k=>{
+    localStorage.setItem(LS_PREFIX + k, JSON.stringify(data[k]));
+  });
+}
+
+function resetAllData(){
+  for(let i=localStorage.length-1;i>=0;i--){
+    const k = localStorage.key(i);
+    if(k && k.indexOf(LS_PREFIX) === 0) localStorage.removeItem(k);
+  }
+}
+
+function renderSettings(){
+  return `
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Paramètres</h1>
+    <p class="ai-intro">Toutes tes données (matières, chapitres, quiz, flashcards, examens, IA) sont stockées uniquement dans ce navigateur — aucun serveur n'est utilisé.</p>
+
+    <div class="dash-section">
+      <div class="section-title">Sauvegarder / restaurer mes données</div>
+      <p class="dash-empty" style="margin-top:0;">Exporte une sauvegarde complète de ton compte, pour la garder ou la transférer sur un autre navigateur.</p>
+      <div class="actions" style="justify-content:flex-start;gap:10px;">
+        <button class="btn outline small" id="settings-export-btn">⬇️ Exporter toutes mes données</button>
+        <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde<input type="file" id="settings-import-input" accept="application/json" style="display:none;"></label>
+      </div>
+      <div id="settings-status" style="margin-top:10px;font-size:13px;color:var(--ink-soft);"></div>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-title">Réinitialiser mon historique de réponses</div>
+      <p class="dash-empty" style="margin-top:0;">Remet à zéro la maîtrise de toutes les questions, sans supprimer tes matières et chapitres.</p>
+      <button class="btn-text" id="settings-reset-stats-btn">Réinitialiser mon historique de réponses</button>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-title">Réinitialiser le cache IA</div>
+      <p class="dash-empty" style="margin-top:0;">Force le rechargement du modèle d'IA au prochain lancement de l'assistant.</p>
+      <button class="btn-text" id="settings-reset-ai-btn">Réinitialiser le cache IA</button>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-title" style="color:var(--red-dark);">Zone de danger</div>
+      <p class="dash-empty" style="margin-top:0;">Supprime définitivement toutes tes données locales (matières, chapitres, quiz, flashcards, examens, progression). Cette action est irréversible.</p>
+      <button class="btn red small" id="settings-reset-all-btn">🗑️ Réinitialiser toutes mes données</button>
+    </div>
+  `;
+}
+
+function attachSettingsEvents(){
+  const statusEl = () => document.getElementById("settings-status");
+
+  const exportBtn = document.getElementById("settings-export-btn");
+  if(exportBtn) exportBtn.addEventListener("click", exportAllData);
+
+  const importInput = document.getElementById("settings-import-input");
+  if(importInput) importInput.addEventListener("change", async ()=>{
+    const file = importInput.files[0];
+    if(!file) return;
+    if(!confirm("Importer cette sauvegarde va remplacer tes données actuelles pour les clés qu'elle contient. Continuer ?")) { importInput.value = ""; return; }
+    try{
+      await importAllDataFromFile(file);
+      if(statusEl()) statusEl().textContent = "Import réussi. Rechargement…";
+      setTimeout(()=> location.reload(), 600);
+    }catch(e){
+      if(statusEl()) statusEl().textContent = "Erreur lors de l'import : " + e.message;
+    }
+  });
+
+  const resetStatsBtn = document.getElementById("settings-reset-stats-btn");
+  if(resetStatsBtn) resetStatsBtn.addEventListener("click", ()=>{
+    if(!confirm("Réinitialiser tout ton historique de réponses aux quiz ? Cette action est définitive.")) return;
+    state.qstats = {};
+    state.progress = {};
+    saveQStats();
+    lsSet(KEY_QUIZ, state.progress);
+    render();
+  });
+
+  const resetAIBtn = document.getElementById("settings-reset-ai-btn");
+  if(resetAIBtn) resetAIBtn.addEventListener("click", ()=>{
+    if(confirm("Réinitialiser le cache IA ? Le modèle devra être retéléchargé au prochain lancement.")) aiResetCache();
+  });
+
+  const resetAllBtn = document.getElementById("settings-reset-all-btn");
+  if(resetAllBtn) resetAllBtn.addEventListener("click", ()=>{
+    if(!confirm("Supprimer TOUTES tes données locales (matières, chapitres, quiz, flashcards, examens, progression) ? Cette action est irréversible.")) return;
+    if(!confirm("Dernière confirmation : toutes tes données seront perdues définitivement. Continuer ?")) return;
+    resetAllData();
+    location.reload();
+  });
+}
+
+/* ============================================================
    16. INIT
    ============================================================ */
-["dashboard","library","review","exam","quiz","fiches","flash","ai"].forEach(t=>{
+["dashboard","library","review","exam","quiz","fiches","flash","ai","oral","progress","settings"].forEach(t=>{
   const el = document.getElementById("tab-"+t);
   if(el) el.addEventListener("click", ()=>{
     if(t !== "exam" && state.exam.screen === "running"){
