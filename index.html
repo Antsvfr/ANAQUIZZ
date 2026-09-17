@@ -33,6 +33,20 @@
     --blue:#2C5FA8;
     --blue-tint:#E8EFF9;
     --ring: rgba(227,28,61,0.35);
+
+    /* Alias centralisés (couleurs + typographie) — à ajuster ici pour changer tout le site */
+    --font-main: "Inter", Arial, Helvetica, sans-serif;
+    --font-heading: "Inter", Arial, Helvetica, sans-serif;
+    --color-primary: var(--red);
+    --color-primary-dark: var(--red-dark);
+    --color-background: var(--bg);
+    --color-surface: var(--surface);
+    --color-text: var(--ink);
+    --color-muted: var(--muted);
+    --color-border: var(--border);
+    --color-accent: var(--blue);
+    --color-success: var(--green);
+
     --radius-xl:18px;
     --radius-lg:14px;
     --radius-md:10px;
@@ -49,9 +63,9 @@
   html{ scroll-behavior:smooth; }
 
   body{
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Inter", Arial, Helvetica, sans-serif;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-main);
     min-height:100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -62,6 +76,7 @@
   ::selection{ background: var(--red-tint-strong); color: var(--red-dark); }
 
   a, button{ font-family: inherit; }
+  h1, h2, h3, h4{ font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.015em; }
 
   :focus-visible{
     outline: 2.5px solid var(--red);
@@ -84,51 +99,81 @@
   .topbar{
     position: sticky;
     top: 0;
-    z-index: 30;
-    background: rgba(255,255,255,0.86);
-    backdrop-filter: blur(14px) saturate(1.4);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    background: linear-gradient(115deg, var(--red) 0%, var(--red-dark) 100%);
+    box-shadow: 0 2px 10px rgba(180,21,47,0.25);
   }
-  .topbar-inner{ max-width: 920px; margin:0 auto; padding: 17px 22px; }
-  .brandrow{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap: 18px; }
-  .brand-text{ display:flex; align-items:center; gap: 13px; }
+  .topbar-inner{ max-width: 1120px; margin:0 auto; padding: 0 22px; }
+  .brandrow{ display:flex; align-items:center; justify-content:space-between; gap: 18px; min-height: 62px; }
+  .brand-text{ display:flex; align-items:center; gap: 11px; flex-shrink:0; }
   .brand-mark{
-    width: 38px; height: 38px; flex-shrink:0; border-radius: 11px;
+    width: 36px; height: 36px; flex-shrink:0; border-radius: 10px;
     background: linear-gradient(150deg, var(--navy) 0%, var(--navy-dark) 100%);
-    box-shadow: 0 3px 8px rgba(15,31,61,0.32), inset 0 1px 0 rgba(255,255,255,0.15);
-    color:#fff; font-family:"Inter",sans-serif; font-weight:800; font-size:15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
+    color:#fff; font-family: var(--font-heading); font-weight:800; font-size:14px;
     display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
   }
   .brand-mark::after{
-    content:""; position:absolute; right:-6px; bottom:-6px; width:20px; height:20px;
-    border-radius:50%; border:2.5px solid var(--red); border-right-color:transparent; border-top-color:transparent;
-    transform: rotate(-45deg);
+    content:""; position:absolute; right:-6px; bottom:-6px; width:18px; height:18px;
+    border-radius:50%; border:2.5px solid #fff; border-right-color:transparent; border-top-color:transparent;
+    transform: rotate(-45deg); opacity:0.85;
   }
-  .brand-text .eyebrow{
-    font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--navy); font-weight: 800; margin-bottom: 3px;
-  }
-  .brand-text h1{ font-size: 19px; font-weight: 800; margin: 0; letter-spacing:-0.015em; line-height:1.2; }
-  .brand-text p{ margin: 2px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+  .brand-text h1{ font-size: 17px; font-weight: 800; margin: 0; letter-spacing:-0.01em; line-height:1.2; color:#fff; }
 
-  .tabnav{
-    display:flex; flex-wrap: wrap;
-    gap: 2px; background: var(--bg); padding: 4px; border-radius: 14px;
-    border: 1px solid var(--border); flex-shrink:0;
+  /* ===== NAVIGATION PRINCIPALE ===== */
+  .mainnav{ display:flex; align-items:stretch; gap: 2px; flex:1; justify-content:center; }
+  .mainnav-item{ position:relative; display:flex; }
+  .mainnav-link{
+    border:none; background:none; padding: 0 13px; height:62px; border-radius:0;
+    font-family: var(--font-main); font-weight: 600; font-size: 13.5px; color: rgba(255,255,255,0.88); cursor:pointer;
+    display:flex; align-items:center; gap:5px; white-space: nowrap;
+    transition: background 0.16s var(--ease), color 0.16s var(--ease);
+    position:relative;
   }
-  .tabnav button{
-    border:none; background:none; padding: 9px 13px; border-radius: 999px;
-    font-family:"Inter",sans-serif; font-weight: 700; font-size: 12.5px; color: var(--ink-soft); cursor:pointer;
-    transition: background 0.18s var(--ease), color 0.18s var(--ease), transform 0.12s var(--ease);
-    display:flex; align-items:center; gap:6px; white-space: nowrap;
+  .mainnav-link .caret{ font-size:9px; opacity:0.8; transition: transform 0.16s var(--ease); }
+  .mainnav-link:hover{ background: rgba(255,255,255,0.10); color:#fff; }
+  .mainnav-item.active-group > .mainnav-link{ color:#fff; }
+  .mainnav-item.active-group > .mainnav-link::after{
+    content:""; position:absolute; left:14px; right:14px; bottom:8px; height:3px;
+    background:#fff; border-radius:2px;
   }
-  .tabnav button:hover:not(.active){ color: var(--ink); background: rgba(20,21,26,0.05); }
-  .tabnav button:active{ transform: scale(0.96); }
-  .tabnav button.active{
-    background: var(--navy); color: #fff;
-    box-shadow: 0 2px 6px rgba(15,31,61,0.28);
+  .mainnav-item.open > .mainnav-link{ background: rgba(255,255,255,0.14); color:#fff; }
+  .mainnav-item.open > .mainnav-link .caret{ transform: rotate(180deg); }
+
+  .dropdown-menu{
+    position:absolute; top: 100%; left:0; min-width: 240px; margin-top:2px;
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); padding:8px; display:none; z-index: 120;
   }
+  .mainnav-item.open > .dropdown-menu{ display:block; }
+  .dropdown-menu .dd-label{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; font-weight:800; color: var(--muted);
+    padding: 8px 10px 4px;
+  }
+  .dropdown-menu button, .dropdown-menu a{
+    display:flex; width:100%; text-align:left; border:none; background:none; cursor:pointer;
+    padding: 9px 10px; border-radius: var(--radius-sm); font-size:13.5px; font-weight:600; color: var(--ink);
+    font-family: var(--font-main); text-decoration:none;
+  }
+  .dropdown-menu button:hover, .dropdown-menu a:hover{ background: var(--red-tint); color: var(--red-dark); }
+  .dropdown-menu hr{ border:none; border-top:1px solid var(--border); margin: 6px 2px; }
+  .dropdown-menu .dd-add{ color: var(--red); font-weight:800; }
+
+  .topbar-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
+  .topbar-divider{ width:1px; height:28px; background: rgba(255,255,255,0.28); }
+  .profile-chip{
+    display:flex; align-items:center; gap:8px; color:#fff; font-size:13.5px; font-weight:600;
+    background:none; border:none; cursor:pointer; padding:6px 4px; font-family: var(--font-main);
+  }
+  .profile-avatar{
+    width:28px; height:28px; border-radius:50%; background: rgba(255,255,255,0.22);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#fff;
+  }
+  .hamburger-btn{
+    display:none; border:none; background:none; color:#fff; font-size:22px; cursor:pointer;
+    width:38px; height:38px; align-items:center; justify-content:center; border-radius:8px; flex-shrink:0;
+  }
+  .hamburger-btn:hover{ background: rgba(255,255,255,0.12); }
 
   /* ===== STAT BAR ===== */
   .statbar{ display:grid; grid-template-columns: repeat(3,1fr); gap: 13px; margin: 28px 0 24px; }
@@ -558,6 +603,67 @@
 
   .dash-cols{ display:grid; grid-template-columns: 1.1fr 1fr; gap:18px; align-items:start; }
   .dash-col-stack{ display:flex; flex-direction:column; }
+
+  /* ===== BANNIÈRE D'ACCUEIL ===== */
+  .dash-banner{
+    background: linear-gradient(120deg, var(--navy) 0%, var(--navy-dark) 55%, var(--red-dark) 130%);
+    border-radius: var(--radius-xl); padding: 34px 30px; margin: 24px 0 22px; color:#fff;
+    box-shadow: var(--shadow-lg);
+  }
+  .dash-banner-eyebrow{ font-size:12px; text-transform:capitalize; color: rgba(255,255,255,0.75); font-weight:700; margin-bottom:10px; }
+  .dash-banner-title{ font-size:26px; font-weight:800; margin:0 0 10px; letter-spacing:-0.015em; color:#fff; }
+  .dash-banner-sub{ font-size:14px; line-height:1.6; color: rgba(255,255,255,0.85); margin:0 0 20px; max-width:520px; }
+  .dash-banner-cta{ background:#fff; color: var(--navy); border:none; font-weight:800; }
+  .dash-banner-cta:hover{ background: rgba(255,255,255,0.9); transform: translateY(-1px); }
+
+  /* ===== GRILLE DE TABLEAU DE BORD (6 blocs) ===== */
+  .dash-grid2{ display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; margin-bottom:0; }
+  .dash-card{
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:22px 22px; margin-bottom:18px; box-shadow: var(--shadow-sm);
+  }
+  .dash-card-primary{ border-left:4px solid var(--red); }
+  .dash-card-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:var(--red); font-weight:800; margin-bottom:8px; }
+  .dash-card-title{ font-size:19px; font-weight:800; margin:0 0 6px; letter-spacing:-0.01em; }
+  .dash-card-meta{ font-size:12.5px; color:var(--muted); margin:0 0 16px; }
+  .dash-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px; }
+
+  .dash-progress-big{ font-size:38px; font-weight:800; color:var(--navy); line-height:1; letter-spacing:-0.02em; margin-bottom:14px; }
+  .dash-progress-list{ list-style:none; padding:0; margin:0 0 14px; display:flex; flex-direction:column; gap:9px; }
+  .dash-progress-list li{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); gap:10px; }
+  .dash-progress-list li b{ color:var(--ink); font-variant-numeric: tabular-nums; }
+
+  .dash-subject-row{
+    display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--bg); cursor:pointer;
+  }
+  .dash-subject-row:last-of-type{ border-bottom:none; }
+  .dash-subject-row .icon{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .dash-subject-row .name{ font-weight:700; font-size:13.5px; color:var(--ink); }
+  .dash-subject-row .meta{ font-size:11.5px; color:var(--muted); margin-top:1px; }
+  .dash-subject-row .pct{ margin-left:auto; font-size:12.5px; font-weight:800; color:var(--navy); flex-shrink:0; }
+
+  .dash-quicklinks{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .dash-quick-btn{
+    display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+    background: var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-md);
+    padding:13px 14px; cursor:pointer; text-align:left; font-family: var(--font-main);
+    transition: border-color 0.16s var(--ease), transform 0.16s var(--ease);
+  }
+  .dash-quick-btn:hover{ border-color: var(--red); transform: translateY(-1px); }
+  .dash-quick-btn .ico{ font-size:17px; }
+  .dash-quick-btn .lbl{ font-size:12.5px; font-weight:700; color:var(--ink); }
+
+  .dash-feed{ display:flex; flex-direction:column; gap:10px; }
+  .dash-feed-item{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .dash-feed-item b{ color:var(--ink); }
+
+  .dash-reminders{ display:flex; flex-direction:column; gap:8px; }
+  .dash-reminder-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  .dash-reminder-row b{ color:var(--ink-soft); font-weight:700; }
+
+  @media (max-width: 860px){
+    .dash-grid2{ grid-template-columns: 1fr; }
+  }
   .dash-col-stack .dash-section:last-child{ margin-bottom:0; }
 
   .dash-empty{ font-size:12.5px; color:var(--muted); margin:0; }
@@ -651,8 +757,9 @@
   }
 
   /* ===== MODE EXAMEN ===== */
-  body.exam-focus .tabnav{ display:none; }
-  body.exam-focus .brand-text p{ display:none; }
+  body.exam-focus .mainnav,
+  body.exam-focus .hamburger-btn,
+  body.exam-focus .topbar-right{ display:none; }
 
   .exam-setup-group{ margin-bottom:22px; }
   .exam-setup-group .lbl{ font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink); margin-bottom:9px; display:block; }
@@ -855,13 +962,29 @@
   }
 
   @media (max-width: 680px){
-    .topbar-inner{ padding: 14px 16px; }
-    .brandrow{ flex-direction:column; align-items:stretch; gap: 14px; }
-    .brand-text h1{ font-size: 17px; }
-    .tabnav{
-      display:grid; grid-template-columns: repeat(4, 1fr); grid-auto-flow:row; width:100%;
+    .topbar-inner{ padding: 0 16px; }
+    .brandrow{ min-height:56px; }
+    .brand-text h1{ font-size: 15px; }
+    .mainnav{ display:none; }
+    .hamburger-btn{ display:flex; }
+    .profile-chip .profile-label{ display:none; }
+    .topbar-divider{ display:none; }
+
+    body.mobile-nav-open .mainnav{
+      display:flex; flex-direction:column; align-items:stretch;
+      position:fixed; top:56px; left:0; right:0; bottom:0;
+      background: var(--surface); z-index:90; padding:14px; gap:2px; overflow-y:auto;
     }
-    .tabnav button{ padding: 9px 6px; font-size: 11px; justify-content:center; }
+    .mainnav-item{ flex-direction:column; align-items:stretch; }
+    .mainnav-link{
+      height:auto; padding:13px 12px; color: var(--ink); justify-content:space-between;
+      border-radius: var(--radius-md); width:100%;
+    }
+    .mainnav-link:hover{ background: var(--bg); color:var(--ink); }
+    .mainnav-item.active-group > .mainnav-link{ color: var(--red); background: var(--red-tint); }
+    .mainnav-item.active-group > .mainnav-link::after{ display:none; }
+    .mainnav-item.open > .mainnav-link{ background: var(--bg); color:var(--ink); }
+    .dropdown-menu{ position:static; box-shadow:none; border:none; background:var(--bg); margin-top:4px; min-width:0; }
   }
 
   @media (max-width: 560px){
@@ -892,24 +1015,86 @@
     <div class="brandrow">
       <div class="brand-text">
         <div class="brand-mark" aria-hidden="true">EM</div>
-        <div>
-          <div class="eyebrow">Plateforme de révision</div>
-          <h1>EM Lyon Révision</h1>
-          <p>Toutes tes matières, tes chapitres et tes révisions au même endroit.</p>
-        </div>
+        <h1>EM Lyon Révision</h1>
       </div>
-      <div class="tabnav">
-        <button id="tab-dashboard">🏠 Accueil</button>
-        <button id="tab-library">📚 Mes matières</button>
-        <button id="tab-review">🎯 Mes révisions</button>
-        <button id="tab-quiz">🧠 Quiz</button>
-        <button id="tab-flash">🃏 Flashcards</button>
-        <button id="tab-exam">📝 Examens</button>
-        <button id="tab-oral">🎤 Oral</button>
-        <button id="tab-progress">📈 Progression</button>
-        <button id="tab-fiches">📖 Bibliothèque</button>
-        <button id="tab-ai">🤖 Assistant IA</button>
-        <button id="tab-settings">⚙️ Paramètres</button>
+
+      <nav class="mainnav" id="mainnav">
+        <div class="mainnav-item" data-nav="dashboard">
+          <button class="mainnav-link" data-goto="dashboard">Accueil</button>
+        </div>
+
+        <div class="mainnav-item" data-nav="library">
+          <button class="mainnav-link" data-menu-toggle="library">Mes matières <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-library">
+            <button data-goto="library">Toutes mes matières</button>
+            <div id="menu-library-subjects"></div>
+            <hr>
+            <button class="dd-add" data-goto="library-add">+ Ajouter une matière</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="review">
+          <button class="mainnav-link" data-menu-toggle="review">Mes révisions <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-review">
+            <button data-goto="continue">Reprendre mes révisions</button>
+            <button data-goto="quiz-picker">Révision par chapitre</button>
+            <button data-goto="quiz-picker">Révision par matière</button>
+            <button data-goto="quiz-global">Révision globale</button>
+            <button data-goto="recent">Révisions récentes</button>
+            <button data-goto="review">Révisions à revoir</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="resources">
+          <button class="mainnav-link" data-menu-toggle="resources">Ressources <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-resources">
+            <button data-goto="fiches" data-filter="all">Bibliothèque de cours</button>
+            <button data-goto="fiches" data-filter="mine">Mes documents</button>
+            <button data-goto="fiches" data-filter="mine">Cours importés</button>
+            <button data-goto="fiches" data-filter="builtin">Résumés</button>
+            <button data-goto="flash">Flashcards</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="evaluations">
+          <button class="mainnav-link" data-menu-toggle="evaluations">Évaluations <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-evaluations">
+            <button data-goto="quiz">Quiz</button>
+            <button data-goto="exam">Examens blancs</button>
+            <button data-goto="ai">Questions ouvertes</button>
+            <button data-goto="oral">Interrogation orale</button>
+            <button data-goto="progress">Historique des résultats</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="progress">
+          <button class="mainnav-link" data-menu-toggle="progress">Progression <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-progress">
+            <button data-goto="progress">Vue globale</button>
+            <button data-goto="progress">Progression par matière</button>
+            <button data-goto="library">Progression par chapitre</button>
+            <button data-goto="progress">Scores</button>
+            <button data-goto="progress">Statistiques</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="myspace">
+          <button class="mainnav-link" data-menu-toggle="myspace">Mon espace <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-myspace">
+            <button data-goto="ai">Assistant IA</button>
+            <button data-goto="settings">Paramètres</button>
+            <button data-goto="myspace">Mon profil</button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="topbar-right">
+        <div class="topbar-divider"></div>
+        <button class="profile-chip" id="profile-chip-btn" data-goto="myspace">
+          <span class="profile-avatar" id="profile-avatar">?</span>
+          <span class="profile-label" id="profile-label">Bonjour</span>
+        </button>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu">☰</button>
       </div>
     </div>
   </div>
@@ -1845,10 +2030,17 @@ const FLASHCARDS = {
    4. ÉTAT GLOBAL
    ============================================================ */
 let state = {
-  tab: "dashboard", // dashboard | library | review | exam | quiz | fiches | flash | ai | oral | progress | settings
+  tab: "dashboard", // dashboard | library | review | exam | quiz | fiches | flash | ai | oral | progress | settings | myspace
+
+  // --- navigation principale (menus déroulants / mobile) — état d'interface, non persisté ---
+  openMenu: null,
+  mobileMenuOpen: false,
+
+  // --- profil (affichage uniquement, pas de compte) ---
+  profile: { firstName: "" },
 
   // --- bibliothèque de cours (recherche/filtre) ---
-  catalog: { query: "", subjectId: "all", semesterId: "all" },
+  catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all" },
 
   // --- quiz ---
   quizLevel: "all",
@@ -1923,6 +2115,7 @@ let state = {
     bestCorrectStreak: 0,
     quizzesCompleted: 0,
     best90Achieved: false,
+    recentAdds: [],   // [{ts, label}] — matières/chapitres ajoutés récemment, pour le fil d'activité
   },
 };
 
@@ -2088,6 +2281,7 @@ const KEY_AICARDS = "ai-flashcards";
 const KEY_BADGES = "badges";
 const KEY_USER_SUBJECTS = "user-subjects";
 const KEY_USER_CHAPTERS = "user-chapters";
+const KEY_PROFILE = "profile";
 
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
@@ -2158,6 +2352,7 @@ async function loadAllData(){
     state.dash.best90Achieved = (dash.best90Achieved !== undefined)
       ? dash.best90Achieved
       : (dash.recentActivity || []).some(a => a.pct >= 90 && a.total >= 10);
+    state.dash.recentAdds = dash.recentAdds || [];
   }
   state.qstats = await loadKey(KEY_QSTATS, {});
   state.exam.history = await loadKey(KEY_EXAM, []);
@@ -2165,6 +2360,8 @@ async function loadAllData(){
   state.badges = await loadKey(KEY_BADGES, {});
   state.userSubjects = await loadKey(KEY_USER_SUBJECTS, []);
   state.userChapters = await loadKey(KEY_USER_CHAPTERS, []);
+  const savedProfile = await loadKey(KEY_PROFILE, null);
+  if(savedProfile && typeof savedProfile.firstName === "string") state.profile.firstName = savedProfile.firstName;
   const savedModelChoice = lsGet(KEY_AIMODEL);
   if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
   migrateLegacyWrongQuestions();
@@ -2180,6 +2377,13 @@ function saveQStats(){ lsSet(KEY_QSTATS, state.qstats); }
 function saveAIHistory(){ lsSet(KEY_AI, state.aiHistory.slice(-20)); }
 function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
+function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
+
+function logRecentAdd(label){
+  state.dash.recentAdds.unshift({ ts: Date.now(), label });
+  if(state.dash.recentAdds.length > 5) state.dash.recentAdds.length = 5;
+  saveDashboardStats();
+}
 
 function saveProgress(scope, scorePct){
   const prev = state.progress[scope];
@@ -2532,16 +2736,18 @@ function backToPicker(){
    7. NAVIGATION GÉNÉRALE
    ============================================================ */
 function switchTab(tab){
+  if(tab !== "exam" && state.exam.screen === "running"){
+    if(!confirm("Quitter l'examen en cours ? Tes réponses ne seront pas enregistrées.")) return;
+    stopExamTimer();
+    state.exam.screen = "setup";
+  }
   state.tab = tab;
   render();
   window.scrollTo(0,0);
 }
 
 function render(){
-  ["dashboard","library","review","exam","quiz","fiches","flash","ai","oral","progress","settings"].forEach(t=>{
-    const el = document.getElementById("tab-"+t);
-    if(el) el.classList.toggle("active", state.tab === t);
-  });
+  updateNavDynamic();
 
   // mode sans distraction pendant l'épreuve
   const inExam = state.tab === "exam" && state.exam.screen === "running";
@@ -2623,6 +2829,13 @@ function render(){
     return;
   }
 
+  if(state.tab === "myspace"){
+    content.className = "wrap";
+    content.innerHTML = renderMySpace();
+    attachMySpaceEvents();
+    return;
+  }
+
   if(state.tab === "flash"){
     if(state.flashScreen === "picker"){
       content.className = "wrap";
@@ -2691,8 +2904,22 @@ function continueRevision(){
   const d = state.dash;
   if(d.recentChapters && d.recentChapters.length > 0){
     const rc = d.recentChapters[0];
-    const ch = CHAPTERS.find(c => c.id === rc.chapterId);
+    const ch = findAnyChapter(rc.chapterId);
     if(ch){
+      if(isUserChapter(ch.id)){
+        if(rc.type === "flash" && ch.aiFlashcards && ch.aiFlashcards.length){
+          state.tab = "flash";
+          startFlashDeck(ch.id, ch.title, ch.aiFlashcards.slice());
+          return;
+        }
+        if(ch.aiQuiz && ch.aiQuiz.length){
+          startQuiz("chapter:"+ch.id, ch.title, null, ch.aiQuiz.slice());
+          return;
+        }
+        libGoto("chapterDetail", {subjectId: ch.subjectId, chapterId: ch.id});
+        switchTab("library");
+        return;
+      }
       if(rc.type === "flash"){
         state.tab = "flash";
         startFlashDeck(ch.id, ch.num + " · " + ch.title, deckCards(ch.id));
@@ -2714,164 +2941,147 @@ function continueRevision(){
 function renderDashboard(){
   const d = state.dash;
   const g = globalMetrics();
-  const streaks = computeStreaks(d.activityDates);
-  const globalPct = g.mastery;
-  const todayStr = todayKey();
-  const todayCount = (d.dailyStats[todayStr] && d.dailyStats[todayStr].answered) || 0;
-  const goalPct = Math.min(100, Math.round((todayCount/DAILY_GOAL)*100));
-  const weekCount = weeklyCount();
-  const weekPct = Math.min(100, Math.round((weekCount/WEEKLY_GOAL)*100));
-  const reviewList = poolReview(4);
+  const subjects = allSubjects();
+  const firstName = (state.profile.firstName || "").trim();
   const wrongCount = poolWrong().length;
-  const hardCount = poolHard().length;
-  const neverCount = g.never;
-  const timeLabel = fmtDuration(d.timeSpentSeconds);
-  const hasAnyActivity = g.answered > 0 || d.recentActivity.length > 0 || Object.keys(state.flashProgress).length > 0;
+
+  const rc = d.recentChapters && d.recentChapters[0];
+  const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
+  const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
 
   let html = "";
 
-  html += `<div class="dash-hero">
-    <div class="dash-hero-top">
-      <div>
-        <div class="dash-hero-eyebrow">Bienvenue sur EM Lyon Révision</div>
-        <h1 class="dash-hero-title">${hasAnyActivity ? "Ta progression" : "Organise tes cours. Révise efficacement."}</h1>
-        <p class="dash-hero-sub">${hasAnyActivity ? "Ton niveau de maîtrise est recalculé après chaque réponse, question par question." : "Retrouve toutes tes matières, tes chapitres, tes quiz, tes flashcards et tes examens au même endroit. Progresse à ton rythme."}</p>
-      </div>
-      <div class="dash-ring" style="background:conic-gradient(var(--red) ${globalPct}%, var(--border) 0);">
-        <div class="dash-ring-inner"><span class="dash-ring-pct">${globalPct}%</span><span class="dash-ring-lbl">maîtrise</span></div>
-      </div>
-    </div>
-    <div class="dash-cta-row">
-      <button class="btn red dash-cta" id="dash-continue-btn">▶️ Reprendre mes révisions</button>
-      <button class="btn outline dash-cta" id="dash-library-btn">📚 Voir mes matières</button>
-      <button class="btn outline dash-cta" id="dash-addcourse-btn">➕ Ajouter un cours</button>
-      <button class="btn outline dash-cta" id="dash-progress-btn">📈 Voir ma progression</button>
-    </div>
+  /* ---------- Bannière de bienvenue ---------- */
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  html += `<div class="dash-banner">
+    <div class="dash-banner-eyebrow">${dateLabel}</div>
+    <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}, bienvenue sur EM Lyon Révision</h1>
+    <p class="dash-banner-sub">Organise tes cours, révise efficacement et suis ta progression tout au long de l'année.</p>
+    <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
   </div>`;
 
-  html += `<div class="dash-statgrid">
-    <div class="dash-stat">
-      <div class="dash-stat-icon">📈</div>
-      <div class="dash-stat-num">${globalPct}%</div>
-      <div class="dash-stat-lbl">Maîtrise globale</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">✅</div>
-      <div class="dash-stat-num">${g.successRate===null ? "—" : g.successRate+"%"}</div>
-      <div class="dash-stat-lbl">Taux de réussite</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">📝</div>
-      <div class="dash-stat-num">${g.answered}/${g.total}</div>
-      <div class="dash-stat-lbl">Questions travaillées</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">📚</div>
-      <div class="dash-stat-num">${masteredChaptersCount()}/${CHAPTERS.length}</div>
-      <div class="dash-stat-lbl">Chapitres maîtrisés</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">🔥</div>
-      <div class="dash-stat-num">${streaks.current}</div>
-      <div class="dash-stat-lbl">Série actuelle (jours)</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">⏱️</div>
-      <div class="dash-stat-num">${timeLabel}</div>
-      <div class="dash-stat-lbl">Temps de révision</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">✔️</div>
-      <div class="dash-stat-num">${d.correctStreak || 0}</div>
-      <div class="dash-stat-lbl">Bonnes réponses d'affilée</div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon">📊</div>
-      <div class="dash-stat-num">${d.bestCorrectStreak || 0}</div>
-      <div class="dash-stat-lbl">Record de série</div>
-    </div>
-  </div>`;
+  html += `<div class="dash-grid2">`;
 
-  html += `<div class="mode-grid">
-    ${modeCardHtml("wrong", "🔁", "Réviser mes erreurs", "Les questions dont ta dernière réponse était fausse.", wrongCount)}
-    ${modeCardHtml("express", "⚡", "Révision express", "10 questions ciblées sur tes points faibles, en quelques minutes.", Math.min(10, QUESTIONS.length))}
-    ${modeCardHtml("hard", "🧗", "Questions difficiles", "Moins de 50 % de réussite après au moins deux passages.", hardCount)}
-    ${modeCardHtml("never", "🆕", "Questions jamais faites", "Ce que tu n'as encore jamais travaillé.", neverCount)}
-  </div>`;
-
-  html += `<div class="dash-section">
-    <div class="dash-goal-block">
-      <div class="dash-section-head"><span class="section-title" style="margin-bottom:0;">Objectif du jour</span><span class="dash-goal-count">${todayCount} / ${DAILY_GOAL} questions</span></div>
-      <div class="dash-goal-track"><div class="dash-goal-fill" style="width:${goalPct}%"></div></div>
-      <p class="dash-goal-msg">${todayCount >= DAILY_GOAL ? "Objectif atteint aujourd'hui." : "Encore " + (DAILY_GOAL-todayCount) + " question" + ((DAILY_GOAL-todayCount)>1?"s":"") + " pour atteindre ton objectif du jour."}</p>
-    </div>
-    <div class="dash-goal-block">
-      <div class="dash-section-head"><span class="section-title" style="margin-bottom:0;">Objectif de la semaine</span><span class="dash-goal-count">${weekCount} / ${WEEKLY_GOAL} questions</span></div>
-      <div class="dash-goal-track"><div class="dash-goal-fill" style="width:${weekPct}%"></div></div>
-      <p class="dash-goal-msg">${weekCount >= WEEKLY_GOAL ? "Objectif hebdomadaire atteint." : "Encore " + (WEEKLY_GOAL-weekCount) + " question" + ((WEEKLY_GOAL-weekCount)>1?"s":"") + " pour atteindre ton objectif de la semaine."}</p>
-    </div>
-  </div>`;
-
-  html += `<div class="dash-cols">`;
-
-  html += `<div class="dash-section">
-    <div class="section-title">Progression récente</div>`;
-  if(d.recentActivity.length === 0){
-    html += `<p class="dash-empty">Aucune session terminée pour l'instant — termine un quiz ou un paquet de flashcards pour voir apparaître ton historique ici.</p>`;
+  /* ---------- Bloc 1 : reprendre mes révisions ---------- */
+  if(rcChapter){
+    const lastKey = dateKey(new Date(rc.ts));
+    html += `<div class="dash-card dash-card-primary">
+      <div class="dash-card-eyebrow">Reprendre mes révisions</div>
+      <h2 class="dash-card-title">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</h2>
+      <p class="dash-card-meta">Dernière révision : ${fmtRelativeDate(lastKey).toLowerCase()}</p>
+      <button class="btn red" id="dash-continue-btn">▶️ Reprendre</button>
+    </div>`;
   } else {
-    html += `<div class="dash-timeline">` + d.recentActivity.slice(0,6).map(a=>{
-      const icon = a.type === "exam" ? "📝" : (a.type === "quiz" ? "🧠" : "🃏");
-      return `<div class="dash-timeline-item">
-        <span class="dash-timeline-icon">${icon}</span>
-        <div class="dash-timeline-body">
-          <div class="dash-timeline-label">${escapeHtml(a.label)}</div>
-          <div class="dash-timeline-meta">${fmtRelativeDate(a.date)} · ${a.pct}% (${a.score}/${a.total})</div>
+    html += `<div class="dash-card dash-card-primary">
+      <div class="dash-card-eyebrow">Reprendre mes révisions</div>
+      <h2 class="dash-card-title">Commence ta première révision</h2>
+      <p class="dash-card-meta">Ouvre une matière et un chapitre pour lancer ton premier quiz.</p>
+      <button class="btn outline" id="dash-library-btn">Voir mes matières</button>
+    </div>`;
+  }
+
+  /* ---------- Bloc 2 : progression globale ---------- */
+  const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
+  html += `<div class="dash-card">
+    <div class="dash-card-eyebrow">Ma progression</div>
+    <div class="dash-progress-big">${g.mastery}%</div>
+    <ul class="dash-progress-list">
+      <li><span>Matières commencées</span><b>${startedSubjects}/${subjects.length}</b></li>
+      <li><span>Chapitres maîtrisés</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
+      <li><span>Questions travaillées</span><b>${g.answered}/${g.total}</b></li>
+      <li><span>Temps de révision</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
+    </ul>
+    <button class="btn-text" id="dash-progress-link">Voir le détail →</button>
+  </div>`;
+
+  /* ---------- Bloc 3 : mes matières ---------- */
+  html += `<div class="dash-card">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Mes matières</span></div>`;
+  if(subjects.length === 0){
+    html += `<p class="dash-empty">Tu n'as pas encore ajouté de matière.</p>
+      <button class="btn outline small" id="dash-addcourse-btn" style="margin-top:10px;">+ Ajouter ma première matière</button>`;
+  } else {
+    recentSubjectsPreview(3).forEach(s=>{
+      const chs = chaptersOfSubject(s.id);
+      const prog = subjectProgress(s.id);
+      html += `<div class="dash-subject-row" data-open-subject-dash="${s.id}">
+        <span class="icon" style="background:${s.color}22;">${s.icon||"📘"}</span>
+        <div>
+          <div class="name">${escapeHtml(s.name)}</div>
+          <div class="meta">${chs.length} chapitre${chs.length>1?"s":""}</div>
         </div>
+        <span class="pct">${prog===null?"—":prog+"%"}</span>
       </div>`;
-    }).join("") + `</div>`;
+    });
+    html += `<button class="btn-text" id="dash-viewall-subjects" style="margin-top:10px;">Voir toutes mes matières →</button>`;
   }
   html += `</div>`;
 
-  html += `<div class="dash-col-stack">`;
-
-  html += `<div class="dash-section">
-    <div class="section-title">Derniers chapitres consultés</div>`;
-  if(d.recentChapters.length === 0){
-    html += `<p class="dash-empty">Tu n'as pas encore consulté de chapitre en quiz ou en flashcards.</p>`;
+  /* ---------- Bloc 4 : activité récente ---------- */
+  const feed = recentFeedItems(5);
+  html += `<div class="dash-card" id="dash-recent-activity">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Activité récente</span></div>`;
+  if(feed.length === 0){
+    html += `<p class="dash-empty">Aucune activité récente.<br>Commence une première révision pour voir apparaître ton historique.</p>`;
   } else {
-    html += `<div class="dash-chapterlist">` + d.recentChapters.slice(0,4).map(rc=>{
-      const ch = CHAPTERS.find(c => c.id === rc.chapterId);
-      if(!ch) return "";
-      return `<button class="dash-chapterchip" data-goto-chapter="${ch.id}" data-goto-type="${rc.type}">
-        <span class="level-badge ${ch.level}">${ch.level}</span>
-        <span>${ch.title}</span>
-      </button>`;
-    }).join("") + `</div>`;
+    html += `<div class="dash-feed">` + feed.map(it => `<div class="dash-feed-item">${it}</div>`).join("") + `</div>`;
   }
   html += `</div>`;
 
-  html += `<div class="dash-section">
-    <div class="dash-section-head"><span class="section-title" style="margin-bottom:0;">À revoir en priorité</span></div>`;
-  if(reviewList.length === 0){
-    html += `<p class="dash-empty">${g.answered === 0 ? "Réponds à quelques questions pour que ta liste de révision se construise." : "Rien d'urgent à revoir — tout ce que tu as travaillé est bien maîtrisé. 🎉"}</p>`;
-  } else {
-    html += `<div class="dash-reviewlist">` + reviewList.map(q=>{
-      const themeLbl = THEME_META[q.theme] ? THEME_META[q.theme].short : "";
-      const m = masteryOf(q);
-      return `<div class="dash-reviewitem"><span class="dash-review-theme">${themeLbl} · maîtrise ${m}%</span><span class="dash-review-q">${escapeHtml(q.q)}</span></div>`;
-    }).join("") + `</div>`;
-    html += `<p class="dash-review-more">Liste complète dans l'onglet « À revoir ».</p>`;
-  }
-  html += `</div>`;
+  /* ---------- Bloc 5 : actions rapides ---------- */
+  html += `<div class="dash-card">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Actions rapides</span></div>
+    <div class="dash-quicklinks">
+      <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">Ajouter un cours</span></button>
+      <button class="dash-quick-btn" id="dash-quiz-btn"><span class="ico">🧠</span><span class="lbl">Faire un quiz</span></button>
+      <button class="dash-quick-btn" id="dash-flash-btn"><span class="ico">🃏</span><span class="lbl">Flashcards</span></button>
+      <button class="dash-quick-btn" id="dash-progress-btn"><span class="ico">📈</span><span class="lbl">Voir ma progression</span></button>
+    </div>
+  </div>`;
 
-  html += `</div>`; // dash-col-stack
-  html += `</div>`; // dash-cols
+  /* ---------- Bloc 6 : à revoir (discret) ---------- */
+  html += `<div class="dash-card">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">À revoir</span></div>
+    <div class="dash-reminders">
+      <div class="dash-reminder-row"><span>Chapitres à réviser</span><b>${wrongCount ? wrongCount : "Rien pour l'instant"}</b></div>
+      <div class="dash-reminder-row"><span>Cours récemment ajoutés</span><b>${(d.recentAdds||[]).length}</b></div>
+    </div>
+    ${wrongCount ? `<button class="btn-text" id="dash-review-link" style="margin-top:10px;">Voir la liste à revoir →</button>` : ""}
+  </div>`;
 
-  html += renderBadgesSection();
+  html += `</div>`; // dash-grid2
 
   html += `<footer class="hint">Toutes tes données sont enregistrées dans ce navigateur (localStorage) et restent disponibles après fermeture.${storageAvailable ? "" : " ⚠️ Le stockage local semble bloqué : cette session ne sera pas conservée."}</footer>`;
 
   return html;
+}
+
+/* Matières à mettre en avant sur le dashboard : les plus récemment consultées d'abord. */
+function recentSubjectsPreview(limit){
+  const seen = new Set();
+  const result = [];
+  (state.dash.recentChapters||[]).forEach(rc=>{
+    const ch = findAnyChapter(rc.chapterId);
+    const subj = ch ? subjectOfChapter(ch) : null;
+    if(subj && !seen.has(subj.id)){ seen.add(subj.id); result.push(subj); }
+  });
+  allSubjects().forEach(s=>{ if(result.length < limit && !seen.has(s.id)){ seen.add(s.id); result.push(s); } });
+  return result.slice(0, limit);
+}
+
+/* Fusionne sessions terminées + ajouts récents pour le fil d'activité du dashboard. */
+function recentFeedItems(limit){
+  const items = [];
+  (state.dash.recentActivity||[]).forEach(a=>{
+    const typeLbl = a.type === "exam" ? "Examen" : (a.type === "quiz" ? "Quiz" : "Flashcards");
+    items.push({ ts: new Date(a.ts).getTime(), html: "Tu as terminé : <b>" + typeLbl + " — " + escapeHtml(a.label) + "</b> (" + a.pct + "%)" });
+  });
+  (state.dash.recentAdds||[]).forEach(a=>{
+    items.push({ ts: a.ts, html: "Tu as ajouté : <b>" + escapeHtml(a.label) + "</b>" });
+  });
+  items.sort((x,y)=> y.ts - x.ts);
+  return items.slice(0, limit).map(it => it.html);
 }
 
 function renderBadgesSection(){
@@ -2916,27 +3126,35 @@ function attachModeEvents(){
 }
 
 function attachDashboardEvents(){
+  const bannerCta = document.getElementById("dash-banner-cta");
+  if(bannerCta) bannerCta.addEventListener("click", ()=>{
+    if(state.dash.recentChapters && state.dash.recentChapters.length > 0) continueRevision();
+    else { libGoto("subjects"); switchTab("library"); }
+  });
+
   const cbtn = document.getElementById("dash-continue-btn");
   if(cbtn) cbtn.addEventListener("click", continueRevision);
   const libbtn = document.getElementById("dash-library-btn");
-  if(libbtn) libbtn.addEventListener("click", ()=>{ state.library.view = "subjects"; switchTab("library"); });
-  const addbtn = document.getElementById("dash-addcourse-btn");
-  if(addbtn) addbtn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
+  if(libbtn) libbtn.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
+  document.querySelectorAll("#dash-addcourse-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
+  });
   const progbtn = document.getElementById("dash-progress-btn");
   if(progbtn) progbtn.addEventListener("click", ()=> switchTab("progress"));
-  attachModeEvents();
-  document.querySelectorAll("[data-goto-chapter]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const chId = btn.dataset.gotoChapter;
-      const type = btn.dataset.gotoType;
-      const ch = CHAPTERS.find(c => c.id === chId);
-      if(!ch) return;
-      if(type === "flash"){
-        state.tab = "flash";
-        startFlashDeck(ch.id, ch.num + " · " + ch.title, deckCards(ch.id));
-      } else {
-        startQuiz("chapter:"+ch.id, ch.title, ch.themes);
-      }
+  const proglink = document.getElementById("dash-progress-link");
+  if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
+  const quizbtn = document.getElementById("dash-quiz-btn");
+  if(quizbtn) quizbtn.addEventListener("click", ()=>{ state.screen = "picker"; switchTab("quiz"); });
+  const flashbtn = document.getElementById("dash-flash-btn");
+  if(flashbtn) flashbtn.addEventListener("click", ()=>{ state.flashScreen = "picker"; switchTab("flash"); });
+  const reviewlink = document.getElementById("dash-review-link");
+  if(reviewlink) reviewlink.addEventListener("click", ()=> switchTab("review"));
+  const viewAll = document.getElementById("dash-viewall-subjects");
+  if(viewAll) viewAll.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
+  document.querySelectorAll("[data-open-subject-dash]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      libGoto("subjectDetail", {subjectId: el.dataset.openSubjectDash});
+      switchTab("library");
     });
   });
 }
@@ -3313,6 +3531,7 @@ function attachLibraryEvents(){
         const id = genLibId("subj");
         state.userSubjects.push({id, name, semesterId, icon, color, description, builtin:false});
         saveUserSubjects();
+        logRecentAdd("Nouvelle matière — " + name);
         libGoto("subjectDetail", {subjectId:id});
       }
     });
@@ -3337,6 +3556,7 @@ function attachLibraryEvents(){
         const id = genLibId("chap");
         state.userChapters.push({id, subjectId: lib.subjectId, num, title, desc, content, aiQuiz:[], aiFlashcards:[]});
         saveUserChapters();
+        logRecentAdd("Nouveau chapitre — " + title);
         libGoto("chapterDetail", {chapterId:id});
       }
     });
@@ -4269,11 +4489,14 @@ function renderFiches(){
   const q = (state.catalog.query || "").trim().toLowerCase();
   const subjFilter = state.catalog.subjectId || "all";
   const semFilter = state.catalog.semesterId || "all";
+  const scopeFilter = state.catalog.scope || "all";
   const subjects = allSubjects();
+  const scopeLabel = scopeFilter === "mine" ? "Mes documents" : (scopeFilter === "builtin" ? "Résumés (cours intégrés)" : null);
 
   let html = `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Bibliothèque de cours</h1>
     <p class="ai-intro">Recherche, filtre et ouvre n'importe quel cours de ton année, toutes matières confondues.</p>
+    ${scopeLabel ? `<div class="ai-intro" style="margin-top:-8px;"><span class="level-badge" style="background:var(--red-tint);color:var(--red-dark);">${scopeLabel}</span> <button class="btn-text" id="catalog-clear-scope" style="margin-left:6px;">Voir tous les cours</button></div>` : ""}
     <div class="card" style="margin-bottom:22px;display:flex;flex-direction:column;gap:12px;">
       <input type="text" id="catalog-search" class="ai-select" placeholder="Rechercher un cours..." value="${escapeHtml(state.catalog.query||"")}">
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -4295,6 +4518,8 @@ function renderFiches(){
 
   const chapters = allChaptersFlat().filter(ch=>{
     const subj = findSubject(ch.subjectId);
+    if(scopeFilter === "mine" && !isUserChapter(ch.id)) return false;
+    if(scopeFilter === "builtin" && isUserChapter(ch.id)) return false;
     if(subjFilter !== "all" && ch.subjectId !== subjFilter) return false;
     if(semFilter !== "all" && (!subj || subj.semesterId !== semFilter)) return false;
     if(q){
@@ -4339,6 +4564,8 @@ function renderFiches(){
 }
 
 function attachFichesEvents(){
+  const clearScope = document.getElementById("catalog-clear-scope");
+  if(clearScope) clearScope.addEventListener("click", ()=>{ state.catalog.scope = "all"; render(); });
   document.querySelectorAll("[data-aifiche]").forEach(btn=>{
     btn.addEventListener("click", ()=> aiOpenFromChapter(btn.dataset.aifiche, btn.dataset.ch));
   });
@@ -6019,19 +6246,172 @@ function attachSettingsEvents(){
 }
 
 /* ============================================================
+   15quinquies. MON ESPACE — profil local
+   ============================================================ */
+function renderMySpace(){
+  const firstName = state.profile.firstName || "";
+  return `
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
+    <p class="ai-intro">Ton profil, raccourcis vers l'assistant IA et les paramètres.</p>
+
+    <div class="dash-section">
+      <div class="section-title">Mon profil</div>
+      <p class="dash-empty" style="margin-top:0;">Ton prénom est utilisé uniquement pour personnaliser l'affichage (header, accueil). Il reste stocké dans ce navigateur.</p>
+      <div class="ai-field" style="max-width:320px;">
+        <label for="profile-firstname-input">Ton prénom</label>
+        <input type="text" id="profile-firstname-input" class="ai-select" placeholder="Ex. Anton" value="${escapeHtml(firstName)}">
+      </div>
+      <button class="btn red small" id="profile-save-btn" style="margin-top:6px;">Enregistrer</button>
+      <span id="profile-save-status" style="margin-left:10px;font-size:12.5px;color:var(--muted);"></span>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-title">Raccourcis</div>
+      <div class="dash-quicklinks">
+        <button class="dash-quick-btn" id="myspace-ai-btn"><span class="ico">🤖</span><span class="lbl">Assistant IA</span></button>
+        <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
+      </div>
+    </div>
+  `;
+}
+
+function attachMySpaceEvents(){
+  const saveBtn = document.getElementById("profile-save-btn");
+  if(saveBtn) saveBtn.addEventListener("click", ()=>{
+    const val = document.getElementById("profile-firstname-input").value.trim();
+    state.profile.firstName = val;
+    saveProfile();
+    updateNavDynamic();
+    const status = document.getElementById("profile-save-status");
+    if(status) status.textContent = "Enregistré.";
+  });
+  const aiBtn = document.getElementById("myspace-ai-btn");
+  if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
+  const settingsBtn = document.getElementById("myspace-settings-btn");
+  if(settingsBtn) settingsBtn.addEventListener("click", ()=> switchTab("settings"));
+}
+
+/* ============================================================
+   15sexies. NAVIGATION PRINCIPALE — menus déroulants + mobile
+   ============================================================ */
+const NAV_GROUP = {
+  dashboard: "dashboard", library: "library", review: "review",
+  fiches: "resources", flash: "resources",
+  quiz: "evaluations", exam: "evaluations", oral: "evaluations",
+  progress: "progress",
+  ai: "myspace", settings: "myspace", myspace: "myspace",
+};
+
+function updateNavDynamic(){
+  // liste des matières dans le menu déroulant "Mes matières"
+  const listEl = document.getElementById("menu-library-subjects");
+  if(listEl){
+    listEl.innerHTML = allSubjects().map(s =>
+      `<button data-goto="library-subject" data-subject-id="${s.id}">${s.icon||"📘"} ${escapeHtml(s.name)}</button>`
+    ).join("");
+  }
+
+  // onglet principal actif
+  const group = NAV_GROUP[state.tab] || state.tab;
+  document.querySelectorAll(".mainnav-item").forEach(el=>{
+    el.classList.toggle("active-group", el.dataset.nav === group);
+  });
+
+  // profil (header)
+  const firstName = (state.profile.firstName || "").trim();
+  const nameLbl = document.getElementById("profile-label");
+  if(nameLbl) nameLbl.textContent = firstName ? "Bonjour " + firstName : "Mon espace";
+  const avatar = document.getElementById("profile-avatar");
+  if(avatar) avatar.textContent = firstName ? firstName.charAt(0).toUpperCase() : "🎓";
+}
+
+function updateNavMenuState(){
+  document.querySelectorAll(".mainnav-item").forEach(el=>{
+    el.classList.toggle("open", el.dataset.nav === state.openMenu);
+  });
+  document.body.classList.toggle("mobile-nav-open", state.mobileMenuOpen);
+}
+
+function closeAllNavMenus(){
+  state.openMenu = null;
+  state.mobileMenuOpen = false;
+  updateNavMenuState();
+}
+
+function handleNavGoto(ds){
+  const goto = ds.goto;
+  if(goto === "dashboard") return switchTab("dashboard");
+  if(goto === "library"){ libGoto("subjects"); return switchTab("library"); }
+  if(goto === "library-subject"){ libGoto("subjectDetail", {subjectId: ds.subjectId}); return switchTab("library"); }
+  if(goto === "library-add"){ libGoto("subjectForm", {editingSubjectId:null}); return switchTab("library"); }
+  if(goto === "continue") return continueRevision();
+  if(goto === "quiz-picker"){ state.screen = "picker"; return switchTab("quiz"); }
+  if(goto === "quiz-global") return startModeQuiz("express");
+  if(goto === "review") return switchTab("review");
+  if(goto === "recent"){
+    switchTab("dashboard");
+    setTimeout(()=>{ const el = document.getElementById("dash-recent-activity"); if(el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60);
+    return;
+  }
+  if(goto === "fiches"){ state.catalog.scope = ds.filter || "all"; return switchTab("fiches"); }
+  if(goto === "flash"){ state.flashScreen = "picker"; return switchTab("flash"); }
+  if(goto === "quiz"){ state.screen = "picker"; return switchTab("quiz"); }
+  if(goto === "exam"){ state.exam.screen = "setup"; return switchTab("exam"); }
+  if(goto === "oral") return switchTab("oral");
+  if(goto === "ai") return switchTab("ai");
+  if(goto === "progress") return switchTab("progress");
+  if(goto === "settings") return switchTab("settings");
+  if(goto === "myspace") return switchTab("myspace");
+}
+
+function attachMainNavEvents(){
+  const nav = document.getElementById("mainnav");
+
+  document.querySelectorAll("[data-menu-toggle]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const key = btn.dataset.menuToggle;
+      state.openMenu = (state.openMenu === key) ? null : key;
+      updateNavMenuState();
+    });
+  });
+
+  nav.addEventListener("click", (e)=>{
+    const leaf = e.target.closest("[data-goto]");
+    if(!leaf) return;
+    e.stopPropagation();
+    closeAllNavMenus();
+    handleNavGoto(leaf.dataset);
+  });
+
+  document.getElementById("profile-chip-btn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    closeAllNavMenus();
+    switchTab("myspace");
+  });
+
+  document.getElementById("hamburger-btn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    state.mobileMenuOpen = !state.mobileMenuOpen;
+    state.openMenu = null;
+    updateNavMenuState();
+  });
+
+  document.addEventListener("click", (e)=>{
+    if(!e.target.closest("#mainnav") && !e.target.closest("#hamburger-btn")){
+      if(state.openMenu || state.mobileMenuOpen) closeAllNavMenus();
+    }
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape" && (state.openMenu || state.mobileMenuOpen)) closeAllNavMenus();
+  });
+}
+
+/* ============================================================
    16. INIT
    ============================================================ */
-["dashboard","library","review","exam","quiz","fiches","flash","ai","oral","progress","settings"].forEach(t=>{
-  const el = document.getElementById("tab-"+t);
-  if(el) el.addEventListener("click", ()=>{
-    if(t !== "exam" && state.exam.screen === "running"){
-      if(!confirm("Quitter l'examen en cours ? Tes réponses ne seront pas enregistrées.")) return;
-      stopExamTimer();
-      state.exam.screen = "setup";
-    }
-    switchTab(t);
-  });
-});
+attachMainNavEvents();
 
 (async function init(){
   await loadAllData();
