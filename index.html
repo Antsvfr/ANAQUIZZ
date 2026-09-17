@@ -108,15 +108,11 @@
   .brand-text{ display:flex; align-items:center; gap: 11px; flex-shrink:0; }
   .brand-mark{
     width: 36px; height: 36px; flex-shrink:0; border-radius: 10px;
-    background: linear-gradient(150deg, var(--navy) 0%, var(--navy-dark) 100%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
-    color:#fff; font-family: var(--font-heading); font-weight:800; font-size:14px;
-    display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
-  }
-  .brand-mark::after{
-    content:""; position:absolute; right:-6px; bottom:-6px; width:18px; height:18px;
-    border-radius:50%; border:2.5px solid #fff; border-right-color:transparent; border-top-color:transparent;
-    transform: rotate(-45deg); opacity:0.85;
+    background: var(--red-dark);
+    border: 1.5px solid rgba(255,255,255,0.55);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+    color: #fff; font-family: var(--font-heading); font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
   }
   .brand-text h1{ font-size: 17px; font-weight: 800; margin: 0; letter-spacing:-0.01em; line-height:1.2; color:#fff; }
 
@@ -1015,7 +1011,7 @@
     <div class="brandrow">
       <div class="brand-text">
         <div class="brand-mark" aria-hidden="true">EM</div>
-        <h1>EM Lyon Révision</h1>
+        <h1>Lyon Révision</h1>
       </div>
 
       <nav class="mainnav" id="mainnav">
@@ -1033,15 +1029,16 @@
           </div>
         </div>
 
-        <div class="mainnav-item" data-nav="review">
-          <button class="mainnav-link" data-menu-toggle="review">Mes révisions <span class="caret">▾</span></button>
-          <div class="dropdown-menu" id="menu-review">
-            <button data-goto="continue">Reprendre mes révisions</button>
-            <button data-goto="quiz-picker">Révision par chapitre</button>
-            <button data-goto="quiz-picker">Révision par matière</button>
-            <button data-goto="quiz-global">Révision globale</button>
-            <button data-goto="recent">Révisions récentes</button>
-            <button data-goto="review">Révisions à revoir</button>
+        <div class="mainnav-item" data-nav="activities">
+          <button class="mainnav-link" data-menu-toggle="activities">Activités <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-activities">
+            <button data-goto="activities">Toutes les activités</button>
+            <hr>
+            <button data-goto="quiz">Quiz</button>
+            <button data-goto="flash">Flashcards</button>
+            <button data-goto="exam">Examens blancs</button>
+            <button data-goto="oral">Interrogation orale</button>
+            <button data-goto="ai">Questions ouvertes</button>
           </div>
         </div>
 
@@ -1050,21 +1047,12 @@
           <div class="dropdown-menu" id="menu-resources">
             <button data-goto="fiches" data-filter="all">Bibliothèque de cours</button>
             <button data-goto="fiches" data-filter="mine">Mes documents</button>
-            <button data-goto="fiches" data-filter="mine">Cours importés</button>
             <button data-goto="fiches" data-filter="builtin">Résumés</button>
-            <button data-goto="flash">Flashcards</button>
           </div>
         </div>
 
-        <div class="mainnav-item" data-nav="evaluations">
-          <button class="mainnav-link" data-menu-toggle="evaluations">Évaluations <span class="caret">▾</span></button>
-          <div class="dropdown-menu" id="menu-evaluations">
-            <button data-goto="quiz">Quiz</button>
-            <button data-goto="exam">Examens blancs</button>
-            <button data-goto="ai">Questions ouvertes</button>
-            <button data-goto="oral">Interrogation orale</button>
-            <button data-goto="progress">Historique des résultats</button>
-          </div>
+        <div class="mainnav-item" data-nav="planning">
+          <button class="mainnav-link" data-goto="planning">Planning</button>
         </div>
 
         <div class="mainnav-item" data-nav="progress">
@@ -1073,17 +1061,6 @@
             <button data-goto="progress">Vue globale</button>
             <button data-goto="progress">Progression par matière</button>
             <button data-goto="library">Progression par chapitre</button>
-            <button data-goto="progress">Scores</button>
-            <button data-goto="progress">Statistiques</button>
-          </div>
-        </div>
-
-        <div class="mainnav-item" data-nav="myspace">
-          <button class="mainnav-link" data-menu-toggle="myspace">Mon espace <span class="caret">▾</span></button>
-          <div class="dropdown-menu" id="menu-myspace">
-            <button data-goto="ai">Assistant IA</button>
-            <button data-goto="settings">Paramètres</button>
-            <button data-goto="myspace">Mon profil</button>
           </div>
         </div>
       </nav>
@@ -2039,6 +2016,9 @@ let state = {
   // --- profil (affichage uniquement, pas de compte) ---
   profile: { firstName: "" },
 
+  // --- planning / calendrier (import manuel .ics, aucune donnée distante) ---
+  planning: { events: [], officialUrl: "", view: "upcoming", lastImportMsg: "" },
+
   // --- bibliothèque de cours (recherche/filtre) ---
   catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all" },
 
@@ -2282,6 +2262,7 @@ const KEY_BADGES = "badges";
 const KEY_USER_SUBJECTS = "user-subjects";
 const KEY_USER_CHAPTERS = "user-chapters";
 const KEY_PROFILE = "profile";
+const KEY_PLANNING = "planning";
 
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
@@ -2362,6 +2343,11 @@ async function loadAllData(){
   state.userChapters = await loadKey(KEY_USER_CHAPTERS, []);
   const savedProfile = await loadKey(KEY_PROFILE, null);
   if(savedProfile && typeof savedProfile.firstName === "string") state.profile.firstName = savedProfile.firstName;
+  const savedPlanning = await loadKey(KEY_PLANNING, null);
+  if(savedPlanning){
+    state.planning.events = Array.isArray(savedPlanning.events) ? savedPlanning.events : [];
+    state.planning.officialUrl = savedPlanning.officialUrl || "";
+  }
   const savedModelChoice = lsGet(KEY_AIMODEL);
   if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
   migrateLegacyWrongQuestions();
@@ -2378,6 +2364,7 @@ function saveAIHistory(){ lsSet(KEY_AI, state.aiHistory.slice(-20)); }
 function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
 function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
+function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl }); }
 
 function logRecentAdd(label){
   state.dash.recentAdds.unshift({ ts: Date.now(), label });
@@ -2836,6 +2823,20 @@ function render(){
     return;
   }
 
+  if(state.tab === "activities"){
+    content.className = "wrap";
+    content.innerHTML = renderActivities();
+    attachActivitiesEvents();
+    return;
+  }
+
+  if(state.tab === "planning"){
+    content.className = "wrap";
+    content.innerHTML = renderPlanning();
+    attachPlanningEvents();
+    return;
+  }
+
   if(state.tab === "flash"){
     if(state.flashScreen === "picker"){
       content.className = "wrap";
@@ -2943,7 +2944,6 @@ function renderDashboard(){
   const g = globalMetrics();
   const subjects = allSubjects();
   const firstName = (state.profile.firstName || "").trim();
-  const wrongCount = poolWrong().length;
 
   const rc = d.recentChapters && d.recentChapters[0];
   const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
@@ -2956,8 +2956,8 @@ function renderDashboard(){
   const dateLabel = today.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
   html += `<div class="dash-banner">
     <div class="dash-banner-eyebrow">${dateLabel}</div>
-    <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}, bienvenue sur EM Lyon Révision</h1>
-    <p class="dash-banner-sub">Organise tes cours, révise efficacement et suis ta progression tout au long de l'année.</p>
+    <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}</h1>
+    <p class="dash-banner-sub">Prêt à continuer tes révisions ?</p>
     <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
   </div>`;
 
@@ -3033,22 +3033,24 @@ function renderDashboard(){
   html += `<div class="dash-card">
     <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Actions rapides</span></div>
     <div class="dash-quicklinks">
+      <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">Voir mes matières</span></button>
       <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">Ajouter un cours</span></button>
-      <button class="dash-quick-btn" id="dash-quiz-btn"><span class="ico">🧠</span><span class="lbl">Faire un quiz</span></button>
-      <button class="dash-quick-btn" id="dash-flash-btn"><span class="ico">🃏</span><span class="lbl">Flashcards</span></button>
-      <button class="dash-quick-btn" id="dash-progress-btn"><span class="ico">📈</span><span class="lbl">Voir ma progression</span></button>
+      <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">Faire une activité</span></button>
+      <button class="dash-quick-btn" id="dash-planning-btn"><span class="ico">🗓️</span><span class="lbl">Voir mon planning</span></button>
     </div>
   </div>`;
 
-  /* ---------- Bloc 6 : à revoir (discret) ---------- */
+  /* ---------- Bloc 6 : planning ---------- */
+  const nextEvent = planningNextEvent();
   html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">À revoir</span></div>
-    <div class="dash-reminders">
-      <div class="dash-reminder-row"><span>Chapitres à réviser</span><b>${wrongCount ? wrongCount : "Rien pour l'instant"}</b></div>
-      <div class="dash-reminder-row"><span>Cours récemment ajoutés</span><b>${(d.recentAdds||[]).length}</b></div>
-    </div>
-    ${wrongCount ? `<button class="btn-text" id="dash-review-link" style="margin-top:10px;">Voir la liste à revoir →</button>` : ""}
-  </div>`;
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Prochain cours</span></div>`;
+  if(nextEvent){
+    html += `<div style="font-weight:700;font-size:14px;color:var(--ink);">${escapeHtml(nextEvent.summary)}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${fmtEventDate(nextEvent.start)}${nextEvent.location ? " · " + escapeHtml(nextEvent.location) : ""}</div>`;
+  } else {
+    html += `<p class="dash-empty">Aucun planning importé pour l'instant.</p>`;
+  }
+  html += `<button class="btn-text" id="dash-planning-link" style="margin-top:10px;">Voir mon planning →</button></div>`;
 
   html += `</div>`; // dash-grid2
 
@@ -3136,19 +3138,19 @@ function attachDashboardEvents(){
   if(cbtn) cbtn.addEventListener("click", continueRevision);
   const libbtn = document.getElementById("dash-library-btn");
   if(libbtn) libbtn.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
+  const libbtn2 = document.getElementById("dash-library-btn2");
+  if(libbtn2) libbtn2.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   document.querySelectorAll("#dash-addcourse-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
   });
-  const progbtn = document.getElementById("dash-progress-btn");
-  if(progbtn) progbtn.addEventListener("click", ()=> switchTab("progress"));
   const proglink = document.getElementById("dash-progress-link");
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
-  const quizbtn = document.getElementById("dash-quiz-btn");
-  if(quizbtn) quizbtn.addEventListener("click", ()=>{ state.screen = "picker"; switchTab("quiz"); });
-  const flashbtn = document.getElementById("dash-flash-btn");
-  if(flashbtn) flashbtn.addEventListener("click", ()=>{ state.flashScreen = "picker"; switchTab("flash"); });
-  const reviewlink = document.getElementById("dash-review-link");
-  if(reviewlink) reviewlink.addEventListener("click", ()=> switchTab("review"));
+  const activitiesBtn = document.getElementById("dash-activities-btn");
+  if(activitiesBtn) activitiesBtn.addEventListener("click", ()=> switchTab("activities"));
+  const planningBtn = document.getElementById("dash-planning-btn");
+  if(planningBtn) planningBtn.addEventListener("click", ()=> switchTab("planning"));
+  const planningLink = document.getElementById("dash-planning-link");
+  if(planningLink) planningLink.addEventListener("click", ()=> switchTab("planning"));
   const viewAll = document.getElementById("dash-viewall-subjects");
   if(viewAll) viewAll.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   document.querySelectorAll("[data-open-subject-dash]").forEach(el=>{
@@ -5990,6 +5992,65 @@ function attachAIEvents(){
 }
 
 /* ============================================================
+   15a. ACTIVITÉS — hub (quiz, flashcards, examens, oral, questions ouvertes)
+   ============================================================ */
+function renderActivities(){
+  const rc = state.dash.recentChapters && state.dash.recentChapters[0];
+  const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
+  const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
+  const wrongCount = poolWrong().length;
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Activités</h1>
+  <p class="ai-intro">Quiz, flashcards, examens blancs et oral — choisis une activité, tu retrouveras ensuite ta matière et ton chapitre à l'intérieur.</p>`;
+
+  if(rcChapter){
+    html += `<div class="card" style="margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="dash-card-eyebrow">Reprendre ma dernière activité</div>
+        <div style="font-weight:800;font-size:15px;">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</div>
+      </div>
+      <button class="btn red" id="act-continue-btn">▶️ Reprendre</button>
+    </div>`;
+  }
+
+  html += `<div class="ai-actiongrid">
+    <button class="ai-action" id="act-quiz"><span class="ico">🧠</span><span class="t">Quiz</span><span class="d">Teste tes connaissances sur une matière ou un chapitre.</span></button>
+    <button class="ai-action" id="act-flash"><span class="ico">🃏</span><span class="t">Flashcards</span><span class="d">Mémorise les notions importantes.</span></button>
+    <button class="ai-action" id="act-exam"><span class="ico">📝</span><span class="t">Examens blancs</span><span class="d">Entraîne-toi dans des conditions d'examen.</span></button>
+    <button class="ai-action" id="act-oral"><span class="ico">🎤</span><span class="t">Interrogation orale</span><span class="d">Prépare-toi à répondre à l'oral, question par question.</span></button>
+  </div>`;
+
+  html += `<div class="card" style="margin-bottom:22px;">
+    <div class="section-title" style="margin-bottom:6px;">Questions ouvertes</div>
+    <p class="ai-intro" style="margin:0 0 12px;">Pose n'importe quelle question ouverte à l'assistant IA sur un chapitre.</p>
+    <button class="btn outline small" id="act-open-questions">Ouvrir l'assistant IA</button>
+  </div>`;
+
+  if(wrongCount > 0){
+    html += `<p class="dash-empty">Tu as ${wrongCount} question${wrongCount>1?"s":""} à revoir en priorité. <button class="btn-text" id="act-review-link" style="padding:0;">Voir la liste →</button></p>`;
+  }
+
+  return html;
+}
+
+function attachActivitiesEvents(){
+  const cbtn = document.getElementById("act-continue-btn");
+  if(cbtn) cbtn.addEventListener("click", continueRevision);
+  const quizBtn = document.getElementById("act-quiz");
+  if(quizBtn) quizBtn.addEventListener("click", ()=>{ state.screen = "picker"; switchTab("quiz"); });
+  const flashBtn = document.getElementById("act-flash");
+  if(flashBtn) flashBtn.addEventListener("click", ()=>{ state.flashScreen = "picker"; switchTab("flash"); });
+  const examBtn = document.getElementById("act-exam");
+  if(examBtn) examBtn.addEventListener("click", ()=>{ state.exam.screen = "setup"; switchTab("exam"); });
+  const oralBtn = document.getElementById("act-oral");
+  if(oralBtn) oralBtn.addEventListener("click", ()=> switchTab("oral"));
+  const openQBtn = document.getElementById("act-open-questions");
+  if(openQBtn) openQBtn.addEventListener("click", ()=> switchTab("ai"));
+  const reviewLink = document.getElementById("act-review-link");
+  if(reviewLink) reviewLink.addEventListener("click", ()=> switchTab("review"));
+}
+
+/* ============================================================
    15bis. INTERROGATION ORALE — sélection matière/chapitre
    ============================================================ */
 function startOralDrill(ch){
@@ -6292,12 +6353,190 @@ function attachMySpaceEvents(){
 }
 
 /* ============================================================
-   15sexies. NAVIGATION PRINCIPALE — menus déroulants + mobile
+   15sexies. PLANNING — import manuel .ics (aucune donnée distante)
+   ============================================================ */
+function unescapeICS(s){
+  return s.replace(/\\n/gi, " ").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
+}
+
+function parseICSDate(value){
+  const m = value.match(/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+  if(!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]) - 1, d = Number(m[3]);
+  if(m[5] === undefined) return new Date(y, mo, d).getTime();
+  const h = Number(m[5]), mi = Number(m[6]), s = Number(m[7]);
+  return m[8] === "Z" ? Date.UTC(y, mo, d, h, mi, s) : new Date(y, mo, d, h, mi, s).getTime();
+}
+
+/* Parseur .ics minimal : gère les événements simples (pas de récurrence RRULE). */
+function parseICS(text){
+  const rawLines = text.split(/\r\n|\n|\r/);
+  const lines = [];
+  rawLines.forEach(line=>{
+    if((line.startsWith(" ") || line.startsWith("\t")) && lines.length){
+      lines[lines.length-1] += line.slice(1);
+    } else {
+      lines.push(line);
+    }
+  });
+
+  const events = [];
+  let cur = null;
+  lines.forEach(line=>{
+    if(line === "BEGIN:VEVENT"){ cur = {}; return; }
+    if(line === "END:VEVENT"){ if(cur) events.push(cur); cur = null; return; }
+    if(!cur) return;
+    const idx = line.indexOf(":");
+    if(idx === -1) return;
+    let key = line.slice(0, idx);
+    const value = line.slice(idx + 1);
+    const semi = key.indexOf(";");
+    if(semi !== -1) key = key.slice(0, semi);
+    if(key === "SUMMARY") cur.summary = unescapeICS(value);
+    else if(key === "DTSTART") cur.start = parseICSDate(value);
+    else if(key === "DTEND") cur.end = parseICSDate(value);
+    else if(key === "LOCATION") cur.location = unescapeICS(value);
+  });
+
+  return events
+    .filter(e => e.summary && e.start)
+    .map(e => ({ summary: e.summary, start: e.start, end: e.end || e.start, location: e.location || "" }));
+}
+
+function planningFutureEvents(){
+  const cutoff = Date.now() - 6 * 3600 * 1000;
+  return state.planning.events.filter(e => e.start >= cutoff).sort((a, b) => a.start - b.start);
+}
+
+function planningNextEvent(){
+  const events = planningFutureEvents();
+  return events.length ? events[0] : null;
+}
+
+function fmtEventDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+}
+
+function renderPlanning(){
+  const events = planningFutureEvents();
+  const filter = state.planning.view || "upcoming";
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const tomorrowStart = todayStart + 86400000;
+  const weekEnd = todayStart + 7 * 86400000;
+
+  let filtered = events;
+  if(filter === "today") filtered = events.filter(e => e.start >= todayStart && e.start < tomorrowStart);
+  else if(filter === "tomorrow") filtered = events.filter(e => e.start >= tomorrowStart && e.start < tomorrowStart + 86400000);
+  else if(filter === "week") filtered = events.filter(e => e.start >= todayStart && e.start < weekEnd);
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
+  <p class="ai-intro">Ton emploi du temps, importé depuis un fichier .ics — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
+
+  html += `<div class="card" style="margin-bottom:22px;">
+    <div class="section-title" style="margin-bottom:10px;">Importer mon planning</div>
+    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis ton espace étudiant, puis importe-le ici.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer un fichier .ics<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
+      ${state.planning.events.length ? `<button class="btn-text" id="planning-clear-btn">Effacer les événements importés</button>` : ""}
+    </div>
+    <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
+  </div>`;
+
+  html += `<div class="card" style="margin-bottom:22px;">
+    <div class="section-title" style="margin-bottom:10px;">Mon planning officiel</div>
+    <p class="ai-intro" style="margin:0 0 12px;">Colle le lien de ton espace étudiant pour l'ouvrir en un clic (aucune récupération automatique — ton mot de passe n'est jamais demandé ni stocké).</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <input type="text" id="planning-url-input" class="ai-select" placeholder="https://..." value="${escapeHtml(state.planning.officialUrl||"")}" style="flex:1;min-width:220px;">
+      <button class="btn outline small" id="planning-url-save">Enregistrer</button>
+      ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir mon planning officiel ↗</button>` : ""}
+    </div>
+  </div>`;
+
+  if(events.length === 0){
+    html += `<div class="empty-state"><div class="big">🗓️</div>Aucun événement importé pour l'instant.<br>Importe un fichier .ics pour voir apparaître tes cours ici.</div>`;
+    return html;
+  }
+
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    ${["today","tomorrow","week","upcoming"].map(f=>{
+      const labels = {today:"Aujourd'hui", tomorrow:"Demain", week:"Cette semaine", upcoming:"Prochains cours"};
+      return `<button class="btn ${filter===f?"red":"outline"} small" data-planning-filter="${f}">${labels[f]}</button>`;
+    }).join("")}
+  </div>`;
+
+  if(filtered.length === 0){
+    html += `<div class="empty-state"><div class="big">📭</div>Rien de prévu sur cette période.</div>`;
+  } else {
+    html += filtered.map(e => `
+      <div style="padding:12px 0;border-bottom:1px solid var(--bg);">
+        <div style="font-weight:700;font-size:13.5px;color:var(--ink);">${escapeHtml(e.summary)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${fmtEventDate(e.start)}${e.location ? " · " + escapeHtml(e.location) : ""}</div>
+      </div>`).join("");
+  }
+
+  return html;
+}
+
+function attachPlanningEvents(){
+  const icsInput = document.getElementById("planning-ics-input");
+  if(icsInput) icsInput.addEventListener("change", async ()=>{
+    const file = icsInput.files[0];
+    if(!file) return;
+    try{
+      const text = await readFileAsText(file);
+      const parsed = parseICS(text);
+      if(parsed.length === 0){
+        state.planning.lastImportMsg = "Aucun événement reconnu dans ce fichier.";
+        render();
+        return;
+      }
+      const seen = new Set(state.planning.events.map(e => e.summary + "|" + e.start));
+      let added = 0;
+      parsed.forEach(e=>{
+        const key = e.summary + "|" + e.start;
+        if(!seen.has(key)){ state.planning.events.push(e); seen.add(key); added++; }
+      });
+      savePlanning();
+      state.planning.lastImportMsg = added + " événement(s) importé(s).";
+      render();
+    }catch(e){
+      state.planning.lastImportMsg = "Erreur lors de la lecture du fichier : " + e.message;
+      render();
+    }
+  });
+
+  const clearBtn = document.getElementById("planning-clear-btn");
+  if(clearBtn) clearBtn.addEventListener("click", ()=>{
+    if(!confirm("Supprimer tous les événements importés ?")) return;
+    state.planning.events = [];
+    savePlanning();
+    render();
+  });
+
+  const urlSave = document.getElementById("planning-url-save");
+  if(urlSave) urlSave.addEventListener("click", ()=>{
+    state.planning.officialUrl = document.getElementById("planning-url-input").value.trim();
+    savePlanning();
+    render();
+  });
+  const urlOpen = document.getElementById("planning-url-open");
+  if(urlOpen) urlOpen.addEventListener("click", ()=> window.open(state.planning.officialUrl, "_blank", "noopener"));
+
+  document.querySelectorAll("[data-planning-filter]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.planning.view = btn.dataset.planningFilter; render(); });
+  });
+}
+
+/* ============================================================
+   15septies. NAVIGATION PRINCIPALE — menus déroulants + mobile
    ============================================================ */
 const NAV_GROUP = {
-  dashboard: "dashboard", library: "library", review: "review",
-  fiches: "resources", flash: "resources",
-  quiz: "evaluations", exam: "evaluations", oral: "evaluations",
+  dashboard: "dashboard", library: "library",
+  activities: "activities", quiz: "activities", flash: "activities", exam: "activities", oral: "activities", review: "activities",
+  fiches: "resources",
+  planning: "planning",
   progress: "progress",
   ai: "myspace", settings: "myspace", myspace: "myspace",
 };
@@ -6345,20 +6584,15 @@ function handleNavGoto(ds){
   if(goto === "library-subject"){ libGoto("subjectDetail", {subjectId: ds.subjectId}); return switchTab("library"); }
   if(goto === "library-add"){ libGoto("subjectForm", {editingSubjectId:null}); return switchTab("library"); }
   if(goto === "continue") return continueRevision();
-  if(goto === "quiz-picker"){ state.screen = "picker"; return switchTab("quiz"); }
-  if(goto === "quiz-global") return startModeQuiz("express");
+  if(goto === "activities") return switchTab("activities");
   if(goto === "review") return switchTab("review");
-  if(goto === "recent"){
-    switchTab("dashboard");
-    setTimeout(()=>{ const el = document.getElementById("dash-recent-activity"); if(el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60);
-    return;
-  }
   if(goto === "fiches"){ state.catalog.scope = ds.filter || "all"; return switchTab("fiches"); }
   if(goto === "flash"){ state.flashScreen = "picker"; return switchTab("flash"); }
   if(goto === "quiz"){ state.screen = "picker"; return switchTab("quiz"); }
   if(goto === "exam"){ state.exam.screen = "setup"; return switchTab("exam"); }
   if(goto === "oral") return switchTab("oral");
   if(goto === "ai") return switchTab("ai");
+  if(goto === "planning") return switchTab("planning");
   if(goto === "progress") return switchTab("progress");
   if(goto === "settings") return switchTab("settings");
   if(goto === "myspace") return switchTab("myspace");
