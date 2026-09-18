@@ -171,6 +171,32 @@
   }
   .hamburger-btn:hover{ background: rgba(255,255,255,0.12); }
 
+  /* ===== BULLE ASSISTANT IA ===== */
+  .ai-bubble{
+    position:fixed; width:56px; height:56px; border-radius:50%; z-index:200;
+    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    border: none; color:#fff; cursor:grab;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 18px rgba(180,21,47,0.38), 0 2px 6px rgba(0,0,0,0.12);
+    touch-action:none; -webkit-user-select:none; user-select:none;
+    animation: ai-bubble-bob 3.4s ease-in-out infinite;
+  }
+  .ai-bubble:active{ cursor:grabbing; }
+  .ai-bubble svg{ width:28px; height:28px; pointer-events:none; }
+  .ai-bubble:focus-visible{ outline: 2.5px solid #fff; outline-offset: 3px; }
+  .ai-bubble.corner-br{ right:20px; bottom:20px; left:auto; top:auto; }
+  .ai-bubble.corner-bl{ left:20px; bottom:20px; right:auto; top:auto; }
+  .ai-bubble.corner-tr{ right:20px; top:80px; left:auto; bottom:auto; }
+  .ai-bubble.corner-tl{ left:20px; top:80px; right:auto; bottom:auto; }
+  @keyframes ai-bubble-bob{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-5px); } }
+  @media (prefers-reduced-motion: reduce){ .ai-bubble{ animation:none; } }
+  body.exam-focus .ai-bubble{ display:none; }
+  @media (max-width:680px){
+    .ai-bubble{ width:50px; height:50px; }
+    .ai-bubble.corner-tr, .ai-bubble.corner-tl{ top:66px; }
+    .ai-bubble.corner-br, .ai-bubble.corner-bl{ bottom:16px; }
+  }
+
   /* ===== STAT BAR ===== */
   .statbar{ display:grid; grid-template-columns: repeat(3,1fr); gap: 13px; margin: 28px 0 24px; }
   .stat{
@@ -1036,7 +1062,6 @@
             <hr>
             <button data-goto="quiz">Quiz</button>
             <button data-goto="flash">Flashcards</button>
-            <button data-goto="exam">Examens blancs</button>
             <button data-goto="oral">Interrogation orale</button>
             <button data-goto="ai">Questions ouvertes</button>
           </div>
@@ -1046,8 +1071,18 @@
           <button class="mainnav-link" data-menu-toggle="resources">Ressources <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-resources">
             <button data-goto="fiches" data-filter="all">Bibliothèque de cours</button>
-            <button data-goto="fiches" data-filter="mine">Mes documents</button>
-            <button data-goto="fiches" data-filter="builtin">Résumés</button>
+            <button data-goto="fiches" data-filter="doc-document">Mes documents</button>
+            <button data-goto="fiches" data-filter="doc-resume">Résumés</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="exams">
+          <button class="mainnav-link" data-menu-toggle="exams">Examens <span class="caret">▾</span></button>
+          <div class="dropdown-menu" id="menu-exams">
+            <button data-goto="exams">Vue d'ensemble</button>
+            <hr>
+            <button data-goto="exam">Examens blancs</button>
+            <button data-goto="exams-sujets">Mes sujets</button>
           </div>
         </div>
 
@@ -1078,6 +1113,16 @@
 </div>
 
 <div id="content" class="wrap"></div>
+
+<button type="button" class="ai-bubble corner-br" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="4" y="8" width="16" height="12" rx="4" fill="#fff"/>
+    <rect x="10" y="2" width="4" height="5" rx="2" fill="#fff"/>
+    <circle cx="9" cy="14" r="1.6" fill="var(--red-dark)"/>
+    <circle cx="15" cy="14" r="1.6" fill="var(--red-dark)"/>
+    <path d="M9 18h6" stroke="var(--red-dark)" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+</button>
 
 <script>
 /* ============================================================
@@ -2020,7 +2065,15 @@ let state = {
   planning: { events: [], officialUrl: "", view: "upcoming", lastImportMsg: "" },
 
   // --- bibliothèque de cours (recherche/filtre) ---
-  catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all" },
+  catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all", docType: "all" },
+
+  // --- documents importés (Ressources + sujets d'examen) ---
+  documents: [],   // [{id, name, type:"document"|"resume"|"sujet", subjectId, mime, addedAt, content?|dataUrl?}]
+  examsSujetStatus: "",
+  resourcesDocStatus: "",
+
+  // --- bulle assistant IA (position) ---
+  aiBubble: { corner: "br" },
 
   // --- quiz ---
   quizLevel: "all",
@@ -2263,6 +2316,8 @@ const KEY_USER_SUBJECTS = "user-subjects";
 const KEY_USER_CHAPTERS = "user-chapters";
 const KEY_PROFILE = "profile";
 const KEY_PLANNING = "planning";
+const KEY_DOCUMENTS = "documents";
+const KEY_AIBUBBLE = "ai-bubble-pos";
 
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
@@ -2348,6 +2403,9 @@ async function loadAllData(){
     state.planning.events = Array.isArray(savedPlanning.events) ? savedPlanning.events : [];
     state.planning.officialUrl = savedPlanning.officialUrl || "";
   }
+  state.documents = await loadKey(KEY_DOCUMENTS, []);
+  const savedBubble = lsGet(KEY_AIBUBBLE);
+  if(savedBubble && savedBubble.corner) state.aiBubble.corner = savedBubble.corner;
   const savedModelChoice = lsGet(KEY_AIMODEL);
   if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
   migrateLegacyWrongQuestions();
@@ -2365,6 +2423,8 @@ function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
 function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
 function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl }); }
+function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
+function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { corner: state.aiBubble.corner }); }
 
 function logRecentAdd(label){
   state.dash.recentAdds.unshift({ ts: Date.now(), label });
@@ -2837,6 +2897,13 @@ function render(){
     return;
   }
 
+  if(state.tab === "exams"){
+    content.className = "wrap";
+    content.innerHTML = renderExams();
+    attachExamsEvents();
+    return;
+  }
+
   if(state.tab === "flash"){
     if(state.flashScreen === "picker"){
       content.className = "wrap";
@@ -3036,6 +3103,7 @@ function renderDashboard(){
       <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">Voir mes matières</span></button>
       <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">Ajouter un cours</span></button>
       <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">Faire une activité</span></button>
+      <button class="dash-quick-btn" id="dash-exams-btn"><span class="ico">📝</span><span class="lbl">Passer un examen</span></button>
       <button class="dash-quick-btn" id="dash-planning-btn"><span class="ico">🗓️</span><span class="lbl">Voir mon planning</span></button>
     </div>
   </div>`;
@@ -3147,6 +3215,8 @@ function attachDashboardEvents(){
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
   const activitiesBtn = document.getElementById("dash-activities-btn");
   if(activitiesBtn) activitiesBtn.addEventListener("click", ()=> switchTab("activities"));
+  const examsBtn = document.getElementById("dash-exams-btn");
+  if(examsBtn) examsBtn.addEventListener("click", ()=> switchTab("exams"));
   const planningBtn = document.getElementById("dash-planning-btn");
   if(planningBtn) planningBtn.addEventListener("click", ()=> switchTab("planning"));
   const planningLink = document.getElementById("dash-planning-link");
@@ -4496,9 +4566,31 @@ function renderFiches(){
   const scopeLabel = scopeFilter === "mine" ? "Mes documents" : (scopeFilter === "builtin" ? "Résumés (cours intégrés)" : null);
 
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Bibliothèque de cours</h1>
-    <p class="ai-intro">Recherche, filtre et ouvre n'importe quel cours de ton année, toutes matières confondues.</p>
-    ${scopeLabel ? `<div class="ai-intro" style="margin-top:-8px;"><span class="level-badge" style="background:var(--red-tint);color:var(--red-dark);">${scopeLabel}</span> <button class="btn-text" id="catalog-clear-scope" style="margin-left:6px;">Voir tous les cours</button></div>` : ""}
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ressources</h1>
+    <p class="ai-intro">Tes cours, tes documents importés et tes résumés — les quiz, flashcards et examens sont dans Activités et Examens.</p>
+  `;
+
+  /* ---------- Mes documents (import local : PDF, TXT, Markdown, images) ---------- */
+  const docType = state.catalog.docType || "all";
+  const docs = state.documents.filter(d => d.type !== "sujet" && (docType === "all" || d.type === docType));
+  html += `<div class="dash-section" id="resources-documents">
+    <div class="dash-section-head">
+      <span class="section-title" style="margin-bottom:0;">Mes documents</span>
+      <label class="btn outline small" style="cursor:pointer;margin:0;">+ Importer un document<input type="file" id="resources-doc-input" accept=".txt,.md,.pdf,image/*" style="display:none;"></label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      ${["all","document","resume"].map(t=>{
+        const labels = {all:"Tous", document:"Documents", resume:"Résumés"};
+        return `<button class="btn ${docType===t?"red":"outline"} small" data-doctype-filter="${t}">${labels[t]}</button>`;
+      }).join("")}
+    </div>
+    ${state.resourcesDocStatus ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${escapeHtml(state.resourcesDocStatus)}</div>` : ""}
+    ${docs.length === 0 ? `<p class="dash-empty">Aucun document importé pour l'instant.</p>` : docs.map(docRowHtml).join("")}
+  </div>`;
+
+  /* ---------- Bibliothèque de cours (chapitres, existant) ---------- */
+  html += `<div class="section-title" style="margin-top:26px;">Bibliothèque de cours</div>
+    ${scopeLabel ? `<div class="ai-intro" style="margin-top:-4px;"><span class="level-badge" style="background:var(--red-tint);color:var(--red-dark);">${scopeLabel}</span> <button class="btn-text" id="catalog-clear-scope" style="margin-left:6px;">Voir tous les cours</button></div>` : ""}
     <div class="card" style="margin-bottom:22px;display:flex;flex-direction:column;gap:12px;">
       <input type="text" id="catalog-search" class="ai-select" placeholder="Rechercher un cours..." value="${escapeHtml(state.catalog.query||"")}">
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -4568,6 +4660,24 @@ function renderFiches(){
 function attachFichesEvents(){
   const clearScope = document.getElementById("catalog-clear-scope");
   if(clearScope) clearScope.addEventListener("click", ()=>{ state.catalog.scope = "all"; render(); });
+
+  const docInput = document.getElementById("resources-doc-input");
+  if(docInput) docInput.addEventListener("change", async ()=>{
+    const file = docInput.files[0];
+    if(!file) return;
+    try{
+      await importDocumentFile(file, "document");
+      state.resourcesDocStatus = "";
+    }catch(e){
+      state.resourcesDocStatus = e.message;
+    }
+    render();
+  });
+  document.querySelectorAll("[data-doctype-filter]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.catalog.docType = btn.dataset.doctypeFilter; render(); });
+  });
+  attachDocumentRowEvents();
+
   document.querySelectorAll("[data-aifiche]").forEach(btn=>{
     btn.addEventListener("click", ()=> aiOpenFromChapter(btn.dataset.aifiche, btn.dataset.ch));
   });
@@ -6001,7 +6111,7 @@ function renderActivities(){
   const wrongCount = poolWrong().length;
 
   let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Activités</h1>
-  <p class="ai-intro">Quiz, flashcards, examens blancs et oral — choisis une activité, tu retrouveras ensuite ta matière et ton chapitre à l'intérieur.</p>`;
+  <p class="ai-intro">Quiz, flashcards et oral — choisis une activité, tu retrouveras ensuite ta matière et ton chapitre à l'intérieur. (Pour les examens blancs, direction l'onglet Examens.)</p>`;
 
   if(rcChapter){
     html += `<div class="card" style="margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
@@ -6013,10 +6123,9 @@ function renderActivities(){
     </div>`;
   }
 
-  html += `<div class="ai-actiongrid">
+  html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(3,1fr);">
     <button class="ai-action" id="act-quiz"><span class="ico">🧠</span><span class="t">Quiz</span><span class="d">Teste tes connaissances sur une matière ou un chapitre.</span></button>
     <button class="ai-action" id="act-flash"><span class="ico">🃏</span><span class="t">Flashcards</span><span class="d">Mémorise les notions importantes.</span></button>
-    <button class="ai-action" id="act-exam"><span class="ico">📝</span><span class="t">Examens blancs</span><span class="d">Entraîne-toi dans des conditions d'examen.</span></button>
     <button class="ai-action" id="act-oral"><span class="ico">🎤</span><span class="t">Interrogation orale</span><span class="d">Prépare-toi à répondre à l'oral, question par question.</span></button>
   </div>`;
 
@@ -6040,8 +6149,6 @@ function attachActivitiesEvents(){
   if(quizBtn) quizBtn.addEventListener("click", ()=>{ state.screen = "picker"; switchTab("quiz"); });
   const flashBtn = document.getElementById("act-flash");
   if(flashBtn) flashBtn.addEventListener("click", ()=>{ state.flashScreen = "picker"; switchTab("flash"); });
-  const examBtn = document.getElementById("act-exam");
-  if(examBtn) examBtn.addEventListener("click", ()=>{ state.exam.screen = "setup"; switchTab("exam"); });
   const oralBtn = document.getElementById("act-oral");
   if(oralBtn) oralBtn.addEventListener("click", ()=> switchTab("oral"));
   const openQBtn = document.getElementById("act-open-questions");
@@ -6333,6 +6440,16 @@ function renderMySpace(){
         <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
       </div>
     </div>
+
+    <div class="dash-section">
+      <div class="section-title">Position de l'assistant IA</div>
+      <p class="dash-empty" style="margin-top:0;">La bulle flottante peut aussi se déplacer directement à la souris ou au doigt.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${[["br","Bas droite"],["bl","Bas gauche"],["tr","Haut droite"],["tl","Haut gauche"]].map(([c,label])=>
+          `<button class="btn ${state.aiBubble.corner===c?"red":"outline"} small" data-bubble-corner="${c}">${label}</button>`
+        ).join("")}
+      </div>
+    </div>
   `;
 }
 
@@ -6350,6 +6467,9 @@ function attachMySpaceEvents(){
   if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
   const settingsBtn = document.getElementById("myspace-settings-btn");
   if(settingsBtn) settingsBtn.addEventListener("click", ()=> switchTab("settings"));
+  document.querySelectorAll("[data-bubble-corner]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ setAIBubbleCorner(btn.dataset.bubbleCorner); render(); });
+  });
 }
 
 /* ============================================================
@@ -6432,27 +6552,30 @@ function renderPlanning(){
   else if(filter === "week") filtered = events.filter(e => e.start >= todayStart && e.start < weekEnd);
 
   let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
-  <p class="ai-intro">Ton emploi du temps, importé depuis un fichier .ics — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
+  <p class="ai-intro">Ton emploi du temps (Makers Board ou tout autre calendrier .ics) — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
 
   html += `<div class="card" style="margin-bottom:22px;">
     <div class="section-title" style="margin-bottom:10px;">Importer mon planning</div>
-    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis ton espace étudiant, puis importe-le ici.</p>
+    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. C'est la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification).</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
       <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer un fichier .ics<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
-      ${state.planning.events.length ? `<button class="btn-text" id="planning-clear-btn">Effacer les événements importés</button>` : ""}
     </div>
     <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
   </div>`;
 
   html += `<div class="card" style="margin-bottom:22px;">
-    <div class="section-title" style="margin-bottom:10px;">Mon planning officiel</div>
-    <p class="ai-intro" style="margin:0 0 12px;">Colle le lien de ton espace étudiant pour l'ouvrir en un clic (aucune récupération automatique — ton mot de passe n'est jamais demandé ni stocké).</p>
+    <div class="section-title" style="margin-bottom:10px;">Lien de mon planning</div>
+    <p class="ai-intro" style="margin:0 0 12px;">Colle ton lien personnel (Makers Board ou autre) pour l'ouvrir en un clic. Il reste uniquement dans ce navigateur — jamais dans le code du site, jamais envoyé nulle part, aucun mot de passe demandé.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <input type="text" id="planning-url-input" class="ai-select" placeholder="https://..." value="${escapeHtml(state.planning.officialUrl||"")}" style="flex:1;min-width:220px;">
       <button class="btn outline small" id="planning-url-save">Enregistrer</button>
-      ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir mon planning officiel ↗</button>` : ""}
+      ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir mon planning ↗</button>` : ""}
     </div>
   </div>`;
+
+  if(state.planning.events.length > 0 || state.planning.officialUrl){
+    html += `<p class="dash-empty" style="margin-bottom:22px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer mon planning (événements importés + lien enregistré)</button></p>`;
+  }
 
   if(events.length === 0){
     html += `<div class="empty-state"><div class="big">🗓️</div>Aucun événement importé pour l'instant.<br>Importe un fichier .ics pour voir apparaître tes cours ici.</div>`;
@@ -6509,8 +6632,10 @@ function attachPlanningEvents(){
 
   const clearBtn = document.getElementById("planning-clear-btn");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{
-    if(!confirm("Supprimer tous les événements importés ?")) return;
+    if(!confirm("Supprimer tous les événements importés et le lien de planning enregistré ?")) return;
     state.planning.events = [];
+    state.planning.officialUrl = "";
+    state.planning.lastImportMsg = "";
     savePlanning();
     render();
   });
@@ -6530,12 +6655,154 @@ function attachPlanningEvents(){
 }
 
 /* ============================================================
-   15septies. NAVIGATION PRINCIPALE — menus déroulants + mobile
+   15septies. DOCUMENTS — import local (Ressources + sujets d'examen)
+   ============================================================ */
+const DOC_MAX_BYTES = 3 * 1024 * 1024; // ~3 Mo par fichier, pour rester dans les quotas localStorage
+
+function docTypeLabel(t){
+  return t === "resume" ? "Résumé" : (t === "sujet" ? "Sujet d'examen" : "Document");
+}
+
+function readFileAsDataURL(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Lecture du fichier impossible"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function importDocumentFile(file, type){
+  if(file.size > DOC_MAX_BYTES){
+    throw new Error("Fichier trop volumineux pour être stocké localement (limite ~3 Mo).");
+  }
+  const isText = /\.(txt|md|markdown)$/i.test(file.name) || file.type === "text/plain" || file.type === "text/markdown";
+  const doc = {
+    id: genLibId("doc"),
+    name: file.name,
+    type: type || "document",
+    mime: file.type || "",
+    addedAt: Date.now(),
+  };
+  if(isText) doc.content = await readFileAsText(file);
+  else doc.dataUrl = await readFileAsDataURL(file);
+  state.documents.push(doc);
+  saveDocuments();
+  return doc;
+}
+
+function openDocument(doc){
+  if(doc.dataUrl){
+    window.open(doc.dataUrl, "_blank");
+    return;
+  }
+  const blob = new Blob([doc.content || ""], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank");
+  setTimeout(()=> URL.revokeObjectURL(url), 60000);
+}
+
+function docRowHtml(doc){
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg);gap:10px;flex-wrap:wrap;">
+    <div>
+      <div style="font-weight:700;font-size:13px;color:var(--ink);">${escapeHtml(doc.name)}</div>
+      <div style="font-size:11.5px;color:var(--muted);">${docTypeLabel(doc.type)} · ${fmtRelativeDate(dateKey(new Date(doc.addedAt))).toLowerCase()}</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button class="btn-text" data-open-doc="${doc.id}">Ouvrir</button>
+      <button class="btn-text" data-delete-doc="${doc.id}" style="color:var(--muted);">Supprimer</button>
+    </div>
+  </div>`;
+}
+
+function attachDocumentRowEvents(){
+  document.querySelectorAll("[data-open-doc]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const doc = state.documents.find(d => d.id === btn.dataset.openDoc);
+      if(doc) openDocument(doc);
+    });
+  });
+  document.querySelectorAll("[data-delete-doc]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(!confirm("Supprimer ce document ?")) return;
+      state.documents = state.documents.filter(d => d.id !== btn.dataset.deleteDoc);
+      saveDocuments();
+      render();
+    });
+  });
+}
+
+/* ============================================================
+   15octies. EXAMENS — hub (examens blancs, sujets, historique)
+   ============================================================ */
+function renderExams(){
+  const hist = state.exam.history || [];
+  const sujets = state.documents.filter(d => d.type === "sujet");
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Examens</h1>
+  <p class="ai-intro">Entraîne-toi en conditions d'examen, retrouve tes sujets et consulte tes résultats.</p>`;
+
+  html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
+    <button class="ai-action" id="exams-blancs-btn"><span class="ico">📝</span><span class="t">Examens blancs</span><span class="d">Entraîne-toi dans des conditions d'examen chronométré, par matière ou chapitre.</span></button>
+    <button class="ai-action" id="exams-sujets-btn"><span class="ico">📄</span><span class="t">Mes sujets</span><span class="d">${sujets.length} sujet${sujets.length>1?"s":""} importé${sujets.length>1?"s":""}.</span></button>
+  </div>`;
+
+  html += `<div class="dash-section" id="exams-sujets-section">
+    <div class="dash-section-head">
+      <span class="section-title" style="margin-bottom:0;">Mes sujets</span>
+      <label class="btn outline small" style="cursor:pointer;margin:0;">+ Importer un sujet<input type="file" id="exams-sujet-input" accept=".txt,.md,.pdf,image/*" style="display:none;"></label>
+    </div>
+    ${state.examsSujetStatus ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${escapeHtml(state.examsSujetStatus)}</div>` : ""}
+    ${sujets.length === 0 ? `<p class="dash-empty">Aucun sujet importé pour l'instant.</p>` : sujets.map(docRowHtml).join("")}
+  </div>`;
+
+  html += `<div class="dash-section">
+    <div class="section-title">Historique des résultats</div>
+    ${hist.length === 0 ? `<p class="dash-empty">Aucun examen réalisé pour l'instant.</p>` : hist.slice(0,15).map(h => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg);gap:10px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--ink);">${escapeHtml(h.scopeLabel)}</div>
+          <div style="font-size:11.5px;color:var(--muted);">${fmtRelativeDate(h.dateKey)} · ${h.total} questions · ${fmtClock(h.timeUsed)}</div>
+        </div>
+        <div style="font-weight:800;font-size:14px;color:${h.pct>=70?"var(--green)":"var(--red-dark)"};">${h.pct}%</div>
+      </div>
+    `).join("")}
+  </div>`;
+
+  return html;
+}
+
+function attachExamsEvents(){
+  const blancsBtn = document.getElementById("exams-blancs-btn");
+  if(blancsBtn) blancsBtn.addEventListener("click", ()=>{ state.exam.screen = "setup"; switchTab("exam"); });
+  const sujetsBtn = document.getElementById("exams-sujets-btn");
+  if(sujetsBtn) sujetsBtn.addEventListener("click", ()=>{
+    const el = document.getElementById("exams-sujets-section");
+    if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+  const sujetInput = document.getElementById("exams-sujet-input");
+  if(sujetInput) sujetInput.addEventListener("change", async ()=>{
+    const file = sujetInput.files[0];
+    if(!file) return;
+    try{
+      await importDocumentFile(file, "sujet");
+      state.examsSujetStatus = "";
+    }catch(e){
+      state.examsSujetStatus = e.message;
+    }
+    render();
+  });
+  attachDocumentRowEvents();
+}
+
+/* ============================================================
+   15nonies. NAVIGATION PRINCIPALE — menus déroulants + mobile
    ============================================================ */
 const NAV_GROUP = {
   dashboard: "dashboard", library: "library",
-  activities: "activities", quiz: "activities", flash: "activities", exam: "activities", oral: "activities", review: "activities",
+  activities: "activities", quiz: "activities", flash: "activities", oral: "activities", review: "activities",
   fiches: "resources",
+  exams: "exams", exam: "exams",
   planning: "planning",
   progress: "progress",
   ai: "myspace", settings: "myspace", myspace: "myspace",
@@ -6586,10 +6853,27 @@ function handleNavGoto(ds){
   if(goto === "continue") return continueRevision();
   if(goto === "activities") return switchTab("activities");
   if(goto === "review") return switchTab("review");
-  if(goto === "fiches"){ state.catalog.scope = ds.filter || "all"; return switchTab("fiches"); }
+  if(goto === "fiches"){
+    const filter = ds.filter || "all";
+    if(filter.indexOf("doc-") === 0){
+      state.catalog.docType = filter.slice(4);
+      switchTab("fiches");
+      setTimeout(()=>{ const el = document.getElementById("resources-documents"); if(el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60);
+    } else {
+      state.catalog.scope = filter;
+      switchTab("fiches");
+    }
+    return;
+  }
   if(goto === "flash"){ state.flashScreen = "picker"; return switchTab("flash"); }
   if(goto === "quiz"){ state.screen = "picker"; return switchTab("quiz"); }
   if(goto === "exam"){ state.exam.screen = "setup"; return switchTab("exam"); }
+  if(goto === "exams") return switchTab("exams");
+  if(goto === "exams-sujets"){
+    switchTab("exams");
+    setTimeout(()=>{ const el = document.getElementById("exams-sujets-section"); if(el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60);
+    return;
+  }
   if(goto === "oral") return switchTab("oral");
   if(goto === "ai") return switchTab("ai");
   if(goto === "planning") return switchTab("planning");
@@ -6643,12 +6927,89 @@ function attachMainNavEvents(){
 }
 
 /* ============================================================
+   15decies. BULLE ASSISTANT IA — déplaçable (souris + tactile)
+   ============================================================ */
+function setAIBubbleCorner(corner){
+  state.aiBubble.corner = corner;
+  saveAIBubblePos();
+  const bubble = document.getElementById("ai-bubble");
+  if(bubble){
+    bubble.classList.remove("corner-br","corner-bl","corner-tr","corner-tl");
+    bubble.classList.add("corner-" + corner);
+    bubble.style.left = ""; bubble.style.top = ""; bubble.style.right = ""; bubble.style.bottom = "";
+  }
+}
+
+function openAIBubble(){
+  switchTab("ai");
+}
+
+function initAIBubble(){
+  const bubble = document.getElementById("ai-bubble");
+  if(!bubble) return;
+
+  let dragging = false, moved = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  bubble.addEventListener("pointerdown", (e)=>{
+    dragging = true; moved = false;
+    const rect = bubble.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startLeft = rect.left; startTop = rect.top;
+    bubble.setPointerCapture(e.pointerId);
+  });
+
+  bubble.addEventListener("pointermove", (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(!moved && Math.hypot(dx, dy) < 6) return;
+    moved = true;
+    bubble.classList.remove("corner-br","corner-bl","corner-tr","corner-tl");
+    const size = bubble.offsetWidth;
+    const left = Math.max(6, Math.min(window.innerWidth - size - 6, startLeft + dx));
+    const top = Math.max(56, Math.min(window.innerHeight - size - 6, startTop + dy));
+    bubble.style.left = left + "px";
+    bubble.style.top = top + "px";
+    bubble.style.right = "auto";
+    bubble.style.bottom = "auto";
+  });
+
+  bubble.addEventListener("pointerup", ()=>{
+    if(!dragging) return;
+    dragging = false;
+    if(moved){
+      const rect = bubble.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      const corner = (cy < window.innerHeight / 2 ? "t" : "b") + (cx < window.innerWidth / 2 ? "l" : "r");
+      setAIBubbleCorner(corner);
+    } else {
+      openAIBubble();
+    }
+  });
+
+  bubble.addEventListener("pointercancel", ()=>{ dragging = false; });
+
+  bubble.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openAIBubble(); }
+  });
+
+  window.addEventListener("resize", ()=>{
+    if(bubble.style.left){
+      const size = bubble.offsetWidth;
+      bubble.style.left = Math.max(6, Math.min(window.innerWidth - size - 6, parseFloat(bubble.style.left))) + "px";
+      bubble.style.top = Math.max(56, Math.min(window.innerHeight - size - 6, parseFloat(bubble.style.top))) + "px";
+    }
+  });
+}
+
+/* ============================================================
    16. INIT
    ============================================================ */
 attachMainNavEvents();
+initAIBubble();
 
 (async function init(){
   await loadAllData();
+  setAIBubbleCorner(state.aiBubble.corner || "br");
   render();
 })();
 </script>
