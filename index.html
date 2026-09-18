@@ -225,6 +225,12 @@
   .hero-mix .txt .d{ font-size: 13px; color: var(--ink-soft); }
   .hero-mix-import{ background: linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 45%, var(--green-tint) 130%); margin-bottom:16px; }
 
+  .planning-source-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-bottom:16px; padding:2px 2px 14px; border-bottom:1px solid var(--border);
+  }
+  .planning-source-bar .s{ font-size:11.5px; color: var(--muted); }
+
   /* ===== IMPORTATION DE COURS ===== */
   .import-dropzone{
     background: var(--surface); border:2px dashed var(--border-strong); border-radius: var(--radius-xl);
@@ -694,12 +700,28 @@
     background: linear-gradient(120deg, var(--navy) 0%, var(--navy-dark) 55%, var(--red-dark) 130%);
     border-radius: var(--radius-xl); padding: 34px 30px; margin: 24px 0 22px; color:#fff;
     box-shadow: var(--shadow-lg);
+    display:flex; align-items:center; justify-content:space-between; gap:26px; flex-wrap:wrap;
   }
+  .dash-banner-left{ flex:1; min-width:240px; }
   .dash-banner-eyebrow{ font-size:12px; text-transform:capitalize; color: rgba(255,255,255,0.75); font-weight:700; margin-bottom:10px; }
   .dash-banner-title{ font-size:26px; font-weight:800; margin:0 0 10px; letter-spacing:-0.015em; color:#fff; }
   .dash-banner-sub{ font-size:14px; line-height:1.6; color: rgba(255,255,255,0.85); margin:0 0 20px; max-width:520px; }
   .dash-banner-cta{ background:#fff; color: var(--navy); border:none; font-weight:800; }
   .dash-banner-cta:hover{ background: rgba(255,255,255,0.9); transform: translateY(-1px); }
+  .dash-banner-actions{ display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+  .dash-banner-action{
+    display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.28);
+    color:#fff; border-radius: var(--radius-md); padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family: var(--font-main); white-space:nowrap; transition: background .15s var(--ease), border-color .15s var(--ease);
+  }
+  .dash-banner-action:hover{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
+  .dash-banner-action:active{ transform: scale(0.97); }
+  .dash-banner-action .ico{ font-size:14px; }
+  @media (max-width:680px){
+    .dash-banner{ flex-direction:column; align-items:stretch; }
+    .dash-banner-actions{ flex-direction:row; flex-wrap:wrap; }
+    .dash-banner-action{ flex:1; justify-content:center; min-width:110px; }
+  }
 
   /* ===== GRILLE DE TABLEAU DE BORD (6 blocs) ===== */
   .dash-grid2{ display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; margin-bottom:0; }
@@ -747,6 +769,14 @@
   .dash-reminder-row b{ color:var(--ink-soft); font-weight:700; }
 
   .dash-schedule-card{ margin-bottom:18px; }
+  .dash-schedule-nav{ display:flex; gap:6px; flex-wrap:wrap; }
+  .dash-schedule-navbtn{
+    background: var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:5px 12px;
+    font-size:11px; font-weight:700; color: var(--ink-soft); cursor:pointer; font-family: var(--font-main);
+    transition: border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease);
+  }
+  .dash-schedule-navbtn:hover{ border-color: var(--red); color: var(--red-dark); }
+  .dash-schedule-navbtn.active{ background: var(--red); border-color: var(--red); color:#fff; }
   .dash-current-course{
     background: var(--green-tint); border:1.5px solid var(--green); border-radius: var(--radius-md);
     padding:14px 16px; margin-bottom:12px; cursor:pointer; transition: box-shadow 0.15s var(--ease);
@@ -1193,41 +1223,55 @@
     display:flex; flex-direction:column; position:relative;
   }
   .cal-modal-workspace .cw-main{ flex:1 1 auto; min-width:0; overflow-y:auto; padding:22px; }
-  .cw-ai-mobile-trigger{
-    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+
+  /* Un seul bouton pour fermer (dans l'en-tête du panneau) et un seul pour rouvrir
+     (bouton plein, avec icône + texte) — jamais de glyphe ambigu sans libellé. */
+  .cw-ai-openbtn{
+    display:none; align-items:center; justify-content:center; gap:8px;
     background: var(--red-tint); color: var(--red-dark); border:1.5px solid var(--red); border-radius: var(--radius-md);
-    padding:11px; font-weight:800; font-size:13px; cursor:pointer; margin:14px 0 4px; font-family: var(--font-main);
+    padding:11px; font-weight:800; font-size:13px; cursor:pointer; font-family: var(--font-main);
+    transition: background .15s var(--ease), color .15s var(--ease), transform .1s var(--ease);
   }
+  .cw-ai-openbtn:hover{ background: var(--red); color:#fff; }
+  .cw-ai-openbtn:active{ transform: scale(0.97); }
+  .cw-ai-openbtn.mobile-show{ display:flex; width:100%; margin:14px 0 4px; }
+
+  .cw-ai-closebtn{
+    display:flex; align-items:center; gap:6px; background: var(--surface); border:1.5px solid var(--border);
+    border-radius:20px; padding:7px 14px 7px 12px; font-size:12px; font-weight:800; color: var(--ink-soft);
+    cursor:pointer; font-family: var(--font-main); margin-left:auto; flex-shrink:0; min-height:34px;
+    transition: border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease);
+  }
+  .cw-ai-closebtn:hover{ border-color: var(--red); color: var(--red-dark); background: var(--red-tint); }
+  .cw-ai-closebtn:active{ transform: scale(0.96); }
+  @media (max-width:420px){
+    .cw-ai-closebtn .txt{ display:none; }
+    .cw-ai-closebtn{ padding:0; width:34px; height:34px; justify-content:center; border-radius:50%; }
+  }
+
   .cw-aiside{ display:none; }
   .cw-aiside.is-open{
     display:flex; flex-direction:column; position:absolute; inset:0; background: var(--surface);
     z-index:5; padding:16px; overflow-y:auto; border-radius: var(--radius-lg);
   }
-  .cw-ai-mobile-only{ display:inline-flex; }
-  .cw-ai-desktop-only{ display:none; }
   @media (min-width:900px){
     .cal-modal-workspace{ flex-direction:row; max-height:88vh; }
     .cal-modal-workspace .cw-main{ border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
-    .cw-ai-mobile-trigger{ display:none; }
+    .cw-ai-openbtn.mobile-show{ display:none; }
+    .cw-ai-openbtn.desktop-show{
+      display:inline-flex; position:absolute; top:20px; right:20px; width:auto; margin:0;
+      padding:9px 18px; z-index:2; box-shadow: var(--shadow-sm);
+    }
     .cw-aiside{
       display:flex !important; flex-direction:column; width:340px; flex-shrink:0;
       position:static; z-index:auto; border-left:1px solid var(--border);
       background: var(--surface-2); border-radius:0 var(--radius-lg) var(--radius-lg) 0;
       padding:18px; overflow-y:auto;
     }
-    .cw-aiside.collapsed{ width:56px; padding:16px 8px; }
-    .cw-aiside.collapsed .cw-ai-body, .cw-aiside.collapsed .cw-ai-title{ display:none; }
-    .cw-ai-mobile-only{ display:none; }
-    .cw-ai-desktop-only{ display:inline-flex; }
+    .cw-aiside.collapsed{ display:none !important; }
   }
   .cw-ai-header{ display:flex; align-items:center; gap:8px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border); flex-shrink:0; }
   .cw-ai-title{ font-size:13.5px; font-weight:800; color: var(--ink); flex:1; }
-  .cw-ai-iconbtn{
-    background: var(--surface); border:1px solid var(--border); border-radius:8px; width:30px; height:30px;
-    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; font-weight:800;
-    color: var(--ink-soft); flex-shrink:0;
-  }
-  .cw-ai-iconbtn:hover{ border-color: var(--red); color: var(--red-dark); }
   .cw-ai-body{ display:flex; flex-direction:column; flex:1; min-height:0; }
   .cw-ai-status{ font-size:11.5px; line-height:1.5; padding:9px 11px; border-radius:8px; margin-bottom:12px; }
   .cw-ai-status.idle{ background: var(--bg); color: var(--muted); }
@@ -2352,6 +2396,8 @@ let state = {
     lastImportMsg: "", lastSyncAt: null, selectedEventId: null, focusNotesOnOpen: false,
     aiPanelCollapsed: false,  // panneau IA réduit (ordinateur)
     aiPanelOpenMobile: false, // panneau IA ouvert en superposition (mobile)
+    configPanelOpen: false,   // section "importer / lien du planning" dépliée — repliée par défaut une fois configurée
+    urlVisible: false,        // lien Makers Board affiché en clair (masqué par défaut)
   },
 
   // --- assistant IA dans la fiche de cours : état d'interface, jamais persisté ---
@@ -2373,6 +2419,9 @@ let state = {
     pasteText: "",
     dragOver: false,
   },
+
+  // --- aperçu du planning sur le dashboard : "today" | "tomorrow" ---
+  dashSchedulePreview: "today",
 
   // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
   courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
@@ -3402,10 +3451,17 @@ function renderDashboard(){
   const today = new Date();
   const dateLabel = today.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
   html += `<div class="dash-banner">
-    <div class="dash-banner-eyebrow">${dateLabel}</div>
-    <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}</h1>
-    <p class="dash-banner-sub">Prêt à continuer tes révisions ?</p>
-    <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
+    <div class="dash-banner-left">
+      <div class="dash-banner-eyebrow">${dateLabel}</div>
+      <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}</h1>
+      <p class="dash-banner-sub">Prêt à continuer tes révisions ?</p>
+      <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
+    </div>
+    <div class="dash-banner-actions">
+      <button class="dash-banner-action" id="dash-banner-import-btn"><span class="ico">📥</span>Importer un cours</button>
+      <button class="dash-banner-action" id="dash-banner-planning-btn"><span class="ico">🗓️</span>Planning</button>
+      <button class="dash-banner-action" id="dash-banner-ai-btn"><span class="ico">🤖</span>Assistant IA</button>
+    </div>
   </div>`;
 
   /* ---------- Mon emploi du temps (planning en direct) ---------- */
@@ -3539,8 +3595,16 @@ function renderDashboardRevisions(){
 /* "Mon emploi du temps" — aperçu du planning du jour directement sur le dashboard,
    avec détection du cours en cours et accès direct à l'espace de notes. */
 function renderDashboardSchedule(){
+  const previewDay = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
   let html = `<div class="dash-card dash-schedule-card" id="dash-schedule-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">🗓️ Mon emploi du temps</span></div>`;
+    <div class="dash-card-head">
+      <span class="section-title" style="margin-bottom:0;">🗓️ Mon emploi du temps</span>
+      <div class="dash-schedule-nav">
+        <button class="dash-schedule-navbtn ${previewDay===0?"active":""}" data-schedule-day="today">Aujourd'hui</button>
+        <button class="dash-schedule-navbtn ${previewDay===1?"active":""}" data-schedule-day="tomorrow">Demain</button>
+        <button class="dash-schedule-navbtn" id="dash-schedule-week">Semaine</button>
+      </div>
+    </div>`;
 
   if(state.planning.events.length === 0){
     html += `<p class="dash-empty">Aucun planning importé pour l'instant.</p>
@@ -3548,8 +3612,9 @@ function renderDashboardSchedule(){
     return html;
   }
 
-  const todaysEvents = eventsOnDay(new Date()).slice().sort((a,b)=>a.start-b.start);
-  const current = getCurrentCourse();
+  const targetDate = new Date(Date.now() + previewDay * 86400000);
+  const todaysEvents = eventsOnDay(targetDate).slice().sort((a,b)=>a.start-b.start);
+  const current = previewDay === 0 ? getCurrentCourse() : null;
 
   if(current){
     const cd = getCourseData(current.id);
@@ -3581,7 +3646,7 @@ function renderDashboardSchedule(){
       </div>`;
     }).join("") + `</div>`;
   } else if(!current){
-    html += `<p class="dash-empty">Aucun cours aujourd'hui.</p>`;
+    html += `<p class="dash-empty">Aucun cours ${previewDay === 0 ? "aujourd'hui" : "demain"}.</p>`;
   }
 
   html += `<button class="btn-text" id="dash-schedule-full" style="margin-top:10px;">Voir le planning complet →</button>`;
@@ -3663,6 +3728,12 @@ function attachDashboardEvents(){
     if(state.dash.recentChapters && state.dash.recentChapters.length > 0) continueRevision();
     else { libGoto("subjects"); switchTab("library"); }
   });
+  const bannerImportBtn = document.getElementById("dash-banner-import-btn");
+  if(bannerImportBtn) bannerImportBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  const bannerPlanningBtn = document.getElementById("dash-banner-planning-btn");
+  if(bannerPlanningBtn) bannerPlanningBtn.addEventListener("click", ()=> switchTab("planning"));
+  const bannerAiBtn = document.getElementById("dash-banner-ai-btn");
+  if(bannerAiBtn) bannerAiBtn.addEventListener("click", ()=> switchTab("ai"));
 
   const cbtn = document.getElementById("dash-continue-btn");
   if(cbtn) cbtn.addEventListener("click", continueRevision);
@@ -3705,6 +3776,11 @@ function attachDashboardEvents(){
   if(scheduleFull) scheduleFull.addEventListener("click", ()=> switchTab("planning"));
   const scheduleSetup = document.getElementById("dash-schedule-setup");
   if(scheduleSetup) scheduleSetup.addEventListener("click", ()=> switchTab("planning"));
+  document.querySelectorAll("[data-schedule-day]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.dashSchedulePreview = btn.dataset.scheduleDay; render(); });
+  });
+  const scheduleWeekBtn = document.getElementById("dash-schedule-week");
+  if(scheduleWeekBtn) scheduleWeekBtn.addEventListener("click", ()=>{ state.planning.calView = "week"; switchTab("planning"); });
   document.querySelectorAll("[data-open-event]").forEach(el=>{
     el.addEventListener("click", ()=> openCourseModal(el.dataset.openEvent));
     el.addEventListener("keydown", (e)=>{
@@ -8906,9 +8982,10 @@ function courseAiPanelHtml(e, cd){
 
   let html = `<div class="cw-aiside ${collapsed ? "collapsed" : ""} ${mobileOpen ? "is-open" : ""}" id="cw-aiside">
     <div class="cw-ai-header">
-      <button class="cw-ai-iconbtn cw-ai-mobile-only" id="cw-ai-mobile-close" aria-label="Retour aux notes" title="Retour aux notes">←</button>
       <span class="cw-ai-title">🤖 Assistant IA du cours</span>
-      <button class="cw-ai-iconbtn cw-ai-desktop-only" id="cw-ai-collapse-btn" aria-label="${collapsed ? "Agrandir" : "Réduire"} le panneau IA" title="${collapsed ? "Agrandir" : "Réduire"} le panneau">${collapsed ? "«" : "»"}</button>
+      <button type="button" class="cw-ai-closebtn" id="cw-ai-close-btn" aria-label="Fermer l'assistant IA" title="Fermer l'assistant IA">
+        <span aria-hidden="true">✕</span><span class="txt">Fermer l'assistant IA</span>
+      </button>
     </div>
     <div class="cw-ai-body">`;
 
@@ -8985,7 +9062,9 @@ function courseWorkspaceModalHtml(e, opts){
         <button type="button" class="cw-fav-btn ${cd.favorite ? "active" : ""}" id="cw-fav-btn" aria-pressed="${cd.favorite ? "true" : "false"}" aria-label="${cd.favorite ? "Retirer des favoris" : "Marquer comme favori"}" title="Favori">${cd.favorite ? "★" : "☆"}</button>
         <button class="btn-text" id="cal-modal-close" aria-label="Fermer les détails">✕</button>
       </div>
-      <button type="button" class="cw-ai-mobile-trigger" id="cw-ai-mobile-open">🤖 Demander à l'IA</button>
+      <button type="button" class="cw-ai-openbtn ${!state.planning.aiPanelOpenMobile ? "mobile-show" : ""} ${state.planning.aiPanelCollapsed ? "desktop-show" : ""}" id="cw-ai-open-btn" aria-label="Ouvrir l'assistant IA" title="Ouvrir l'assistant IA">
+        <span aria-hidden="true">🤖</span><span class="txt">Assistant IA</span>
+      </button>
       <div class="cw-badges"><span class="cw-badge ${status}">${statusLabel}</span></div>
       ${progressHtml}
       <ul class="dash-progress-list">
@@ -9128,19 +9207,19 @@ function attachCourseModalEvents(){
   /* ---- assistant IA du cours ---- */
   const evId = state.planning.selectedEventId;
 
-  const collapseBtn = document.getElementById("cw-ai-collapse-btn");
-  if(collapseBtn) collapseBtn.addEventListener("click", ()=>{
-    state.planning.aiPanelCollapsed = !state.planning.aiPanelCollapsed;
-    render();
-  });
-  const mobileOpenBtn = document.getElementById("cw-ai-mobile-open");
-  if(mobileOpenBtn) mobileOpenBtn.addEventListener("click", ()=>{
-    state.planning.aiPanelOpenMobile = true;
-    render();
-  });
-  const mobileCloseBtn = document.getElementById("cw-ai-mobile-close");
-  if(mobileCloseBtn) mobileCloseBtn.addEventListener("click", ()=>{
+  // Un seul bouton pour fermer/réduire l'assistant IA, un seul pour le rouvrir — les deux
+  // flags (mobile/desktop) sont mis à jour ensemble : seul celui qui compte pour la largeur
+  // d'écran courante a un effet visuel, donc rien à recalculer côté JS au redimensionnement.
+  const aiCloseBtn = document.getElementById("cw-ai-close-btn");
+  if(aiCloseBtn) aiCloseBtn.addEventListener("click", ()=>{
     state.planning.aiPanelOpenMobile = false;
+    state.planning.aiPanelCollapsed = true;
+    render();
+  });
+  const aiOpenBtn = document.getElementById("cw-ai-open-btn");
+  if(aiOpenBtn) aiOpenBtn.addEventListener("click", ()=>{
+    state.planning.aiPanelOpenMobile = true;
+    state.planning.aiPanelCollapsed = false;
     render();
   });
 
@@ -9216,31 +9295,46 @@ function attachCourseModalEvents(){
 
 
 function renderPlanning(){
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
-  <p class="ai-intro">Ton emploi du temps (Makers Board ou tout autre calendrier .ics) — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
+  const hasPlanning = state.planning.events.length > 0;
+  const configOpen = state.planning.configPanelOpen || !hasPlanning;
 
-  html += `<div class="card" style="margin-bottom:22px;">
-    <div class="section-title" style="margin-bottom:10px;">Importer / actualiser mon planning</div>
-    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. Ré-importer le même fichier met à jour les cours modifiés sans créer de doublon (basé sur l'identifiant de chaque événement). C'est actuellement la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification) — voir la note en bas de page.</p>
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
+  <p class="ai-intro">Ton emploi du temps — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
+
+  if(hasPlanning && !configOpen){
+    html += `<div class="planning-source-bar">
+      <span class="s">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() : ""}</span>
+      <button class="btn-text" id="planning-toggle-config">⚙️ Modifier la source du planning</button>
+    </div>`;
+  }
+
+  if(configOpen){
+    html += `<div class="card" style="margin-bottom:22px;">`;
+    if(hasPlanning){
+      html += `<div class="dash-card-head"><div class="section-title" style="margin-bottom:0;">Source de mon planning</div>
+        <button class="btn-text" id="planning-toggle-config">Masquer ▲</button></div>`;
+    } else {
+      html += `<div class="section-title" style="margin-bottom:10px;">Configurer mon planning</div>`;
+    }
+    html += `<p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. Ré-importer le même fichier met à jour les cours modifiés sans créer de doublon (basé sur l'identifiant de chaque événement). C'est actuellement la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification).</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
       <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer / actualiser (.ics)<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
       <span style="font-size:12px;color:var(--muted);">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() + " à " + new Date(state.planning.lastSyncAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "Jamais synchronisé"}</span>
     </div>
     <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
-  </div>`;
 
-  html += `<div class="card" style="margin-bottom:22px;">
-    <div class="section-title" style="margin-bottom:10px;">Lien de mon planning</div>
-    <p class="ai-intro" style="margin:0 0 12px;">Colle ton lien personnel (Makers Board ou autre) pour l'ouvrir en un clic. Il reste uniquement dans ce navigateur — jamais dans le code du site, jamais envoyé nulle part, aucun mot de passe demandé.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <input type="text" id="planning-url-input" class="ai-select" placeholder="https://..." value="${escapeHtml(state.planning.officialUrl||"")}" style="flex:1;min-width:220px;">
+    <div class="section-title" style="margin:20px 0 10px;">Lien de mon planning</div>
+    <p class="ai-intro" style="margin:0 0 10px;">🔒 Reste uniquement dans ce navigateur — jamais écrit dans le code du site, jamais envoyé à un serveur ni à l'assistant IA. Champ masqué par défaut.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="${state.planning.urlVisible ? "text" : "password"}" id="planning-url-input" class="ai-select" placeholder="https://..." value="${escapeHtml(state.planning.officialUrl||"")}" autocomplete="off" style="flex:1;min-width:220px;">
+      <button class="btn-text" id="planning-url-toggle-visibility" type="button" aria-label="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}" title="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}">${state.planning.urlVisible ? "🙈" : "👁️"}</button>
       <button class="btn outline small" id="planning-url-save">Enregistrer</button>
-      ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir mon planning ↗</button>` : ""}
+      ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir ↗</button>` : ""}
+      ${state.planning.officialUrl ? `<button class="btn-text" id="planning-url-delete" style="color:var(--red-dark);">Supprimer le lien</button>` : ""}
     </div>
-  </div>`;
 
-  if(state.planning.events.length > 0 || state.planning.officialUrl){
-    html += `<p class="dash-empty" style="margin-bottom:22px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer mon planning (événements importés + lien enregistré)</button></p>`;
+    ${hasPlanning ? `<p class="dash-empty" style="margin-top:18px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer mon planning (événements importés + lien enregistré)</button></p>` : ""}
+    </div>`;
   }
 
   if(state.planning.events.length === 0){
@@ -9286,6 +9380,9 @@ function attachPlanningEvents(){
     try{
       const text = await readFileAsText(file);
       const parsed = parseICS(text);
+      // Le panneau de config reste ouvert après une action d'import : sinon le message
+      // de confirmation (ou d'erreur) disparaîtrait immédiatement, masqué avec la section.
+      state.planning.configPanelOpen = true;
       if(parsed.length === 0){
         state.planning.lastImportMsg = "Aucun événement reconnu dans ce fichier.";
         render();
@@ -9297,9 +9394,36 @@ function attachPlanningEvents(){
       state.planning.lastImportMsg = added + " événement(s) importé(s)" + (updated ? ", " + updated + " mis à jour" : "") + ".";
       render();
     }catch(e){
+      state.planning.configPanelOpen = true;
       state.planning.lastImportMsg = "Erreur lors de la lecture du fichier : " + e.message;
       render();
     }
+  });
+
+  const toggleConfigBtn = document.getElementById("planning-toggle-config");
+  if(toggleConfigBtn) toggleConfigBtn.addEventListener("click", ()=>{
+    state.planning.configPanelOpen = !state.planning.configPanelOpen;
+    render();
+  });
+
+  const urlToggleVis = document.getElementById("planning-url-toggle-visibility");
+  if(urlToggleVis) urlToggleVis.addEventListener("click", ()=>{
+    // Bascule directement le DOM (pas de render()) pour ne jamais perdre un lien
+    // déjà tapé mais pas encore enregistré.
+    state.planning.urlVisible = !state.planning.urlVisible;
+    const input = document.getElementById("planning-url-input");
+    if(input) input.type = state.planning.urlVisible ? "text" : "password";
+    urlToggleVis.textContent = state.planning.urlVisible ? "🙈" : "👁️";
+    const lbl = state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien";
+    urlToggleVis.title = lbl;
+    urlToggleVis.setAttribute("aria-label", lbl);
+  });
+  const urlDelete = document.getElementById("planning-url-delete");
+  if(urlDelete) urlDelete.addEventListener("click", ()=>{
+    if(!confirm("Supprimer le lien de planning enregistré ?")) return;
+    state.planning.officialUrl = "";
+    savePlanning();
+    render();
   });
 
   const clearBtn = document.getElementById("planning-clear-btn");
