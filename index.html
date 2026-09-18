@@ -223,6 +223,71 @@
   .hero-mix .txt{ position:relative; }
   .hero-mix .txt .h{ font-weight: 800; font-size: 16px; margin-bottom: 4px; letter-spacing:-0.01em; }
   .hero-mix .txt .d{ font-size: 13px; color: var(--ink-soft); }
+  .hero-mix-import{ background: linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 45%, var(--green-tint) 130%); margin-bottom:16px; }
+
+  /* ===== IMPORTATION DE COURS ===== */
+  .import-dropzone{
+    background: var(--surface); border:2px dashed var(--border-strong); border-radius: var(--radius-xl);
+    padding:38px 24px; text-align:center; cursor:pointer; transition: border-color .15s var(--ease), background .15s var(--ease);
+  }
+  .import-dropzone:hover, .import-dropzone:focus-visible{ border-color: var(--red); outline:none; }
+  .import-dropzone.is-dragover{ border-color: var(--red); background: var(--red-tint); }
+  .import-dropzone-icon{ font-size:34px; margin-bottom:10px; }
+  .import-dropzone-title{ font-size:15px; font-weight:800; color: var(--ink); margin-bottom:5px; }
+  .import-dropzone-sub{ font-size:12.5px; color: var(--ink-soft); margin-bottom:8px; }
+  .import-dropzone-formats{ font-size:11px; color: var(--muted); }
+
+  .import-filelist{ display:flex; flex-direction:column; gap:6px; margin-top:16px; }
+  .import-file-row{
+    display:flex; align-items:center; gap:10px; background: var(--surface-2); border:1px solid var(--border);
+    border-radius: var(--radius-sm); padding:9px 12px; font-size:12.5px;
+  }
+  .import-file-row .name{ flex:1; font-weight:700; color: var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .import-file-row .size{ color: var(--muted); flex-shrink:0; }
+
+  .import-stats-row{ display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color: var(--ink-soft); margin:14px 0 4px; }
+  .import-notion-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .import-notion-tag{
+    font-size:11px; font-weight:700; background: var(--surface-2); color: var(--ink-soft);
+    border:1px solid var(--border); border-radius:20px; padding:4px 11px;
+  }
+
+  .import-progress-card{ display:flex; flex-direction:column; gap:4px; }
+  .import-step{ display:flex; align-items:center; gap:12px; padding:11px 4px; font-size:13.5px; color: var(--muted); border-bottom:1px solid var(--bg); }
+  .import-step:last-child{ border-bottom:none; }
+  .import-step .dot{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; border:2px solid var(--border);
+  }
+  .import-step.done{ color: var(--ink); }
+  .import-step.done .dot{ background: var(--green); border-color: var(--green); color:#fff; }
+  .import-step.current{ color: var(--ink); font-weight:800; }
+  .import-step.current .dot{ border-color: var(--red); }
+  .import-step.pending .dot{ background: var(--bg); }
+
+  .import-result-hero{ text-align:center; padding:32px 24px; }
+  .import-result-icon{ font-size:42px; }
+  .import-result-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+  .import-result-hero .import-stats-row{ justify-content:center; }
+  .import-result-list{ display:flex; flex-direction:column; gap:8px; }
+  .import-result-row{
+    display:flex; align-items:center; gap:12px; background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius-md); padding:12px 14px; font-size:13px;
+  }
+  .import-result-row.ko{ background: var(--amber-tint); border-color: var(--amber-strong); }
+  .import-result-row .name{ flex:1; font-weight:700; color: var(--ink); }
+  .import-result-row .meta{ font-size:11.5px; color: var(--muted); flex-shrink:0; }
+
+  .lib-reviewq-list{ display:flex; flex-direction:column; gap:8px; }
+  .lib-reviewq-item{ border:1px solid var(--border); border-radius: var(--radius-sm); padding:10px 13px; background: var(--surface-2); }
+  .lib-reviewq-item summary{ font-weight:700; font-size:13px; cursor:pointer; color: var(--ink); }
+  .lib-reviewq-item .a{ margin-top:8px; font-size:12.5px; color: var(--ink-soft); line-height:1.6; padding-top:8px; border-top:1px solid var(--border); }
+
+  .lib-editor-list{ display:flex; flex-direction:column; gap:12px; margin-top:10px; }
+  .lib-editor-item{ display:flex; flex-direction:column; gap:8px; border:1px solid var(--border); border-radius: var(--radius-sm); padding:12px; background: var(--surface-2); }
+  .lib-editor-item-actions{ display:flex; gap:14px; }
+  .lib-editor-add{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+  .lib-editor-add input{ flex:1; min-width:160px; }
 
   /* ===== BUTTONS (unified system) ===== */
   .btn{
@@ -2280,6 +2345,19 @@ let state = {
     quizIndex: 0, quizRevealed: false,
   },
 
+  // --- importation de cours (fichier / collé) → fiche + résumé + quiz + flashcards + questions ---
+  // État de l'assistant d'import, jamais persisté (seul le résultat final — matière + chapitre — l'est).
+  courseImport: {
+    step: "pick",          // pick | detect | generating | result
+    busy: false,           // verrou partagé avec aiEngineBusy() : une seule génération IA à la fois
+    files: [],             // [{id, name, size, status, error, extractedText, charCount, warning,
+                            //   detected:{title, subjectId, newSubjectName, chapterTitle, notions:[]},
+                            //   genStepIndex, resultChapterId, resultSubjectId}]
+    activeIndex: 0,
+    pasteText: "",
+    dragOver: false,
+  },
+
   // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
   courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
 
@@ -3389,6 +3467,7 @@ function renderDashboard(){
   html += `<div class="dash-card">
     <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Actions rapides</span></div>
     <div class="dash-quicklinks">
+      <button class="dash-quick-btn" id="dash-import-course-btn"><span class="ico">📥</span><span class="lbl">Importer un cours</span></button>
       <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">Voir mes matières</span></button>
       <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">Ajouter un cours</span></button>
       <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">Faire une activité</span></button>
@@ -3541,6 +3620,8 @@ function attachDashboardEvents(){
   document.querySelectorAll("#dash-addcourse-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
   });
+  const importBtn = document.getElementById("dash-import-course-btn");
+  if(importBtn) importBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
   const proglink = document.getElementById("dash-progress-link");
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
   const activitiesBtn = document.getElementById("dash-activities-btn");
@@ -3616,6 +3697,7 @@ function renderLibrary(){
   if(lib.view === "chapterForm") return renderChapterForm();
   if(lib.view === "chapterDetail") return renderChapterDetail();
   if(lib.view === "subjectDetail") return renderSubjectDetail();
+  if(lib.view === "import") return renderCourseImportWizard();
   return renderSubjectsList();
 }
 
@@ -3624,12 +3706,19 @@ function renderSubjectsList(){
   let html = `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mes matières</h1>
     <p class="ai-intro">Retrouve ici toutes tes matières — le cours d'étude de marché déjà intégré au site, et celles que tu ajoutes toi-même au fil de l'année.</p>
+    <div class="hero-mix hero-mix-import">
+      <div class="txt">
+        <div class="h">📥 Importer un cours</div>
+        <div class="d">Dépose un fichier ou colle ton cours : fiche, résumé, quiz, flashcards et questions de révision sont générés automatiquement.</div>
+      </div>
+      <button class="btn red" id="lib-import-course-btn">Importer un cours</button>
+    </div>
     <div class="hero-mix">
       <div class="txt">
         <div class="h">Créer une nouvelle matière</div>
         <div class="d">Nom, semestre, icône, couleur — tu pourras y ajouter des chapitres ensuite.</div>
       </div>
-      <button class="btn red" id="lib-add-subject-btn">+ Ajouter une matière</button>
+      <button class="btn outline" id="lib-add-subject-btn">+ Ajouter une matière</button>
     </div>
   `;
 
@@ -3733,19 +3822,34 @@ function renderChapterDetail(){
   if(ch.desc) html += `<p class="ai-intro">${escapeHtml(ch.desc)}</p>`;
 
   if(isUser){
-    // Chapitre créé par l'utilisateur : contenu libre + actions IA génériques.
-    html += `<div class="actions" style="margin:10px 0 20px;justify-content:flex-start;">
+    // Chapitre créé par l'utilisateur (ou importé automatiquement) : contenu libre + actions IA.
+    html += `<div class="actions" style="margin:10px 0 16px;justify-content:flex-start;align-items:center;">
       <button class="btn outline small" id="lib-edit-chapter-btn">Modifier le chapitre</button>
       <button class="btn-text" id="lib-delete-chapter-btn">Supprimer le chapitre</button>
+      <button class="btn-text" id="lib-mark-reviewed-btn" style="${ch.markedReviewed?"color:var(--green);":""}">${ch.markedReviewed ? "✅ Révisé" : "Marquer comme révisé"}</button>
     </div>`;
 
+    if(ch.sourceFileName) html += `<p style="font-size:11.5px;color:var(--muted);margin:-8px 0 14px;">📥 Importé depuis « ${escapeHtml(ch.sourceFileName)} »</p>`;
+    if(ch.keyNotions && ch.keyNotions.length){
+      html += `<div class="import-notion-tags" style="margin-bottom:16px;">${ch.keyNotions.map(n=>`<span class="import-notion-tag">${escapeHtml(n)}</span>`).join("")}</div>`;
+    }
+
     if(!ch.content || !ch.content.trim()){
-      html += `<div class="empty-state"><div class="big">✍️</div>Ce chapitre n'a pas encore de contenu.<br>Clique sur « Modifier le chapitre » pour coller ou écrire ton cours.</div>`;
+      html += `<div class="empty-state"><div class="big">✍️</div>Ce chapitre n'a pas encore de contenu.<br>Clique sur « Modifier le chapitre » pour coller ou écrire ton cours, ou importe un fichier depuis « Mes matières ».</div>`;
     } else {
       html += `<div class="card" style="margin-bottom:20px;">
-        <div class="section-title">Contenu du chapitre</div>
+        <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Fiche de cours</span>
+          <button class="btn-text" id="lib-regen-fiche" >🔄 Régénérer</button></div>
         <div class="ai-result-body" style="white-space:pre-wrap;max-height:340px;overflow:auto;">${escapeHtml(ch.content)}</div>
       </div>`;
+
+      if(ch.summary){
+        html += `<div class="card" style="margin-bottom:20px;">
+          <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Résumé</span>
+            <button class="btn-text" id="lib-regen-summary">🔄 Régénérer</button></div>
+          <div class="ai-result-body" style="white-space:pre-wrap;">${escapeHtml(ch.summary)}</div>
+        </div>`;
+      }
 
       html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
         <button class="ai-action" id="lib-ai-summary"><span class="ico">📖</span><span class="t">Résumer ce chapitre</span><span class="d">Fiche de révision générée par l'IA</span></button>
@@ -3761,6 +3865,54 @@ function renderChapterDetail(){
         html += `<button class="btn outline small" id="lib-play-flash" style="margin-top:14px;margin-left:10px;">🃏 Réviser les flashcards générées (${ch.aiFlashcards.length})</button>`;
       }
       html += `<div id="lib-ai-status"></div>`;
+
+      if(ch.aiReviewQuestions && ch.aiReviewQuestions.length){
+        html += `<div class="card" style="margin-top:20px;">
+          <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Questions de révision (${ch.aiReviewQuestions.length})</span>
+            <button class="btn-text" id="lib-regen-reviewq">🔄 Régénérer</button></div>
+          <div class="lib-reviewq-list">${ch.aiReviewQuestions.map((rq,i)=>`
+            <details class="lib-reviewq-item"><summary>${i+1}. ${escapeHtml(rq.q)}</summary><div class="a">${escapeHtml(rq.a)}</div></details>`).join("")}</div>
+        </div>`;
+      }
+
+      if(ch.aiFlashcards && ch.aiFlashcards.length){
+        html += `<details class="ai-extra" style="margin-top:16px;">
+          <summary>✏️ Modifier les flashcards (${ch.aiFlashcards.length})</summary>
+          <div class="lib-editor-list">${ch.aiFlashcards.map((c,i)=>`
+            <div class="lib-editor-item">
+              <input class="ai-select" data-card-front="${i}" value="${escapeHtml(c.front)}" placeholder="Question">
+              <input class="ai-select" data-card-back="${i}" value="${escapeHtml(c.back)}" placeholder="Réponse">
+              <div class="lib-editor-item-actions">
+                <button class="btn-text" data-card-save="${i}">Enregistrer</button>
+                <button class="btn-text" data-card-delete="${i}" style="color:var(--red-dark);">Supprimer</button>
+              </div>
+            </div>`).join("")}</div>
+          <div class="lib-editor-add">
+            <input class="ai-select" id="lib-newcard-front" placeholder="Nouvelle question">
+            <input class="ai-select" id="lib-newcard-back" placeholder="Nouvelle réponse">
+            <button class="btn outline small" id="lib-newcard-add">+ Ajouter une carte</button>
+          </div>
+        </details>`;
+      }
+
+      if(ch.aiQuiz && ch.aiQuiz.length){
+        html += `<details class="ai-extra" style="margin-top:10px;">
+          <summary>✏️ Modifier les questions du quiz (${ch.aiQuiz.length})</summary>
+          <div class="lib-editor-list">${ch.aiQuiz.map((q,i)=>`
+            <div class="lib-editor-item">
+              <input class="ai-select" data-q-text="${i}" value="${escapeHtml(q.q)}" placeholder="Question">
+              ${q.opts.map((o,oi)=>`<div style="display:flex;gap:8px;align-items:center;">
+                <input type="radio" name="lib-q-correct-${i}" data-q-correct="${i}" value="${oi}" ${q.correct===oi?"checked":""}>
+                <input class="ai-select" data-q-opt="${i}-${oi}" value="${escapeHtml(o)}" style="flex:1;">
+              </div>`).join("")}
+              <input class="ai-select" data-q-exp="${i}" value="${escapeHtml(q.exp||"")}" placeholder="Explication (optionnel)">
+              <div class="lib-editor-item-actions">
+                <button class="btn-text" data-q-save="${i}">Enregistrer</button>
+                <button class="btn-text" data-q-delete="${i}" style="color:var(--red-dark);">Supprimer</button>
+              </div>
+            </div>`).join("")}</div>
+        </details>`;
+      }
     }
   } else {
     // Chapitre intégré : on renvoie simplement vers les outils déjà existants, avec le contexte pré-rempli.
@@ -3846,6 +3998,8 @@ function attachLibraryEvents(){
   if(lib.view === "subjects"){
     const addBtn = document.getElementById("lib-add-subject-btn");
     if(addBtn) addBtn.addEventListener("click", ()=> libGoto("subjectForm", {editingSubjectId:null}));
+    const importBtn = document.getElementById("lib-import-course-btn");
+    if(importBtn) importBtn.addEventListener("click", ()=> goToCourseImport());
     document.querySelectorAll("[data-open-subject]").forEach(el=>{
       el.addEventListener("click", ()=> libGoto("subjectDetail", {subjectId: el.dataset.openSubject}));
     });
@@ -3910,6 +4064,68 @@ function attachLibraryEvents(){
       if(playQuizBtn) playQuizBtn.addEventListener("click", ()=> startQuiz("chapter:"+ch.id, ch.title, null, ch.aiQuiz.slice()));
       const playFlashBtn = document.getElementById("lib-play-flash");
       if(playFlashBtn) playFlashBtn.addEventListener("click", ()=> startFlashDeck(ch.id, ch.title, ch.aiFlashcards.slice()));
+
+      const markReviewedBtn = document.getElementById("lib-mark-reviewed-btn");
+      if(markReviewedBtn) markReviewedBtn.addEventListener("click", ()=>{
+        ch.markedReviewed = !ch.markedReviewed;
+        saveUserChapters();
+        render();
+      });
+      const regenFiche = document.getElementById("lib-regen-fiche");
+      if(regenFiche) regenFiche.addEventListener("click", ()=> libRegeneratePart(ch, "fiche"));
+      const regenSummary = document.getElementById("lib-regen-summary");
+      if(regenSummary) regenSummary.addEventListener("click", ()=> libRegeneratePart(ch, "summary"));
+      const regenReviewQ = document.getElementById("lib-regen-reviewq");
+      if(regenReviewQ) regenReviewQ.addEventListener("click", ()=> libRegeneratePart(ch, "reviewQuestions"));
+
+      /* ---- édition des flashcards ---- */
+      document.querySelectorAll("[data-card-save]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const i = parseInt(btn.dataset.cardSave);
+          const front = document.querySelector(`[data-card-front="${i}"]`).value;
+          const back = document.querySelector(`[data-card-back="${i}"]`).value;
+          if(!front.trim() || !back.trim()){ alert("La question et la réponse sont obligatoires."); return; }
+          libUpdateFlashcard(ch, i, front, back);
+          render();
+        });
+      });
+      document.querySelectorAll("[data-card-delete]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          if(!confirm("Supprimer cette flashcard ?")) return;
+          libDeleteFlashcard(ch, parseInt(btn.dataset.cardDelete));
+          render();
+        });
+      });
+      const newCardAdd = document.getElementById("lib-newcard-add");
+      if(newCardAdd) newCardAdd.addEventListener("click", ()=>{
+        const front = document.getElementById("lib-newcard-front").value;
+        const back = document.getElementById("lib-newcard-back").value;
+        if(!front.trim() || !back.trim()){ alert("La question et la réponse sont obligatoires."); return; }
+        libAddFlashcard(ch, front, back);
+        render();
+      });
+
+      /* ---- édition des questions du quiz ---- */
+      document.querySelectorAll("[data-q-save]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const i = parseInt(btn.dataset.qSave);
+          const q = document.querySelector(`[data-q-text="${i}"]`).value;
+          const opts = Array.from(document.querySelectorAll(`[data-q-opt^="${i}-"]`)).map(inp=>inp.value);
+          const correctInput = document.querySelector(`input[name="lib-q-correct-${i}"]:checked`);
+          const correct = correctInput ? parseInt(correctInput.value) : 0;
+          const exp = document.querySelector(`[data-q-exp="${i}"]`).value;
+          if(!q.trim() || opts.some(o=>!o.trim())){ alert("La question et toutes les options sont obligatoires."); return; }
+          libUpdateQuizQuestion(ch, i, q, opts, correct, exp);
+          render();
+        });
+      });
+      document.querySelectorAll("[data-q-delete]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          if(!confirm("Supprimer cette question ?")) return;
+          libDeleteQuizQuestion(ch, parseInt(btn.dataset.qDelete));
+          render();
+        });
+      });
     } else if(ch){
       const gf = document.getElementById("lib-goto-fiche");
       if(gf) gf.addEventListener("click", ()=>{ state.fichesLevel = ch.level; switchTab("fiches"); });
@@ -3982,6 +4198,8 @@ function attachLibraryEvents(){
       }
     });
   }
+
+  if(lib.view === "import") attachCourseImportEvents();
 }
 
 /* ---------- Actions IA pour un chapitre créé par l'utilisateur ----------
@@ -4004,6 +4222,23 @@ async function libRunUserChapterAI(ch, mode){
     : "TÂCHE : fais réviser l'étudiant à l'oral sur ce chapitre. Pose UNE SEULE question ouverte à la fois, attends sa réponse, puis corrige brièvement avant d'enchaîner. Commence directement par la première question.";
   state.aiThread = [{role:"user", content: AI_SYSTEM + "\n\n" + ctx + "\n\n" + task, display: (mode==="summary"?"📖 Résumer — ":"🎤 Réviser — ") + ch.title}];
   state.aiContextLabel = "Contexte : chapitre « " + ch.title + "» (Ma bibliothèque)";
+  state.tab = "ai";
+  window.scrollTo(0,0);
+  await aiSend();
+}
+
+/* Ouvre l'assistant IA sur ce chapitre, prêt à recevoir une question libre de l'élève
+   (utilisé par le bouton "Poser une question à l'IA" après un import de cours). */
+async function libRunUserChapterFree(ch){
+  state.aiChapter = null;
+  state.aiAction = "course";
+  if(!AI_ACTIONS.course) AI_ACTIONS.course = {icon:"📚", label:"Chapitre de ma bibliothèque", needs:"none", desc:""};
+  state.aiMode = "text";
+  state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
+  const ctx = libChapterContext(ch);
+  const task = "TÂCHE : présente-toi en une phrase comme prêt à répondre aux questions de l'élève sur ce chapitre, sans reformuler le cours pour l'instant. Termine par : « Pose-moi ta question ci-dessous. »";
+  state.aiThread = [{role:"user", content: AI_SYSTEM + "\n\n" + ctx + "\n\n" + task, display: "🤖 Poser une question — " + ch.title}];
+  state.aiContextLabel = "Contexte : chapitre « " + ch.title + " » (Ma bibliothèque)";
   state.tab = "ai";
   window.scrollTo(0,0);
   await aiSend();
@@ -4060,6 +4295,873 @@ async function libGenerateUserChapterCards(ch){
   }catch(e){
     if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Échec de la génération des flashcards (${escapeHtml(e.message||"erreur")}). Réessaie.</div>`;
   }
+}
+
+/* ---------- édition manuelle des flashcards / questions générées ---------- */
+function libUpdateFlashcard(ch, idx, front, back){
+  if(!ch.aiFlashcards || !ch.aiFlashcards[idx]) return;
+  ch.aiFlashcards[idx] = {front, back, ai: ch.aiFlashcards[idx].ai};
+  saveUserChapters();
+}
+function libDeleteFlashcard(ch, idx){
+  if(!ch.aiFlashcards) return;
+  ch.aiFlashcards.splice(idx, 1);
+  saveUserChapters();
+}
+function libAddFlashcard(ch, front, back){
+  if(!front.trim() || !back.trim()) return;
+  ch.aiFlashcards = ch.aiFlashcards || [];
+  ch.aiFlashcards.push({front: front.trim(), back: back.trim(), ai: false});
+  saveUserChapters();
+}
+function libUpdateQuizQuestion(ch, idx, q, opts, correct, exp){
+  if(!ch.aiQuiz || !ch.aiQuiz[idx]) return;
+  ch.aiQuiz[idx] = Object.assign({}, ch.aiQuiz[idx], {q, opts, correct, exp});
+  saveUserChapters();
+}
+function libDeleteQuizQuestion(ch, idx){
+  if(!ch.aiQuiz) return;
+  ch.aiQuiz.splice(idx, 1);
+  saveUserChapters();
+}
+function libAddQuizQuestion(ch, q, opts, correct, exp){
+  if(!q.trim() || opts.some(o=>!o.trim())) return;
+  ch.aiQuiz = ch.aiQuiz || [];
+  ch.aiQuiz.push({uid:"manual-"+Date.now(), ai:false, theme:"ai", q:q.trim(), opts:opts.map(o=>o.trim()), correct, exp:exp.trim()});
+  saveUserChapters();
+}
+
+/* ---- régénération indépendante d'un support (fiche / résumé / quiz / flashcards / questions) ----
+   Repart du texte source d'origine si disponible (chapitre importé), sinon du contenu actuel
+   (chapitre créé/édité à la main) — jamais d'un support déjà régénéré, pour éviter l'effet de dérive. */
+function libChapterWorkingText(ch){ return (ch.originalText || ch.content || "").trim(); }
+function libChapterMeta(ch){ return { title: ch.title, chapterTitle: ch.desc || "", notions: ch.keyNotions || [] }; }
+
+async function libRegeneratePart(ch, key){
+  const statusEl = () => document.getElementById("lib-ai-status");
+  const setStatus = (html) => { const el = statusEl(); if(el) el.innerHTML = html; };
+  if(state.aiStatus !== "ready"){
+    setStatus(`<div class="ai-error">L'assistant IA n'est pas chargé. Va dans l'onglet 🤖 Assistant IA pour le charger, puis reviens ici.</div>`);
+    return;
+  }
+  const text = libChapterWorkingText(ch);
+  if(!text){
+    setStatus(`<div class="ai-error">Ce chapitre n'a pas de contenu source à partir duquel régénérer.</div>`);
+    return;
+  }
+  const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
+  const fns = { fiche: generateCourseFiche, summary: generateCourseSummary, quiz: generateCourseQuizFromText, flashcards: generateCourseFlashcardsFromText, reviewQuestions: generateCourseReviewQuestions };
+  setStatus(`<div class="ai-loading"><span class="ai-spinner"></span>Régénération de ${labels[key]}…</div>`);
+  try{
+    const result = await fns[key](text, libChapterMeta(ch));
+    if(key === "fiche") ch.content = result;
+    else if(key === "summary") ch.summary = result;
+    else if(key === "quiz") ch.aiQuiz = result;
+    else if(key === "flashcards") ch.aiFlashcards = result;
+    else if(key === "reviewQuestions") ch.aiReviewQuestions = result;
+    ch.updatedAt = Date.now();
+    saveUserChapters();
+    render();
+  }catch(e){
+    setStatus(`<div class="ai-error">Échec de la régénération de ${labels[key]} (${escapeHtml(e.message||"erreur")}). Réessaie.</div>`);
+  }
+}
+
+/* ============================================================
+   7ter. IMPORTATION DE COURS
+   Un fichier (ou du texte collé) → une fiche structurée, un résumé, un quiz,
+   des flashcards et des questions de révision, générés automatiquement.
+   Réutilise entièrement WebLLM (aiLoadModel / webllmChat / webllmJsonChat,
+   verrouillé par aiEngineBusy()) et le système de matières/chapitres déjà en
+   place : un cours importé devient un chapitre utilisateur normal
+   (state.userChapters), avec les mêmes actions IA que celles déjà
+   disponibles (libGenerateUserChapterQuiz / libGenerateUserChapterCards /
+   libRunUserChapterAI) pour la régénération individuelle.
+   ============================================================ */
+const COURSE_IMPORT_MAX_BYTES = 15 * 1024 * 1024; // ~15 Mo par fichier
+const COURSE_IMPORT_MIN_CHARS = 40;               // en dessous : considéré vide/illisible
+const COURSE_CHUNK_CHARS = 5000;
+const COURSE_CONDENSE_THRESHOLD = 9000;
+
+/* ---- extraction de texte par format ---- */
+let pdfjsModulePromise = null;
+function loadPdfJsModule(){
+  if(!pdfjsModulePromise){
+    pdfjsModulePromise = import("https://esm.run/pdfjs-dist@4.0.379/build/pdf.min.mjs").then(mod=>{
+      mod.GlobalWorkerOptions.workerSrc = "https://esm.run/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs";
+      return mod;
+    });
+  }
+  return pdfjsModulePromise;
+}
+async function extractPdfText(file){
+  let pdfjs;
+  try{ pdfjs = await loadPdfJsModule(); }
+  catch(e){ throw new Error("Impossible de charger le lecteur PDF (connexion internet nécessaire au premier import). Colle le texte de ton cours à la place."); }
+  const buf = await file.arrayBuffer();
+  const doc = await pdfjs.getDocument({data: buf}).promise;
+  const maxPages = Math.min(doc.numPages, 100);
+  let text = "";
+  for(let i=1; i<=maxPages; i++){
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str).join(" ") + "\n\n";
+  }
+  return { text: text.trim(), truncated: doc.numPages > maxPages };
+}
+
+let mammothModulePromise = null;
+function loadMammothModule(){
+  if(!mammothModulePromise) mammothModulePromise = import("https://esm.run/mammoth");
+  return mammothModulePromise;
+}
+async function extractDocxText(file){
+  let mammoth;
+  try{ mammoth = await loadMammothModule(); }
+  catch(e){ throw new Error("Impossible de charger le lecteur DOCX (connexion internet nécessaire au premier import). Colle le texte de ton cours à la place."); }
+  const buf = await file.arrayBuffer();
+  const api = mammoth.extractRawText ? mammoth : mammoth.default;
+  const result = await api.extractRawText({arrayBuffer: buf});
+  return { text: (result.value || "").trim(), truncated: false };
+}
+
+function courseFileKind(file){
+  const name = file.name.toLowerCase();
+  if(name.endsWith(".txt")) return "text";
+  if(name.endsWith(".md") || name.endsWith(".markdown")) return "text";
+  if(name.endsWith(".pdf")) return "pdf";
+  if(name.endsWith(".docx")) return "docx";
+  return null;
+}
+
+async function extractCourseFileText(file){
+  if(file.size > COURSE_IMPORT_MAX_BYTES){
+    throw new Error("« " + file.name + " » est trop volumineux (limite ~15 Mo).");
+  }
+  const kind = courseFileKind(file);
+  if(!kind){
+    throw new Error("Format non pris en charge pour « " + file.name + " ». Formats acceptés : PDF, DOCX, TXT, Markdown. (PPTX et les images/OCR ne sont pas encore pris en charge — colle le texte directement à la place.)");
+  }
+  if(kind === "text") return { text: (await readFileAsText(file)).trim(), truncated: false };
+  if(kind === "pdf") return extractPdfText(file);
+  return extractDocxText(file);
+}
+
+/* ---- découpage + condensation pour les cours très longs ---- */
+function chunkCourseText(text, size){
+  size = size || COURSE_CHUNK_CHARS;
+  const paras = text.split(/\n{2,}/);
+  const chunks = [];
+  let cur = "";
+  paras.forEach(p=>{
+    if(cur && (cur + "\n\n" + p).length > size){ chunks.push(cur); cur = p; }
+    else cur = cur ? cur + "\n\n" + p : p;
+    while(cur.length > size * 1.4){ chunks.push(cur.slice(0, size)); cur = cur.slice(size); }
+  });
+  if(cur) chunks.push(cur);
+  return chunks;
+}
+
+async function condenseCourseChunk(chunkText, index, total){
+  const prompt = AI_SYSTEM + "\n\nEXTRAIT " + (index+1) + "/" + total + " D'UN COURS :\n" + chunkText +
+    "\n\nTÂCHE : condense cet extrait en une liste dense de points (définitions, faits, formules, exemples, dates, auteurs), sans rien inventer ni interpréter. Conserve le vocabulaire exact du cours. Réponds uniquement par la liste condensée, sans commentaire autour.";
+  const res = await webllmChat([{role:"user", content: prompt}], {});
+  return (res && res.text) ? res.text.trim() : "";
+}
+
+/* Pour un cours très long : condense chaque section avant de l'utiliser comme source pour
+   le reste du pipeline, pour rester dans la capacité du modèle sans perdre d'information. */
+async function buildWorkingCourseText(rawText, onProgress){
+  const trimmed = rawText.trim();
+  if(trimmed.length <= COURSE_CONDENSE_THRESHOLD) return { text: trimmed, wasCondensed: false, chunkCount: 1 };
+  const chunks = chunkCourseText(trimmed);
+  const digests = [];
+  for(let i=0; i<chunks.length; i++){
+    if(onProgress) onProgress(i, chunks.length);
+    const digest = await condenseCourseChunk(chunks[i], i, chunks.length);
+    if(digest) digests.push(digest);
+  }
+  return { text: clip(digests.join("\n\n"), 12000), wasCondensed: true, chunkCount: chunks.length };
+}
+
+/* ---- détection matière / titre / notions ---- */
+function matchSubjectByName(name){
+  if(!name) return null;
+  const n = name.toLowerCase().trim();
+  return allSubjects().find(s=>{
+    const sn = s.name.toLowerCase();
+    return sn === n || sn.includes(n) || n.includes(sn);
+  }) || null;
+}
+
+async function detectCourseMeta(workingText, fileName){
+  const existingSubjects = allSubjects().map(s=>s.name).join(", ");
+  const prompt = AI_SYSTEM + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
+    "\n\nMatières déjà existantes sur ce site : " + (existingSubjects || "(aucune)") +
+    "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"notions\":[\"...\"]}";
+  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const text = (res && res.text) ? res.text : "";
+  const match = text.match(/\{[\s\S]*\}/);
+  let parsed = null;
+  if(match){ try{ parsed = JSON.parse(match[0]); }catch(e){ parsed = null; } }
+  const fallbackTitle = (fileName || "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
+  return {
+    title: (parsed && parsed.title) ? String(parsed.title).slice(0,120) : (fallbackTitle || "Cours importé"),
+    subjectName: (parsed && parsed.subject) ? String(parsed.subject).slice(0,60) : "",
+    chapterTitle: (parsed && parsed.chapter) ? String(parsed.chapter).slice(0,120) : (fallbackTitle || "Chapitre importé"),
+    notions: (parsed && Array.isArray(parsed.notions)) ? parsed.notions.slice(0,10).map(String) : [],
+  };
+}
+
+/* ---- génération des supports à partir du texte de travail ---- */
+function courseGenContext(workingText, meta){
+  return clip(
+    "TITRE DU COURS : " + meta.title +
+    (meta.chapterTitle ? "\nCHAPITRE : " + meta.chapterTitle : "") +
+    (meta.notions && meta.notions.length ? "\nNOTIONS DÉTECTÉES : " + meta.notions.join(", ") : "") +
+    "\n\nCONTENU DU COURS :\n" + workingText,
+    9000
+  );
+}
+
+async function generateCourseFiche(workingText, meta){
+  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+    "\n\nTÂCHE : rédige une fiche de cours structurée à partir UNIQUEMENT de ce contenu, sans rien inventer. Utilise ces sections, seulement celles que le contenu permet de remplir :\n## Grandes parties\n## Définitions importantes\n## Notions essentielles\n## Mécanismes / raisonnements\n## Exemples\n## Formules ou dates si présentes\n## Points à retenir\nSignale entre crochets [information manquante] si un passage du cours semblait incomplet ou illisible.";
+  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const text = (res && res.text) ? res.text.trim() : "";
+  if(!text) throw new Error("la fiche générée est vide");
+  return text;
+}
+
+async function generateCourseSummary(workingText, meta){
+  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+    "\n\nTÂCHE : rédige, sans rien inventer : 1) un résumé court (3 à 5 phrases) ; 2) une liste des idées essentielles (une ligne chacune). Commence par « Résumé court » puis « Idées essentielles ».";
+  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const text = (res && res.text) ? res.text.trim() : "";
+  if(!text) throw new Error("le résumé généré est vide");
+  return text;
+}
+
+async function generateCourseQuizFromText(workingText, meta){
+  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+    "\n\nTÂCHE : génère 8 questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
+    .map((q,i)=>({ uid:"import-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String), correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"" }));
+  if(quiz.length === 0) throw new Error("aucune question générée (format inattendu)");
+  return quiz;
+}
+
+async function generateCourseFlashcardsFromText(workingText, meta){
+  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+    "\n\nTÂCHE : génère 10 flashcards de révision (définitions, notions, formules, auteurs, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\"}]";
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front), back:String(c.back), ai:true}));
+  if(cards.length === 0) throw new Error("aucune flashcard générée (format inattendu)");
+  return cards;
+}
+
+async function generateCourseReviewQuestions(workingText, meta){
+  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+    "\n\nTÂCHE : génère 6 questions de révision variées sur ce contenu (définition, compréhension, application, et une question plus difficile si le contenu le permet), avec leur réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"a\":\"...\"}]";
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const qs = (arr||[]).filter(q=>q&&q.q&&q.a).map(q=>({q:String(q.q), a:String(q.a)}));
+  if(qs.length === 0) throw new Error("aucune question de révision générée (format inattendu)");
+  return qs;
+}
+
+/* ---- orchestration : file d'import, un fichier à la fois ---- */
+async function ensureImportAIReady(){
+  if(state.aiStatus === "ready") return;
+  if(state.aiStatus === "checking") throw new Error("Vérification de la compatibilité de ton appareil en cours, réessaie dans un instant.");
+  if(state.aiStatus === "nogpu") throw new Error("L'assistant IA n'est pas disponible sur cet appareil (WebGPU requis). Tu peux quand même créer ta matière et coller ton cours à la main.");
+  if(state.aiStatus === "loading") throw new Error("Le modèle est en cours de chargement, réessaie dans quelques secondes.");
+  await aiLoadModel(state.aiModelId || pickModelForDevice());
+  if(state.aiStatus !== "ready") throw new Error("Le chargement du modèle IA a échoué. Réessaie, ou charge-le depuis l'onglet Assistant IA.");
+}
+
+function genImportId(){ return "imp" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function courseImportAddFiles(fileList){
+  const ci = state.courseImport;
+  Array.from(fileList).slice(0, 10 - ci.files.length).forEach(file=>{
+    ci.files.push({
+      id: genImportId(), name: file.name, size: file.size, file,
+      status: "pending", error: null, warning: null,
+      extractedText: "", charCount: 0, workingText: "",
+      detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
+      failedSteps: [], genStepIndex: -1,
+      resultChapterId: null, resultSubjectId: null,
+    });
+  });
+}
+function courseImportRemoveFile(id){
+  state.courseImport.files = state.courseImport.files.filter(f => f.id !== id);
+}
+function courseImportAddPasteAsFile(){
+  const ci = state.courseImport;
+  const text = ci.pasteText.trim();
+  if(!text) return;
+  ci.files.push({
+    id: genImportId(), name: "Texte collé", size: text.length, file: null,
+    status: "pending", error: null, warning: null,
+    extractedText: text, charCount: text.length, workingText: "",
+    detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
+    failedSteps: [], genStepIndex: -1,
+    resultChapterId: null, resultSubjectId: null,
+  });
+  ci.pasteText = "";
+}
+
+const COURSE_IMPORT_STEP_LABELS = ["Création de la fiche", "Création du résumé", "Création des quiz", "Création des flashcards", "Création des questions de révision"];
+
+function courseImportStart(){
+  const ci = state.courseImport;
+  if(ci.files.length === 0) return;
+  if(aiEngineBusy()) return;
+  ci.step = "detect";
+  ci.activeIndex = ci.files.findIndex(f => f.status === "pending");
+  if(ci.activeIndex === -1) ci.activeIndex = 0;
+  courseImportProcessFile(ci.activeIndex);
+}
+
+/* Extraction + détection pour UN fichier de la file — s'arrête sur l'écran de confirmation
+   (statut "review"), ou avance automatiquement au fichier suivant en cas d'échec. */
+async function courseImportProcessFile(index){
+  const ci = state.courseImport;
+  const item = ci.files[index];
+  if(!item) return;
+  ci.activeIndex = index;
+
+  item.status = "extracting";
+  render();
+  let extracted;
+  try{
+    extracted = item.file ? await extractCourseFileText(item.file) : { text: item.extractedText, truncated: false };
+  }catch(e){
+    item.status = "error";
+    item.error = e.message || "Erreur lors de la lecture du fichier.";
+    render();
+    courseImportAdvanceIfNeeded(index);
+    return;
+  }
+  item.extractedText = extracted.text;
+  item.charCount = extracted.text.length;
+  item.warning = extracted.truncated ? "Document très long : seules les premières pages ont été lues." : null;
+
+  if(item.extractedText.trim().length < COURSE_IMPORT_MIN_CHARS){
+    item.status = "error";
+    item.error = "Ce fichier semble vide ou illisible. Ajoute du contenu, ou colle le texte de ton cours directement.";
+    render();
+    courseImportAdvanceIfNeeded(index);
+    return;
+  }
+
+  item.status = "detecting";
+  ci.busy = true;
+  render();
+  try{
+    await ensureImportAIReady();
+    const built = await buildWorkingCourseText(item.extractedText, (i,total)=>{
+      item.error = null;
+      item.warning = "Cours long : analyse en cours (" + (i+1) + "/" + total + ")…";
+      render();
+    });
+    item.workingText = built.text;
+    item.warning = built.wasCondensed ? "Cours long : condensé automatiquement en " + built.chunkCount + " section(s) avant génération." : item.warning;
+    const meta = await detectCourseMeta(built.text, item.name);
+    const matched = matchSubjectByName(meta.subjectName);
+    item.detected = {
+      title: meta.title,
+      subjectId: matched ? matched.id : null,
+      newSubjectName: matched ? "" : (meta.subjectName || "Autre"),
+      chapterTitle: meta.chapterTitle,
+      notions: meta.notions,
+    };
+    item.status = "review";
+  }catch(e){
+    item.status = "error";
+    item.error = e.message || "Erreur lors de l'analyse du cours.";
+  }finally{
+    ci.busy = false;
+    render();
+  }
+}
+
+function courseImportAdvanceIfNeeded(index){
+  const ci = state.courseImport;
+  const next = ci.files.findIndex((f,i) => i > index && f.status === "pending");
+  if(next !== -1){ courseImportProcessFile(next); return; }
+  if(ci.files.every(f => f.status === "error" || f.status === "done")) ci.step = "result";
+  render();
+}
+
+/* Génère les 5 supports pour le fichier en confirmation, étape par étape — une étape en échec
+   n'empêche pas les suivantes, et reste individuellement relançable (courseImportRetryStep). */
+async function courseImportGenerate(index){
+  const ci = state.courseImport;
+  const item = ci.files[index];
+  if(!item || item.status !== "review" || aiEngineBusy()) return;
+  item.status = "generating";
+  item.failedSteps = [];
+  ci.busy = true;
+  ci.step = "generating";
+  render();
+  await courseImportRunAllSteps(item);
+  ci.busy = false;
+  courseImportFinalize(index);
+}
+
+async function courseImportRunAllSteps(item){
+  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions };
+  const steps = [
+    {key:"fiche", fn: generateCourseFiche},
+    {key:"summary", fn: generateCourseSummary},
+    {key:"quiz", fn: generateCourseQuizFromText},
+    {key:"flashcards", fn: generateCourseFlashcardsFromText},
+    {key:"reviewQuestions", fn: generateCourseReviewQuestions},
+  ];
+  for(let i=0;i<steps.length;i++){
+    item.genStepIndex = i;
+    render();
+    try{
+      item.generated[steps[i].key] = await steps[i].fn(item.workingText, meta);
+      item.failedSteps = item.failedSteps.filter(k => k !== steps[i].key);
+    }catch(e){
+      if(!item.failedSteps.includes(steps[i].key)) item.failedSteps.push(steps[i].key);
+    }
+  }
+  item.genStepIndex = -1;
+}
+
+/* Relance uniquement l'étape indiquée (ex. après un échec), sans tout refaire. */
+async function courseImportRetryStep(index, key){
+  const ci = state.courseImport;
+  const item = ci.files[index];
+  if(!item || aiEngineBusy()) return;
+  const fns = { fiche: generateCourseFiche, summary: generateCourseSummary, quiz: generateCourseQuizFromText, flashcards: generateCourseFlashcardsFromText, reviewQuestions: generateCourseReviewQuestions };
+  if(!fns[key]) return;
+  ci.busy = true;
+  item.status = "generating";
+  item.genStepIndex = COURSE_IMPORT_STEP_LABELS.length; // affiche juste "génération en cours" générique
+  render();
+  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions };
+  try{
+    item.generated[key] = await fns[key](item.workingText, meta);
+    item.failedSteps = item.failedSteps.filter(k => k !== key);
+  }catch(e){
+    if(!item.failedSteps.includes(key)) item.failedSteps.push(key);
+  }
+  item.genStepIndex = -1;
+  ci.busy = false;
+  if(item.resultChapterId){
+    // le cours existe déjà (relance après finalisation) : on met simplement à jour le chapitre sauvegardé
+    const ch = findAnyChapter(item.resultChapterId);
+    if(ch) courseImportApplyGeneratedToChapter(ch, item);
+    item.status = "done";
+  } else {
+    item.status = "review";
+  }
+  render();
+}
+
+function courseImportApplyGeneratedToChapter(ch, item){
+  if(item.generated.fiche) ch.content = item.generated.fiche;
+  if(item.generated.summary) ch.summary = item.generated.summary;
+  if(item.generated.quiz) ch.aiQuiz = item.generated.quiz;
+  if(item.generated.flashcards) ch.aiFlashcards = item.generated.flashcards;
+  if(item.generated.reviewQuestions) ch.aiReviewQuestions = item.generated.reviewQuestions;
+  ch.updatedAt = Date.now();
+  saveUserChapters();
+}
+
+function courseImportFinalize(index){
+  const ci = state.courseImport;
+  const item = ci.files[index];
+  if(!item) return;
+  const d = item.detected;
+
+  let subjectId = d.subjectId;
+  if(!subjectId){
+    subjectId = genLibId("subj");
+    state.userSubjects.push({
+      id: subjectId, name: d.newSubjectName || "Autre", semesterId: SEMESTERS[0].id,
+      icon: "📥", color: SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
+      description: "Matière créée automatiquement lors de l'import d'un cours.", builtin: false,
+    });
+    saveUserSubjects();
+  }
+
+  const chapterId = genLibId("chap");
+  state.userChapters.push({
+    id: chapterId, subjectId,
+    num: pad2(chaptersOfSubject(subjectId).length + 1),
+    title: d.title, desc: (d.chapterTitle && d.chapterTitle !== d.title) ? d.chapterTitle : "",
+    content: item.generated.fiche || item.extractedText.slice(0, 4000),
+    originalText: clip(item.extractedText, 20000),
+    summary: item.generated.summary || "",
+    aiQuiz: item.generated.quiz || [],
+    aiFlashcards: item.generated.flashcards || [],
+    aiReviewQuestions: item.generated.reviewQuestions || [],
+    keyNotions: d.notions || [],
+    sourceFileName: item.name || "",
+    createdAt: Date.now(), updatedAt: Date.now(),
+    markedReviewed: false,
+  });
+  saveUserChapters();
+  logRecentAdd("Cours importé — " + d.title);
+
+  item.resultChapterId = chapterId;
+  item.resultSubjectId = subjectId;
+  item.status = item.failedSteps.length >= 5 ? "error" : "done";
+  if(item.status === "error" && !item.error) item.error = "Aucun support n'a pu être généré. Réessaie depuis la fiche du chapitre.";
+
+  const next = ci.files.findIndex((f,i) => i > index && f.status === "pending");
+  if(next !== -1){ ci.step = "detect"; courseImportProcessFile(next); return; }
+  ci.step = "result";
+  render();
+}
+
+function courseImportReset(){
+  state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false };
+  render();
+}
+
+/* Point d'entrée commun (dashboard / Mes matières / Ressources) : repart d'un import
+   vierge, sauf si une importation est déjà en cours (pour ne pas la perdre). */
+function goToCourseImport(){
+  const ci = state.courseImport;
+  const hasActiveWork = ci.files.some(f => ["pending","extracting","detecting","review","generating"].includes(f.status));
+  if(!hasActiveWork) state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false };
+  libGoto("import");
+}
+
+function fmtFileSize(bytes){
+  if(bytes < 1024) return bytes + " o";
+  if(bytes < 1024*1024) return Math.round(bytes/1024) + " Ko";
+  return (Math.round(bytes/1024/1024*10)/10) + " Mo";
+}
+
+function renderCourseImportWizard(){
+  const ci = state.courseImport;
+  if(ci.step === "generating") return renderImportGenerating();
+  if(ci.step === "result") return renderImportResult();
+  if(ci.step === "detect") return renderImportDetectOrReview();
+  return renderImportPick();
+}
+
+function renderImportPick(){
+  const ci = state.courseImport;
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Importer un cours</h1>
+  <p class="ai-intro">Dépose un fichier ou colle ton cours : EM Lyon Révision génère automatiquement une fiche structurée, un résumé, un quiz, des flashcards et des questions de révision — sans rien remplir à la main.</p>`;
+
+  html += `<div class="import-dropzone ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
+    <div class="import-dropzone-icon">📥</div>
+    <div class="import-dropzone-title">Dépose ton cours ici ou clique pour importer un fichier</div>
+    <div class="import-dropzone-sub">Tu peux aussi importer plusieurs fichiers à la fois.</div>
+    <div class="import-dropzone-formats">Formats acceptés : PDF, DOCX, TXT, Markdown · 15 Mo max par fichier</div>
+    <input type="file" id="import-file-input" accept=".pdf,.docx,.txt,.md,.markdown" multiple style="display:none;">
+  </div>`;
+
+  html += `<div class="ai-field" style="margin-top:18px;">
+    <label for="import-paste-text">Tu peux également coller ton cours directement ici</label>
+    <textarea class="ai-textarea" id="import-paste-text" style="min-height:110px;" placeholder="Colle le texte de ton cours…">${escapeHtml(ci.pasteText)}</textarea>
+    <button class="btn-text" id="import-add-paste-btn" style="margin-top:6px;">+ Ajouter ce texte à la file</button>
+  </div>`;
+
+  if(ci.files.length){
+    html += `<div class="import-filelist">` + ci.files.map(f=>`
+      <div class="import-file-row">
+        <span class="name">📄 ${escapeHtml(f.name)}</span>
+        <span class="size">${fmtFileSize(f.size)}</span>
+        <button class="btn-text" data-import-remove="${f.id}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button>
+      </div>`).join("") + `</div>`;
+  }
+
+  html += `<div class="actions" style="justify-content:flex-start;margin-top:18px;">
+    <button class="btn red" id="import-generate-btn" ${ci.files.length === 0 ? "disabled" : ""}>Générer mes supports${ci.files.length > 1 ? " (" + ci.files.length + " fichiers)" : ""}</button>
+    <button class="btn-text" id="import-cancel-btn">Annuler</button>
+  </div>`;
+
+  html += `<footer class="hint">Le traitement se fait localement dans ton navigateur lorsque l'assistant IA est disponible : ton cours n'est envoyé à aucun serveur. Les formats PPTX et les images (OCR) ne sont pas encore pris en charge — colle le texte directement dans ce cas.</footer>`;
+  return html;
+}
+
+function renderImportDetectOrReview(){
+  const ci = state.courseImport;
+  const item = ci.files[ci.activeIndex];
+  if(!item) return renderImportPick();
+
+  if(item.status === "extracting" || item.status === "detecting"){
+    return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Analyse de ton cours…</h1>
+    <div class="card">
+      <div class="ai-loading"><span class="ai-spinner"></span>
+        <div>${item.status === "extracting" ? "Lecture du fichier « " + escapeHtml(item.name) + " »…" : "Analyse du contenu…"}
+        ${item.warning ? `<div class="s">${escapeHtml(item.warning)}</div>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if(item.status === "error"){
+    return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Import impossible</h1>
+    <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
+    <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+      <button class="btn outline" id="import-retry-file-btn">🔄 Réessayer</button>
+      <button class="btn-text" id="import-skip-file-btn">Passer ce fichier</button>
+      <button class="btn-text" id="import-cancel-btn">Retour</button>
+    </div>`;
+  }
+
+  // status === "review"
+  const d = item.detected;
+  const matched = d.subjectId ? findSubject(d.subjectId) : null;
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Voici ce que nous avons détecté</h1>
+  <p class="ai-intro">Vérifie et corrige si besoin, puis lance la génération.</p>`;
+
+  html += `<div class="card">
+    <div class="ai-field"><label for="import-title-input">Titre du cours</label>
+      <input class="ai-select" id="import-title-input" value="${escapeHtml(d.title)}"></div>
+    <div class="form-row2">
+      <div class="ai-field"><label for="import-subject-select">Matière</label>
+        <select class="ai-select" id="import-subject-select">
+          <option value="">+ Nouvelle matière</option>
+          ${allSubjects().map(s=>`<option value="${s.id}" ${d.subjectId===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="ai-field" id="import-newsubject-wrap" style="${d.subjectId ? "display:none;" : ""}">
+        <label for="import-newsubject-input">Nom de la nouvelle matière</label>
+        <input class="ai-select" id="import-newsubject-input" value="${escapeHtml(d.newSubjectName || "")}"></div>
+    </div>
+    <div class="ai-field"><label for="import-chapter-input">Titre du chapitre</label>
+      <input class="ai-select" id="import-chapter-input" value="${escapeHtml(d.chapterTitle)}"></div>
+
+    <div class="import-stats-row">
+      <span>📄 ${item.charCount.toLocaleString("fr-FR")} caractères</span>
+      <span>💡 ${d.notions.length} notion${d.notions.length>1?"s":""} détectée${d.notions.length>1?"s":""}</span>
+      ${matched ? `<span>♻️ Ajouté à « ${escapeHtml(matched.name)} »</span>` : `<span>✨ Nouvelle matière</span>`}
+    </div>
+    ${d.notions.length ? `<div class="import-notion-tags">${d.notions.map(n=>`<span class="import-notion-tag">${escapeHtml(n)}</span>`).join("")}</div>` : ""}
+    ${item.warning ? `<p class="ai-hint" style="margin-top:10px;">${escapeHtml(item.warning)}</p>` : ""}
+
+    <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+      <button class="btn red" id="import-confirm-generate-btn">Générer les supports</button>
+      <button class="btn-text" id="import-skip-file-btn">Annuler ce fichier</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+function renderImportGenerating(){
+  const ci = state.courseImport;
+  const item = ci.files[ci.activeIndex];
+  if(!item) return renderImportPick();
+  const curIdx = item.genStepIndex;
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Création de tes supports de révision…</h1>
+  <p class="ai-intro">« ${escapeHtml(item.detected ? item.detected.title : item.name)} »</p>
+  <div class="card import-progress-card">`;
+  const steps = ["Lecture du contenu", "Analyse du cours"].concat(COURSE_IMPORT_STEP_LABELS, ["Finalisation"]);
+  // Les deux premières étapes (lecture/analyse) sont déjà faites au moment où "generating" s'affiche.
+  html += steps.map((label,i)=>{
+    const stepOffset = i - 2; // aligne sur genStepIndex (0 = fiche)
+    let state_ = "done";
+    if(i < 2) state_ = "done";
+    else if(stepOffset === curIdx) state_ = "current";
+    else if(stepOffset > curIdx) state_ = "pending";
+    return `<div class="import-step ${state_}">
+      <span class="dot">${state_==="done" ? "✓" : (state_==="current" ? "" : "")}</span>
+      <span class="lbl">${label}</span>
+      ${state_==="current" ? `<span class="ai-spinner" style="margin-left:auto;"></span>` : ""}
+    </div>`;
+  }).join("");
+  html += `</div>
+  <footer class="hint">Cette étape peut prendre un moment selon la longueur du cours et ton appareil — ne ferme pas cette fenêtre.</footer>`;
+  return html;
+}
+
+function renderImportResult(){
+  const ci = state.courseImport;
+  const files = ci.files;
+  if(files.length === 0) return renderImportPick();
+
+  if(files.length === 1){
+    const item = files[0];
+    if(item.status === "error"){
+      return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Import impossible</h1>
+      <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
+      <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+        <button class="btn-text" id="import-back-btn">← Retour à mes cours</button>
+      </div>`;
+    }
+    const ch = findAnyChapter(item.resultChapterId);
+    const subj = ch ? findSubject(ch.subjectId) : null;
+    const quizLen = (ch && ch.aiQuiz) ? ch.aiQuiz.length : 0;
+    const cardsLen = (ch && ch.aiFlashcards) ? ch.aiFlashcards.length : 0;
+    const qLen = (ch && ch.aiReviewQuestions) ? ch.aiReviewQuestions.length : 0;
+    let html = `<div class="card import-result-hero">
+      <div class="import-result-icon">🎉</div>
+      <h1 style="font-size:20px;font-weight:800;margin:6px 0 4px;">Ton cours est prêt !</h1>
+      <p class="ai-intro" style="margin:0 0 14px;">${escapeHtml(item.detected.title)}${subj ? " — " + escapeHtml(subj.name) : ""}</p>
+      <div class="import-stats-row">
+        <span>🧠 ${quizLen} question${quizLen>1?"s":""} de quiz</span>
+        <span>🃏 ${cardsLen} flashcard${cardsLen>1?"s":""}</span>
+        <span>🎯 ${qLen} question${qLen>1?"s":""} de révision</span>
+        <span>💡 ${(item.detected.notions||[]).length} notion${(item.detected.notions||[]).length>1?"s":""}</span>
+        <span>📅 importé le ${new Date(ch?ch.createdAt:Date.now()).toLocaleDateString("fr-FR")}</span>
+      </div>`;
+    if(item.failedSteps && item.failedSteps.length){
+      const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
+      html += `<div class="ai-error" style="margin-top:14px;">Certains supports n'ont pas pu être générés (${item.failedSteps.map(k=>labels[k]).join(", ")}). Tu peux les régénérer depuis la fiche du chapitre.</div>`;
+    }
+    html += `<div class="import-result-actions">
+        <button class="btn red" data-goto-chapter="${item.resultChapterId}">📖 Ouvrir la fiche de cours</button>
+        ${quizLen ? `<button class="btn outline" data-goto-quiz="${item.resultChapterId}">🧠 Commencer le quiz</button>` : ""}
+        ${cardsLen ? `<button class="btn outline" data-goto-flash="${item.resultChapterId}">🃏 Réviser les flashcards</button>` : ""}
+        <button class="btn outline" data-goto-ask="${item.resultChapterId}">🤖 Poser une question à l'IA</button>
+        <button class="btn-text" data-mark-reviewed="${item.resultChapterId}">✅ Marquer comme révisé</button>
+      </div>
+      <button class="btn-text" id="import-back-btn" style="margin-top:14px;">← Retour à mes cours</button>
+    </div>`;
+    return html;
+  }
+
+  // plusieurs fichiers : récapitulatif compact
+  const doneCount = files.filter(f=>f.status==="done").length;
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${doneCount}/${files.length} cours prêts</h1>
+  <div class="import-result-list">`;
+  files.forEach(f=>{
+    const ch = f.resultChapterId ? findAnyChapter(f.resultChapterId) : null;
+    const ok = f.status === "done";
+    html += `<div class="import-result-row ${ok?"ok":"ko"}">
+      <span class="name">${ok?"✅":"⚠️"} ${escapeHtml(ok && f.detected ? f.detected.title : f.name)}</span>
+      <span class="meta">${ok ? ((ch&&ch.aiQuiz?ch.aiQuiz.length:0) + " quiz · " + (ch&&ch.aiFlashcards?ch.aiFlashcards.length:0) + " flashcards") : escapeHtml(f.error||"échec")}</span>
+      ${ok ? `<button class="btn-text" data-goto-chapter="${f.resultChapterId}">Ouvrir →</button>` : ""}
+    </div>`;
+  });
+  html += `</div>
+  <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+    <button class="btn-text" id="import-back-btn">← Retour à mes cours</button>
+    <button class="btn outline" id="import-new-btn">Importer d'autres cours</button>
+  </div>`;
+  return html;
+}
+
+function attachCourseImportEvents(){
+  if(state.aiStatus === "checking") checkAIStatus();
+  const ci = state.courseImport;
+
+  /* ---- étape "pick" ---- */
+  const dropzone = document.getElementById("import-dropzone");
+  const fileInput = document.getElementById("import-file-input");
+  if(dropzone && fileInput){
+    dropzone.addEventListener("click", ()=> fileInput.click());
+    dropzone.addEventListener("keydown", (e)=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); fileInput.click(); } });
+    dropzone.addEventListener("dragover", (e)=>{ e.preventDefault(); if(!ci.dragOver){ ci.dragOver = true; render(); } });
+    dropzone.addEventListener("dragleave", ()=>{ if(ci.dragOver){ ci.dragOver = false; render(); } });
+    dropzone.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      ci.dragOver = false;
+      if(e.dataTransfer && e.dataTransfer.files.length) courseImportAddFiles(e.dataTransfer.files);
+      render();
+    });
+    fileInput.addEventListener("change", ()=>{
+      if(fileInput.files.length) courseImportAddFiles(fileInput.files);
+      fileInput.value = "";
+      render();
+    });
+  }
+  const pasteTa = document.getElementById("import-paste-text");
+  if(pasteTa) pasteTa.addEventListener("input", (e)=>{ ci.pasteText = e.target.value; });
+  const addPasteBtn = document.getElementById("import-add-paste-btn");
+  if(addPasteBtn) addPasteBtn.addEventListener("click", ()=>{
+    const ta = document.getElementById("import-paste-text");
+    if(ta) ci.pasteText = ta.value;
+    courseImportAddPasteAsFile();
+    render();
+  });
+  document.querySelectorAll("[data-import-remove]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ courseImportRemoveFile(btn.dataset.importRemove); render(); });
+  });
+  const genBtn = document.getElementById("import-generate-btn");
+  if(genBtn && !genBtn.disabled) genBtn.addEventListener("click", courseImportStart);
+  const cancelBtn = document.getElementById("import-cancel-btn");
+  if(cancelBtn) cancelBtn.addEventListener("click", ()=> libGoto("subjects"));
+
+  /* ---- étape "detect" (extraction/analyse en cours, erreur, ou confirmation) ---- */
+  const retryFileBtn = document.getElementById("import-retry-file-btn");
+  if(retryFileBtn) retryFileBtn.addEventListener("click", ()=>{
+    const item = ci.files[ci.activeIndex];
+    if(item){ item.status = "pending"; item.error = null; courseImportProcessFile(ci.activeIndex); }
+  });
+  const skipFileBtn = document.getElementById("import-skip-file-btn");
+  if(skipFileBtn) skipFileBtn.addEventListener("click", ()=>{
+    const item = ci.files[ci.activeIndex];
+    if(item) courseImportRemoveFile(item.id);
+    const next = ci.files.findIndex(f => f.status === "pending" || f.status === "review");
+    if(next !== -1) courseImportProcessFile(next);
+    else if(ci.files.some(f=>f.status==="done"||f.status==="error")) ci.step = "result";
+    else ci.step = "pick";
+    render();
+  });
+
+  const subjSelect = document.getElementById("import-subject-select");
+  const newSubjWrap = document.getElementById("import-newsubject-wrap");
+  if(subjSelect){
+    subjSelect.addEventListener("change", ()=>{
+      const item = ci.files[ci.activeIndex];
+      if(!item) return;
+      item.detected.subjectId = subjSelect.value || null;
+      if(newSubjWrap) newSubjWrap.style.display = subjSelect.value ? "none" : "";
+    });
+  }
+  const titleInput = document.getElementById("import-title-input");
+  if(titleInput) titleInput.addEventListener("input", (e)=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.title = e.target.value; });
+  const newSubjInput = document.getElementById("import-newsubject-input");
+  if(newSubjInput) newSubjInput.addEventListener("input", (e)=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.newSubjectName = e.target.value; });
+  const chapterInput = document.getElementById("import-chapter-input");
+  if(chapterInput) chapterInput.addEventListener("input", (e)=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.chapterTitle = e.target.value; });
+
+  const confirmBtn = document.getElementById("import-confirm-generate-btn");
+  if(confirmBtn) confirmBtn.addEventListener("click", ()=>{
+    const item = ci.files[ci.activeIndex];
+    if(!item) return;
+    if(!item.detected.title.trim()){ alert("Le titre du cours est obligatoire."); return; }
+    if(!item.detected.subjectId && !item.detected.newSubjectName.trim()){ alert("Choisis une matière ou donne un nom à la nouvelle matière."); return; }
+    courseImportGenerate(ci.activeIndex);
+  });
+
+  /* ---- étape "result" ---- */
+  document.querySelectorAll("[data-goto-chapter]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ libGoto("chapterDetail", {chapterId: btn.dataset.gotoChapter}); switchTab("library"); });
+  });
+  document.querySelectorAll("[data-goto-quiz]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.gotoQuiz);
+      if(ch && ch.aiQuiz && ch.aiQuiz.length) startQuiz("chapter:"+ch.id, ch.title, null, ch.aiQuiz);
+    });
+  });
+  document.querySelectorAll("[data-goto-flash]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.gotoFlash);
+      if(ch && ch.aiFlashcards && ch.aiFlashcards.length) startFlashDeck(ch.id, ch.title, ch.aiFlashcards);
+    });
+  });
+  document.querySelectorAll("[data-goto-ask]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.gotoAsk);
+      if(ch) libRunUserChapterFree(ch);
+    });
+  });
+  document.querySelectorAll("[data-mark-reviewed]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.markReviewed);
+      if(ch){ ch.markedReviewed = true; saveUserChapters(); render(); }
+    });
+  });
+  const backBtn = document.getElementById("import-back-btn");
+  if(backBtn) backBtn.addEventListener("click", ()=> libGoto("subjects"));
+  const newImportBtn = document.getElementById("import-new-btn");
+  if(newImportBtn) newImportBtn.addEventListener("click", ()=>{ courseImportReset(); });
 }
 
 /* ============================================================
@@ -4754,12 +5856,35 @@ function renderPicker(){
     chs.forEach(ch => { html += chapterHtml(ch); });
   });
 
+  const importedWithQuiz = state.userChapters.filter(ch => ch.aiQuiz && ch.aiQuiz.length);
+  if(importedWithQuiz.length){
+    html += `<div class="level-heading"><span class="tag">Mes cours</span><span class="name">Cours importés</span><span class="line"></span></div>
+    <div class="flash-deckgrid">` + importedWithQuiz.map(ch=>{
+      const s = subjectOfChapter(ch);
+      return `<div class="flash-deckcard">
+        <div class="top">
+          <div><div class="name">${escapeHtml(ch.title)}</div><div class="desc">${s ? escapeHtml(s.name) + " · " : ""}${ch.aiQuiz.length} question${ch.aiQuiz.length>1?"s":""}</div></div>
+        </div>
+        <div class="bottom">
+          <span class="mastery none">Quiz généré</span>
+          <button class="btn outline small" data-import-quiz="${ch.id}">🧠 Réviser</button>
+        </div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
   html += `<footer class="hint">Le pourcentage affiché est ton niveau de maîtrise, calculé à partir de tes réponses réelles à chaque question.</footer>`;
 
   return html;
 }
 
 function attachPickerEvents(){
+  document.querySelectorAll("[data-import-quiz]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.importQuiz);
+      if(ch && ch.aiQuiz && ch.aiQuiz.length) startQuiz("chapter:"+ch.id, ch.title, null, ch.aiQuiz);
+    });
+  });
   document.querySelectorAll("[data-quizlvl]").forEach(btn=>{
     btn.addEventListener("click", ()=>{ state.quizLevel = btn.dataset.quizlvl; render(); });
   });
@@ -4917,6 +6042,7 @@ function renderFiches(){
   let html = `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ressources</h1>
     <p class="ai-intro">Tes cours, tes documents importés et tes résumés — les quiz, flashcards et examens sont dans Activités et Examens.</p>
+    <p class="ai-intro" style="margin-top:-8px;"><button class="btn-text" id="fiches-import-course-btn" style="padding:0;">📥 Importer un cours pour générer automatiquement fiche, résumé, quiz et flashcards →</button></p>
   `;
 
   /* ---------- Mes documents (import local : PDF, TXT, Markdown, images) ---------- */
@@ -5007,6 +6133,9 @@ function renderFiches(){
 }
 
 function attachFichesEvents(){
+  const importCourseBtn = document.getElementById("fiches-import-course-btn");
+  if(importCourseBtn) importCourseBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+
   const clearScope = document.getElementById("catalog-clear-scope");
   if(clearScope) clearScope.addEventListener("click", ()=>{ state.catalog.scope = "all"; render(); });
 
@@ -5188,11 +6317,35 @@ function renderFlashPicker(){
     html += `</div>`;
   });
 
+  const importedWithCards = state.userChapters.filter(ch => ch.aiFlashcards && ch.aiFlashcards.length);
+  if(importedWithCards.length){
+    html += `<div class="level-heading"><span class="tag">Mes cours</span><span class="name">Cours importés</span><span class="line"></span></div>
+    <div class="flash-deckgrid">` + importedWithCards.map(ch=>{
+      const s = subjectOfChapter(ch);
+      return `<div class="flash-deckcard">
+        <div class="top">
+          <div><div class="name">${escapeHtml(ch.title)}</div><div class="desc">${s ? escapeHtml(s.name) : ""}</div></div>
+          <span class="count">${ch.aiFlashcards.length} cartes</span>
+        </div>
+        <div class="bottom">
+          <span class="mastery none">Cartes générées</span>
+          <button class="btn outline small" data-import-flash="${ch.id}">🃏 Réviser</button>
+        </div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
   html += `<footer class="hint">Clique sur une carte pour la retourner, puis indique si tu la connaissais — comme un vrai jeu de cartes de révision.</footer>`;
   return html;
 }
 
 function attachFlashPickerEvents(){
+  document.querySelectorAll("[data-import-flash]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.importFlash);
+      if(ch && ch.aiFlashcards && ch.aiFlashcards.length) startFlashDeck(ch.id, ch.title, ch.aiFlashcards);
+    });
+  });
   document.querySelectorAll("[data-flashlvl]").forEach(btn=>{
     btn.addEventListener("click", ()=>{ state.flashLevel = btn.dataset.flashlvl; render(); });
   });
@@ -7330,7 +8483,7 @@ function renderCalendarMonth(){
    ============================================================ */
 
 /* Verrou partagé avec l'onglet Assistant IA : un seul modèle, une seule génération à la fois. */
-function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy; }
+function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy || state.courseImport.busy; }
 
 const COURSE_AI_SYSTEM = "Tu aides un élève de terminale à comprendre son cours. Réponds en français, de façon claire, structurée et pédagogique, adaptée au niveau lycée : phrases courtes, vocabulaire compliqué expliqué, exemples concrets, une analogie si utile. Pas de jargon inutile, pas de préambule ni de flatterie. Appuie-toi en priorité sur les informations du cours fournies ci-dessous (notes, résumé, description de l'événement). Si elles ne suffisent pas pour répondre précisément, dis-le clairement et, si besoin, demande une précision à l'élève plutôt que d'inventer un contenu de cours qui n'y figure pas.";
 
