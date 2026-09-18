@@ -7385,6 +7385,38 @@ async function aiRunQuickTest(){
   render();
 }
 
+/* Test complet, de bout en bout : charge réellement le worker + WebLLM +
+   le modèle (si pas déjà chargé), puis envoie un message trivial et
+   vérifie qu'une vraie réponse revient. Contrairement à aiRunQuickTest()
+   (qui ne vérifie que WebGPU), celui-ci confirme que TOUTE la chaîne
+   fonctionne — jamais de "ça marche" sans avoir réellement généré du texte.
+   Télécharge le modèle si nécessaire : n'est déclenché que sur demande explicite. */
+async function aiRunFullEngineTest(){
+  if(aiEngineBusy() || state.aiFullTestBusy) return;
+  state.aiFullTestBusy = true;
+  state.aiDiagPanelOpen = true;
+  state.aiFullTestResult = "⏳ Test en cours : chargement du moteur puis envoi d'un message de test…";
+  render();
+  try{
+    if(state.aiStatus !== "ready"){
+      await aiLoadModel(state.aiModelId || pickModelForDevice());
+    }
+    if(state.aiStatus !== "ready"){
+      state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé (voir « Détails techniques » ci-dessus pour l'étape exacte).";
+    } else {
+      const res = await webllmChat([{role:"user", content:"Réponds uniquement : IA locale fonctionnelle."}], {});
+      const text = (res && res.text || "").trim();
+      state.aiFullTestResult = text
+        ? "✅ Test réussi — réponse reçue du modèle local : « " + clip(text, 200) + " »"
+        : "❌ Le modèle a répondu, mais avec un texte vide : le moteur tourne, la génération elle-même pose problème.";
+    }
+  }catch(e){
+    state.aiFullTestResult = "❌ Échec du test : " + (e && e.message ? e.message : "erreur inconnue") + ".";
+  }
+  state.aiFullTestBusy = false;
+  render();
+}
+
 /* Relance le diagnostic complet depuis le début (utilisé par "Réessayer").
    Se protège contre les doubles clics pendant la vérification. */
 async function aiRetryDetection(){
@@ -7432,10 +7464,12 @@ function aiDiagnosticPanelHtml(){
       <div><b>Mode utilisé :</b> ${escapeHtml(modeLine)}</div>
     </div>
     <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn-text" id="ai-test-btn">🧪 Tester mon assistant IA</button>
+      <button class="btn-text" id="ai-test-btn">🧪 Tester WebGPU (rapide)</button>
       <button class="btn-text" id="ai-retry-check-btn">🔄 Réessayer le chargement</button>
+      <button class="btn-text" id="ai-full-test-btn" ${(aiEngineBusy() || state.aiFullTestBusy) ? "disabled" : ""}>${state.aiFullTestBusy ? "⏳ Test en cours…" : "🧪 Test complet (charge le modèle)"}</button>
     </div>
     ${state.aiTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiTestResult)}</div>` : ""}
+    ${state.aiFullTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiFullTestResult)}</div>` : ""}
     ${diag ? `<details class="ai-extra" style="margin-top:10px;">
       <summary>Détails techniques</summary>
       <div style="font-size:11.5px; line-height:1.8; margin-top:6px; color:var(--muted); font-family:monospace;">
@@ -7512,6 +7546,13 @@ function aiTeardownEngine(){
   webllmLoadedModelId = null;
 }
 
+/* Logs de diagnostic courts et lisibles pour suivre précisément où en est
+   le chargement du moteur IA (utile en console pendant un débogage — ne
+   change rien à l'interface). */
+function aiLog(step, detail){
+  console.log("[EM Lyon Révision · IA]", step, detail !== undefined ? detail : "");
+}
+
 async function aiLoadModel(modelId){
   if(state.aiStatus === "loading") return;
   if(state.aiStatus === "ready" && webllmLoadedModelId === modelId) return;
@@ -7524,10 +7565,12 @@ async function aiLoadModel(modelId){
   state.aiDiagnostic = null;
   state.aiLoadStartedAt = Date.now();
   render();
+  aiLog("Modèle demandé", modelId);
 
   const failLoad = (stage, raw) => {
     if(myLoadToken !== webllmLoadToken) return;
     console.error(`Échec du chargement IA (étape: ${stage}) :`, raw);
+    aiLog("Erreur détectée", stage);
     clearAiWatchdog();
     state.aiStatus = "error";
     state.aiDiagnostic = buildAiDiagnostic(stage, raw);
@@ -7538,6 +7581,7 @@ async function aiLoadModel(modelId){
     let webllm;
     try{
       webllm = await loadWebLLMModule();
+      aiLog("Module WebLLM chargé");
     }catch(e){
       failLoad("module_import", e);
       return;
@@ -7547,6 +7591,7 @@ async function aiLoadModel(modelId){
     aiTeardownEngine();
     try{
       webllmWorker = new Worker("ai-worker.js", { type: "module" });
+      aiLog("Worker créé");
     }catch(e){
       failLoad("worker_start", e);
       return;
@@ -7555,6 +7600,10 @@ async function aiLoadModel(modelId){
     webllmWorker.onerror = (err) => {
       workerErrored = true;
       failLoad("worker_start", err);
+    };
+    webllmWorker.onmessageerror = (err) => {
+      workerErrored = true;
+      failLoad("worker_start", { message: "Message illisible reçu depuis ai-worker.js (onmessageerror)." });
     };
 
     const armWatchdog = () => {
@@ -7566,6 +7615,7 @@ async function aiLoadModel(modelId){
     };
     armWatchdog();
 
+    aiLog("Initialisation demandée — début du téléchargement");
     webllmEngine = await webllm.CreateWebWorkerMLCEngine(webllmWorker, modelId, {
       initProgressCallback: (report) => {
         if(myLoadToken !== webllmLoadToken) return;
@@ -7579,6 +7629,7 @@ async function aiLoadModel(modelId){
     clearAiWatchdog();
     if(myLoadToken !== webllmLoadToken || workerErrored) return;
 
+    aiLog("Téléchargement terminé — modèle prêt");
     webllmLoadedModelId = modelId;
     state.aiModelId = modelId;
     state.aiStatus = "ready";
@@ -7652,6 +7703,7 @@ function aiChangeModel(key){
 
 async function webllmChat(turns, { onText, signal } = {}){
   if(!webllmEngine) throw new Error("Le modèle n'est pas chargé.");
+  aiLog("Génération commencée");
   const myToken = ++webllmGenerationToken;
   const messages = turns.map(t => ({ role: t.role, content: t.content }));
   let full = "";
@@ -7672,6 +7724,7 @@ async function webllmChat(turns, { onText, signal } = {}){
       if(onText) onText({ text: full });
     }
   }
+  aiLog("Réponse reçue", full.length + " caractères");
   return { text: full };
 }
 
@@ -7724,6 +7777,8 @@ Object.assign(state, {
   libGenerateError: "",
   aiDiagPanelOpen: false,
   aiRetryChecking: false,
+  aiFullTestResult: "",
+  aiFullTestBusy: false,
 });
 
 const AI_ACTIONS = {
@@ -8518,6 +8573,8 @@ function attachAIEvents(){
 
   const testBtn = document.getElementById("ai-test-btn");
   if(testBtn) testBtn.addEventListener("click", aiRunQuickTest);
+  const fullTestBtn = document.getElementById("ai-full-test-btn");
+  if(fullTestBtn && !fullTestBtn.disabled) fullTestBtn.addEventListener("click", aiRunFullEngineTest);
   const retryCheckBtn = document.getElementById("ai-retry-check-btn");
   if(retryCheckBtn && !retryCheckBtn.disabled) retryCheckBtn.addEventListener("click", aiRetryDetection);
   const diagPanel = document.getElementById("ai-diag-panel");
