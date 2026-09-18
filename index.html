@@ -2490,6 +2490,7 @@ let state = {
     activeIndex: 0,
     pasteText: "",
     dragOver: false,
+    genSignal: null,       // jeton d'annulation partagé de la génération en cours ({cancelled:false})
   },
 
   // --- aperçu du planning sur le dashboard : "today" | "tomorrow" ---
@@ -4820,6 +4821,17 @@ async function extractCourseFileText(file, onProgress){
 }
 
 /* ---- découpage + condensation pour les cours très longs ---- */
+/* Découpe un bloc trop long au dernier espace/saut de ligne avant `size`,
+   plutôt qu'à un index de caractère arbitraire — évite de couper au milieu
+   d'un mot. Retombe sur une coupe brute seulement si aucun espace n'existe
+   dans la zone (texte sans espaces, cas très rare). */
+function splitAtWordBoundary(text, size){
+  if(text.length <= size) return [text, ""];
+  let cut = text.lastIndexOf(" ", size);
+  if(cut < size * 0.5) cut = text.lastIndexOf("\n", size);
+  if(cut < size * 0.5) cut = size; // aucun espace/saut de ligne raisonnable trouvé : dernier recours
+  return [text.slice(0, cut).trim(), text.slice(cut).trim()];
+}
 function chunkCourseText(text, size){
   size = size || COURSE_CHUNK_CHARS;
   const paras = text.split(/\n{2,}/);
@@ -4828,29 +4840,136 @@ function chunkCourseText(text, size){
   paras.forEach(p=>{
     if(cur && (cur + "\n\n" + p).length > size){ chunks.push(cur); cur = p; }
     else cur = cur ? cur + "\n\n" + p : p;
-    while(cur.length > size * 1.4){ chunks.push(cur.slice(0, size)); cur = cur.slice(size); }
+    while(cur.length > size * 1.4){
+      const [head, rest] = splitAtWordBoundary(cur, size);
+      chunks.push(head);
+      cur = rest;
+    }
   });
   if(cur) chunks.push(cur);
   return chunks;
 }
 
-async function condenseCourseChunk(chunkText, index, total){
+/* ============================================================
+   GÉNÉRATION DE COURS — progression, minuteur, annulation
+   ============================================================ */
+
+/* Phases affichées à l'utilisateur pendant l'analyse + la génération,
+   mappées sur un pourcentage continu 0-100 (jamais une fausse valeur figée). */
+const COURSE_GEN_PHASES = [
+  { key:"extract",   group:1, pctFrom:0,  pctTo:15,  label:"Préparation de ton cours…" },
+  { key:"chunk",      group:1, pctFrom:15, pctTo:30,  label:"L'IA lit les différentes parties du document…" },
+  { key:"meta",       group:1, pctFrom:30, pctTo:45,  label:"Identification des notions importantes…" },
+  { key:"fiche",      group:2, pctFrom:45, pctTo:63,  label:"Création de ta fiche de révision…" },
+  { key:"summary",    group:2, pctFrom:63, pctTo:76,  label:"Rédaction de ton résumé…" },
+  { key:"quiz",       group:2, pctFrom:76, pctTo:86,  label:"Génération des questions de quiz…" },
+  { key:"flashcards", group:2, pctFrom:86, pctTo:94,  label:"Création de tes flashcards…" },
+  { key:"finalize",   group:3, pctFrom:94, pctTo:100, label:"Finalisation de tes supports de révision…" },
+];
+const COURSE_GEN_GROUP_LABELS = { 1:"Lecture et analyse du cours", 2:"Génération des supports de révision", 3:"Finalisation" };
+const COURSE_GEN_GROUP_COUNT = 3;
+
+function coursePhasePercent(phase, frac){
+  frac = Math.max(0, Math.min(1, frac == null ? 1 : frac));
+  return Math.round(phase.pctFrom + (phase.pctTo - phase.pctFrom) * frac);
+}
+
+/* Calcule {percent, label, groupIndex, groupLabel} à partir de l'état réel
+   de l'item — jamais une progression inventée : dérivée du statut, de la
+   progression d'extraction/de découpage, ou de l'étape de génération en
+   cours (item.genStepIndex). */
+function courseImportProgressInfo(item){
+  if(item.status === "extracting"){
+    const p = item.extractProgress;
+    const frac = (p && p.total) ? p.page / p.total : 0;
+    const phase = COURSE_GEN_PHASES[0];
+    return { percent: coursePhasePercent(phase, frac), label: phase.label, groupIndex: phase.group };
+  }
+  if(item.status === "detecting"){
+    const p = item.chunkProgress;
+    if(p && p.total > 1){
+      const phase = COURSE_GEN_PHASES[1];
+      return { percent: coursePhasePercent(phase, (p.i+1)/p.total), label: phase.label, groupIndex: phase.group };
+    }
+    // Cours court (pas de découpage) ou détection des métadonnées après le découpage.
+    const phase = COURSE_GEN_PHASES[2];
+    return { percent: coursePhasePercent(phase, 0.5), label: phase.label, groupIndex: phase.group };
+  }
+  if(item.status === "generating"){
+    const genPhases = COURSE_GEN_PHASES.slice(3, 7); // fiche, summary, quiz, flashcards
+    if(item.genStepIndex >= 0 && item.genStepIndex < genPhases.length){
+      const phase = genPhases[item.genStepIndex];
+      return { percent: coursePhasePercent(phase, 0.5), label: phase.label, groupIndex: phase.group };
+    }
+    if(item.genStepIndex >= genPhases.length){
+      // 5ᵉ étape interne (questions de révision) : fait partie de la finalisation à l'écran.
+      const phase = COURSE_GEN_PHASES[7];
+      return { percent: coursePhasePercent(phase, 0.3), label: "Préparation des questions de révision…", groupIndex: phase.group };
+    }
+    const phase = COURSE_GEN_PHASES[7];
+    return { percent: coursePhasePercent(phase, 1), label: phase.label, groupIndex: phase.group };
+  }
+  return { percent: 0, label: COURSE_GEN_PHASES[0].label, groupIndex: 1 };
+}
+
+function fmtElapsed(ms){
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m > 0 ? (m + " min " + String(r).padStart(2,"0") + " s") : (r + " s");
+}
+
+let courseImportTimerHandle = null;
+/* Démarre (ou redémarre) le minuteur affiché pendant l'extraction/analyse/génération.
+   Un seul minuteur actif à la fois — repartir d'un nouvel appel arrête l'ancien. */
+function courseImportStartTimer(item){
+  courseImportStopTimer();
+  item.genStartedAt = Date.now();
+  courseImportTimerHandle = setInterval(()=>{
+    if(state.tab === "library") render();
+  }, 1000);
+}
+function courseImportStopTimer(){
+  if(courseImportTimerHandle){ clearInterval(courseImportTimerHandle); courseImportTimerHandle = null; }
+}
+
+/* Distingue le type d'erreur pour afficher un message utile plutôt qu'un
+   message générique — d'après des motifs réels connus des erreurs WebGPU/
+   WebLLM, jamais une supposition présentée comme certaine. */
+function classifyGenerationError(e){
+  const msg = (e && e.message) ? e.message : String(e || "");
+  const low = msg.toLowerCase();
+  if(/out of memory|oom|allocation failed|memory/i.test(low)){
+    return { kind:"memory", message:"L'IA manque probablement de mémoire pour traiter ce cours en une seule fois. Essaie avec un cours plus court, ou découpe ton document en plusieurs parties." };
+  }
+  if(/device was lost|gpudevice|webgpu|context lost|adapter/i.test(low)){
+    return { kind:"webgpu", message:"L'accélération graphique n'est plus disponible. Recharge la page ou vérifie les paramètres graphiques de ton navigateur." };
+  }
+  if(/cancelled/i.test(low)){
+    return { kind:"cancelled", message:"Génération annulée." };
+  }
+  return { kind:"generic", message:"La génération a rencontré un problème. Ton cours original est conservé. Tu peux réessayer.", detail: msg };
+}
+
+async function condenseCourseChunk(chunkText, index, total, signal){
   const prompt = AI_SYSTEM + "\n\nEXTRAIT " + (index+1) + "/" + total + " D'UN COURS :\n" + chunkText +
     "\n\nTÂCHE : condense cet extrait en une liste dense de points (définitions, faits, formules, exemples, dates, auteurs), sans rien inventer ni interpréter. Conserve le vocabulaire exact du cours. Réponds uniquement par la liste condensée, sans commentaire autour.";
-  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const res = await webllmChat([{role:"user", content: prompt}], { signal });
   return (res && res.text) ? res.text.trim() : "";
 }
 
 /* Pour un cours très long : condense chaque section avant de l'utiliser comme source pour
-   le reste du pipeline, pour rester dans la capacité du modèle sans perdre d'information. */
-async function buildWorkingCourseText(rawText, onProgress){
+   le reste du pipeline, pour rester dans la capacité du modèle sans perdre d'information.
+   `signal` (optionnel, {cancelled}) permet d'interrompre proprement entre deux sections. */
+async function buildWorkingCourseText(rawText, onProgress, signal){
   const trimmed = rawText.trim();
   if(trimmed.length <= COURSE_CONDENSE_THRESHOLD) return { text: trimmed, wasCondensed: false, chunkCount: 1 };
   const chunks = chunkCourseText(trimmed);
   const digests = [];
   for(let i=0; i<chunks.length; i++){
+    if(signal && signal.cancelled) return { text: clip(digests.join("\n\n"), 12000), wasCondensed: true, chunkCount: chunks.length };
     if(onProgress) onProgress(i, chunks.length);
-    const digest = await condenseCourseChunk(chunks[i], i, chunks.length);
+    const digest = await condenseCourseChunk(chunks[i], i, chunks.length, signal);
     if(digest) digests.push(digest);
   }
   return { text: clip(digests.join("\n\n"), 12000), wasCondensed: true, chunkCount: chunks.length };
@@ -4879,12 +4998,12 @@ function extractJsonObject(text){
   }
 }
 
-async function detectCourseMeta(workingText, fileName){
+async function detectCourseMeta(workingText, fileName, signal){
   const existingSubjects = allSubjects().map(s=>s.name).join(", ");
   const prompt = AI_SYSTEM + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
     "\n\nMatières déjà existantes sur ce site : " + (existingSubjects || "(aucune)") +
     "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, un niveau probable (L1, L2 ou L3 — ou une chaîne vide si tu ne peux pas le déterminer), et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"level\":\"...\",\"notions\":[\"...\"]}";
-  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const res = await webllmChat([{role:"user", content: prompt}], { signal });
   const parsed = extractJsonObject(res && res.text);
   const fallbackTitle = (fileName || "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
   return {
@@ -4907,47 +5026,47 @@ function courseGenContext(workingText, meta){
   );
 }
 
-async function generateCourseFiche(workingText, meta){
+async function generateCourseFiche(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : rédige une fiche de cours structurée à partir UNIQUEMENT de ce contenu, sans rien inventer. Utilise ces sections, seulement celles que le contenu permet de remplir :\n## Grandes parties\n## Définitions importantes\n## Notions essentielles\n## Mécanismes / raisonnements\n## Exemples\n## Formules ou dates si présentes\n## Points à retenir\nSignale entre crochets [information manquante] si un passage du cours semblait incomplet ou illisible.";
-  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const res = await webllmChat([{role:"user", content: prompt}], { signal });
   const text = (res && res.text) ? res.text.trim() : "";
   if(!text) throw new Error("la fiche générée est vide");
   return text;
 }
 
-async function generateCourseSummary(workingText, meta){
+async function generateCourseSummary(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : rédige, sans rien inventer : 1) un résumé court (3 à 5 phrases) ; 2) une liste des idées essentielles (une ligne chacune). Commence par « Résumé court » puis « Idées essentielles ».";
-  const res = await webllmChat([{role:"user", content: prompt}], {});
+  const res = await webllmChat([{role:"user", content: prompt}], { signal });
   const text = (res && res.text) ? res.text.trim() : "";
   if(!text) throw new Error("le résumé généré est vide");
   return text;
 }
 
-async function generateCourseQuizFromText(workingText, meta){
+async function generateCourseQuizFromText(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère 8 questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
   const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
     .map((q,i)=>({ uid:"import-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String), correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"" }));
   if(quiz.length === 0) throw new Error("aucune question générée (format inattendu)");
   return quiz;
 }
 
-async function generateCourseFlashcardsFromText(workingText, meta){
+async function generateCourseFlashcardsFromText(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère 10 flashcards de révision (définitions, notions, formules, auteurs, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
   const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front), back:String(c.back), ai:true}));
   if(cards.length === 0) throw new Error("aucune flashcard générée (format inattendu)");
   return cards;
 }
 
-async function generateCourseReviewQuestions(workingText, meta){
+async function generateCourseReviewQuestions(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère 6 questions de révision variées sur ce contenu (définition, compréhension, application, et une question plus difficile si le contenu le permet), avec leur réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"a\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
+  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
   const qs = (arr||[]).filter(q=>q&&q.q&&q.a).map(q=>({q:String(q.q), a:String(q.a)}));
   if(qs.length === 0) throw new Error("aucune question de révision générée (format inattendu)");
   return qs;
@@ -5070,6 +5189,8 @@ function courseImportAddFiles(fileList){
       detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
       failedSteps: [], genStepIndex: -1,
       resultChapterId: null, resultSubjectId: null,
+      extractProgress: null, chunkProgress: null,
+      genStartedAt: null, currentStepStartedAt: null, lastStepError: null, cancelled: false,
     });
   });
 }
@@ -5087,6 +5208,8 @@ function courseImportAddPasteAsFile(){
     detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
     failedSteps: [], genStepIndex: -1,
     resultChapterId: null, resultSubjectId: null,
+    extractProgress: null, chunkProgress: null,
+    genStartedAt: null, currentStepStartedAt: null, lastStepError: null, cancelled: false,
   });
   ci.pasteText = "";
 }
@@ -5116,26 +5239,36 @@ async function courseImportProcessFile(index){
   ci.activeIndex = index;
 
   item.status = "extracting";
+  item.cancelled = false;
+  item.lastStepError = null;
+  courseImportStartTimer(item);
+  const signal = ci.genSignal = { cancelled: false };
+  aiLog("Début de génération", item.name);
   render();
   let extracted;
   try{
     extracted = item.file ? await extractCourseFileText(item.file, (page, total)=>{
+      item.extractProgress = { page, total };
       item.warning = "Lecture du PDF : page " + page + "/" + total + "…";
       render();
     }) : { text: item.extractedText, truncated: false, numPages: null, isScanned: false };
   }catch(e){
+    courseImportStopTimer();
     item.status = "error";
     item.error = e.message || "Erreur lors de la lecture du fichier.";
     render();
     courseImportAdvanceIfNeeded(index);
     return;
   }
+  if(signal.cancelled) return courseImportHandleCancelled(item);
   item.extractedText = extracted.text;
   item.charCount = extracted.text.length;
   item.numPages = extracted.numPages || null;
   item.warning = extracted.truncated ? "Document très long : seules les 100 premières pages ont été lues." : null;
+  aiLog("Longueur du cours", item.charCount + " caractères");
 
   if(extracted.isScanned){
+    courseImportStopTimer();
     item.status = "error";
     item.error = "Ce PDF ne contient pas de texte exploitable (probablement des pages scannées/images). L'OCR n'est pas disponible pour l'instant. Importe un PDF contenant du vrai texte, ou colle le contenu directement.";
     render();
@@ -5143,6 +5276,7 @@ async function courseImportProcessFile(index){
     return;
   }
   if(item.extractedText.trim().length < COURSE_IMPORT_MIN_CHARS){
+    courseImportStopTimer();
     item.status = "error";
     item.error = "Ce fichier semble vide ou illisible. Ajoute du contenu, ou colle le texte de ton cours directement.";
     render();
@@ -5152,6 +5286,7 @@ async function courseImportProcessFile(index){
 
   item.status = "detecting";
   ci.busy = true;
+  aiLog("Étape 1/3 : analyse du contenu");
   render();
   // L'extraction a réussi : à partir d'ici, l'import ne doit plus jamais être
   // considéré comme un échec juste parce que l'IA locale est indisponible.
@@ -5166,12 +5301,16 @@ async function courseImportProcessFile(index){
       try{
         const built = await buildWorkingCourseText(item.extractedText, (i,total)=>{
           item.error = null;
+          item.chunkProgress = { i, total };
           item.warning = "Cours long : analyse en cours (" + (i+1) + "/" + total + ")…";
           render();
-        });
+        }, signal);
+        if(signal.cancelled) return courseImportHandleCancelled(item);
         item.workingText = built.text;
         item.warning = built.wasCondensed ? "Cours long : condensé automatiquement en " + built.chunkCount + " section(s) avant génération." : item.warning;
-        meta = await detectCourseMeta(built.text, item.name);
+        aiLog("Nombre de parties", built.chunkCount);
+        meta = await detectCourseMeta(built.text, item.name, signal);
+        if(signal.cancelled) return courseImportHandleCancelled(item);
       }catch(e){
         // La détection IA a échoué en cours de route : on ne perd pas le cours,
         // on retombe sur la détection simple.
@@ -5201,8 +5340,20 @@ async function courseImportProcessFile(index){
     item.error = e.message || "Erreur lors de l'analyse du cours.";
   }finally{
     ci.busy = false;
+    courseImportStopTimer();
     render();
   }
+}
+
+/* Arrête proprement une génération annulée en cours d'analyse/extraction —
+   ne touche jamais au texte déjà extrait ni aux données déjà sauvegardées. */
+function courseImportHandleCancelled(item){
+  courseImportStopTimer();
+  state.courseImport.busy = false;
+  item.status = "cancelled";
+  item.cancelled = true;
+  aiLog("Génération annulée");
+  render();
 }
 
 function courseImportAdvanceIfNeeded(index){
@@ -5233,12 +5384,24 @@ async function courseImportGenerate(index){
   item.status = "generating";
   item.failedSteps = [];
   item.heuristicMode = false;
+  item.lastStepError = null;
+  item.cancelled = false;
   ci.busy = true;
   ci.step = "generating";
+  const signal = ci.genSignal = { cancelled: false };
+  courseImportStartTimer(item);
+  aiLog("Étape 2/3 : génération des supports");
   render();
-  await courseImportRunAllSteps(item);
+  await courseImportRunAllSteps(item, signal);
   ci.busy = false;
+  if(signal.cancelled){
+    courseImportHandleCancelled(item);
+    return;
+  }
+  aiLog("Étape 3/3 : finalisation");
   await courseImportFinalize(index);
+  courseImportStopTimer();
+  aiLog("Génération terminée");
 }
 
 /* "Enregistrer sans IA" : sauvegarde immédiatement le cours avec le texte déjà
@@ -5249,6 +5412,7 @@ async function courseImportSaveWithoutAI(index){
   const ci = state.courseImport;
   const item = ci.files[index];
   if(!item || item.status !== "review" || ci.busy) return;
+  courseImportStopTimer();
   ci.busy = true;
   item.status = "generating";
   item.heuristicMode = true;
@@ -5264,7 +5428,7 @@ async function courseImportSaveWithoutAI(index){
   await courseImportFinalize(index, { aiSkipped: true });
 }
 
-async function courseImportRunAllSteps(item){
+async function courseImportRunAllSteps(item, signal){
   const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions };
   const steps = [
     {key:"fiche", fn: generateCourseFiche},
@@ -5274,13 +5438,21 @@ async function courseImportRunAllSteps(item){
     {key:"reviewQuestions", fn: generateCourseReviewQuestions},
   ];
   for(let i=0;i<steps.length;i++){
+    if(signal && signal.cancelled) return;
     item.genStepIndex = i;
+    item.currentStepStartedAt = Date.now();
     render();
     try{
-      item.generated[steps[i].key] = await steps[i].fn(item.workingText, meta);
+      item.generated[steps[i].key] = await steps[i].fn(item.workingText, meta, signal);
+      if(signal && signal.cancelled) return;
       item.failedSteps = item.failedSteps.filter(k => k !== steps[i].key);
+      item.lastStepError = null;
     }catch(e){
+      if(signal && signal.cancelled) return;
       if(!item.failedSteps.includes(steps[i].key)) item.failedSteps.push(steps[i].key);
+      const classified = classifyGenerationError(e);
+      item.lastStepError = classified;
+      console.error("[EM Lyon Révision · IA] Erreur de génération :", steps[i].key, e);
     }
   }
   item.genStepIndex = -1;
@@ -5301,8 +5473,11 @@ async function courseImportRetryStep(index, key){
   try{
     item.generated[key] = await fns[key](item.workingText, meta);
     item.failedSteps = item.failedSteps.filter(k => k !== key);
+    item.lastStepError = null;
   }catch(e){
     if(!item.failedSteps.includes(key)) item.failedSteps.push(key);
+    item.lastStepError = classifyGenerationError(e);
+    console.error("[EM Lyon Révision · IA] Erreur de génération :", key, e);
   }
   item.genStepIndex = -1;
   ci.busy = false;
@@ -5425,7 +5600,8 @@ async function courseImportFinalize(index, opts){
 }
 
 function courseImportReset(){
-  state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false };
+  courseImportStopTimer();
+  state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false, genSignal:null };
   render();
 }
 
@@ -5434,7 +5610,10 @@ function courseImportReset(){
 function goToCourseImport(){
   const ci = state.courseImport;
   const hasActiveWork = ci.files.some(f => ["pending","extracting","detecting","review","generating"].includes(f.status));
-  if(!hasActiveWork) state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false };
+  if(!hasActiveWork){
+    courseImportStopTimer();
+    state.courseImport = { step:"pick", busy:false, files:[], activeIndex:0, pasteText:"", dragOver:false, genSignal:null };
+  }
   libGoto("import");
 }
 
@@ -5446,10 +5625,21 @@ function fmtFileSize(bytes){
 
 function renderCourseImportWizard(){
   const ci = state.courseImport;
+  const activeItem = ci.files[ci.activeIndex];
+  if(activeItem && activeItem.status === "cancelled") return renderImportCancelled(activeItem);
   if(ci.step === "generating") return renderImportGenerating();
   if(ci.step === "result") return renderImportResult();
   if(ci.step === "detect") return renderImportDetectOrReview();
   return renderImportPick();
+}
+
+function renderImportCancelled(item){
+  return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Génération annulée</h1>
+  <div class="ai-notice">Génération annulée.<br>Ton cours original n'a pas été supprimé${item.charCount ? " — le texte extrait (" + item.charCount.toLocaleString("fr-FR") + " caractères) reste disponible" : ""}.</div>
+  <div class="actions" style="justify-content:flex-start;margin-top:16px;flex-wrap:wrap;">
+    <button class="btn red" id="import-relaunch-btn">🔄 Relancer la génération</button>
+    <button class="btn-text" id="import-cancel-back-btn">← Retour à mes cours</button>
+  </div>`;
 }
 
 function renderImportPick(){
@@ -5489,6 +5679,75 @@ function renderImportPick(){
   return html;
 }
 
+/* Bloc de progression partagé (barre + %, étape sur 3, minuteur, annuler,
+   avertissement adapté à la longueur, avertissement "ça prend du temps")
+   — utilisé à la fois pendant l'analyse (extraction/découpage) et pendant
+   la génération des supports, sur une échelle continue 0-100 %. */
+function renderCourseGenProgressHtml(item){
+  const info = courseImportProgressInfo(item);
+  const elapsed = item.genStartedAt ? fmtElapsed(Date.now() - item.genStartedAt) : "0 s";
+  const groupLabel = COURSE_GEN_GROUP_LABELS[info.groupIndex] || "";
+  let html = `<div class="card import-progress-card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:2px;">
+      <b style="font-size:13px;">Étape ${info.groupIndex} sur ${COURSE_GEN_GROUP_COUNT} — ${escapeHtml(groupLabel)}</b>
+      <span style="font-size:12px;color:var(--muted);flex-shrink:0;">${info.percent} %</span>
+    </div>
+    <div class="ai-loadbar"><div class="ai-loadbar-fill" style="width:${info.percent}%;"></div></div>
+    <p class="s" style="margin:8px 0 0;font-size:12.5px;color:var(--ink-soft);">${escapeHtml(info.label)}</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px;">
+      <span style="font-size:12px;color:var(--muted);">⏱️ Temps écoulé : ${escapeHtml(elapsed)}</span>
+      <button class="btn-text" id="import-cancel-gen-btn" style="color:var(--red-dark);">✕ Annuler la génération</button>
+    </div>
+  </div>`;
+
+  const cc = item.charCount || 0;
+  if(cc > 20000){
+    html += `<div class="ai-notice" style="margin-top:12px;">📚 Ton cours est assez long.<br>L'IA peut prendre plusieurs minutes pour l'analyser. Tu peux laisser cette page ouverte pendant le traitement.<br>Ne ferme pas cet onglet tant que la génération n'est pas terminée.</div>`;
+  } else if(cc > 8000){
+    html += `<p class="ai-hint" style="margin-top:10px;">L'analyse peut prendre un peu de temps.</p>`;
+  }
+
+  const stepStarted = item.currentStepStartedAt || item.genStartedAt;
+  if(stepStarted && (Date.now() - stepStarted) > 45000){
+    html += `<div class="ai-error" style="margin-top:10px;">⏳ L'analyse prend plus de temps que prévu.<br>L'IA travaille peut-être encore sur ton cours. Tu peux attendre ou annuler la génération.</div>`;
+  }
+  if(item.lastStepError){
+    html += `<div class="ai-error" style="margin-top:10px;">${escapeHtml(item.lastStepError.message)}</div>`;
+  }
+  return html;
+}
+
+/* "Annuler la génération" : demande confirmation seulement si la génération
+   est déjà avancée, arrête le minuteur, signale l'annulation au traitement
+   en cours (qui s'arrête à son prochain point de contrôle) — ne supprime
+   jamais le texte déjà extrait ni les données déjà sauvegardées. */
+function courseImportCancel(){
+  const ci = state.courseImport;
+  const item = ci.files[ci.activeIndex];
+  if(!item) return;
+  const info = courseImportProgressInfo(item);
+  if(info.percent >= 10 && !confirm("Annuler la génération en cours ? Ton cours original (texte extrait) ne sera pas supprimé.")) return;
+  if(ci.genSignal) ci.genSignal.cancelled = true;
+}
+
+/* Renvoie un fichier annulé vers l'étape appropriée pour relancer :
+   l'écran de révision s'il avait déjà été détecté, ou une ré-analyse complète sinon. */
+function courseImportRelaunch(index){
+  const ci = state.courseImport;
+  const item = ci.files[index];
+  if(!item) return;
+  item.cancelled = false;
+  item.lastStepError = null;
+  ci.step = "detect";
+  if(item.detected){
+    item.status = "review";
+    render();
+  } else {
+    item.status = "pending";
+    courseImportProcessFile(index);
+  }
+}
+
 function renderImportDetectOrReview(){
   const ci = state.courseImport;
   const item = ci.files[ci.activeIndex];
@@ -5496,13 +5755,7 @@ function renderImportDetectOrReview(){
 
   if(item.status === "pending" || item.status === "extracting" || item.status === "detecting"){
     return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Analyse de ton cours…</h1>
-    <div class="card">
-      <div class="ai-loading"><span class="ai-spinner"></span>
-        <div>${item.status === "extracting" ? "Lecture du fichier « " + escapeHtml(item.name) + " »…" : "Analyse du contenu…"}
-        ${item.warning ? `<div class="s">${escapeHtml(item.warning)}</div>` : ""}
-        </div>
-      </div>
-    </div>`;
+    ${renderCourseGenProgressHtml(item)}`;
   }
 
   if(item.status === "error"){
@@ -5584,10 +5837,15 @@ function renderImportGenerating(){
   if(!item) return renderImportPick();
   const curIdx = item.genStepIndex;
   let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Création de tes supports de révision…</h1>
-  <p class="ai-intro">« ${escapeHtml(item.detected ? item.detected.title : item.name)} »</p>
-  <div class="card import-progress-card">`;
+  <p class="ai-intro">« ${escapeHtml(item.detected ? item.detected.title : item.name)} »</p>`;
+  html += renderCourseGenProgressHtml(item);
+
   const steps = ["Lecture du contenu", "Analyse du cours"].concat(COURSE_IMPORT_STEP_LABELS, ["Finalisation"]);
   // Les deux premières étapes (lecture/analyse) sont déjà faites au moment où "generating" s'affiche.
+  const doneCount = Math.min(steps.length, curIdx < 0 ? steps.length : curIdx + 2);
+  html += `<details class="ai-extra" style="margin-top:12px;">
+    <summary>Détail des étapes (${doneCount}/${steps.length} terminée${doneCount>1?"s":""})</summary>
+    <div class="card import-progress-card" style="margin-top:8px;">`;
   html += steps.map((label,i)=>{
     const stepOffset = i - 2; // aligne sur genStepIndex (0 = fiche)
     let state_ = "done";
@@ -5600,7 +5858,7 @@ function renderImportGenerating(){
       ${state_==="current" ? `<span class="ai-spinner" style="margin-left:auto;"></span>` : ""}
     </div>`;
   }).join("");
-  html += `</div>
+  html += `</div></details>
   <footer class="hint">Cette étape peut prendre un moment selon la longueur du cours et ton appareil — ne ferme pas cette fenêtre.</footer>`;
   return html;
 }
@@ -5716,6 +5974,14 @@ function attachCourseImportEvents(){
   if(genBtn && !genBtn.disabled) genBtn.addEventListener("click", courseImportStart);
   const cancelBtn = document.getElementById("import-cancel-btn");
   if(cancelBtn) cancelBtn.addEventListener("click", ()=> libGoto("subjects"));
+
+  /* ---- annulation / relance d'une génération en cours ---- */
+  const cancelGenBtn = document.getElementById("import-cancel-gen-btn");
+  if(cancelGenBtn) cancelGenBtn.addEventListener("click", courseImportCancel);
+  const relaunchBtn = document.getElementById("import-relaunch-btn");
+  if(relaunchBtn) relaunchBtn.addEventListener("click", ()=> courseImportRelaunch(ci.activeIndex));
+  const cancelBackBtn = document.getElementById("import-cancel-back-btn");
+  if(cancelBackBtn) cancelBackBtn.addEventListener("click", ()=> libGoto("subjects"));
 
   /* ---- étape "detect" (extraction/analyse en cours, erreur, ou confirmation) ---- */
   const retryFileBtn = document.getElementById("import-retry-file-btn");
