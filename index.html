@@ -1116,6 +1116,79 @@
   .color-swatches button.active{ border-color: var(--ink); }
   .chapter-status-select{ display:flex; gap:8px; }
 
+  /* ===== RESSOURCES — AUTOMATISER MES RÉVISIONS ===== */
+  .automate-card{ margin:22px 0 28px; }
+  .automate-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:18px; }
+  .automate-head .ico{
+    font-size:22px; width:44px; height:44px; border-radius:12px; flex-shrink:0;
+    background: var(--red-tint); display:flex; align-items:center; justify-content:center;
+  }
+  .automate-head .h{ font-size:16px; font-weight:800; margin-bottom:4px; }
+  .automate-head .d{ font-size:12.5px; color: var(--ink-soft); line-height:1.55; max-width:560px; }
+  .import-dropzone-compact{ padding:26px 18px; }
+  .automate-advanced{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+  .automate-advanced summary{ font-size:12px; font-weight:700; color: var(--ink-soft); cursor:pointer; list-style:none; }
+  .automate-advanced summary::marker{ content:""; }
+  .automate-advanced summary:hover{ color: var(--red); }
+
+  /* ===== RESSOURCES — BIBLIOTHÈQUE DE COURS ===== */
+  .course-filters-card{ padding:16px 18px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px; }
+  .course-filters-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .course-filters-row .ai-select{ width:100%; }
+  .course-filters-footer{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .course-viewtoggle{ display:flex; gap:2px; background: var(--bg); border-radius:10px; padding:3px; }
+  .course-viewbtn{
+    border:none; background:none; padding:6px 12px; border-radius:8px; cursor:pointer;
+    font-size:14px; color: var(--muted); line-height:1;
+  }
+  .course-viewbtn.active{ background: var(--surface); color: var(--ink); box-shadow: var(--shadow-xs); }
+
+  .course-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:900px){ .course-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .course-grid{ grid-template-columns:1fr; } }
+  @media (max-width:760px){ .course-filters-row{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:520px){ .course-filters-row{ grid-template-columns:1fr; } }
+
+  .course-card{
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:16px 17px; cursor:pointer; box-shadow: var(--shadow-sm);
+    display:flex; flex-direction:column; gap:9px;
+    transition: border-color .16s var(--ease), transform .16s var(--ease), box-shadow .16s var(--ease);
+  }
+  .course-card:hover, .course-card:focus-visible{ border-color: var(--red); transform: translateY(-2px); box-shadow: var(--shadow-md); outline:none; }
+  .course-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .course-card-icon{ font-size:19px; width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .course-card-badges{ display:flex; align-items:center; gap:6px; }
+  .course-card-title{ font-size:14px; font-weight:800; line-height:1.3; color: var(--ink); }
+  .course-card-meta{ font-size:11.5px; color: var(--ink-soft); }
+  .course-card-stats{ display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color: var(--muted); font-weight:600; }
+  .course-card-chips{ display:flex; gap:6px; flex-wrap:wrap; }
+  .course-card-chip{
+    font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px;
+    background: var(--green-tint); color: var(--green);
+  }
+  .course-card-chip.off{ background: var(--bg); color: var(--muted); }
+  .course-card-chip.ok{ background:none; padding:0; font-size:13px; }
+  .course-card-progress{ display:flex; align-items:center; gap:8px; margin-top:2px; }
+  .course-card-progress .deckbar-track{ flex:1; height:5px; background: var(--bg); border-radius:999px; overflow:hidden; }
+  .course-card-progress .deckbar-fill{ height:100%; border-radius:999px; transition: width .4s var(--ease); }
+  .course-card-progress .deckbar-fill.none{ background: var(--border-strong); }
+  .course-card-progress .deckbar-fill.progress{ background: var(--amber); }
+  .course-card-progress .deckbar-fill.done{ background: var(--green); }
+  .course-card-progress .pct{ font-size:11px; font-weight:700; color: var(--muted); flex-shrink:0; }
+  .course-card-open{ align-self:flex-start; margin-top:4px; pointer-events:none; }
+
+  .course-list{ display:flex; flex-direction:column; gap:10px; }
+  .course-list .course-card{
+    flex-direction:row; align-items:center; flex-wrap:wrap; padding:12px 16px; gap:14px;
+  }
+  .course-list .course-card-top{ flex-direction:column; align-items:flex-start; gap:6px; }
+  .course-list .course-card-title{ min-width:160px; }
+  .course-list .course-card-meta{ min-width:120px; }
+  .course-list .course-card-chips{ margin-left:auto; }
+  .course-list .course-card-progress{ width:110px; margin-top:0; }
+  .course-list .course-card-open{ margin-top:0; }
+
   /* ===== PLANNING — CALENDRIER JOUR / SEMAINE / MOIS ===== */
   .cal-viewbtn{
     border:none; background:none; padding:7px 14px; border-radius:999px;
@@ -1396,8 +1469,7 @@
           <button class="mainnav-link" data-menu-toggle="resources">Ressources <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-resources">
             <button data-goto="fiches" data-filter="all">Bibliothèque de cours</button>
-            <button data-goto="fiches" data-filter="doc-document">Mes documents</button>
-            <button data-goto="fiches" data-filter="doc-resume">Résumés</button>
+            <button data-goto="import-course">📥 Importer un cours</button>
           </div>
         </div>
 
@@ -2427,7 +2499,11 @@ let state = {
   courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
 
   // --- bibliothèque de cours (recherche/filtre) ---
-  catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all", docType: "all" },
+  catalog: {
+    query: "", subjectId: "all", semesterId: "all", scope: "all", docType: "all",
+    level: "all", revisionState: "all", sortBy: "recent", viewMode: "grid",
+    advancedOpen: false,
+  },
 
   // --- documents importés (Ressources + sujets d'examen) ---
   documents: [],   // [{id, name, type:"document"|"resume"|"sujet", subjectId, mime, addedAt, content?|dataUrl?}]
@@ -3966,7 +4042,13 @@ function renderChapterDetail(){
       <button class="btn-text" id="lib-mark-reviewed-btn" style="${ch.markedReviewed?"color:var(--green);":""}">${ch.markedReviewed ? "✅ Révisé" : "Marquer comme révisé"}</button>
     </div>`;
 
-    if(ch.sourceFileName) html += `<p style="font-size:11.5px;color:var(--muted);margin:-8px 0 14px;">📥 Importé depuis « ${escapeHtml(ch.sourceFileName)} »</p>`;
+    if(ch.sourceFileName) html += `<p style="font-size:11.5px;color:var(--muted);margin:-8px 0 14px;">📥 Importé depuis « ${escapeHtml(ch.sourceFileName)} »${ch.pageCount ? " · " + ch.pageCount + " page" + (ch.pageCount>1?"s":"") : ""}</p>`;
+    if(ch.hasOriginalFile){
+      html += `<div class="actions" style="margin:-6px 0 16px;justify-content:flex-start;">
+        <button class="btn outline small" id="lib-open-pdf-btn">📄 Lire le PDF</button>
+        <button class="btn-text" id="lib-download-pdf-btn">⬇️ Télécharger le PDF</button>
+      </div>`;
+    }
     if(ch.keyNotions && ch.keyNotions.length){
       html += `<div class="import-notion-tags" style="margin-bottom:16px;">${ch.keyNotions.map(n=>`<span class="import-notion-tag">${escapeHtml(n)}</span>`).join("")}</div>`;
     }
@@ -4059,6 +4141,12 @@ function renderChapterDetail(){
       <button class="mode-card" id="lib-goto-flash"><div class="mc-top"><span class="mc-title">🃏 Réviser les flashcards</span></div><span class="mc-desc">Le paquet complet du chapitre.</span></button>
       <button class="mode-card" id="lib-goto-ai"><div class="mc-top"><span class="mc-title">🤖 Assistant IA</span></div><span class="mc-desc">Résumé, interrogation ou question libre.</span></button>
     </div>`;
+    if(FICHES[ch.id]){
+      html += `<div class="card" id="chapterdetail-fiche" style="margin-top:20px;">
+        <div class="section-title">Fiche de cours</div>
+        ${FICHES[ch.id]}
+      </div>`;
+    }
   }
 
   return html;
@@ -4185,6 +4273,7 @@ function attachLibraryEvents(){
       if(delBtn) delBtn.addEventListener("click", ()=>{
         if(!confirm("Supprimer ce chapitre ? Cette action est définitive.")) return;
         const subjId = ch.subjectId;
+        if(ch.hasOriginalFile) deleteCourseFileBlob(ch.id).catch(()=>{});
         state.userChapters = state.userChapters.filter(c=>c.id!==ch.id);
         saveUserChapters();
         libGoto("subjectDetail", {subjectId: subjId});
@@ -4207,6 +4296,35 @@ function attachLibraryEvents(){
         ch.markedReviewed = !ch.markedReviewed;
         saveUserChapters();
         render();
+      });
+      const openPdfBtn = document.getElementById("lib-open-pdf-btn");
+      if(openPdfBtn) openPdfBtn.addEventListener("click", async ()=>{
+        openPdfBtn.disabled = true;
+        try{
+          const blob = await getCourseFileBlob(ch.id);
+          if(!blob){ alert("Le PDF original n'est plus disponible dans ce navigateur."); return; }
+          const url = URL.createObjectURL(blob);
+          window.open(url, "_blank", "noopener");
+          setTimeout(()=> URL.revokeObjectURL(url), 60000);
+        }catch(e){
+          alert("Impossible d'ouvrir le PDF (" + (e.message||"erreur") + ").");
+        }finally{
+          openPdfBtn.disabled = false;
+        }
+      });
+      const downloadPdfBtn = document.getElementById("lib-download-pdf-btn");
+      if(downloadPdfBtn) downloadPdfBtn.addEventListener("click", async ()=>{
+        try{
+          const blob = await getCourseFileBlob(ch.id);
+          if(!blob){ alert("Le PDF original n'est plus disponible dans ce navigateur."); return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = ch.originalFileName || (ch.title + ".pdf");
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(()=> URL.revokeObjectURL(url), 60000);
+        }catch(e){
+          alert("Impossible de télécharger le PDF (" + (e.message||"erreur") + ").");
+        }
       });
       const regenFiche = document.getElementById("lib-regen-fiche");
       if(regenFiche) regenFiche.addEventListener("click", ()=> libRegeneratePart(ch, "fiche"));
@@ -4265,7 +4383,10 @@ function attachLibraryEvents(){
       });
     } else if(ch){
       const gf = document.getElementById("lib-goto-fiche");
-      if(gf) gf.addEventListener("click", ()=>{ state.fichesLevel = ch.level; switchTab("fiches"); });
+      if(gf) gf.addEventListener("click", ()=>{
+        const el = document.getElementById("chapterdetail-fiche");
+        if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+      });
       const gq = document.getElementById("lib-goto-quiz");
       if(gq) gq.addEventListener("click", ()=> startQuiz("chapter:"+ch.id, ch.title, ch.themes));
       const gfl = document.getElementById("lib-goto-flash");
@@ -4520,6 +4641,52 @@ const COURSE_IMPORT_MIN_CHARS = 40;               // en dessous : considéré vi
 const COURSE_CHUNK_CHARS = 5000;
 const COURSE_CONDENSE_THRESHOLD = 9000;
 
+/* ---- fichiers PDF originaux : trop volumineux pour localStorage, stockés dans IndexedDB,
+   indexés par l'identifiant du chapitre (les métadonnées légères restent dans le chapitre
+   lui-même, sauvegardé normalement via localStorage). ---- */
+const COURSE_FILES_DB_NAME = "em-lyon-revision-files";
+const COURSE_FILES_STORE = "pdfs";
+let courseFilesDBPromise = null;
+function openCourseFilesDB(){
+  if(!window.indexedDB) return Promise.reject(new Error("IndexedDB non disponible sur ce navigateur."));
+  if(!courseFilesDBPromise){
+    courseFilesDBPromise = new Promise((resolve, reject)=>{
+      const req = indexedDB.open(COURSE_FILES_DB_NAME, 1);
+      req.onupgradeneeded = ()=>{ if(!req.result.objectStoreNames.contains(COURSE_FILES_STORE)) req.result.createObjectStore(COURSE_FILES_STORE); };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error || new Error("Impossible d'ouvrir le stockage local des fichiers."));
+    });
+  }
+  return courseFilesDBPromise;
+}
+async function saveCourseFileBlob(chapterId, blob){
+  const db = await openCourseFilesDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(COURSE_FILES_STORE, "readwrite");
+    tx.objectStore(COURSE_FILES_STORE).put(blob, chapterId);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+async function getCourseFileBlob(chapterId){
+  const db = await openCourseFilesDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(COURSE_FILES_STORE, "readonly");
+    const req = tx.objectStore(COURSE_FILES_STORE).get(chapterId);
+    req.onsuccess = ()=> resolve(req.result || null);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function deleteCourseFileBlob(chapterId){
+  const db = await openCourseFilesDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(COURSE_FILES_STORE, "readwrite");
+    tx.objectStore(COURSE_FILES_STORE).delete(chapterId);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+
 /* ---- extraction de texte par format ---- */
 let pdfjsModulePromise = null;
 function loadPdfJsModule(){
@@ -4531,20 +4698,28 @@ function loadPdfJsModule(){
   }
   return pdfjsModulePromise;
 }
-async function extractPdfText(file){
+async function extractPdfText(file, onProgress){
   let pdfjs;
   try{ pdfjs = await loadPdfJsModule(); }
   catch(e){ throw new Error("Impossible de charger le lecteur PDF (connexion internet nécessaire au premier import). Colle le texte de ton cours à la place."); }
   const buf = await file.arrayBuffer();
   const doc = await pdfjs.getDocument({data: buf}).promise;
-  const maxPages = Math.min(doc.numPages, 100);
+  const numPages = doc.numPages;
+  const maxPages = Math.min(numPages, 100);
   let text = "";
   for(let i=1; i<=maxPages; i++){
+    if(onProgress) onProgress(i, maxPages);
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
     text += content.items.map(it => it.str).join(" ") + "\n\n";
   }
-  return { text: text.trim(), truncated: doc.numPages > maxPages };
+  const trimmed = text.trim();
+  return {
+    text: trimmed,
+    truncated: numPages > maxPages,
+    numPages,
+    isScanned: trimmed.length < 20, // quasiment aucun texte détecté → probablement des pages scannées (images)
+  };
 }
 
 let mammothModulePromise = null;
@@ -4559,7 +4734,7 @@ async function extractDocxText(file){
   const buf = await file.arrayBuffer();
   const api = mammoth.extractRawText ? mammoth : mammoth.default;
   const result = await api.extractRawText({arrayBuffer: buf});
-  return { text: (result.value || "").trim(), truncated: false };
+  return { text: (result.value || "").trim(), truncated: false, numPages: null, isScanned: false };
 }
 
 function courseFileKind(file){
@@ -4571,7 +4746,7 @@ function courseFileKind(file){
   return null;
 }
 
-async function extractCourseFileText(file){
+async function extractCourseFileText(file, onProgress){
   if(file.size > COURSE_IMPORT_MAX_BYTES){
     throw new Error("« " + file.name + " » est trop volumineux (limite ~15 Mo).");
   }
@@ -4579,8 +4754,8 @@ async function extractCourseFileText(file){
   if(!kind){
     throw new Error("Format non pris en charge pour « " + file.name + " ». Formats acceptés : PDF, DOCX, TXT, Markdown. (PPTX et les images/OCR ne sont pas encore pris en charge — colle le texte directement à la place.)");
   }
-  if(kind === "text") return { text: (await readFileAsText(file)).trim(), truncated: false };
-  if(kind === "pdf") return extractPdfText(file);
+  if(kind === "text") return { text: (await readFileAsText(file)).trim(), truncated: false, numPages: null, isScanned: false };
+  if(kind === "pdf") return extractPdfText(file, onProgress);
   return extractDocxText(file);
 }
 
@@ -4631,21 +4806,32 @@ function matchSubjectByName(name){
   }) || null;
 }
 
+/* Tente de récupérer un objet JSON même si la réponse du modèle contient du texte
+   autour, des virgules en trop, etc. — ne jamais faire échouer toute l'importation
+   pour un JSON imparfait : chaque champ a un repli sûr côté appelant. */
+function extractJsonObject(text){
+  const match = String(text || "").match(/\{[\s\S]*\}/);
+  if(!match) return null;
+  try{ return JSON.parse(match[0]); }
+  catch(e){
+    try{ return JSON.parse(match[0].replace(/,\s*([}\]])/g, "$1")); } // virgules traînantes
+    catch(e2){ return null; }
+  }
+}
+
 async function detectCourseMeta(workingText, fileName){
   const existingSubjects = allSubjects().map(s=>s.name).join(", ");
   const prompt = AI_SYSTEM + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
     "\n\nMatières déjà existantes sur ce site : " + (existingSubjects || "(aucune)") +
-    "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"notions\":[\"...\"]}";
+    "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, un niveau probable (L1, L2 ou L3 — ou une chaîne vide si tu ne peux pas le déterminer), et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"level\":\"...\",\"notions\":[\"...\"]}";
   const res = await webllmChat([{role:"user", content: prompt}], {});
-  const text = (res && res.text) ? res.text : "";
-  const match = text.match(/\{[\s\S]*\}/);
-  let parsed = null;
-  if(match){ try{ parsed = JSON.parse(match[0]); }catch(e){ parsed = null; } }
+  const parsed = extractJsonObject(res && res.text);
   const fallbackTitle = (fileName || "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
   return {
     title: (parsed && parsed.title) ? String(parsed.title).slice(0,120) : (fallbackTitle || "Cours importé"),
     subjectName: (parsed && parsed.subject) ? String(parsed.subject).slice(0,60) : "",
     chapterTitle: (parsed && parsed.chapter) ? String(parsed.chapter).slice(0,120) : (fallbackTitle || "Chapitre importé"),
+    level: (parsed && LEVELS.includes(parsed.level)) ? parsed.level : "",
     notions: (parsed && Array.isArray(parsed.notions)) ? parsed.notions.slice(0,10).map(String) : [],
   };
 }
@@ -4725,7 +4911,7 @@ function courseImportAddFiles(fileList){
     ci.files.push({
       id: genImportId(), name: file.name, size: file.size, file,
       status: "pending", error: null, warning: null,
-      extractedText: "", charCount: 0, workingText: "",
+      extractedText: "", charCount: 0, workingText: "", numPages: null,
       detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
       failedSteps: [], genStepIndex: -1,
       resultChapterId: null, resultSubjectId: null,
@@ -4742,7 +4928,7 @@ function courseImportAddPasteAsFile(){
   ci.files.push({
     id: genImportId(), name: "Texte collé", size: text.length, file: null,
     status: "pending", error: null, warning: null,
-    extractedText: text, charCount: text.length, workingText: "",
+    extractedText: text, charCount: text.length, workingText: "", numPages: null,
     detected: null, generated: {fiche:null, summary:null, quiz:null, flashcards:null, reviewQuestions:null},
     failedSteps: [], genStepIndex: -1,
     resultChapterId: null, resultSubjectId: null,
@@ -4759,6 +4945,10 @@ function courseImportStart(){
   ci.step = "detect";
   ci.activeIndex = ci.files.findIndex(f => f.status === "pending");
   if(ci.activeIndex === -1) ci.activeIndex = 0;
+  // Les étapes détection/génération/résultat ont besoin de plus de place : elles s'affichent
+  // toujours dans la page dédiée "Mes matières", que l'import ait démarré depuis Ressources ou non.
+  libGoto("import");
+  switchTab("library");
   courseImportProcessFile(ci.activeIndex);
 }
 
@@ -4774,7 +4964,10 @@ async function courseImportProcessFile(index){
   render();
   let extracted;
   try{
-    extracted = item.file ? await extractCourseFileText(item.file) : { text: item.extractedText, truncated: false };
+    extracted = item.file ? await extractCourseFileText(item.file, (page, total)=>{
+      item.warning = "Lecture du PDF : page " + page + "/" + total + "…";
+      render();
+    }) : { text: item.extractedText, truncated: false, numPages: null, isScanned: false };
   }catch(e){
     item.status = "error";
     item.error = e.message || "Erreur lors de la lecture du fichier.";
@@ -4784,8 +4977,16 @@ async function courseImportProcessFile(index){
   }
   item.extractedText = extracted.text;
   item.charCount = extracted.text.length;
-  item.warning = extracted.truncated ? "Document très long : seules les premières pages ont été lues." : null;
+  item.numPages = extracted.numPages || null;
+  item.warning = extracted.truncated ? "Document très long : seules les 100 premières pages ont été lues." : null;
 
+  if(extracted.isScanned){
+    item.status = "error";
+    item.error = "Ce PDF ne contient pas de texte exploitable (probablement des pages scannées/images). L'OCR n'est pas disponible pour l'instant. Importe un PDF contenant du vrai texte, ou colle le contenu directement.";
+    render();
+    courseImportAdvanceIfNeeded(index);
+    return;
+  }
   if(item.extractedText.trim().length < COURSE_IMPORT_MIN_CHARS){
     item.status = "error";
     item.error = "Ce fichier semble vide ou illisible. Ajoute du contenu, ou colle le texte de ton cours directement.";
@@ -4813,6 +5014,8 @@ async function courseImportProcessFile(index){
       subjectId: matched ? matched.id : null,
       newSubjectName: matched ? "" : (meta.subjectName || "Autre"),
       chapterTitle: meta.chapterTitle,
+      level: meta.level,
+      semesterId: SEMESTERS[0].id,
       notions: meta.notions,
     };
     item.status = "review";
@@ -4846,7 +5049,7 @@ async function courseImportGenerate(index){
   render();
   await courseImportRunAllSteps(item);
   ci.busy = false;
-  courseImportFinalize(index);
+  await courseImportFinalize(index);
 }
 
 async function courseImportRunAllSteps(item){
@@ -4912,7 +5115,7 @@ function courseImportApplyGeneratedToChapter(ch, item){
   saveUserChapters();
 }
 
-function courseImportFinalize(index){
+async function courseImportFinalize(index){
   const ci = state.courseImport;
   const item = ci.files[index];
   if(!item) return;
@@ -4922,7 +5125,7 @@ function courseImportFinalize(index){
   if(!subjectId){
     subjectId = genLibId("subj");
     state.userSubjects.push({
-      id: subjectId, name: d.newSubjectName || "Autre", semesterId: SEMESTERS[0].id,
+      id: subjectId, name: d.newSubjectName || "Autre", semesterId: d.semesterId || SEMESTERS[0].id,
       icon: "📥", color: SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
       description: "Matière créée automatiquement lors de l'import d'un cours.", builtin: false,
     });
@@ -4930,10 +5133,18 @@ function courseImportFinalize(index){
   }
 
   const chapterId = genLibId("chap");
+
+  let hasOriginalFile = false;
+  if(item.file && courseFileKind(item.file) === "pdf"){
+    try{ await saveCourseFileBlob(chapterId, item.file); hasOriginalFile = true; }
+    catch(e){ console.error("Impossible d'enregistrer le PDF original :", e); }
+  }
+
   state.userChapters.push({
     id: chapterId, subjectId,
     num: pad2(chaptersOfSubject(subjectId).length + 1),
     title: d.title, desc: (d.chapterTitle && d.chapterTitle !== d.title) ? d.chapterTitle : "",
+    level: d.level || "",
     content: item.generated.fiche || item.extractedText.slice(0, 4000),
     originalText: clip(item.extractedText, 20000),
     summary: item.generated.summary || "",
@@ -4942,6 +5153,10 @@ function courseImportFinalize(index){
     aiReviewQuestions: item.generated.reviewQuestions || [],
     keyNotions: d.notions || [],
     sourceFileName: item.name || "",
+    pageCount: item.numPages || null,
+    hasOriginalFile,
+    originalFileName: item.file ? item.file.name : "",
+    originalFileMime: item.file ? item.file.type : "",
     createdAt: Date.now(), updatedAt: Date.now(),
     markedReviewed: false,
   });
@@ -5029,7 +5244,7 @@ function renderImportDetectOrReview(){
   const item = ci.files[ci.activeIndex];
   if(!item) return renderImportPick();
 
-  if(item.status === "extracting" || item.status === "detecting"){
+  if(item.status === "pending" || item.status === "extracting" || item.status === "detecting"){
     return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Analyse de ton cours…</h1>
     <div class="card">
       <div class="ai-loading"><span class="ai-spinner"></span>
@@ -5072,8 +5287,23 @@ function renderImportDetectOrReview(){
     </div>
     <div class="ai-field"><label for="import-chapter-input">Titre du chapitre</label>
       <input class="ai-select" id="import-chapter-input" value="${escapeHtml(d.chapterTitle)}"></div>
+    <div class="form-row2">
+      <div class="ai-field"><label for="import-level-select">Niveau (facultatif)</label>
+        <select class="ai-select" id="import-level-select">
+          <option value="" ${!d.level?"selected":""}>Non précisé</option>
+          ${LEVELS.map(lv=>`<option value="${lv}" ${d.level===lv?"selected":""}>${lv}</option>`).join("")}
+        </select>
+      </div>
+      <div class="ai-field" id="import-semester-wrap" style="${d.subjectId ? "display:none;" : ""}">
+        <label for="import-semester-select">Semestre de la nouvelle matière</label>
+        <select class="ai-select" id="import-semester-select">
+          ${SEMESTERS.map(sm=>`<option value="${sm.id}" ${d.semesterId===sm.id?"selected":""}>${escapeHtml(sm.name)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
 
     <div class="import-stats-row">
+      ${item.numPages ? `<span>📑 ${item.numPages} page${item.numPages>1?"s":""}</span>` : ""}
       <span>📄 ${item.charCount.toLocaleString("fr-FR")} caractères</span>
       <span>💡 ${d.notions.length} notion${d.notions.length>1?"s":""} détectée${d.notions.length>1?"s":""}</span>
       ${matched ? `<span>♻️ Ajouté à « ${escapeHtml(matched.name)} »</span>` : `<span>✨ Nouvelle matière</span>`}
@@ -5243,12 +5473,14 @@ function attachCourseImportEvents(){
 
   const subjSelect = document.getElementById("import-subject-select");
   const newSubjWrap = document.getElementById("import-newsubject-wrap");
+  const semesterWrap = document.getElementById("import-semester-wrap");
   if(subjSelect){
     subjSelect.addEventListener("change", ()=>{
       const item = ci.files[ci.activeIndex];
       if(!item) return;
       item.detected.subjectId = subjSelect.value || null;
       if(newSubjWrap) newSubjWrap.style.display = subjSelect.value ? "none" : "";
+      if(semesterWrap) semesterWrap.style.display = subjSelect.value ? "none" : "";
     });
   }
   const titleInput = document.getElementById("import-title-input");
@@ -5257,6 +5489,10 @@ function attachCourseImportEvents(){
   if(newSubjInput) newSubjInput.addEventListener("input", (e)=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.newSubjectName = e.target.value; });
   const chapterInput = document.getElementById("import-chapter-input");
   if(chapterInput) chapterInput.addEventListener("input", (e)=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.chapterTitle = e.target.value; });
+  const levelSelect = document.getElementById("import-level-select");
+  if(levelSelect) levelSelect.addEventListener("change", ()=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.level = levelSelect.value; });
+  const semesterSelect = document.getElementById("import-semester-select");
+  if(semesterSelect) semesterSelect.addEventListener("change", ()=>{ const item = ci.files[ci.activeIndex]; if(item) item.detected.semesterId = semesterSelect.value; });
 
   const confirmBtn = document.getElementById("import-confirm-generate-btn");
   if(confirmBtn) confirmBtn.addEventListener("click", ()=>{
@@ -6168,67 +6404,129 @@ function attachResultsEvents(){
 /* ============================================================
    9. FICHES — RENDU
    ============================================================ */
-function renderFiches(){
+/* Progression et statut de révision, unifiés entre chapitres intégrés et chapitres importés. */
+function courseProgressOf(ch){
+  return isUserChapter(ch.id) ? userChapterProgress(ch) : chapterMetrics(ch).mastery;
+}
+function courseIsRevised(ch){
+  return isUserChapter(ch.id) ? !!ch.markedReviewed : !!chapterMetrics(ch).mastered;
+}
+
+function renderCourseAutomationCard(){
+  const ci = state.courseImport;
+  let html = `<div class="card automate-card">
+    <div class="automate-head">
+      <span class="ico">🤖</span>
+      <div>
+        <div class="h">Automatiser mes révisions</div>
+        <div class="d">Importe un cours et génère automatiquement une fiche, un résumé, des quiz et des flashcards grâce à l'assistant IA local.</div>
+      </div>
+    </div>
+
+    <div class="import-dropzone import-dropzone-compact ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
+      <div class="import-dropzone-icon">📄</div>
+      <div class="import-dropzone-title">Dépose ton PDF ici</div>
+      <div class="import-dropzone-sub">ou clique pour choisir un fichier</div>
+      <div class="import-dropzone-formats">PDF, DOCX, TXT, Markdown · 15 Mo max</div>
+      <input type="file" id="import-file-input" accept=".pdf,.docx,.txt,.md,.markdown" multiple style="display:none;">
+    </div>
+
+    <details class="ai-extra" style="margin-top:10px;">
+      <summary>Ou coller le texte directement</summary>
+      <textarea class="ai-textarea" id="import-paste-text" style="min-height:90px;margin-top:8px;" placeholder="Colle le texte de ton cours…">${escapeHtml(ci.pasteText)}</textarea>
+      <button class="btn-text" id="import-add-paste-btn" style="margin-top:6px;">+ Ajouter ce texte à la file</button>
+    </details>`;
+
+  if(ci.files.length){
+    html += `<div class="import-filelist" style="margin-top:14px;">` + ci.files.map(f=>`
+      <div class="import-file-row">
+        <span class="name">📄 ${escapeHtml(f.name)}</span>
+        <span class="size">${fmtFileSize(f.size)}</span>
+        <button class="btn-text" data-import-remove="${f.id}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button>
+      </div>`).join("") + `</div>`;
+  }
+
+  html += `<div class="actions" style="justify-content:flex-start;margin-top:14px;">
+    <button class="btn red" id="import-generate-btn" ${ci.files.length === 0 ? "disabled" : ""}>📥 Importer un cours${ci.files.length > 1 ? " (" + ci.files.length + " fichiers)" : ""}</button>
+  </div>
+
+  <details class="ai-extra automate-advanced">
+    <summary>Options avancées</summary>
+    <p class="ai-hint" style="margin:8px 0;">Pour sauvegarder ou restaurer l'ensemble de tes matières et chapitres au format JSON — pas pour importer un cours.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+      <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours (JSON)</button>
+      <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="catalog-import-input" accept=".json,application/json" style="display:none;"></label>
+    </div>
+  </details>
+  </div>`;
+  return html;
+}
+
+function fmtCourseDate(ch){
+  if(ch.createdAt) return fmtRelativeDate(dateKey(new Date(ch.createdAt))).toLowerCase();
+  const subj = findSubject(ch.subjectId);
+  return (subj && subj.builtin) ? "cours intégré" : "";
+}
+
+function renderCourseCard(ch){
+  const subj = findSubject(ch.subjectId);
+  const isUser = isUserChapter(ch.id);
+  const progress = courseProgressOf(ch);
+  const revised = courseIsRevised(ch);
+  const quizLen = isUser ? (ch.aiQuiz ? ch.aiQuiz.length : 0) : QUESTIONS.filter(q => ch.themes && ch.themes.includes(q.theme)).length;
+  const cardsLen = isUser ? (ch.aiFlashcards ? ch.aiFlashcards.length : 0) : deckCards(ch.id).length;
+  const hasFiche = isUser ? !!(ch.content && ch.content.trim()) : !!FICHES[ch.id];
+  const hasSummary = isUser ? !!(ch.summary && ch.summary.trim()) : true;
+  const tierKey = progress === null ? "none" : (progress >= 75 ? "done" : "progress");
+
+  return `<div class="course-card" data-catalog-open="${ch.id}" data-catalog-subject="${ch.subjectId}" tabindex="0" role="button" aria-label="Ouvrir ${escapeHtml(ch.title)}">
+    <div class="course-card-top">
+      <span class="course-card-icon" style="background:${subj?subj.color:"#8a8f9c"}22;color:${subj?subj.color:"#8a8f9c"};">${subj&&subj.icon?subj.icon:"📘"}</span>
+      <div class="course-card-badges">
+        ${ch.level ? `<span class="level-badge ${ch.level}">${ch.level}</span>` : ""}
+        ${revised ? `<span class="course-card-chip ok">✅</span>` : ""}
+      </div>
+    </div>
+    <div class="course-card-title">${escapeHtml(ch.title)}</div>
+    <div class="course-card-meta">${subj ? escapeHtml(subj.name) : ""}${ch.desc ? " · " + escapeHtml(ch.desc) : ""}</div>
+    <div class="course-card-stats">
+      ${ch.pageCount ? `<span>📑 ${ch.pageCount}p</span>` : ""}
+      ${fmtCourseDate(ch) ? `<span>📅 ${fmtCourseDate(ch)}</span>` : ""}
+    </div>
+    <div class="course-card-chips">
+      <span class="course-card-chip ${hasFiche?"":"off"}">📖 Fiche</span>
+      <span class="course-card-chip ${hasSummary?"":"off"}">📝 Résumé</span>
+      <span class="course-card-chip ${quizLen?"":"off"}">🧠 ${quizLen}</span>
+      <span class="course-card-chip ${cardsLen?"":"off"}">🃏 ${cardsLen}</span>
+    </div>
+    <div class="course-card-progress">
+      <div class="deckbar-track"><div class="deckbar-fill ${tierKey}" style="width:${progress||0}%;"></div></div>
+      <span class="pct">${progress===null?"—":progress+"%"}</span>
+    </div>
+    <span class="btn outline small course-card-open">Ouvrir →</span>
+  </div>`;
+}
+
+function renderCourseLibrarySection(){
   const q = (state.catalog.query || "").trim().toLowerCase();
   const subjFilter = state.catalog.subjectId || "all";
   const semFilter = state.catalog.semesterId || "all";
   const scopeFilter = state.catalog.scope || "all";
+  const levelFilter = state.catalog.level || "all";
+  const revisionFilter = state.catalog.revisionState || "all";
+  const sortBy = state.catalog.sortBy || "recent";
+  const viewMode = state.catalog.viewMode || "grid";
   const subjects = allSubjects();
-  const scopeLabel = scopeFilter === "mine" ? "Mes documents" : (scopeFilter === "builtin" ? "Résumés (cours intégrés)" : null);
 
-  let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ressources</h1>
-    <p class="ai-intro">Tes cours, tes documents importés et tes résumés — les quiz, flashcards et examens sont dans Activités et Examens.</p>
-    <p class="ai-intro" style="margin-top:-8px;"><button class="btn-text" id="fiches-import-course-btn" style="padding:0;">📥 Importer un cours pour générer automatiquement fiche, résumé, quiz et flashcards →</button></p>
-  `;
-
-  /* ---------- Mes documents (import local : PDF, TXT, Markdown, images) ---------- */
-  const docType = state.catalog.docType || "all";
-  const docs = state.documents.filter(d => d.type !== "sujet" && (docType === "all" || d.type === docType));
-  html += `<div class="dash-section" id="resources-documents">
-    <div class="dash-section-head">
-      <span class="section-title" style="margin-bottom:0;">Mes documents</span>
-      <label class="btn outline small" style="cursor:pointer;margin:0;">+ Importer un document<input type="file" id="resources-doc-input" accept=".txt,.md,.pdf,image/*" style="display:none;"></label>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-      ${["all","document","resume"].map(t=>{
-        const labels = {all:"Tous", document:"Documents", resume:"Résumés"};
-        return `<button class="btn ${docType===t?"red":"outline"} small" data-doctype-filter="${t}">${labels[t]}</button>`;
-      }).join("")}
-    </div>
-    ${state.resourcesDocStatus ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${escapeHtml(state.resourcesDocStatus)}</div>` : ""}
-    ${docs.length === 0 ? `<p class="dash-empty">Aucun document importé pour l'instant.</p>` : docs.map(docRowHtml).join("")}
-  </div>`;
-
-  /* ---------- Bibliothèque de cours (chapitres, existant) ---------- */
-  html += `<div class="section-title" style="margin-top:26px;">Bibliothèque de cours</div>
-    ${scopeLabel ? `<div class="ai-intro" style="margin-top:-4px;"><span class="level-badge" style="background:var(--red-tint);color:var(--red-dark);">${scopeLabel}</span> <button class="btn-text" id="catalog-clear-scope" style="margin-left:6px;">Voir tous les cours</button></div>` : ""}
-    <div class="card" style="margin-bottom:22px;display:flex;flex-direction:column;gap:12px;">
-      <input type="text" id="catalog-search" class="ai-select" placeholder="Rechercher un cours..." value="${escapeHtml(state.catalog.query||"")}">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <select id="catalog-subject" class="ai-select" style="flex:1;min-width:180px;">
-          <option value="all">Toutes les matières</option>
-          ${subjects.map(s=>`<option value="${s.id}" ${subjFilter===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}
-        </select>
-        <select id="catalog-semester" class="ai-select" style="flex:1;min-width:180px;">
-          <option value="all">Tous les semestres</option>
-          ${SEMESTERS.map(sm=>`<option value="${sm.id}" ${semFilter===sm.id?"selected":""}>${escapeHtml(sm.name)}</option>`).join("")}
-        </select>
-      </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-        <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours (sauvegarde JSON)</button>
-        <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="catalog-import-input" accept=".json,application/json" style="display:none;"></label>
-      </div>
-      <p style="font-size:11px;color:var(--muted);margin:0;">Ceci restaure une sauvegarde JSON déjà exportée depuis ce site — pour importer un cours (PDF, DOCX, TXT...), utilise « 📥 Importer un cours pour générer automatiquement… » tout en haut de cette page.</p>
-    </div>
-  `;
-
-  const chapters = allChaptersFlat().filter(ch=>{
+  let chapters = allChaptersFlat().filter(ch=>{
     const subj = findSubject(ch.subjectId);
     if(scopeFilter === "mine" && !isUserChapter(ch.id)) return false;
     if(scopeFilter === "builtin" && isUserChapter(ch.id)) return false;
     if(subjFilter !== "all" && ch.subjectId !== subjFilter) return false;
     if(semFilter !== "all" && (!subj || subj.semesterId !== semFilter)) return false;
+    if(levelFilter !== "all" && ch.level !== levelFilter) return false;
+    if(revisionFilter === "revised" && !courseIsRevised(ch)) return false;
+    if(revisionFilter === "torevise" && courseIsRevised(ch)) return false;
     if(q){
       const hay = ((ch.title||"") + " " + (ch.desc||"") + " " + (subj?subj.name:"")).toLowerCase();
       if(!hay.includes(q)) return false;
@@ -6236,73 +6534,86 @@ function renderFiches(){
     return true;
   });
 
+  chapters = chapters.slice().sort((a,b)=>{
+    if(sortBy === "alpha") return a.title.localeCompare(b.title, "fr");
+    if(sortBy === "progress") return (courseProgressOf(b)||0) - (courseProgressOf(a)||0);
+    return (b.createdAt||0) - (a.createdAt||0);
+  });
+
+  const hasActiveFilters = !!(q || subjFilter!=="all" || semFilter!=="all" || scopeFilter!=="all" || levelFilter!=="all" || revisionFilter!=="all");
+
+  let html = `<div class="section-title" style="margin-top:6px;">Bibliothèque de cours</div>`;
+
+  html += `<div class="card course-filters-card">
+    <input type="text" id="catalog-search" class="ai-select" placeholder="🔍 Rechercher un cours…" value="${escapeHtml(state.catalog.query||"")}">
+    <div class="course-filters-row">
+      <select id="catalog-subject" class="ai-select">
+        <option value="all">Toutes les matières</option>
+        ${subjects.map(s=>`<option value="${s.id}" ${subjFilter===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}
+      </select>
+      <select id="catalog-semester" class="ai-select">
+        <option value="all">Tous les semestres</option>
+        ${SEMESTERS.map(sm=>`<option value="${sm.id}" ${semFilter===sm.id?"selected":""}>${escapeHtml(sm.name)}</option>`).join("")}
+      </select>
+      <select id="catalog-level" class="ai-select">
+        <option value="all">Tous niveaux</option>
+        ${LEVELS.map(lv=>`<option value="${lv}" ${levelFilter===lv?"selected":""}>${lv}</option>`).join("")}
+      </select>
+      <select id="catalog-revision" class="ai-select">
+        <option value="all" ${revisionFilter==="all"?"selected":""}>Statut : tous</option>
+        <option value="revised" ${revisionFilter==="revised"?"selected":""}>Révisés</option>
+        <option value="torevise" ${revisionFilter==="torevise"?"selected":""}>À revoir</option>
+      </select>
+      <select id="catalog-sort" class="ai-select">
+        <option value="recent" ${sortBy==="recent"?"selected":""}>Tri : plus récents</option>
+        <option value="alpha" ${sortBy==="alpha"?"selected":""}>Tri : alphabétique</option>
+        <option value="progress" ${sortBy==="progress"?"selected":""}>Tri : progression</option>
+      </select>
+    </div>
+    <div class="course-filters-footer">
+      <div class="course-viewtoggle">
+        <button class="course-viewbtn ${viewMode==="grid"?"active":""}" data-view-mode="grid" aria-label="Affichage en grille" title="Grille">▦</button>
+        <button class="course-viewbtn ${viewMode==="list"?"active":""}" data-view-mode="list" aria-label="Affichage en liste" title="Liste">☰</button>
+      </div>
+      ${hasActiveFilters ? `<button class="btn-text" id="catalog-reset-filters">Réinitialiser les filtres</button>` : ""}
+    </div>
+  </div>`;
+
   if(chapters.length === 0){
     html += `<div class="empty-state"><div class="big">🔍</div>Aucun cours ne correspond à ta recherche.</div>`;
     return html;
   }
 
-  chapters.forEach(ch=>{
-    const subj = findSubject(ch.subjectId);
-    const isUser = isUserChapter(ch.id);
-    html += `<div class="fiche-card">
-      <div class="fiche-card-head">
-        <div class="chapter-num">${ch.num||""}</div>
-        <div>
-          <div class="title-row">
-            <h2>${escapeHtml(ch.title)}</h2>
-            ${subj ? `<span class="level-badge" style="background:${subj.color}22;color:${subj.color};">${escapeHtml(subj.name)}</span>` : ""}
-            ${ch.level ? `<span class="level-badge ${ch.level}">${ch.level}</span>` : ""}
-          </div>
-          <p>${escapeHtml(ch.desc || "")}</p>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="ai-inline-btn" data-catalog-open="${ch.id}" data-catalog-subject="${ch.subjectId}">📖 Ouvrir ce cours</button>
-            ${!isUser ? `<button class="ai-inline-btn" data-aifiche="summary" data-ch="${ch.id}">🤖 Résumer ce chapitre</button>
-            <button class="ai-inline-btn" data-aifiche="drill" data-ch="${ch.id}">🎤 Me faire réviser</button>` : ""}
-          </div>
-        </div>
-      </div>
-      ${!isUser && FICHES[ch.id] ? FICHES[ch.id] : ""}
-    </div>`;
-  });
+  html += `<div class="${viewMode==="grid" ? "course-grid" : "course-list"}">` + chapters.map(renderCourseCard).join("") + `</div>`;
+  html += `<footer class="hint">${chapters.length} cours · clique sur une carte pour ouvrir sa fiche, son quiz et ses flashcards.</footer>`;
+  return html;
+}
 
-  html += `<footer class="hint">Fiches synthétiques — à utiliser en complément des quiz et des flashcards pour ancrer les notions clés.</footer>`;
-
+function renderFiches(){
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ressources</h1>
+  <p class="ai-intro">Automatise tes révisions et retrouve tous tes cours, fiches, quiz et flashcards au même endroit.</p>`;
+  html += renderCourseAutomationCard();
+  html += renderCourseLibrarySection();
   return html;
 }
 
 function attachFichesEvents(){
-  const importCourseBtn = document.getElementById("fiches-import-course-btn");
-  if(importCourseBtn) importCourseBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  attachCourseImportEvents();
 
-  const clearScope = document.getElementById("catalog-clear-scope");
-  if(clearScope) clearScope.addEventListener("click", ()=>{ state.catalog.scope = "all"; render(); });
-
-  const docInput = document.getElementById("resources-doc-input");
-  if(docInput) docInput.addEventListener("change", async ()=>{
-    const file = docInput.files[0];
-    if(!file) return;
-    try{
-      await importDocumentFile(file, "document");
-      state.resourcesDocStatus = "";
-    }catch(e){
-      state.resourcesDocStatus = e.message;
-    }
-    render();
-  });
-  document.querySelectorAll("[data-doctype-filter]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{ state.catalog.docType = btn.dataset.doctypeFilter; render(); });
-  });
-  attachDocumentRowEvents();
-
-  document.querySelectorAll("[data-aifiche]").forEach(btn=>{
-    btn.addEventListener("click", ()=> aiOpenFromChapter(btn.dataset.aifiche, btn.dataset.ch));
-  });
   document.querySelectorAll("[data-catalog-open]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       libGoto("chapterDetail", {subjectId: btn.dataset.catalogSubject, chapterId: btn.dataset.catalogOpen});
       switchTab("library");
     });
+    btn.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        libGoto("chapterDetail", {subjectId: btn.dataset.catalogSubject, chapterId: btn.dataset.catalogOpen});
+        switchTab("library");
+      }
+    });
   });
+
   const search = document.getElementById("catalog-search");
   if(search) search.addEventListener("input", ()=>{
     state.catalog.query = search.value;
@@ -6315,6 +6626,22 @@ function attachFichesEvents(){
   if(subjSel) subjSel.addEventListener("change", ()=>{ state.catalog.subjectId = subjSel.value; render(); });
   const semSel = document.getElementById("catalog-semester");
   if(semSel) semSel.addEventListener("change", ()=>{ state.catalog.semesterId = semSel.value; render(); });
+  const levelSel = document.getElementById("catalog-level");
+  if(levelSel) levelSel.addEventListener("change", ()=>{ state.catalog.level = levelSel.value; render(); });
+  const revisionSel = document.getElementById("catalog-revision");
+  if(revisionSel) revisionSel.addEventListener("change", ()=>{ state.catalog.revisionState = revisionSel.value; render(); });
+  const sortSel = document.getElementById("catalog-sort");
+  if(sortSel) sortSel.addEventListener("change", ()=>{ state.catalog.sortBy = sortSel.value; render(); });
+  document.querySelectorAll("[data-view-mode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.catalog.viewMode = btn.dataset.viewMode; render(); });
+  });
+  const resetBtn = document.getElementById("catalog-reset-filters");
+  if(resetBtn) resetBtn.addEventListener("click", ()=>{
+    state.catalog.query = ""; state.catalog.subjectId = "all"; state.catalog.semesterId = "all";
+    state.catalog.scope = "all"; state.catalog.level = "all"; state.catalog.revisionState = "all";
+    render();
+  });
+
   const exportBtn = document.getElementById("catalog-export-btn");
   if(exportBtn) exportBtn.addEventListener("click", exportUserCourses);
   const importInput = document.getElementById("catalog-import-input");
@@ -9694,17 +10021,11 @@ function handleNavGoto(ds){
   if(goto === "activities") return switchTab("activities");
   if(goto === "review") return switchTab("review");
   if(goto === "fiches"){
-    const filter = ds.filter || "all";
-    if(filter.indexOf("doc-") === 0){
-      state.catalog.docType = filter.slice(4);
-      switchTab("fiches");
-      setTimeout(()=>{ const el = document.getElementById("resources-documents"); if(el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60);
-    } else {
-      state.catalog.scope = filter;
-      switchTab("fiches");
-    }
+    state.catalog.scope = ds.filter || "all";
+    switchTab("fiches");
     return;
   }
+  if(goto === "import-course"){ goToCourseImport(); return switchTab("library"); }
   if(goto === "flash"){ state.flashScreen = "picker"; return switchTab("flash"); }
   if(goto === "quiz"){ state.screen = "picker"; return switchTab("quiz"); }
   if(goto === "exam"){ state.exam.screen = "setup"; return switchTab("exam"); }
