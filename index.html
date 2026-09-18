@@ -681,6 +681,34 @@
   .dash-reminder-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
   .dash-reminder-row b{ color:var(--ink-soft); font-weight:700; }
 
+  .dash-schedule-card{ margin-bottom:18px; }
+  .dash-current-course{
+    background: var(--green-tint); border:1.5px solid var(--green); border-radius: var(--radius-md);
+    padding:14px 16px; margin-bottom:12px; cursor:pointer; transition: box-shadow 0.15s var(--ease);
+  }
+  .dash-current-course:hover, .dash-current-course:focus-visible{ box-shadow: var(--shadow-md); outline:none; }
+  .badge-current{
+    display:inline-block; font-size:10.5px; font-weight:800; color:#fff; background: var(--green);
+    padding:3px 9px; border-radius:20px; margin-bottom:8px; letter-spacing:0.01em;
+  }
+  .ccourse-title{ font-size:16px; font-weight:800; color:var(--ink); }
+  .ccourse-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+  .ccourse-progressbar{ height:6px; border-radius:4px; background:rgba(255,255,255,0.65); overflow:hidden; margin-top:10px; }
+  .ccourse-progressbar-fill{ height:100%; background: var(--green); border-radius:4px; transition:width 0.3s var(--ease); }
+  .ccourse-remaining{ font-size:11px; color: var(--green); font-weight:700; margin-top:5px; }
+
+  .dash-schedule-list{ display:flex; flex-direction:column; gap:4px; }
+  .dash-schedule-row{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer;
+    font-size:12.5px; transition: background 0.15s var(--ease);
+  }
+  .dash-schedule-row:hover, .dash-schedule-row:focus-visible{ background: var(--bg); outline:none; }
+  .dash-schedule-row.status-past{ opacity:0.55; }
+  .dash-schedule-time{ font-weight:700; color:var(--ink); min-width:88px; flex-shrink:0; font-variant-numeric: tabular-nums; }
+  .dash-schedule-title{ flex:1; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dash-schedule-badge{ font-size:9.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.02em; flex-shrink:0; }
+  .dash-schedule-row.status-current .dash-schedule-badge{ color: var(--green); }
+
   @media (max-width: 860px){
     .dash-grid2{ grid-template-columns: 1fr; }
   }
@@ -1010,15 +1038,26 @@
   .cal-daycol{ position:relative; border-left:1px solid var(--bg); }
   .cal-daycol.is-today{ background: var(--red-tint); }
   .cal-hourline{ position:absolute; left:0; right:0; border-top:1px solid var(--bg); }
-  .cal-now-line{ position:absolute; left:0; right:0; border-top:2px solid var(--red); z-index:3; }
+  .cal-now-line{ position:absolute; left:0; right:0; border-top:2px solid var(--green); z-index:6; pointer-events:none; }
   .cal-now-line::before{
-    content:""; position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background: var(--red);
+    content:""; position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background: var(--green);
+  }
+  .cal-now-time{
+    position:absolute; right:2px; top:-8px; font-size:9px; font-weight:800; color:#fff;
+    background: var(--green); padding:1px 5px; border-radius:4px;
   }
   .cal-event{
     position:absolute; border-radius:6px; padding:3px 6px; font-size:11px; overflow:hidden;
     cursor:pointer; transition: box-shadow .15s var(--ease), z-index 0s;
   }
   .cal-event:hover, .cal-event:focus-visible{ box-shadow: var(--shadow-md); z-index:4; outline:none; }
+  .cal-event.is-current{ box-shadow: 0 0 0 1.5px var(--green); }
+  .cal-event.is-past{ opacity:0.55; }
+  .cal-event-badge{
+    display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.02em;
+    background: var(--green); color:#fff; padding:1px 4px; border-radius:4px; margin-bottom:2px; width:fit-content;
+  }
+  .cal-event-fav{ float:right; color: var(--amber); font-size:11px; line-height:1; }
   .cal-event-time{ font-size:9.5px; font-weight:700; opacity:0.85; }
   .cal-event-title{ font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cal-event-loc{ font-size:9.5px; opacity:0.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1030,9 +1069,9 @@
   .cal-monthhead{ background: var(--surface-2); padding:6px 4px; font-size:10px; font-weight:800; text-align:center; color: var(--muted); }
   .cal-monthcell{ background: var(--surface); min-height:88px; padding:4px; font-size:10px; }
   .cal-monthcell.is-outside{ background: var(--bg); color: var(--muted); }
-  .cal-monthcell.is-today{ box-shadow: inset 0 0 0 1.5px var(--red); }
+  .cal-monthcell.is-today{ box-shadow: inset 0 0 0 1.5px var(--green); }
   .cal-monthcell .dn{ font-weight:800; margin-bottom:3px; cursor:pointer; display:inline-block; }
-  .cal-monthcell.is-today .dn{ color: var(--red); }
+  .cal-monthcell.is-today .dn{ color:#fff; background: var(--green); border-radius:50%; width:19px; height:19px; line-height:19px; text-align:center; font-size:10.5px; }
   .cal-monthchip{
     font-size:9.5px; font-weight:700; padding:1px 5px; border-radius:4px; margin-bottom:2px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
@@ -1041,6 +1080,31 @@
 
   .cal-modal-backdrop{ position:fixed; inset:0; background:rgba(20,21,26,0.55); z-index:300; display:flex; align-items:center; justify-content:center; padding:20px; }
   .cal-modal{ background: var(--surface); border-radius: var(--radius-lg); max-width:420px; width:100%; max-height:85vh; overflow-y:auto; padding:22px; box-shadow: var(--shadow-lg); }
+  .cal-modal-wide{ max-width:560px; }
+
+  .cw-toprow{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px; }
+  .cw-title{ font-size:17px; font-weight:800; margin:0; flex:1; }
+  .cw-fav-btn{ background:none; border:none; cursor:pointer; font-size:21px; line-height:1; color: var(--border-strong); padding:2px 4px; flex-shrink:0; }
+  .cw-fav-btn.active{ color: var(--amber); }
+  .cw-badges{ display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 14px; }
+  .cw-badge{ font-size:10.5px; font-weight:800; padding:3px 10px; border-radius:20px; letter-spacing:0.02em; }
+  .cw-badge.current{ background: var(--green-tint); color: var(--green); }
+  .cw-badge.past{ background: var(--bg); color: var(--muted); }
+  .cw-badge.upcoming{ background: var(--red-tint); color: var(--red-dark); }
+  .cw-progress-wrap{ margin-bottom:16px; }
+  .cw-progress-label{ font-size:11px; color: var(--muted); margin-bottom:4px; display:flex; justify-content:space-between; gap:10px; }
+  .cw-progressbar{ height:6px; border-radius:4px; background: var(--bg); overflow:hidden; }
+  .cw-progressbar-fill{ height:100%; background: var(--green); border-radius:4px; transition: width 0.3s var(--ease); }
+  .cw-section{ margin-top:18px; }
+  .cw-section-label{ font-size:11px; font-weight:800; color: var(--ink); margin-bottom:7px; display:block; text-transform:uppercase; letter-spacing:0.03em; }
+  .cw-revision-choices{ display:flex; gap:6px; flex-wrap:wrap; }
+  .cw-revision-choices .status-pill{ cursor:pointer; border:1.5px solid transparent; font-family: var(--font-main); }
+  .cw-revision-choices .status-pill.is-active{ border-color: currentColor; }
+  .cw-checklist{ display:flex; flex-direction:column; gap:8px; }
+  .cw-checklist label{ display:flex; align-items:center; gap:9px; font-size:13px; color: var(--ink); cursor:pointer; }
+  .cw-checklist input[type="checkbox"]{ width:16px; height:16px; accent-color: var(--red); cursor:pointer; flex-shrink:0; }
+  .cw-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:20px; padding-top:14px; border-top:1px solid var(--bg); }
+  .cw-save-indicator{ font-size:11px; color: var(--muted); }
 
   @media (max-width:680px){
     .cal-headerrow, .cal-allday-row, .cal-grid{ min-width:540px; }
@@ -1181,6 +1245,7 @@
 </div>
 
 <div id="content" class="wrap"></div>
+<div id="course-modal-root"></div>
 
 <button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2135,8 +2200,11 @@ let state = {
     calView: "week",          // day | week | month
     anchorDate: null,         // ms — jour de référence pour toutes les vues
     expandedMonthDay: null,   // ms — jour "+N" déplié en vue mois
-    lastImportMsg: "", lastSyncAt: null, selectedEventId: null,
+    lastImportMsg: "", lastSyncAt: null, selectedEventId: null, focusNotesOnOpen: false,
   },
+
+  // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
+  courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
 
   // --- bibliothèque de cours (recherche/filtre) ---
   catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all", docType: "all" },
@@ -2392,6 +2460,7 @@ const KEY_PROFILE = "profile";
 const KEY_PLANNING = "planning";
 const KEY_DOCUMENTS = "documents";
 const KEY_AIBUBBLE = "ai-bubble-pos";
+const KEY_COURSE_DATA = "course-data";
 
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
@@ -2479,6 +2548,7 @@ async function loadAllData(){
     state.planning.lastSyncAt = savedPlanning.lastSyncAt || null;
   }
   state.documents = await loadKey(KEY_DOCUMENTS, []);
+  state.courseData = await loadKey(KEY_COURSE_DATA, {});
   const savedBubble = lsGet(KEY_AIBUBBLE);
   if(savedBubble && typeof savedBubble.x === "number" && typeof savedBubble.y === "number"){
     state.aiBubble.x = savedBubble.x;
@@ -2503,6 +2573,50 @@ function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
 function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl, lastSyncAt: state.planning.lastSyncAt }); }
 function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
 function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { x: state.aiBubble.x, y: state.aiBubble.y }); }
+
+const DEFAULT_CHECKLIST = { relire:false, exercices:false, definitions:false, prochain:false };
+function getCourseData(eventId){
+  const cd = state.courseData[eventId];
+  return cd ? Object.assign({ notes:"", summary:"", questions:"", checklist: Object.assign({}, DEFAULT_CHECKLIST), favorite:false, revisionStatus:"none" }, cd, { checklist: Object.assign({}, DEFAULT_CHECKLIST, cd.checklist) })
+            : { notes:"", summary:"", questions:"", checklist: Object.assign({}, DEFAULT_CHECKLIST), favorite:false, revisionStatus:"none" };
+}
+function saveCourseData(eventId, patch){
+  state.courseData[eventId] = Object.assign(getCourseData(eventId), patch);
+  lsSet(KEY_COURSE_DATA, state.courseData);
+}
+function deleteCourseData(eventId){
+  delete state.courseData[eventId];
+  lsSet(KEY_COURSE_DATA, state.courseData);
+}
+function courseDataIsEmpty(cd){
+  return !cd.notes && !cd.summary && !cd.questions && !cd.favorite && cd.revisionStatus === "none" &&
+    !Object.values(cd.checklist||{}).some(Boolean);
+}
+
+/* ---- espace de travail par cours : ouverture / fermeture partagées (dashboard + planning) ---- */
+const COURSE_TEXT_FIELDS = { "cw-notes":"notes", "cw-summary":"summary", "cw-questions":"questions" };
+let courseModalSaveTimers = {};
+
+function openCourseModal(eventId, focusNotes){
+  state.planning.selectedEventId = eventId;
+  state.planning.focusNotesOnOpen = !!focusNotes;
+  render();
+}
+function flushCourseModalSaves(){
+  const evId = state.planning.selectedEventId;
+  Object.keys(courseModalSaveTimers).forEach(id => clearTimeout(courseModalSaveTimers[id]));
+  courseModalSaveTimers = {};
+  if(!evId) return;
+  Object.keys(COURSE_TEXT_FIELDS).forEach(id=>{
+    const ta = document.getElementById(id);
+    if(ta) saveCourseData(evId, {[COURSE_TEXT_FIELDS[id]]: ta.value});
+  });
+}
+function closeCourseModal(){
+  flushCourseModalSaves();
+  state.planning.selectedEventId = null;
+  render();
+}
 
 function logRecentAdd(label){
   state.dash.recentAdds.unshift({ ts: Date.now(), label });
@@ -2873,6 +2987,7 @@ function switchTab(tab){
 
 function render(){
   updateNavDynamic();
+  renderGlobalCourseModal();
 
   // mode sans distraction pendant l'épreuve
   const inExam = state.tab === "exam" && state.exam.screen === "running";
@@ -3106,6 +3221,9 @@ function renderDashboard(){
     <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
   </div>`;
 
+  /* ---------- Mon emploi du temps (planning en direct) ---------- */
+  html += renderDashboardSchedule();
+
   html += `<div class="dash-grid2">`;
 
   /* ---------- Bloc 1 : reprendre mes révisions ---------- */
@@ -3186,26 +3304,63 @@ function renderDashboard(){
     </div>
   </div>`;
 
-  /* ---------- Bloc 6 : planning ---------- */
-  const nextEvents = planningFutureEvents().slice(0, 3);
-  html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Prochain cours</span></div>`;
-  if(nextEvents.length){
-    html += nextEvents.map((e, i) => `<div style="${i>0?"margin-top:10px;padding-top:10px;border-top:1px solid var(--bg);":""}">
-      <div style="font-weight:700;font-size:14px;color:var(--ink);">${escapeHtml(e.summary)}</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${fmtEventDate(e.start)} · ${fmtEventTimeRange(e)}${e.location ? " · " + escapeHtml(e.location) : ""}</div>
-    </div>`).join("");
-    html += `<button class="btn-text" id="dash-planning-link" style="margin-top:10px;">Voir mon planning →</button>`;
-  } else {
-    html += `<p class="dash-empty">Aucun prochain cours trouvé.</p>
-      <button class="btn outline small" id="dash-planning-link" style="margin-top:6px;">Configurer mon planning</button>`;
-  }
-  html += `</div>`;
-
   html += `</div>`; // dash-grid2
 
   html += `<footer class="hint">Toutes tes données sont enregistrées dans ce navigateur (localStorage) et restent disponibles après fermeture.${storageAvailable ? "" : " ⚠️ Le stockage local semble bloqué : cette session ne sera pas conservée."}</footer>`;
 
+  return html;
+}
+
+/* "Mon emploi du temps" — aperçu du planning du jour directement sur le dashboard,
+   avec détection du cours en cours et accès direct à l'espace de notes. */
+function renderDashboardSchedule(){
+  let html = `<div class="dash-card dash-schedule-card" id="dash-schedule-card">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">🗓️ Mon emploi du temps</span></div>`;
+
+  if(state.planning.events.length === 0){
+    html += `<p class="dash-empty">Aucun planning importé pour l'instant.</p>
+      <button class="btn outline small" id="dash-schedule-setup" style="margin-top:6px;">Configurer mon planning</button></div>`;
+    return html;
+  }
+
+  const todaysEvents = eventsOnDay(new Date()).slice().sort((a,b)=>a.start-b.start);
+  const current = getCurrentCourse();
+
+  if(current){
+    const cd = getCourseData(current.id);
+    const total = (current.end || current.start) - current.start;
+    const elapsed = Math.min(total, Math.max(0, Date.now() - current.start));
+    const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
+    const remainMin = Math.max(0, Math.round(((current.end || current.start) - Date.now()) / 60000));
+    html += `<div class="dash-current-course" data-open-event="${current.id}" tabindex="0" role="button" aria-label="${escapeHtml(current.summary)} — en cours">
+      <span class="badge-current">🟢 En cours${cd.favorite ? " · ★" : ""}</span>
+      <div class="ccourse-title">${escapeHtml(current.summary)}</div>
+      <div class="ccourse-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}</div>
+      <div class="ccourse-progressbar" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
+        <div class="ccourse-progressbar-fill" id="dash-ccourse-fill" style="width:${pct}%;"></div>
+      </div>
+      <div class="ccourse-remaining" id="dash-ccourse-text">${pct}% · ${remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min"} restantes</div>
+      <button class="btn red small" data-open-event-notes="${current.id}" style="margin-top:8px;">✏️ Prendre des notes</button>
+    </div>`;
+  }
+
+  const others = todaysEvents.filter(e => !current || e.id !== current.id);
+  if(others.length){
+    html += `<div class="dash-schedule-list">` + others.map(e=>{
+      const st = getCourseStatus(e);
+      const stLabel = st === "past" ? "Terminé" : (st === "current" ? "En cours" : "À venir");
+      return `<div class="dash-schedule-row status-${st}" data-open-event="${e.id}" tabindex="0" role="button" aria-label="${escapeHtml(e.summary)}">
+        <span class="dash-schedule-time">${fmtEventTimeRange(e)}</span>
+        <span class="dash-schedule-title">${escapeHtml(e.summary)}</span>
+        <span class="dash-schedule-badge">${stLabel}</span>
+      </div>`;
+    }).join("") + `</div>`;
+  } else if(!current){
+    html += `<p class="dash-empty">Aucun cours aujourd'hui.</p>`;
+  }
+
+  html += `<button class="btn-text" id="dash-schedule-full" style="margin-top:10px;">Voir le planning complet →</button>`;
+  html += `</div>`;
   return html;
 }
 
@@ -3301,14 +3456,33 @@ function attachDashboardEvents(){
   if(examsBtn) examsBtn.addEventListener("click", ()=> switchTab("exams"));
   const planningBtn = document.getElementById("dash-planning-btn");
   if(planningBtn) planningBtn.addEventListener("click", ()=> switchTab("planning"));
-  const planningLink = document.getElementById("dash-planning-link");
-  if(planningLink) planningLink.addEventListener("click", ()=> switchTab("planning"));
   const viewAll = document.getElementById("dash-viewall-subjects");
   if(viewAll) viewAll.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   document.querySelectorAll("[data-open-subject-dash]").forEach(el=>{
     el.addEventListener("click", ()=>{
       libGoto("subjectDetail", {subjectId: el.dataset.openSubjectDash});
       switchTab("library");
+    });
+  });
+
+  /* ---------- Mon emploi du temps (planning en direct) ---------- */
+  const scheduleFull = document.getElementById("dash-schedule-full");
+  if(scheduleFull) scheduleFull.addEventListener("click", ()=> switchTab("planning"));
+  const scheduleSetup = document.getElementById("dash-schedule-setup");
+  if(scheduleSetup) scheduleSetup.addEventListener("click", ()=> switchTab("planning"));
+  document.querySelectorAll("[data-open-event]").forEach(el=>{
+    el.addEventListener("click", ()=> openCourseModal(el.dataset.openEvent));
+    el.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        openCourseModal(el.dataset.openEvent);
+      }
+    });
+  });
+  document.querySelectorAll("[data-open-event-notes]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openCourseModal(btn.dataset.openEventNotes, true);
     });
   });
 }
@@ -6759,9 +6933,35 @@ function isAllDayOrSpanning(e){
   return e.allDay || ((e.end || e.start) - e.start) >= 20 * 3600 * 1000;
 }
 
+/* Ligne verte de l'heure actuelle : repositionnée en direct par tickPlanningClock(),
+   sans re-rendu, grâce aux attributs data-grid-min-h/max-h. */
+function nowLineHtml(minH, maxH){
+  const now = new Date();
+  if(now.getHours() < minH || now.getHours() >= maxH) return "";
+  const top = ((now.getHours()-minH) + now.getMinutes()/60) * CAL_HOUR_H;
+  const label = now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  return `<div class="cal-now-line" data-grid-min-h="${minH}" data-grid-max-h="${maxH}" style="top:${top}px;">
+    <span class="cal-now-time">${label}</span>
+  </div>`;
+}
+
 function eventsOnDay(dayDate){
   const start = dayDate.getTime(), end = start + 86400000;
   return state.planning.events.filter(e => e.start < end && (e.end || e.start) > start);
+}
+
+/* "passé" / "en cours" / "à venir" — se base uniquement sur l'heure réelle. */
+function getCourseStatus(e){
+  if(e.allDay) return "upcoming";
+  const now = Date.now();
+  if(now < e.start) return "upcoming";
+  if(now < (e.end || e.start)) return "current";
+  return "past";
+}
+
+function getCurrentCourse(){
+  const now = Date.now();
+  return state.planning.events.find(e => !e.allDay && e.start <= now && now < (e.end || e.start)) || null;
 }
 
 /* Place les événements d'une journée en colonnes pour ne jamais masquer un chevauchement. */
@@ -6809,8 +7009,16 @@ function calendarGridBounds(events){
 
 function eventBlockHtml(e, extraStyle){
   const color = colorForEvent(e);
-  return `<div class="cal-event" data-open-event="${e.id}" tabindex="0" role="button" aria-label="${escapeHtml(e.summary)}"
-    style="${extraStyle}background:${color}22;border-left:3px solid ${color};color:${color};">
+  const status = getCourseStatus(e);
+  const isCurrent = status === "current";
+  const cd = getCourseData(e.id);
+  const bg = isCurrent ? "var(--green-tint)" : color + "22";
+  const border = isCurrent ? "var(--green)" : color;
+  const text = isCurrent ? "var(--green)" : color;
+  return `<div class="cal-event ${isCurrent?"is-current":""} ${status==="past"?"is-past":""}" data-open-event="${e.id}" tabindex="0" role="button" aria-label="${escapeHtml(e.summary)}${isCurrent?" — en cours":""}"
+    style="${extraStyle}background:${bg};border-left:3px solid ${border};color:${text};">
+    ${cd.favorite ? `<span class="cal-event-fav">★</span>` : ""}
+    ${isCurrent ? `<span class="cal-event-badge">En cours</span>` : ""}
     <div class="cal-event-time">${fmtEventTimeRange(e)}</div>
     <div class="cal-event-title">${escapeHtml(e.summary)}</div>
     ${e.location ? `<div class="cal-event-loc">${escapeHtml(e.location)}</div>` : ""}
@@ -6923,11 +7131,7 @@ function renderCalendarDay(){
   html += `</div>`;
   html += `<div class="cal-daycol ${isToday?"is-today":""}">`;
   for(let h=minH; h<maxH; h++) html += `<div class="cal-hourline" style="top:${(h-minH)*CAL_HOUR_H}px;"></div>`;
-  const now = new Date();
-  if(isToday && now.getHours() >= minH && now.getHours() < maxH){
-    const top = ((now.getHours()-minH) + now.getMinutes()/60) * CAL_HOUR_H;
-    html += `<div class="cal-now-line" style="top:${top}px;"></div>`;
-  }
+  if(isToday) html += nowLineHtml(minH, maxH);
   laid.forEach(({event,col,totalCols})=>{
     const s = new Date(event.start);
     const top = ((s.getHours()-minH) + s.getMinutes()/60) * CAL_HOUR_H;
@@ -6964,17 +7168,13 @@ function renderCalendarWeek(){
   html += `<div class="cal-timecol">`;
   for(let h=minH; h<maxH; h++) html += `<div class="cal-hour" style="top:${(h-minH)*CAL_HOUR_H}px;">${pad2(h)}:00</div>`;
   html += `</div>`;
-  const now = new Date();
   days.forEach(day=>{
     const timed = eventsOnDay(day).filter(e => !isAllDayOrSpanning(e));
     const laid = layoutTimedEvents(timed);
     const isToday = day.toDateString() === todayStr;
     html += `<div class="cal-daycol ${isToday?"is-today":""}">`;
     for(let h=minH; h<maxH; h++) html += `<div class="cal-hourline" style="top:${(h-minH)*CAL_HOUR_H}px;"></div>`;
-    if(isToday && now.getHours() >= minH && now.getHours() < maxH){
-      const top = ((now.getHours()-minH) + now.getMinutes()/60) * CAL_HOUR_H;
-      html += `<div class="cal-now-line" style="top:${top}px;"></div>`;
-    }
+    if(isToday) html += nowLineHtml(minH, maxH);
     laid.forEach(({event,col,totalCols})=>{
       const s = new Date(event.start);
       const top = ((s.getHours()-minH) + s.getMinutes()/60) * CAL_HOUR_H;
@@ -7027,15 +7227,43 @@ function renderCalendarMonth(){
   return html;
 }
 
-function eventModalHtml(e){
+function courseWorkspaceModalHtml(e, opts){
+  opts = opts || {};
   const subj = matchEventSubject(e.summary);
   const durMin = e.end ? Math.round((e.end - e.start) / 60000) : 0;
+  const status = getCourseStatus(e);
+  const cd = getCourseData(e.id);
+  const statusLabel = status === "current" ? "🟢 En cours" : (status === "past" ? "Terminé" : "À venir");
+
+  let progressHtml = "";
+  if(status === "current" && !e.allDay && e.end){
+    const now = Date.now();
+    const total = e.end - e.start;
+    const elapsed = Math.min(total, Math.max(0, now - e.start));
+    const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
+    const remainMin = Math.max(0, Math.round((e.end - now) / 60000));
+    progressHtml = `<div class="cw-progress-wrap" id="cw-progress-wrap" data-ev-start="${e.start}" data-ev-end="${e.end}">
+      <div class="cw-progress-label"><span>Avancement du cours</span><span id="cw-progress-text">${pct}% · ${remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min"} restantes</span></div>
+      <div class="cw-progressbar"><div class="cw-progressbar-fill" id="cw-progress-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+  }
+
+  const revisionOptions = [
+    {key:"none", label:"Non révisé"},
+    {key:"progress", label:"En cours de révision"},
+    {key:"done", label:"Révisé"},
+  ];
+  const hasData = !courseDataIsEmpty(cd);
+
   return `<div class="cal-modal-backdrop" id="cal-modal-backdrop">
-    <div class="cal-modal" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;">
-        <h2 id="cal-modal-title" style="font-size:17px;font-weight:800;margin:0;">${escapeHtml(e.summary)}</h2>
+    <div class="cal-modal cal-modal-wide" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+      <div class="cw-toprow">
+        <h2 id="cal-modal-title" class="cw-title">${escapeHtml(e.summary)}</h2>
+        <button type="button" class="cw-fav-btn ${cd.favorite ? "active" : ""}" id="cw-fav-btn" aria-pressed="${cd.favorite ? "true" : "false"}" aria-label="${cd.favorite ? "Retirer des favoris" : "Marquer comme favori"}" title="Favori">${cd.favorite ? "★" : "☆"}</button>
         <button class="btn-text" id="cal-modal-close" aria-label="Fermer les détails">✕</button>
       </div>
+      <div class="cw-badges"><span class="cw-badge ${status}">${statusLabel}</span></div>
+      ${progressHtml}
       <ul class="dash-progress-list">
         <li><span>Date</span><b>${new Date(e.start).toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long"})}</b></li>
         <li><span>Horaire</span><b>${fmtEventTimeRange(e)}</b></li>
@@ -7045,20 +7273,141 @@ function eventModalHtml(e){
       </ul>
       ${e.description ? `<p style="font-size:12.5px;color:var(--ink-soft);margin:12px 0 0;line-height:1.6;">${escapeHtml(e.description)}</p>` : ""}
       ${subj ? `<button class="btn outline small" data-open-event-subject="${subj.id}" style="margin-top:14px;">Voir la matière : ${escapeHtml(subj.name)} →</button>` : ""}
+
+      <div class="cw-section">
+        <span class="cw-section-label">Statut de révision</span>
+        <div class="cw-revision-choices" id="cw-revision-choices">
+          ${revisionOptions.map(o => `<button type="button" class="status-pill ${o.key === "progress" ? "progress" : (o.key === "done" ? "done" : "none")} ${cd.revisionStatus === o.key ? "is-active" : ""}" data-revision="${o.key}">${o.label}</button>`).join("")}
+        </div>
+      </div>
+
+      <div class="cw-section">
+        <span class="cw-section-label">Notes du cours</span>
+        <textarea class="ai-textarea" id="cw-notes" data-ev-id="${e.id}" style="min-height:110px;" placeholder="Écris ici tes notes de cours…">${escapeHtml(cd.notes)}</textarea>
+      </div>
+
+      <div class="cw-section">
+        <span class="cw-section-label">Résumé rapide</span>
+        <textarea class="ai-textarea" id="cw-summary" data-ev-id="${e.id}" style="min-height:64px;" placeholder="L'essentiel à retenir en quelques lignes…">${escapeHtml(cd.summary)}</textarea>
+      </div>
+
+      <div class="cw-section">
+        <span class="cw-section-label">Questions à revoir</span>
+        <textarea class="ai-textarea" id="cw-questions" data-ev-id="${e.id}" style="min-height:64px;" placeholder="Points à éclaircir, questions à poser…">${escapeHtml(cd.questions)}</textarea>
+      </div>
+
+      <div class="cw-section">
+        <span class="cw-section-label">À faire pour ce cours</span>
+        <div class="cw-checklist">
+          <label><input type="checkbox" data-check="relire" ${cd.checklist.relire ? "checked" : ""}> Relire mes notes</label>
+          <label><input type="checkbox" data-check="exercices" ${cd.checklist.exercices ? "checked" : ""}> Faire les exercices</label>
+          <label><input type="checkbox" data-check="definitions" ${cd.checklist.definitions ? "checked" : ""}> Revoir les définitions clés</label>
+          <label><input type="checkbox" data-check="prochain" ${cd.checklist.prochain ? "checked" : ""}> Préparer le prochain cours</label>
+        </div>
+      </div>
+
+      <div class="cw-actions">
+        <span id="cw-save-indicator" class="cw-save-indicator"></span>
+        ${hasData ? `<button class="btn-text" id="cw-delete-notes" style="margin-left:auto;color:var(--red-dark);">🗑️ Supprimer mes notes</button>` : ""}
+      </div>
     </div>
   </div>`;
 }
 
-function planningFutureEvents(){
-  const cutoff = Date.now() - 6 * 3600 * 1000;
-  return state.planning.events.filter(e => e.start >= cutoff).sort((a, b) => a.start - b.start);
+function renderGlobalCourseModal(){
+  const root = document.getElementById("course-modal-root");
+  if(!root) return;
+  const selected = state.planning.selectedEventId ? state.planning.events.find(e => e.id === state.planning.selectedEventId) : null;
+  if(!selected){
+    if(root.innerHTML) root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = courseWorkspaceModalHtml(selected, {focusNotes: state.planning.focusNotesOnOpen});
+  attachCourseModalEvents();
 }
 
+function attachCourseModalEvents(){
+  const modalClose = document.getElementById("cal-modal-close");
+  if(modalClose) modalClose.addEventListener("click", closeCourseModal);
+  const modalBackdrop = document.getElementById("cal-modal-backdrop");
+  if(modalBackdrop) modalBackdrop.addEventListener("click", (e)=>{
+    if(e.target === modalBackdrop) closeCourseModal();
+  });
 
-function fmtEventDate(ts){
-  const d = new Date(ts);
-  return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  const favBtn = document.getElementById("cw-fav-btn");
+  if(favBtn) favBtn.addEventListener("click", ()=>{
+    const evId = state.planning.selectedEventId;
+    const cd = getCourseData(evId);
+    flushCourseModalSaves();
+    saveCourseData(evId, {favorite: !cd.favorite});
+    render();
+  });
+
+  document.querySelectorAll("[data-revision]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const evId = state.planning.selectedEventId;
+      flushCourseModalSaves();
+      saveCourseData(evId, {revisionStatus: btn.dataset.revision});
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-check]").forEach(chk=>{
+    chk.addEventListener("change", ()=>{
+      const evId = state.planning.selectedEventId;
+      const cd = getCourseData(evId);
+      const checklist = Object.assign({}, cd.checklist, {[chk.dataset.check]: chk.checked});
+      saveCourseData(evId, {checklist});
+    });
+  });
+
+  Object.keys(COURSE_TEXT_FIELDS).forEach(id=>{
+    const ta = document.getElementById(id);
+    if(!ta) return;
+    ta.addEventListener("input", ()=>{
+      const evId = ta.dataset.evId;
+      const indicator = document.getElementById("cw-save-indicator");
+      if(indicator) indicator.textContent = "Enregistrement…";
+      clearTimeout(courseModalSaveTimers[id]);
+      courseModalSaveTimers[id] = setTimeout(()=>{
+        saveCourseData(evId, {[COURSE_TEXT_FIELDS[id]]: ta.value});
+        delete courseModalSaveTimers[id];
+        const ind = document.getElementById("cw-save-indicator");
+        if(ind) ind.textContent = "Enregistré ✓";
+      }, 500);
+    });
+  });
+
+  const delBtn = document.getElementById("cw-delete-notes");
+  if(delBtn) delBtn.addEventListener("click", ()=>{
+    if(!confirm("Supprimer toutes les notes, le résumé, les questions et le statut liés à ce cours ? Cette action est irréversible.")) return;
+    const evId = state.planning.selectedEventId;
+    Object.keys(courseModalSaveTimers).forEach(id => clearTimeout(courseModalSaveTimers[id]));
+    courseModalSaveTimers = {};
+    deleteCourseData(evId);
+    render();
+  });
+
+  document.querySelectorAll("[data-open-event-subject]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      flushCourseModalSaves();
+      state.planning.selectedEventId = null;
+      libGoto("subjectDetail", {subjectId: btn.dataset.openEventSubject});
+      switchTab("library");
+    });
+  });
+
+  if(state.planning.focusNotesOnOpen){
+    state.planning.focusNotesOnOpen = false;
+    const notesTa = document.getElementById("cw-notes");
+    if(notesTa){
+      notesTa.focus();
+      const len = notesTa.value.length;
+      notesTa.setSelectionRange(len, len);
+    }
+  }
 }
+
 
 function renderPlanning(){
   let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
@@ -7114,8 +7463,9 @@ function renderPlanning(){
   html += planningLegendHtml(visibleDays);
   html += `</div>`;
 
-  const selected = state.planning.selectedEventId ? state.planning.events.find(e => e.id === state.planning.selectedEventId) : null;
-  if(selected) html += eventModalHtml(selected);
+  if(Object.keys(state.courseData).length > 0){
+    html += `<p class="dash-empty" style="margin:14px 0 0;"><button class="btn-text" id="planning-clear-notes-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer toutes mes notes de cours (notes, résumés, questions, checklists)</button></p>`;
+  }
 
   html += `<footer class="hint">Pourquoi un import manuel plutôt qu'automatique ? Un site hébergé sur GitHub Pages n'exécute aucun code serveur : il ne peut récupérer un calendrier distant que si Makers Board autorise les requêtes cross-origin (CORS) depuis un navigateur. Tant que ce point n'est pas vérifié, l'import manuel garantit un fonctionnement fiable sans exposer ton lien personnel.</footer>`;
 
@@ -7158,6 +7508,14 @@ function attachPlanningEvents(){
     render();
   });
 
+  const clearNotesBtn = document.getElementById("planning-clear-notes-btn");
+  if(clearNotesBtn) clearNotesBtn.addEventListener("click", ()=>{
+    if(!confirm("Supprimer toutes les notes, résumés, questions, favoris et checklists de tous tes cours ? Cette action est irréversible.")) return;
+    state.courseData = {};
+    lsSet(KEY_COURSE_DATA, state.courseData);
+    render();
+  });
+
   const urlSave = document.getElementById("planning-url-save");
   if(urlSave) urlSave.addEventListener("click", ()=>{
     state.planning.officialUrl = document.getElementById("planning-url-input").value.trim();
@@ -7195,28 +7553,13 @@ function attachPlanningEvents(){
   document.querySelectorAll("[data-open-event]").forEach(el=>{
     el.addEventListener("click", (e)=>{
       e.stopPropagation();
-      state.planning.selectedEventId = el.dataset.openEvent;
-      render();
+      openCourseModal(el.dataset.openEvent);
     });
     el.addEventListener("keydown", (e)=>{
       if(e.key === "Enter" || e.key === " "){
         e.preventDefault();
-        state.planning.selectedEventId = el.dataset.openEvent;
-        render();
+        openCourseModal(el.dataset.openEvent);
       }
-    });
-  });
-  const modalClose = document.getElementById("cal-modal-close");
-  if(modalClose) modalClose.addEventListener("click", ()=>{ state.planning.selectedEventId = null; render(); });
-  const modalBackdrop = document.getElementById("cal-modal-backdrop");
-  if(modalBackdrop) modalBackdrop.addEventListener("click", (e)=>{
-    if(e.target === modalBackdrop){ state.planning.selectedEventId = null; render(); }
-  });
-  document.querySelectorAll("[data-open-event-subject]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      state.planning.selectedEventId = null;
-      libGoto("subjectDetail", {subjectId: btn.dataset.openEventSubject});
-      switchTab("library");
     });
   });
 }
@@ -7595,17 +7938,58 @@ function initAIBubble(){
 }
 
 /* ============================================================
+   15undecies. HORLOGE DU PLANNING — ligne verte + cours en cours en direct
+   ============================================================ */
+let lastKnownCurrentCourseId = null;
+
+/* Repositionne la ligne "maintenant" et met à jour la barre d'avancement du cours en cours
+   SANS re-rendu complet (coût minimal, appelé chaque seconde) ; ne déclenche render()
+   que si le cours "en cours" a réellement changé (démarré / terminé). */
+function updateCurrentTimeIndicator(){
+  const now = new Date();
+  const label = now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  document.querySelectorAll(".cal-now-line").forEach(el=>{
+    const minH = Number(el.dataset.gridMinH), maxH = Number(el.dataset.gridMaxH);
+    if(now.getHours() < minH || now.getHours() >= maxH){ el.remove(); return; }
+    el.style.top = ((now.getHours() - minH) + now.getMinutes() / 60) * CAL_HOUR_H + "px";
+    const timeEl = el.querySelector(".cal-now-time");
+    if(timeEl) timeEl.textContent = label;
+  });
+
+  [{wrap:"cw-progress-wrap", fill:"cw-progress-fill", text:"cw-progress-text"},
+   {wrap:"dash-ccourse-progress", fill:"dash-ccourse-fill", text:"dash-ccourse-text"}].forEach(ids=>{
+    const wrap = document.getElementById(ids.wrap);
+    if(!wrap) return;
+    const start = Number(wrap.dataset.evStart), end = Number(wrap.dataset.evEnd);
+    const total = end - start;
+    const elapsed = Math.min(total, Math.max(0, Date.now() - start));
+    const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
+    const fillEl = document.getElementById(ids.fill);
+    if(fillEl) fillEl.style.width = pct + "%";
+    const remainMin = Math.max(0, Math.round((end - Date.now()) / 60000));
+    const textEl = document.getElementById(ids.text);
+    if(textEl) textEl.textContent = pct + "% · " + (remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min") + " restantes";
+  });
+
+  const cur = getCurrentCourse();
+  const curId = cur ? cur.id : null;
+  if(curId !== lastKnownCurrentCourseId){
+    lastKnownCurrentCourseId = curId;
+    render();
+  }
+}
+
+/* ============================================================
    16. INIT
    ============================================================ */
 attachMainNavEvents();
 initAIBubble();
 
 document.addEventListener("keydown", (e)=>{
-  if(e.key === "Escape" && state.planning.selectedEventId){
-    state.planning.selectedEventId = null;
-    render();
-  }
+  if(e.key === "Escape" && state.planning.selectedEventId) closeCourseModal();
 });
+
+setInterval(updateCurrentTimeIndicator, 1000);
 
 (async function init(){
   await loadAllData();
@@ -7616,6 +8000,7 @@ document.addEventListener("keydown", (e)=>{
     setAIFabXY(def.x, def.y);
   }
   render();
+  lastKnownCurrentCourseId = getCurrentCourse() ? getCurrentCourse().id : null;
 })();
 </script>
 </body>
