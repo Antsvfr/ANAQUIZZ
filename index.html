@@ -7385,33 +7385,96 @@ async function aiRunQuickTest(){
   render();
 }
 
-/* Test complet, de bout en bout : charge réellement le worker + WebLLM +
-   le modèle (si pas déjà chargé), puis envoie un message trivial et
-   vérifie qu'une vraie réponse revient. Contrairement à aiRunQuickTest()
-   (qui ne vérifie que WebGPU), celui-ci confirme que TOUTE la chaîne
-   fonctionne — jamais de "ça marche" sans avoir réellement généré du texte.
-   Télécharge le modèle si nécessaire : n'est déclenché que sur demande explicite. */
+/* Libellé du mode actuel, dans le vocabulaire exact demandé — dérivé de
+   l'état réel (state.aiStatus / state.aiDiagnostic), jamais d'un état à part. */
+function aiCurrentModeLabel(){
+  if(state.aiStatus === "ready") return "IA locale WebGPU prête";
+  if(state.aiStatus === "loading") return (state.aiLoadProgress > 0) ? "Modèle en cours de téléchargement" : "Modèle en cours de chargement";
+  if(state.aiStatus === "nogpu") return "WebGPU indisponible";
+  if(state.aiStatus === "error"){
+    if(state.aiDiagnostic && state.aiDiagnostic.stage === "worker_start") return "Worker indisponible";
+    return "Erreur de génération";
+  }
+  return "Mode simplifié sans IA";
+}
+
+/* Test complet, de bout en bout et RÉEL (jamais simulé) : refait le
+   diagnostic WebGPU, puis — seulement s'il est positif — charge réellement
+   le worker + WebLLM + le modèle configuré (aiLoadModel, la même fonction
+   que le reste du site, pas une copie), puis envoie une vraie requête et
+   affiche le texte exact reçu. Chaque étape ci-dessous est cochée
+   individuellement à partir de faits réels (adapterAvailable/deviceAvailable
+   du diagnostic, stage de l'échec de chargement, réponse effective du
+   modèle) — jamais "ça marche" sans avoir réellement obtenu chaque étape. */
 async function aiRunFullEngineTest(){
   if(aiEngineBusy() || state.aiFullTestBusy) return;
   state.aiFullTestBusy = true;
   state.aiDiagPanelOpen = true;
-  state.aiFullTestResult = "⏳ Test en cours : chargement du moteur puis envoi d'un message de test…";
+  state.aiFullTestResult = "";
+  const steps = state.aiFullTestSteps = [
+    {key:"gpu", label:"navigator.gpu présent", status:"pending"},
+    {key:"adapter", label:"Adaptateur GPU trouvé (requestAdapter)", status:"pending"},
+    {key:"device", label:"Périphérique GPU créé (requestDevice)", status:"pending"},
+    {key:"worker", label:"Worker créé (ai-worker.js)", status:"pending"},
+    {key:"webllm", label:"Module WebLLM chargé", status:"pending"},
+    {key:"model", label:"Modèle demandé : " + (state.aiModelId || pickModelForDevice()), status:"pending"},
+    {key:"download", label:"Téléchargement + initialisation terminés (modèle prêt)", status:"pending"},
+    {key:"request", label:"Requête envoyée au modèle", status:"pending"},
+    {key:"response", label:"Réponse réelle reçue", status:"pending"},
+  ];
   render();
+
+  const diag = await checkWebGPUCompatibility();
+  state.aiGpuDiag = diag;
+  steps[0].status = diag.gpuApiAvailable ? "ok" : "fail";
+  steps[1].status = diag.gpuApiAvailable ? (diag.adapterAvailable ? "ok" : "fail") : "skip";
+  steps[2].status = diag.adapterAvailable ? (diag.deviceAvailable ? "ok" : "fail") : "skip";
+  render();
+
+  if(!diag.ok){
+    for(let i=3;i<steps.length;i++) steps[i].status = "skip";
+    state.aiStatus = "nogpu";
+    state.aiFullTestResult = "❌ " + diag.message + " Impossible d'aller plus loin : sans adaptateur/périphérique GPU réel, le worker WebLLM ne peut pas être testé pour de vrai sur cet appareil.";
+    state.aiFullTestBusy = false;
+    render();
+    return;
+  }
+
+  steps[3].status = "running"; render();
+  const modelId = state.aiModelId || pickModelForDevice();
+  if(state.aiStatus !== "ready" || webllmLoadedModelId !== modelId){
+    await aiLoadModel(modelId);
+  }
+  if(state.aiStatus !== "ready"){
+    const stage = state.aiDiagnostic ? state.aiDiagnostic.stage : null;
+    steps[3].status = stage === "worker_start" ? "fail" : "ok";
+    steps[4].status = steps[3].status !== "ok" ? "skip" : (stage === "module_import" ? "fail" : "ok");
+    steps[5].status = steps[4].status !== "ok" ? "skip" : "ok";
+    steps[6].status = steps[5].status !== "ok" ? "skip" : "fail";
+    steps[7].status = "skip"; steps[8].status = "skip";
+    state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé réellement (étape : " + (state.aiDiagnostic ? state.aiDiagnostic.typeLabel : "inconnue") + "). " + (state.aiDiagnostic ? state.aiDiagnostic.message : "");
+    state.aiFullTestBusy = false;
+    render();
+    return;
+  }
+  steps[3].status = "ok"; steps[4].status = "ok"; steps[5].status = "ok"; steps[6].status = "ok";
+  render();
+
+  steps[7].status = "running"; render();
   try{
-    if(state.aiStatus !== "ready"){
-      await aiLoadModel(state.aiModelId || pickModelForDevice());
-    }
-    if(state.aiStatus !== "ready"){
-      state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé (voir « Détails techniques » ci-dessus pour l'étape exacte).";
+    const res = await webllmChat([{role:"user", content:"Réponds uniquement : IA LOCALE FONCTIONNELLE."}], {});
+    steps[7].status = "ok";
+    const text = (res && res.text || "").trim();
+    if(text){
+      steps[8].status = "ok";
+      state.aiFullTestResult = "✅ Test réel réussi — le modèle « " + aiModelMeta(modelId).label + " » a répondu : « " + clip(text, 200) + " »";
     } else {
-      const res = await webllmChat([{role:"user", content:"Réponds uniquement : IA locale fonctionnelle."}], {});
-      const text = (res && res.text || "").trim();
-      state.aiFullTestResult = text
-        ? "✅ Test réussi — réponse reçue du modèle local : « " + clip(text, 200) + " »"
-        : "❌ Le modèle a répondu, mais avec un texte vide : le moteur tourne, la génération elle-même pose problème.";
+      steps[8].status = "fail";
+      state.aiFullTestResult = "❌ Requête envoyée, mais réponse vide reçue : le moteur tourne, mais la génération elle-même échoue.";
     }
   }catch(e){
-    state.aiFullTestResult = "❌ Échec du test : " + (e && e.message ? e.message : "erreur inconnue") + ".";
+    steps[7].status = "fail"; steps[8].status = "skip";
+    state.aiFullTestResult = "❌ Échec de la génération réelle : " + (e && e.message ? e.message : "erreur inconnue") + ".";
   }
   state.aiFullTestBusy = false;
   render();
@@ -7441,6 +7504,17 @@ function aiEnvSummary(){
   return "Navigateur non identifié";
 }
 
+/* Liste à cocher du test complet — chaque ligne reflète un fait réel
+   (jamais un état inventé) : pending = pas encore atteinte, running = en
+   cours, ok = confirmée réellement, fail = a réellement échoué à cette
+   étape, skip = non atteinte car une étape précédente a échoué. */
+function aiFullTestStepsHtml(){
+  const icon = { pending:"⚪", running:"⏳", ok:"✅", fail:"❌", skip:"➖" };
+  return `<div style="margin-top:10px; padding:10px 12px; background:var(--bg); border-radius:var(--radius-md); font-size:12px; line-height:1.85;">
+    ${state.aiFullTestSteps.map(s => `<div>${icon[s.status]||"⚪"} ${escapeHtml(s.label)}</div>`).join("")}
+  </div>`;
+}
+
 /* Petit panneau de diagnostic ("État de mon assistant IA"), replié par défaut,
    affiché quel que soit l'état de l'IA. */
 function aiDiagnosticPanelHtml(){
@@ -7452,7 +7526,6 @@ function aiDiagnosticPanelHtml(){
     : (state.aiStatus === "ready" || state.aiStatus === "loading" ? "fonctionnel" : "non testé");
   const modelLine = state.aiStatus === "ready" ? "prêt (" + aiModelMeta(state.aiModelId).label + ")"
     : (state.aiStatus === "loading" ? "en cours de chargement" : "non chargé");
-  const modeLine = state.aiStatus === "ready" ? "IA locale WebGPU" : (state.aiStatus === "nogpu" ? "IA locale simplifiée / extraction seule" : "extraction seule (IA non chargée)");
   return `<details class="ai-extra" id="ai-diag-panel" style="margin-top:12px;" ${state.aiDiagPanelOpen ? "open" : ""}>
     <summary>État de mon assistant IA</summary>
     <div style="font-size:12px; line-height:1.9; margin-top:6px; color:var(--ink-soft);">
@@ -7461,14 +7534,15 @@ function aiDiagnosticPanelHtml(){
       <div><b>Carte graphique :</b> ${escapeHtml(adapterLine)}</div>
       <div><b>Moteur local (worker) :</b> ${escapeHtml(workerLine)}</div>
       <div><b>Modèle :</b> ${escapeHtml(modelLine)}</div>
-      <div><b>Mode utilisé :</b> ${escapeHtml(modeLine)}</div>
+      <div><b>Mode actuel :</b> ${escapeHtml(aiCurrentModeLabel())}</div>
     </div>
     <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
       <button class="btn-text" id="ai-test-btn">🧪 Tester WebGPU (rapide)</button>
       <button class="btn-text" id="ai-retry-check-btn">🔄 Réessayer le chargement</button>
-      <button class="btn-text" id="ai-full-test-btn" ${(aiEngineBusy() || state.aiFullTestBusy) ? "disabled" : ""}>${state.aiFullTestBusy ? "⏳ Test en cours…" : "🧪 Test complet (charge le modèle)"}</button>
+      <button class="btn-text" id="ai-full-test-btn" ${(aiEngineBusy() || state.aiFullTestBusy) ? "disabled" : ""}>${state.aiFullTestBusy ? "⏳ Test en cours…" : "🧪 Test complet (réel, charge le modèle)"}</button>
     </div>
     ${state.aiTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiTestResult)}</div>` : ""}
+    ${(state.aiFullTestSteps && state.aiFullTestSteps.length) ? aiFullTestStepsHtml() : ""}
     ${state.aiFullTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiFullTestResult)}</div>` : ""}
     ${diag ? `<details class="ai-extra" style="margin-top:10px;">
       <summary>Détails techniques</summary>
@@ -7779,6 +7853,7 @@ Object.assign(state, {
   aiRetryChecking: false,
   aiFullTestResult: "",
   aiFullTestBusy: false,
+  aiFullTestSteps: [],
 });
 
 const AI_ACTIONS = {
