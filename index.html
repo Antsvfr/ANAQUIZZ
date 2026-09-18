@@ -774,6 +774,22 @@
   .dash-schedule-badge{ font-size:9.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.02em; flex-shrink:0; }
   .dash-schedule-row.status-current .dash-schedule-badge{ color: var(--green); }
 
+  .dash-revisions-list{ display:flex; flex-direction:column; gap:4px; }
+  .dash-revision-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; border-radius:8px;
+    cursor:pointer; transition: background .15s var(--ease); flex-wrap:wrap;
+  }
+  .dash-revision-row:hover, .dash-revision-row:focus-visible{ background: var(--bg); outline:none; }
+  .dash-revision-main .name{ font-weight:700; font-size:13px; color: var(--ink); }
+  .dash-revision-main .meta{ font-size:11.5px; color: var(--muted); margin-top:2px; }
+  .dash-revision-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .dash-revision-badge{
+    font-size:10px; font-weight:800; padding:3px 9px; border-radius:20px; background: var(--surface-2);
+    color: var(--ink-soft); white-space:nowrap;
+  }
+  .dash-revision-badge.warn{ background: var(--amber-tint); color: var(--amber); }
+  .dash-revision-badge.ok{ background: var(--green-tint); color: var(--green); }
+
   @media (max-width: 860px){
     .dash-grid2{ grid-template-columns: 1fr; }
   }
@@ -3478,8 +3494,45 @@ function renderDashboard(){
 
   html += `</div>`; // dash-grid2
 
+  html += renderDashboardRevisions();
+
   html += `<footer class="hint">Toutes tes données sont enregistrées dans ce navigateur (localStorage) et restent disponibles après fermeture.${storageAvailable ? "" : " ⚠️ Le stockage local semble bloqué : cette session ne sera pas conservée."}</footer>`;
 
+  return html;
+}
+
+/* "Mes révisions" — cours récemment importés/créés, avec indicateurs de ce qui est
+   disponible (quiz, flashcards, questions) et un badge "à revoir" tant qu'ils ne sont
+   pas marqués comme révisés. */
+function renderDashboardRevisions(){
+  const recentChapters = state.userChapters
+    .slice()
+    .sort((a,b) => (b.updatedAt||b.createdAt||0) - (a.updatedAt||a.createdAt||0))
+    .slice(0, 5);
+  if(recentChapters.length === 0) return "";
+
+  let html = `<div class="dash-card" style="margin-bottom:18px;">
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Mes révisions</span></div>
+    <div class="dash-revisions-list">`;
+  recentChapters.forEach(ch=>{
+    const s = subjectOfChapter(ch);
+    const dateLbl = fmtRelativeDate(dateKey(new Date(ch.updatedAt||ch.createdAt||Date.now()))).toLowerCase();
+    html += `<div class="dash-revision-row" data-open-revision="${ch.id}" tabindex="0" role="button" aria-label="${escapeHtml(ch.title)}">
+      <div class="dash-revision-main">
+        <div class="name">${escapeHtml(ch.title)}</div>
+        <div class="meta">${s ? escapeHtml(s.name) + " · " : ""}${dateLbl}</div>
+      </div>
+      <div class="dash-revision-badges">
+        ${ch.aiQuiz && ch.aiQuiz.length ? `<span class="dash-revision-badge">🧠 Quiz</span>` : ""}
+        ${ch.aiFlashcards && ch.aiFlashcards.length ? `<span class="dash-revision-badge">🃏 Flashcards</span>` : ""}
+        ${ch.aiReviewQuestions && ch.aiReviewQuestions.length ? `<span class="dash-revision-badge">🎯 Questions</span>` : ""}
+        ${!ch.markedReviewed ? `<span class="dash-revision-badge warn">À revoir</span>` : `<span class="dash-revision-badge ok">✅ Révisé</span>`}
+      </div>
+    </div>`;
+  });
+  html += `</div>
+    <button class="btn-text" id="dash-viewall-revisions" style="margin-top:10px;">Voir toutes mes matières →</button>
+  </div>`;
   return html;
 }
 
@@ -3622,6 +3675,14 @@ function attachDashboardEvents(){
   });
   const importBtn = document.getElementById("dash-import-course-btn");
   if(importBtn) importBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  document.querySelectorAll("[data-open-revision]").forEach(el=>{
+    el.addEventListener("click", ()=>{ libGoto("chapterDetail", {chapterId: el.dataset.openRevision}); switchTab("library"); });
+    el.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); libGoto("chapterDetail", {chapterId: el.dataset.openRevision}); switchTab("library"); }
+    });
+  });
+  const viewAllRevisions = document.getElementById("dash-viewall-revisions");
+  if(viewAllRevisions) viewAllRevisions.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   const proglink = document.getElementById("dash-progress-link");
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
   const activitiesBtn = document.getElementById("dash-activities-btn");
@@ -6079,9 +6140,10 @@ function renderFiches(){
         </select>
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-        <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours</button>
-        <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer des cours<input type="file" id="catalog-import-input" accept="application/json" style="display:none;"></label>
+        <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours (sauvegarde JSON)</button>
+        <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="catalog-import-input" accept=".json,application/json" style="display:none;"></label>
       </div>
+      <p style="font-size:11px;color:var(--muted);margin:0;">Ceci restaure une sauvegarde JSON déjà exportée depuis ce site — pour importer un cours (PDF, DOCX, TXT...), utilise « 📥 Importer un cours pour générer automatiquement… » tout en haut de cette page.</p>
     </div>
   `;
 
@@ -7786,9 +7848,18 @@ function exportUserCourses(){
 }
 
 async function importUserCoursesFromFile(file){
+  const isJsonExt = /\.json$/i.test(file.name);
   const text = await readFileAsText(file);
   let parsed;
-  try{ parsed = JSON.parse(text); }catch(e){ throw new Error("Fichier JSON invalide."); }
+  try{
+    parsed = JSON.parse(text);
+  }catch(e){
+    if(isJsonExt) throw new Error("Ce fichier .json est corrompu ou illisible. Réexporte une nouvelle sauvegarde depuis « Exporter mes cours ».");
+    throw new Error("Ce fichier n'est pas une sauvegarde JSON. Utilise « Importer un cours » (dans Mes matières) pour importer un document (PDF, DOCX, TXT, Markdown).");
+  }
+  if(!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.subjects) && !Array.isArray(parsed.chapters))){
+    throw new Error("Ce fichier n'est pas reconnu comme une sauvegarde EM Lyon Révision. Utilise « Importer un cours » pour importer un document.");
+  }
   const subjects = Array.isArray(parsed.subjects) ? parsed.subjects : [];
   const chapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
   let addedSubjects = 0, addedChapters = 0;
@@ -7820,11 +7891,17 @@ function exportAllData(){
 }
 
 async function importAllDataFromFile(file){
+  const isJsonExt = /\.json$/i.test(file.name);
   const text = await readFileAsText(file);
   let parsed;
-  try{ parsed = JSON.parse(text); }catch(e){ throw new Error("Fichier JSON invalide."); }
+  try{
+    parsed = JSON.parse(text);
+  }catch(e){
+    if(isJsonExt) throw new Error("Ce fichier .json est corrompu ou illisible. Réexporte une nouvelle sauvegarde depuis « Exporter toutes mes données ».");
+    throw new Error("Ce fichier n'est pas une sauvegarde JSON. Utilise « Importer un cours » (dans Mes matières) pour importer un document (PDF, DOCX, TXT, Markdown).");
+  }
   const data = parsed && parsed.data ? parsed.data : parsed;
-  if(!data || typeof data !== "object") throw new Error("Format de sauvegarde non reconnu.");
+  if(!data || typeof data !== "object") throw new Error("Format de sauvegarde non reconnu. Utilise « Importer un cours » si tu voulais importer un document de cours.");
   Object.keys(data).forEach(k=>{
     localStorage.setItem(LS_PREFIX + k, JSON.stringify(data[k]));
   });
@@ -7844,10 +7921,10 @@ function renderSettings(){
 
     <div class="dash-section">
       <div class="section-title">Sauvegarder / restaurer mes données</div>
-      <p class="dash-empty" style="margin-top:0;">Exporte une sauvegarde complète de ton compte, pour la garder ou la transférer sur un autre navigateur.</p>
+      <p class="dash-empty" style="margin-top:0;">Exporte une sauvegarde complète de ton compte, pour la garder ou la transférer sur un autre navigateur. Pour importer un cours (PDF, DOCX, TXT...), utilise « Importer un cours » depuis Mes matières — pas cette section.</p>
       <div class="actions" style="justify-content:flex-start;gap:10px;">
-        <button class="btn outline small" id="settings-export-btn">⬇️ Exporter toutes mes données</button>
-        <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde<input type="file" id="settings-import-input" accept="application/json" style="display:none;"></label>
+        <button class="btn outline small" id="settings-export-btn">⬇️ Exporter toutes mes données (sauvegarde JSON)</button>
+        <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="settings-import-input" accept=".json,application/json" style="display:none;"></label>
       </div>
       <div id="settings-status" style="margin-top:10px;font-size:13px;color:var(--ink-soft);"></div>
     </div>
