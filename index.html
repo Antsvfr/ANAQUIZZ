@@ -171,30 +171,28 @@
   }
   .hamburger-btn:hover{ background: rgba(255,255,255,0.12); }
 
-  /* ===== BULLE ASSISTANT IA ===== */
-  .ai-bubble{
-    position:fixed; width:56px; height:56px; border-radius:50%; z-index:200;
+  /* ===== BULLE ASSISTANT IA (flottante, déplaçable librement) =====
+     Nom de classe distinct de .ai-bubble (utilisée par les messages du
+     chat IA) pour éviter tout conflit de style. */
+  .ai-fab{
+    position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; z-index:200;
     background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
     border: none; color:#fff; cursor:grab;
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 6px 18px rgba(180,21,47,0.38), 0 2px 6px rgba(0,0,0,0.12);
     touch-action:none; -webkit-user-select:none; user-select:none;
-    animation: ai-bubble-bob 3.4s ease-in-out infinite;
+    transition: box-shadow 0.15s var(--ease), transform 0.1s var(--ease);
+    animation: ai-fab-bob 3.4s ease-in-out infinite;
   }
-  .ai-bubble:active{ cursor:grabbing; }
-  .ai-bubble svg{ width:28px; height:28px; pointer-events:none; }
-  .ai-bubble:focus-visible{ outline: 2.5px solid #fff; outline-offset: 3px; }
-  .ai-bubble.corner-br{ right:20px; bottom:20px; left:auto; top:auto; }
-  .ai-bubble.corner-bl{ left:20px; bottom:20px; right:auto; top:auto; }
-  .ai-bubble.corner-tr{ right:20px; top:80px; left:auto; bottom:auto; }
-  .ai-bubble.corner-tl{ left:20px; top:80px; right:auto; bottom:auto; }
-  @keyframes ai-bubble-bob{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-5px); } }
-  @media (prefers-reduced-motion: reduce){ .ai-bubble{ animation:none; } }
-  body.exam-focus .ai-bubble{ display:none; }
+  .ai-fab:hover{ box-shadow: 0 8px 22px rgba(180,21,47,0.46), 0 3px 8px rgba(0,0,0,0.16); }
+  .ai-fab:active{ cursor:grabbing; transform: scale(0.96); }
+  .ai-fab svg{ width:28px; height:28px; pointer-events:none; }
+  .ai-fab:focus-visible{ outline: 2.5px solid #fff; outline-offset: 3px; }
+  @keyframes ai-fab-bob{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-5px); } }
+  @media (prefers-reduced-motion: reduce){ .ai-fab{ animation:none; } }
+  body.exam-focus .ai-fab{ display:none; }
   @media (max-width:680px){
-    .ai-bubble{ width:50px; height:50px; }
-    .ai-bubble.corner-tr, .ai-bubble.corner-tl{ top:66px; }
-    .ai-bubble.corner-br, .ai-bubble.corner-bl{ bottom:16px; }
+    .ai-fab{ width:50px; height:50px; }
   }
 
   /* ===== STAT BAR ===== */
@@ -1114,7 +1112,7 @@
 
 <div id="content" class="wrap"></div>
 
-<button type="button" class="ai-bubble corner-br" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
+<button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <rect x="4" y="8" width="16" height="12" rx="4" fill="#fff"/>
     <rect x="10" y="2" width="4" height="5" rx="2" fill="#fff"/>
@@ -2062,7 +2060,7 @@ let state = {
   profile: { firstName: "" },
 
   // --- planning / calendrier (import manuel .ics, aucune donnée distante) ---
-  planning: { events: [], officialUrl: "", view: "upcoming", lastImportMsg: "" },
+  planning: { events: [], officialUrl: "", view: "upcoming", calView: "list", lastImportMsg: "", lastSyncAt: null, selectedEventId: null, monthOffset: 0 },
 
   // --- bibliothèque de cours (recherche/filtre) ---
   catalog: { query: "", subjectId: "all", semesterId: "all", scope: "all", docType: "all" },
@@ -2072,8 +2070,8 @@ let state = {
   examsSujetStatus: "",
   resourcesDocStatus: "",
 
-  // --- bulle assistant IA (position) ---
-  aiBubble: { corner: "br" },
+  // --- bulle assistant IA (position libre, en pixels) ---
+  aiBubble: { x: null, y: null },
 
   // --- quiz ---
   quizLevel: "all",
@@ -2402,10 +2400,14 @@ async function loadAllData(){
   if(savedPlanning){
     state.planning.events = Array.isArray(savedPlanning.events) ? savedPlanning.events : [];
     state.planning.officialUrl = savedPlanning.officialUrl || "";
+    state.planning.lastSyncAt = savedPlanning.lastSyncAt || null;
   }
   state.documents = await loadKey(KEY_DOCUMENTS, []);
   const savedBubble = lsGet(KEY_AIBUBBLE);
-  if(savedBubble && savedBubble.corner) state.aiBubble.corner = savedBubble.corner;
+  if(savedBubble && typeof savedBubble.x === "number" && typeof savedBubble.y === "number"){
+    state.aiBubble.x = savedBubble.x;
+    state.aiBubble.y = savedBubble.y;
+  }
   const savedModelChoice = lsGet(KEY_AIMODEL);
   if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
   migrateLegacyWrongQuestions();
@@ -2422,9 +2424,9 @@ function saveAIHistory(){ lsSet(KEY_AI, state.aiHistory.slice(-20)); }
 function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
 function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
-function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl }); }
+function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl, lastSyncAt: state.planning.lastSyncAt }); }
 function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
-function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { corner: state.aiBubble.corner }); }
+function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { x: state.aiBubble.x, y: state.aiBubble.y }); }
 
 function logRecentAdd(label){
   state.dash.recentAdds.unshift({ ts: Date.now(), label });
@@ -3109,16 +3111,20 @@ function renderDashboard(){
   </div>`;
 
   /* ---------- Bloc 6 : planning ---------- */
-  const nextEvent = planningNextEvent();
+  const nextEvents = planningFutureEvents().slice(0, 3);
   html += `<div class="dash-card">
     <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Prochain cours</span></div>`;
-  if(nextEvent){
-    html += `<div style="font-weight:700;font-size:14px;color:var(--ink);">${escapeHtml(nextEvent.summary)}</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${fmtEventDate(nextEvent.start)}${nextEvent.location ? " · " + escapeHtml(nextEvent.location) : ""}</div>`;
+  if(nextEvents.length){
+    html += nextEvents.map((e, i) => `<div style="${i>0?"margin-top:10px;padding-top:10px;border-top:1px solid var(--bg);":""}">
+      <div style="font-weight:700;font-size:14px;color:var(--ink);">${escapeHtml(e.summary)}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;">${fmtEventDate(e.start)} · ${fmtEventTimeRange(e)}${e.location ? " · " + escapeHtml(e.location) : ""}</div>
+    </div>`).join("");
+    html += `<button class="btn-text" id="dash-planning-link" style="margin-top:10px;">Voir mon planning →</button>`;
   } else {
-    html += `<p class="dash-empty">Aucun planning importé pour l'instant.</p>`;
+    html += `<p class="dash-empty">Aucun prochain cours trouvé.</p>
+      <button class="btn outline small" id="dash-planning-link" style="margin-top:6px;">Configurer mon planning</button>`;
   }
-  html += `<button class="btn-text" id="dash-planning-link" style="margin-top:10px;">Voir mon planning →</button></div>`;
+  html += `</div>`;
 
   html += `</div>`; // dash-grid2
 
@@ -6443,11 +6449,12 @@ function renderMySpace(){
 
     <div class="dash-section">
       <div class="section-title">Position de l'assistant IA</div>
-      <p class="dash-empty" style="margin-top:0;">La bulle flottante peut aussi se déplacer directement à la souris ou au doigt.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        ${[["br","Bas droite"],["bl","Bas gauche"],["tr","Haut droite"],["tl","Haut gauche"]].map(([c,label])=>
-          `<button class="btn ${state.aiBubble.corner===c?"red":"outline"} small" data-bubble-corner="${c}">${label}</button>`
-        ).join("")}
+      <p class="dash-empty" style="margin-top:0;">Le mode principal reste le glisser-déposer : clique-glisse la bulle n'importe où sur l'écran, à la souris ou au doigt. Ces boutons sont une alternative si le glisser-déposer n'est pas pratique pour toi.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;">
+        ${["tl","tc","tr","ml","mc","mr","bl","bc","br"].map(key=>{
+          const labels = {tl:"Haut gauche", tc:"Haut centre", tr:"Haut droite", ml:"Milieu gauche", mc:"Milieu centre", mr:"Milieu droite", bl:"Bas gauche", bc:"Bas centre", br:"Bas droite"};
+          return `<button class="btn outline small" data-bubble-preset="${key}" style="text-align:center;">${labels[key]}</button>`;
+        }).join("")}
       </div>
     </div>
   `;
@@ -6467,8 +6474,8 @@ function attachMySpaceEvents(){
   if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
   const settingsBtn = document.getElementById("myspace-settings-btn");
   if(settingsBtn) settingsBtn.addEventListener("click", ()=> switchTab("settings"));
-  document.querySelectorAll("[data-bubble-corner]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{ setAIBubbleCorner(btn.dataset.bubbleCorner); render(); });
+  document.querySelectorAll("[data-bubble-preset]").forEach(btn=>{
+    btn.addEventListener("click", ()=> setAIFabPreset(btn.dataset.bubblePreset));
   });
 }
 
@@ -6516,29 +6523,92 @@ function parseICS(text){
     else if(key === "DTSTART") cur.start = parseICSDate(value);
     else if(key === "DTEND") cur.end = parseICSDate(value);
     else if(key === "LOCATION") cur.location = unescapeICS(value);
+    else if(key === "DESCRIPTION") cur.description = unescapeICS(value);
+    else if(key === "UID") cur.uid = value;
   });
 
   return events
     .filter(e => e.summary && e.start)
-    .map(e => ({ summary: e.summary, start: e.start, end: e.end || e.start, location: e.location || "" }));
+    .map(e => ({
+      uid: e.uid || null,
+      summary: e.summary, start: e.start, end: e.end || e.start,
+      location: e.location || "", description: e.description || "",
+    }));
 }
 
-function planningFutureEvents(){
-  const cutoff = Date.now() - 6 * 3600 * 1000;
-  return state.planning.events.filter(e => e.start >= cutoff).sort((a, b) => a.start - b.start);
+/* Rattache un événement à une matière existante uniquement si le nom correspond clairement
+   (sous-chaîne exacte, insensible à la casse) — jamais d'approximation floue. */
+function matchEventSubject(summary){
+  const s = summary.toLowerCase();
+  return allSubjects().find(subj => {
+    const n = subj.name.toLowerCase();
+    return s.includes(n) || n.includes(s);
+  }) || null;
 }
 
-function planningNextEvent(){
-  const events = planningFutureEvents();
-  return events.length ? events[0] : null;
+/* Fusionne les événements importés avec ceux déjà enregistrés :
+   - un événement avec UID met à jour l'entrée existante portant le même UID (pas de doublon) ;
+   - un événement sans UID est comparé sur (résumé + horaire de début). */
+function mergePlanningEvents(parsed){
+  let added = 0, updated = 0;
+  parsed.forEach(e=>{
+    const idx = e.uid
+      ? state.planning.events.findIndex(x => x.uid === e.uid)
+      : state.planning.events.findIndex(x => !x.uid && x.summary === e.summary && x.start === e.start);
+    if(idx === -1){
+      e.id = genLibId("evt");
+      state.planning.events.push(e);
+      added++;
+    } else {
+      const prev = state.planning.events[idx];
+      const changed = prev.summary !== e.summary || prev.start !== e.start || prev.end !== e.end ||
+        prev.location !== e.location || prev.description !== e.description;
+      e.id = prev.id;
+      state.planning.events[idx] = e;
+      if(changed) updated++;
+    }
+  });
+  return { added, updated };
 }
 
-function fmtEventDate(ts){
-  const d = new Date(ts);
-  return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+function fmtEventTimeRange(e){
+  const s = new Date(e.start);
+  const timeFmt = d => d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  if(!e.end || e.end === e.start) return timeFmt(s);
+  return timeFmt(s) + " – " + timeFmt(new Date(e.end));
 }
 
-function renderPlanning(){
+function eventRowHtml(e){
+  const subj = matchEventSubject(e.summary);
+  return `<div data-open-event="${e.id}" style="padding:12px 0;border-bottom:1px solid var(--bg);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+    <div>
+      <div style="font-weight:700;font-size:13.5px;color:var(--ink);">${escapeHtml(e.summary)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">${fmtEventDate(e.start)} · ${fmtEventTimeRange(e)}${e.location ? " · " + escapeHtml(e.location) : ""}</div>
+    </div>
+    ${subj ? `<span class="level-badge" style="background:${subj.color}22;color:${subj.color};flex-shrink:0;">${escapeHtml(subj.name)}</span>` : ""}
+  </div>`;
+}
+
+function eventDetailCardHtml(e){
+  const subj = matchEventSubject(e.summary);
+  const durMin = e.end ? Math.round((e.end - e.start) / 60000) : 0;
+  return `<div class="dash-section" id="planning-event-detail" style="border-left:4px solid var(--red);">
+    <div class="dash-section-head">
+      <span class="section-title" style="margin-bottom:0;">${escapeHtml(e.summary)}</span>
+      <button class="btn-text" id="planning-detail-close">Fermer ✕</button>
+    </div>
+    <ul class="dash-progress-list">
+      <li><span>Date</span><b>${new Date(e.start).toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long"})}</b></li>
+      <li><span>Horaire</span><b>${fmtEventTimeRange(e)}</b></li>
+      ${durMin > 0 ? `<li><span>Durée</span><b>${durMin >= 60 ? (Math.round(durMin/6)/10) + " h" : durMin + " min"}</b></li>` : ""}
+      ${e.location ? `<li><span>Lieu</span><b>${escapeHtml(e.location)}</b></li>` : ""}
+    </ul>
+    ${e.description ? `<p style="font-size:12.5px;color:var(--ink-soft);margin:12px 0 0;line-height:1.6;">${escapeHtml(e.description)}</p>` : ""}
+    ${subj ? `<button class="btn outline small" data-open-event-subject="${subj.id}" style="margin-top:12px;">Voir la matière : ${escapeHtml(subj.name)} →</button>` : ""}
+  </div>`;
+}
+
+function renderPlanningList(){
   const events = planningFutureEvents();
   const filter = state.planning.view || "upcoming";
   const now = new Date();
@@ -6551,14 +6621,94 @@ function renderPlanning(){
   else if(filter === "tomorrow") filtered = events.filter(e => e.start >= tomorrowStart && e.start < tomorrowStart + 86400000);
   else if(filter === "week") filtered = events.filter(e => e.start >= todayStart && e.start < weekEnd);
 
+  let html = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    ${["today","tomorrow","week","upcoming"].map(f=>{
+      const labels = {today:"Aujourd'hui", tomorrow:"Demain", week:"Cette semaine", upcoming:"Prochains cours"};
+      return `<button class="btn ${filter===f?"red":"outline"} small" data-planning-filter="${f}">${labels[f]}</button>`;
+    }).join("")}
+  </div>`;
+
+  if(filtered.length === 0) html += `<div class="empty-state"><div class="big">📭</div>Rien de prévu sur cette période.</div>`;
+  else html += filtered.map(eventRowHtml).join("");
+
+  return html;
+}
+
+function renderPlanningWeek(){
+  const now = new Date();
+  const dayIdx = (now.getDay() + 6) % 7; // lundi = 0
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayIdx);
+  const todayStr = now.toDateString();
+  let html = "";
+  for(let i=0;i<7;i++){
+    const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+    const dayStart = day.getTime(), dayEnd = dayStart + 86400000;
+    const dayEvents = state.planning.events.filter(e => e.start >= dayStart && e.start < dayEnd).sort((a,b)=>a.start-b.start);
+    const isToday = day.toDateString() === todayStr;
+    html += `<div style="padding:12px 0;border-bottom:1px solid var(--bg);">
+      <div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;color:${isToday?"var(--red)":"var(--muted)"};margin-bottom:8px;">
+        ${day.toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long"})}${isToday ? " · aujourd'hui" : ""}
+      </div>
+      ${dayEvents.length === 0 ? `<p class="dash-empty" style="margin:0;">Rien de prévu.</p>` : dayEvents.map(eventRowHtml).join("")}
+    </div>`;
+  }
+  return html;
+}
+
+function renderPlanningMonth(){
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth() + (state.planning.monthOffset||0), 1);
+  const monthLabel = base.toLocaleDateString("fr-FR", {month:"long", year:"numeric"});
+  const firstDayIdx = (base.getDay() + 6) % 7; // lundi = 0
+  const daysInMonth = new Date(base.getFullYear(), base.getMonth()+1, 0).getDate();
+  const todayStr = now.toDateString();
+
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <button class="btn-text" id="planning-month-prev">← Précédent</button>
+    <div style="font-weight:800;text-transform:capitalize;">${monthLabel}</div>
+    <button class="btn-text" id="planning-month-next">Suivant →</button>
+  </div>`;
+  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">`;
+  ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach(d=>{
+    html += `<div style="background:var(--surface-2);padding:6px 4px;font-size:10px;font-weight:800;text-align:center;color:var(--muted);">${d}</div>`;
+  });
+  for(let i=0;i<firstDayIdx;i++) html += `<div style="background:var(--bg);min-height:64px;"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dayDate = new Date(base.getFullYear(), base.getMonth(), d);
+    const dayStart = dayDate.getTime(), dayEnd = dayStart + 86400000;
+    const dayEvents = state.planning.events.filter(e => e.start >= dayStart && e.start < dayEnd).sort((a,b)=>a.start-b.start);
+    const isToday = dayDate.toDateString() === todayStr;
+    html += `<div style="background:var(--surface);min-height:64px;padding:4px;font-size:10px;">
+      <div style="font-weight:800;color:${isToday?"var(--red)":"var(--ink)"};margin-bottom:3px;">${d}</div>
+      ${dayEvents.slice(0,2).map(e => `<div data-open-event="${e.id}" style="cursor:pointer;background:var(--red-tint);color:var(--red-dark);border-radius:4px;padding:1px 4px;margin-bottom:2px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(e.summary)}</div>`).join("")}
+      ${dayEvents.length > 2 ? `<div style="color:var(--muted);font-size:9px;">+${dayEvents.length-2}</div>` : ""}
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function planningFutureEvents(){
+  const cutoff = Date.now() - 6 * 3600 * 1000;
+  return state.planning.events.filter(e => e.start >= cutoff).sort((a, b) => a.start - b.start);
+}
+
+
+function fmtEventDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"}) + " · " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+}
+
+function renderPlanning(){
   let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
   <p class="ai-intro">Ton emploi du temps (Makers Board ou tout autre calendrier .ics) — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
 
   html += `<div class="card" style="margin-bottom:22px;">
-    <div class="section-title" style="margin-bottom:10px;">Importer mon planning</div>
-    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. C'est la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification).</p>
+    <div class="section-title" style="margin-bottom:10px;">Importer / actualiser mon planning</div>
+    <p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. Ré-importer le même fichier met à jour les cours modifiés sans créer de doublon (basé sur l'identifiant de chaque événement). C'est actuellement la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification) — voir la note en bas de page.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer un fichier .ics<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
+      <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer / actualiser (.ics)<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
+      <span style="font-size:12px;color:var(--muted);">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() + " à " + new Date(state.planning.lastSyncAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "Jamais synchronisé"}</span>
     </div>
     <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
   </div>`;
@@ -6577,27 +6727,26 @@ function renderPlanning(){
     html += `<p class="dash-empty" style="margin-bottom:22px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer mon planning (événements importés + lien enregistré)</button></p>`;
   }
 
-  if(events.length === 0){
+  if(state.planning.events.length === 0){
     html += `<div class="empty-state"><div class="big">🗓️</div>Aucun événement importé pour l'instant.<br>Importe un fichier .ics pour voir apparaître tes cours ici.</div>`;
     return html;
   }
 
-  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-    ${["today","tomorrow","week","upcoming"].map(f=>{
-      const labels = {today:"Aujourd'hui", tomorrow:"Demain", week:"Cette semaine", upcoming:"Prochains cours"};
-      return `<button class="btn ${filter===f?"red":"outline"} small" data-planning-filter="${f}">${labels[f]}</button>`;
-    }).join("")}
+  const selected = state.planning.selectedEventId ? state.planning.events.find(e => e.id === state.planning.selectedEventId) : null;
+  if(selected) html += eventDetailCardHtml(selected);
+
+  const calView = state.planning.calView || "list";
+  html += `<div style="display:flex;gap:8px;margin-bottom:18px;">
+    ${[["week","Semaine"],["month","Mois"],["list","Liste"]].map(([v,label])=>
+      `<button class="btn ${calView===v?"red":"outline"} small" data-planning-calview="${v}">${label}</button>`
+    ).join("")}
   </div>`;
 
-  if(filtered.length === 0){
-    html += `<div class="empty-state"><div class="big">📭</div>Rien de prévu sur cette période.</div>`;
-  } else {
-    html += filtered.map(e => `
-      <div style="padding:12px 0;border-bottom:1px solid var(--bg);">
-        <div style="font-weight:700;font-size:13.5px;color:var(--ink);">${escapeHtml(e.summary)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${fmtEventDate(e.start)}${e.location ? " · " + escapeHtml(e.location) : ""}</div>
-      </div>`).join("");
-  }
+  if(calView === "week") html += renderPlanningWeek();
+  else if(calView === "month") html += renderPlanningMonth();
+  else html += renderPlanningList();
+
+  html += `<footer class="hint">Pourquoi un import manuel plutôt qu'automatique ? Un site hébergé sur GitHub Pages n'exécute aucun code serveur : il ne peut récupérer un calendrier distant que si Makers Board autorise les requêtes cross-origin (CORS) depuis un navigateur. Tant que ce point n'est pas vérifié, l'import manuel garantit un fonctionnement fiable sans exposer ton lien personnel.</footer>`;
 
   return html;
 }
@@ -6615,14 +6764,10 @@ function attachPlanningEvents(){
         render();
         return;
       }
-      const seen = new Set(state.planning.events.map(e => e.summary + "|" + e.start));
-      let added = 0;
-      parsed.forEach(e=>{
-        const key = e.summary + "|" + e.start;
-        if(!seen.has(key)){ state.planning.events.push(e); seen.add(key); added++; }
-      });
+      const { added, updated } = mergePlanningEvents(parsed);
+      state.planning.lastSyncAt = Date.now();
       savePlanning();
-      state.planning.lastImportMsg = added + " événement(s) importé(s).";
+      state.planning.lastImportMsg = added + " événement(s) importé(s)" + (updated ? ", " + updated + " mis à jour" : "") + ".";
       render();
     }catch(e){
       state.planning.lastImportMsg = "Erreur lors de la lecture du fichier : " + e.message;
@@ -6636,6 +6781,8 @@ function attachPlanningEvents(){
     state.planning.events = [];
     state.planning.officialUrl = "";
     state.planning.lastImportMsg = "";
+    state.planning.lastSyncAt = null;
+    state.planning.selectedEventId = null;
     savePlanning();
     render();
   });
@@ -6651,6 +6798,24 @@ function attachPlanningEvents(){
 
   document.querySelectorAll("[data-planning-filter]").forEach(btn=>{
     btn.addEventListener("click", ()=>{ state.planning.view = btn.dataset.planningFilter; render(); });
+  });
+  document.querySelectorAll("[data-planning-calview]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.planning.calView = btn.dataset.planningCalview; render(); });
+  });
+  const monthPrev = document.getElementById("planning-month-prev");
+  if(monthPrev) monthPrev.addEventListener("click", ()=>{ state.planning.monthOffset--; render(); });
+  const monthNext = document.getElementById("planning-month-next");
+  if(monthNext) monthNext.addEventListener("click", ()=>{ state.planning.monthOffset++; render(); });
+  document.querySelectorAll("[data-open-event]").forEach(el=>{
+    el.addEventListener("click", ()=>{ state.planning.selectedEventId = el.dataset.openEvent; render(); });
+  });
+  const detailClose = document.getElementById("planning-detail-close");
+  if(detailClose) detailClose.addEventListener("click", ()=>{ state.planning.selectedEventId = null; render(); });
+  document.querySelectorAll("[data-open-event-subject]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      libGoto("subjectDetail", {subjectId: btn.dataset.openEventSubject});
+      switchTab("library");
+    });
   });
 }
 
@@ -6927,17 +7092,60 @@ function attachMainNavEvents(){
 }
 
 /* ============================================================
-   15decies. BULLE ASSISTANT IA — déplaçable (souris + tactile)
+   15decies. BULLE ASSISTANT IA — déplaçable librement (souris + tactile)
    ============================================================ */
-function setAIBubbleCorner(corner){
-  state.aiBubble.corner = corner;
-  saveAIBubblePos();
+const AI_FAB_MARGIN = 8;
+const AI_FAB_TOP_MIN = 60; // laisse le header cliquable
+
+function aiFabSize(){
   const bubble = document.getElementById("ai-bubble");
-  if(bubble){
-    bubble.classList.remove("corner-br","corner-bl","corner-tr","corner-tl");
-    bubble.classList.add("corner-" + corner);
-    bubble.style.left = ""; bubble.style.top = ""; bubble.style.right = ""; bubble.style.bottom = "";
-  }
+  return bubble ? bubble.offsetWidth : 56;
+}
+
+function clampAIFabX(x){
+  const size = aiFabSize();
+  return Math.max(AI_FAB_MARGIN, Math.min(window.innerWidth - size - AI_FAB_MARGIN, x));
+}
+function clampAIFabY(y){
+  const size = aiFabSize();
+  return Math.max(AI_FAB_TOP_MIN, Math.min(window.innerHeight - size - AI_FAB_MARGIN, y));
+}
+
+/* Position par défaut si aucune position n'a jamais été enregistrée : bas droite. */
+function defaultAIFabXY(){
+  const size = aiFabSize();
+  return { x: window.innerWidth - size - 20, y: window.innerHeight - size - 20 };
+}
+
+function applyAIFabPosition(x, y){
+  const bubble = document.getElementById("ai-bubble");
+  if(!bubble) return;
+  bubble.style.left = x + "px";
+  bubble.style.top = y + "px";
+  bubble.style.right = "auto";
+  bubble.style.bottom = "auto";
+}
+
+function setAIFabXY(x, y, persist){
+  const cx = clampAIFabX(x), cy = clampAIFabY(y);
+  state.aiBubble.x = cx; state.aiBubble.y = cy;
+  applyAIFabPosition(cx, cy);
+  if(persist !== false) saveAIBubblePos();
+}
+
+/* Positions nommées pour l'alternative accessible (Mon espace) : grille 3x3. */
+function aiFabPresetXY(key){
+  const size = aiFabSize();
+  const m = 20;
+  const row = key[0], col = key[1];
+  const x = col === "l" ? m : (col === "c" ? (window.innerWidth - size) / 2 : window.innerWidth - size - m);
+  const y = row === "t" ? 70 : (row === "m" ? (window.innerHeight - size) / 2 : window.innerHeight - size - m);
+  return { x, y };
+}
+
+function setAIFabPreset(key){
+  const { x, y } = aiFabPresetXY(key);
+  setAIFabXY(x, y);
 }
 
 function openAIBubble(){
@@ -6963,27 +7171,14 @@ function initAIBubble(){
     const dx = e.clientX - startX, dy = e.clientY - startY;
     if(!moved && Math.hypot(dx, dy) < 6) return;
     moved = true;
-    bubble.classList.remove("corner-br","corner-bl","corner-tr","corner-tl");
-    const size = bubble.offsetWidth;
-    const left = Math.max(6, Math.min(window.innerWidth - size - 6, startLeft + dx));
-    const top = Math.max(56, Math.min(window.innerHeight - size - 6, startTop + dy));
-    bubble.style.left = left + "px";
-    bubble.style.top = top + "px";
-    bubble.style.right = "auto";
-    bubble.style.bottom = "auto";
+    setAIFabXY(startLeft + dx, startTop + dy, false);
   });
 
   bubble.addEventListener("pointerup", ()=>{
     if(!dragging) return;
     dragging = false;
-    if(moved){
-      const rect = bubble.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-      const corner = (cy < window.innerHeight / 2 ? "t" : "b") + (cx < window.innerWidth / 2 ? "l" : "r");
-      setAIBubbleCorner(corner);
-    } else {
-      openAIBubble();
-    }
+    if(moved) saveAIBubblePos();
+    else openAIBubble();
   });
 
   bubble.addEventListener("pointercancel", ()=>{ dragging = false; });
@@ -6993,11 +7188,7 @@ function initAIBubble(){
   });
 
   window.addEventListener("resize", ()=>{
-    if(bubble.style.left){
-      const size = bubble.offsetWidth;
-      bubble.style.left = Math.max(6, Math.min(window.innerWidth - size - 6, parseFloat(bubble.style.left))) + "px";
-      bubble.style.top = Math.max(56, Math.min(window.innerHeight - size - 6, parseFloat(bubble.style.top))) + "px";
-    }
+    setAIFabXY(state.aiBubble.x, state.aiBubble.y);
   });
 }
 
@@ -7009,7 +7200,12 @@ initAIBubble();
 
 (async function init(){
   await loadAllData();
-  setAIBubbleCorner(state.aiBubble.corner || "br");
+  if(typeof state.aiBubble.x === "number" && typeof state.aiBubble.y === "number"){
+    setAIFabXY(state.aiBubble.x, state.aiBubble.y, false);
+  } else {
+    const def = defaultAIFabXY();
+    setAIFabXY(def.x, def.y);
+  }
   render();
 })();
 </script>
