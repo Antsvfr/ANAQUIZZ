@@ -1106,6 +1106,74 @@
   .cw-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:20px; padding-top:14px; border-top:1px solid var(--bg); }
   .cw-save-indicator{ font-size:11px; color: var(--muted); }
 
+  /* ---- fiche de cours : disposition à deux volets (notes + assistant IA) ---- */
+  .cal-modal-workspace{
+    max-width:1020px; width:100%; max-height:90vh; padding:0; overflow:hidden;
+    display:flex; flex-direction:column; position:relative;
+  }
+  .cal-modal-workspace .cw-main{ flex:1 1 auto; min-width:0; overflow-y:auto; padding:22px; }
+  .cw-ai-mobile-trigger{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background: var(--red-tint); color: var(--red-dark); border:1.5px solid var(--red); border-radius: var(--radius-md);
+    padding:11px; font-weight:800; font-size:13px; cursor:pointer; margin:14px 0 4px; font-family: var(--font-main);
+  }
+  .cw-aiside{ display:none; }
+  .cw-aiside.is-open{
+    display:flex; flex-direction:column; position:absolute; inset:0; background: var(--surface);
+    z-index:5; padding:16px; overflow-y:auto; border-radius: var(--radius-lg);
+  }
+  .cw-ai-mobile-only{ display:inline-flex; }
+  .cw-ai-desktop-only{ display:none; }
+  @media (min-width:900px){
+    .cal-modal-workspace{ flex-direction:row; max-height:88vh; }
+    .cal-modal-workspace .cw-main{ border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+    .cw-ai-mobile-trigger{ display:none; }
+    .cw-aiside{
+      display:flex !important; flex-direction:column; width:340px; flex-shrink:0;
+      position:static; z-index:auto; border-left:1px solid var(--border);
+      background: var(--surface-2); border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+      padding:18px; overflow-y:auto;
+    }
+    .cw-aiside.collapsed{ width:56px; padding:16px 8px; }
+    .cw-aiside.collapsed .cw-ai-body, .cw-aiside.collapsed .cw-ai-title{ display:none; }
+    .cw-ai-mobile-only{ display:none; }
+    .cw-ai-desktop-only{ display:inline-flex; }
+  }
+  .cw-ai-header{ display:flex; align-items:center; gap:8px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .cw-ai-title{ font-size:13.5px; font-weight:800; color: var(--ink); flex:1; }
+  .cw-ai-iconbtn{
+    background: var(--surface); border:1px solid var(--border); border-radius:8px; width:30px; height:30px;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; font-weight:800;
+    color: var(--ink-soft); flex-shrink:0;
+  }
+  .cw-ai-iconbtn:hover{ border-color: var(--red); color: var(--red-dark); }
+  .cw-ai-body{ display:flex; flex-direction:column; flex:1; min-height:0; }
+  .cw-ai-status{ font-size:11.5px; line-height:1.5; padding:9px 11px; border-radius:8px; margin-bottom:12px; }
+  .cw-ai-status.idle{ background: var(--bg); color: var(--muted); }
+  .cw-ai-status.loading{ background: var(--amber-tint); color: var(--amber); }
+  .cw-ai-status.ko{ background: var(--amber-tint); color: var(--amber); }
+  .cw-ai-status.checking{ background: var(--bg); color: var(--muted); }
+  .cw-ai-actions{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+  .cw-ai-action{
+    display:flex; align-items:center; gap:6px; text-align:left; cursor:pointer;
+    background: var(--surface); border:1px solid var(--border); border-radius:8px; padding:7px 8px;
+    font-family: var(--font-main); font-size:10.8px; font-weight:700; color: var(--ink); line-height:1.25;
+    transition: border-color .15s var(--ease);
+  }
+  .cw-ai-action:hover:not(:disabled){ border-color: var(--red); }
+  .cw-ai-action:disabled{ opacity:.45; cursor:not-allowed; }
+  .cw-ai-action .ico{ font-size:14px; flex-shrink:0; }
+  .cw-ai-selection-row{ margin-bottom:12px; }
+  .cw-ai-hint{ font-size:10.5px; color: var(--muted); margin-top:4px; }
+  .cw-ai-thread{ display:flex; flex-direction:column; gap:10px; margin:4px 0 12px; }
+  .cw-ai-msgactions{ display:flex; gap:10px; margin-top:8px; }
+  .cw-ai-msgactions .btn-text{ font-size:10.5px; }
+  .cw-ai-composer{ margin-top:auto; padding-top:10px; border-top:1px solid var(--border); }
+  .cw-ai-composer-row{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .cw-ai-compare{ border:1px solid var(--border); border-radius:8px; padding:9px 10px; margin-bottom:8px; font-size:11.5px; background: var(--surface); }
+  .cw-ai-compare .lbl{ font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.03em; color: var(--muted); margin-bottom:3px; }
+  .cw-ai-compare .orig{ color: var(--ink-soft); white-space:pre-wrap; }
+
   @media (max-width:680px){
     .cal-headerrow, .cal-allday-row, .cal-grid{ min-width:540px; }
     .cal-monthcell{ min-height:64px; font-size:9px; }
@@ -2201,6 +2269,15 @@ let state = {
     anchorDate: null,         // ms — jour de référence pour toutes les vues
     expandedMonthDay: null,   // ms — jour "+N" déplié en vue mois
     lastImportMsg: "", lastSyncAt: null, selectedEventId: null, focusNotesOnOpen: false,
+    aiPanelCollapsed: false,  // panneau IA réduit (ordinateur)
+    aiPanelOpenMobile: false, // panneau IA ouvert en superposition (mobile)
+  },
+
+  // --- assistant IA dans la fiche de cours : état d'interface, jamais persisté ---
+  courseAIUI: {
+    question: "", busy: false, error: null, selectionHint: null,
+    pendingKind: null, activeEventId: null,
+    quizIndex: 0, quizRevealed: false,
   },
 
   // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
@@ -2575,10 +2652,16 @@ function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
 function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { x: state.aiBubble.x, y: state.aiBubble.y }); }
 
 const DEFAULT_CHECKLIST = { relire:false, exercices:false, definitions:false, prochain:false };
+function courseDataDefaults(){
+  return { notes:"", summary:"", questions:"", checklist: Object.assign({}, DEFAULT_CHECKLIST), favorite:false, revisionStatus:"none", aiThread: [] };
+}
 function getCourseData(eventId){
   const cd = state.courseData[eventId];
-  return cd ? Object.assign({ notes:"", summary:"", questions:"", checklist: Object.assign({}, DEFAULT_CHECKLIST), favorite:false, revisionStatus:"none" }, cd, { checklist: Object.assign({}, DEFAULT_CHECKLIST, cd.checklist) })
-            : { notes:"", summary:"", questions:"", checklist: Object.assign({}, DEFAULT_CHECKLIST), favorite:false, revisionStatus:"none" };
+  if(!cd) return courseDataDefaults();
+  return Object.assign(courseDataDefaults(), cd, {
+    checklist: Object.assign({}, DEFAULT_CHECKLIST, cd.checklist),
+    aiThread: cd.aiThread || [],
+  });
 }
 function saveCourseData(eventId, patch){
   state.courseData[eventId] = Object.assign(getCourseData(eventId), patch);
@@ -2590,7 +2673,7 @@ function deleteCourseData(eventId){
 }
 function courseDataIsEmpty(cd){
   return !cd.notes && !cd.summary && !cd.questions && !cd.favorite && cd.revisionStatus === "none" &&
-    !Object.values(cd.checklist||{}).some(Boolean);
+    !Object.values(cd.checklist||{}).some(Boolean) && !(cd.aiThread && cd.aiThread.length);
 }
 
 /* ---- espace de travail par cours : ouverture / fermeture partagées (dashboard + planning) ---- */
@@ -2598,8 +2681,18 @@ const COURSE_TEXT_FIELDS = { "cw-notes":"notes", "cw-summary":"summary", "cw-que
 let courseModalSaveTimers = {};
 
 function openCourseModal(eventId, focusNotes){
+  if(eventId !== state.planning.selectedEventId){
+    if(state.courseAIUI.activeEventId !== eventId){
+      state.courseAIUI.question = "";
+      state.courseAIUI.error = null;
+      state.courseAIUI.selectionHint = null;
+      state.courseAIUI.quizIndex = 0;
+      state.courseAIUI.quizRevealed = false;
+    }
+  }
   state.planning.selectedEventId = eventId;
   state.planning.focusNotesOnOpen = !!focusNotes;
+  state.planning.aiPanelOpenMobile = false; // sur mobile, on affiche toujours d'abord les notes
   render();
 }
 function flushCourseModalSaves(){
@@ -5777,7 +5870,7 @@ function defaultDisplay(action){
 }
 
 async function aiFollowUp(text){
-  if(state.aiBusy) return;
+  if(aiEngineBusy()) return;
   if(!text.trim()) return;
   state.aiThread.push({role:"user", content:text.trim(), display:text.trim()});
   state.aiFollow = "";
@@ -5788,6 +5881,7 @@ let aiCurrentSignal = null;
 
 async function aiSend(){
   if(state.aiBusy) return;
+  if(aiEngineBusy()) return; // une génération est déjà en cours ailleurs (ex. fiche de cours) : un seul modèle à la fois
   if(state.aiStatus !== "ready" || !webllmEngine){
     state.aiError = aiErrorMessage({message:"not_ready"});
     render();
@@ -6170,7 +6264,7 @@ function renderAI(){
       <span class="ai-charcount">${state.aiContextLabel ? escapeHtml(state.aiContextLabel) : defaultContextLabel(state.aiAction)}</span>
       <span style="display:flex; gap:10px;">
         ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">✕ Annuler</button>` : ""}
-        <button class="btn red" id="ai-run-btn" ${state.aiBusy || !ready ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
+        <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !ready ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
       </span>
     </div>`;
 
@@ -6211,7 +6305,7 @@ function renderAI(){
     if(state.aiMode === "text" && state.aiThread.length > 1 && !state.aiBusy){
       html += `<div class="ai-followrow">
         <input type="text" class="ai-select" id="ai-follow-input" aria-label="${state.aiAction === "drill" ? "Ta réponse" : "Question de suivi"}" placeholder="${state.aiAction === "drill" ? "Ta réponse…" : "Poser une question de suivi…"}" value="${escapeHtml(state.aiFollow)}">
-        <button class="btn" id="ai-follow-btn">Envoyer</button>
+        <button class="btn" id="ai-follow-btn" ${aiEngineBusy() ? "disabled" : ""}>Envoyer</button>
       </div>`;
     }
 
@@ -7227,6 +7321,404 @@ function renderCalendarMonth(){
   return html;
 }
 
+/* ============================================================
+   15undecies. ASSISTANT IA DANS LA FICHE DE COURS
+   Réutilise entièrement le moteur WebLLM déjà en place (aiLoadModel /
+   webllmChat / webllmJsonChat / state.aiStatus) : aucun second modèle,
+   aucune init dupliquée. Une conversation distincte par cours, stockée
+   dans courseData[eventId].aiThread (même clé localStorage que les notes).
+   ============================================================ */
+
+/* Verrou partagé avec l'onglet Assistant IA : un seul modèle, une seule génération à la fois. */
+function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy; }
+
+const COURSE_AI_SYSTEM = "Tu aides un élève de terminale à comprendre son cours. Réponds en français, de façon claire, structurée et pédagogique, adaptée au niveau lycée : phrases courtes, vocabulaire compliqué expliqué, exemples concrets, une analogie si utile. Pas de jargon inutile, pas de préambule ni de flatterie. Appuie-toi en priorité sur les informations du cours fournies ci-dessous (notes, résumé, description de l'événement). Si elles ne suffisent pas pour répondre précisément, dis-le clairement et, si besoin, demande une précision à l'élève plutôt que d'inventer un contenu de cours qui n'y figure pas.";
+
+function courseAiContextBlock(e, cd){
+  const subj = matchEventSubject(e.summary);
+  const lines = [];
+  lines.push("COURS : " + e.summary);
+  if(subj) lines.push("MATIÈRE : " + subj.name);
+  lines.push("DATE : " + new Date(e.start).toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"}));
+  if(e.organizer) lines.push("PROFESSEUR : " + e.organizer);
+  if(e.location) lines.push("SALLE : " + e.location);
+  if(e.description) lines.push("DESCRIPTION DE L'ÉVÉNEMENT :\n" + e.description);
+  lines.push("NOTES DE L'ÉLÈVE :\n" + (cd.notes ? cd.notes : "(aucune note pour l'instant)"));
+  if(cd.summary) lines.push("RÉSUMÉ DÉJÀ RÉDIGÉ PAR L'ÉLÈVE :\n" + cd.summary);
+  if(cd.questions) lines.push("QUESTIONS QUE L'ÉLÈVE SE POSE DÉJÀ :\n" + cd.questions);
+  return clip(lines.join("\n\n"));
+}
+
+const COURSE_AI_ACTIONS = {
+  reformulateNotes: {
+    icon:"✏️", label:"Reformuler mes notes", kind:"reformulate-all", needsNotes:true,
+    task:"Reformule les notes de l'élève ci-dessus dans un langage plus clair et plus simple. Conserve toutes les idées importantes ainsi que le vocabulaire spécifique du cours. Ne supprime aucune information. Réponds uniquement par la reformulation, sans commentaire autour.",
+  },
+  simplify: {
+    icon:"💡", label:"Expliquer plus simplement", kind:"text",
+    task:"Explique la notion principale de ce cours plus simplement, comme à quelqu'un qui découvre le sujet. Structure ta réponse en 3 parties courtes : Explication (phrases courtes, mots compliqués définis), Exemple (concret, éventuellement une analogie), Point essentiel à retenir.",
+  },
+  example: {
+    icon:"📌", label:"Donner un exemple", kind:"text",
+    task:"Donne un exemple concret et une mise en situation réaliste pour illustrer la notion principale de ce cours.",
+  },
+  clarify: {
+    icon:"❓", label:"Préciser un point du cours", kind:"text",
+    task:"En te basant sur les notes ci-dessus, identifie 1 à 2 points du cours qui semblent flous ou incomplets et précise-les clairement. Si tu ne peux identifier aucun point précis avec les informations disponibles, demande à l'élève sur quel point du cours il souhaite des précisions.",
+  },
+  summarizeNotes: {
+    icon:"📖", label:"Résumer mes notes", kind:"text", needsNotes:true,
+    task:"Résume les notes de l'élève ci-dessus en gardant uniquement l'essentiel, sous forme de liste structurée courte.",
+  },
+  correctNotes: {
+    icon:"🔍", label:"Corriger mes notes", kind:"text", needsNotes:true,
+    task:"Relis les notes de l'élève ci-dessus. Signale les éventuelles erreurs, incohérences, fautes ou approximations que tu peux identifier avec certitude, et propose une correction pour chacune. Si tu ne peux pas vérifier un point car il manque d'informations dans ce qui t'a été fourni, dis-le clairement au lieu de l'inventer.",
+  },
+  reviewQuestions: {
+    icon:"🎯", label:"Créer des questions de révision", kind:"questions",
+    task:"Génère 5 questions de révision variées sur ce cours (définition, compréhension, application), à partir des informations disponibles ci-dessus. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"q\":\"question\",\"a\":\"réponse\"}]",
+  },
+  flashcards: {
+    icon:"🃏", label:"Créer des flashcards", kind:"cards",
+    task:"Génère 6 flashcards de révision (recto/verso) à partir des informations disponibles sur ce cours ci-dessus. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"front\":\"question ou notion courte\",\"back\":\"réponse en une ou deux phrases\"}]",
+  },
+  definition: {
+    icon:"📚", label:"Comprendre une définition", kind:"text",
+    task:"Identifie la définition la plus importante de ce cours à partir des informations disponibles, explique-la clairement et donne un exemple. Si aucune définition claire ne ressort des informations disponibles, demande à l'élève quelle définition précise il souhaite comprendre.",
+  },
+  linkNotion: {
+    icon:"🔗", label:"Lien avec une autre notion", kind:"text",
+    task:"Fais un lien entre la notion principale de ce cours et une autre notion vue en cours, en t'appuyant si possible sur les notes ci-dessus. Si tu ne peux identifier aucun lien pertinent avec les informations disponibles, demande à l'élève avec quelle autre notion il souhaite faire ce lien.",
+  },
+};
+
+/* Suppose que state.courseAIUI.busy est déjà verrouillé (synchrone) par l'appelant. */
+async function ensureCourseAIReady(eventId){
+  if(state.aiStatus === "ready") return true;
+  if(state.aiStatus === "checking"){
+    state.courseAIUI.error = "Vérification de la compatibilité de ton appareil en cours, réessaie dans un instant.";
+    return false;
+  }
+  if(state.aiStatus === "nogpu"){
+    state.courseAIUI.error = "L'assistant IA n'est pas disponible sur cet appareil (WebGPU requis). Tes notes restent bien enregistrées normalement.";
+    return false;
+  }
+  if(state.aiStatus === "loading"){
+    state.courseAIUI.error = "Le modèle est en cours de chargement, réessaie dans quelques secondes.";
+    return false;
+  }
+  // idle ou error : on (re)lance le chargement, exactement comme le bouton « Charger l'assistant IA »
+  // de l'onglet principal — un seul modèle, jamais deux instances.
+  state.courseAIUI.pendingKind = "loading";
+  render();
+  await aiLoadModel(state.aiModelId || pickModelForDevice());
+  return state.aiStatus === "ready";
+}
+
+async function courseAiSend(eventId, userContent, display, kind, meta){
+  if(aiEngineBusy()) return;
+  // Verrou synchrone posé AVANT tout await : un double-clic/double-appel dans le même tick
+  // voit forcément aiEngineBusy() === true dès le deuxième appel.
+  state.courseAIUI.busy = true;
+  state.courseAIUI.activeEventId = eventId;
+  state.courseAIUI.error = null;
+  if(state.aiStatus !== "ready"){
+    state.courseAIUI.pendingKind = "loading";
+    render();
+  }
+
+  const ready = await ensureCourseAIReady(eventId);
+  if(!ready){
+    state.courseAIUI.busy = false;
+    state.courseAIUI.pendingKind = null;
+    render();
+    return;
+  }
+
+  const ev = state.planning.events.find(x => x.id === eventId);
+  if(!ev){
+    state.courseAIUI.busy = false;
+    state.courseAIUI.pendingKind = null;
+    render();
+    return;
+  }
+  const cd = getCourseData(eventId);
+  const thread = cd.aiThread.slice();
+  const sysContent = COURSE_AI_SYSTEM + "\n\n" + courseAiContextBlock(ev, cd);
+  if(thread.length && thread[0].role === "system") thread[0] = {role:"system", content:sysContent, hidden:true};
+  else thread.unshift({role:"system", content:sysContent, hidden:true});
+  thread.push({role:"user", content:userContent, display, kind, meta: meta || null});
+  saveCourseData(eventId, {aiThread: thread});
+
+  state.courseAIUI.pendingKind = kind;
+  const signal = { cancelled:false };
+  aiCurrentSignal = signal;
+  render();
+
+  const turns = thread.map(m => ({role:m.role, content:m.content}));
+
+  try{
+    if(kind === "cards" || kind === "questions"){
+      const arr = await webllmJsonChat(turns, {signal});
+      if(signal.cancelled) throw new Error("cancelled");
+      if(!arr || !arr.length) throw new Error("format inattendu");
+      const fresh = getCourseData(eventId).aiThread.concat([{role:"assistant", content: JSON.stringify(arr), kind}]);
+      saveCourseData(eventId, {aiThread: fresh});
+      if(kind === "questions"){ state.courseAIUI.quizIndex = 0; state.courseAIUI.quizRevealed = false; }
+    } else {
+      const res = await webllmChat(turns, {
+        signal,
+        onText: ({text}) => {
+          const el = document.getElementById("cw-ai-stream");
+          if(el) el.innerHTML = renderAIMarkdown(text);
+        },
+      });
+      const text = (res && res.text) ? res.text : "";
+      if(signal.cancelled){
+        if(text){
+          const fresh = getCourseData(eventId).aiThread.concat([{role:"assistant", content:text + "\n\n*(génération interrompue)*", kind}]);
+          saveCourseData(eventId, {aiThread: fresh});
+        }
+      } else {
+        if(!text) throw new Error("réponse vide");
+        const fresh = getCourseData(eventId).aiThread.concat([{role:"assistant", content:text, kind}]);
+        saveCourseData(eventId, {aiThread: fresh});
+      }
+    }
+  }catch(e){
+    if(!signal.cancelled) state.courseAIUI.error = aiErrorMessage(e);
+  }finally{
+    state.courseAIUI.busy = false;
+    state.courseAIUI.pendingKind = null;
+    if(aiCurrentSignal === signal) aiCurrentSignal = null;
+    render();
+  }
+}
+
+function courseAiRunAction(eventId, actionKey){
+  if(aiEngineBusy()) return;
+  const a = COURSE_AI_ACTIONS[actionKey];
+  if(!a) return;
+  const cd = getCourseData(eventId);
+  if(a.needsNotes && !cd.notes.trim()){
+    const verb = actionKey === "reformulateNotes" ? "les reformuler" : (actionKey === "summarizeNotes" ? "les résumer" : "les corriger");
+    state.courseAIUI.error = "Écris d'abord quelques notes de cours pour que je puisse " + verb + ".";
+    render();
+    return;
+  }
+  const meta = actionKey === "reformulateNotes" ? {originalText: cd.notes} : null;
+  courseAiSend(eventId, a.task, a.label, a.kind, meta);
+}
+
+function courseAiSendQuestion(eventId){
+  if(aiEngineBusy()) return;
+  const q = (state.courseAIUI.question || "").trim();
+  if(!q) return;
+  state.courseAIUI.question = "";
+  courseAiSend(eventId, q, q, "free");
+}
+
+function courseAiReformulateSelection(eventId){
+  if(aiEngineBusy()) return;
+  const ta = document.getElementById("cw-notes");
+  if(!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  if(start === end){
+    state.courseAIUI.selectionHint = "Sélectionne d'abord du texte dans tes notes, puis clique à nouveau sur ce bouton.";
+    render();
+    return;
+  }
+  state.courseAIUI.selectionHint = null;
+  const selected = ta.value.slice(start, end);
+  const shortLabel = selected.length > 40 ? selected.slice(0,40) + "…" : selected;
+  courseAiSend(
+    eventId,
+    "Reformule ce passage de mes notes dans un langage plus clair, en conservant les idées et le vocabulaire important :\n\n" + selected,
+    "Reformuler la sélection : « " + shortLabel + " »",
+    "reformulate-selection",
+    {originalText: selected, selStart: start, selEnd: end}
+  );
+}
+
+function courseAiInsertResponse(eventId, msgIndex){
+  const cd = getCourseData(eventId);
+  const thread = cd.aiThread;
+  const assistantMsg = thread[msgIndex];
+  if(!assistantMsg || assistantMsg.role !== "assistant") return;
+  const userMsg = thread[msgIndex - 1];
+  const kind = assistantMsg.kind;
+  const text = assistantMsg.content.replace(/\n\n\*\(génération interrompue\)\*$/, "");
+
+  let newNotes, confirmMsg;
+  const cur = cd.notes;
+  if(kind === "reformulate-all"){
+    confirmMsg = "Remplacer toutes tes notes par cette reformulation ? L'ancien texte sera perdu.";
+    newNotes = text;
+  } else if(kind === "reformulate-selection" && userMsg && userMsg.meta){
+    const meta = userMsg.meta;
+    if(cur.slice(meta.selStart, meta.selEnd) === meta.originalText){
+      confirmMsg = "Remplacer le passage sélectionné par cette reformulation ?";
+      newNotes = cur.slice(0, meta.selStart) + text + cur.slice(meta.selEnd);
+    } else {
+      confirmMsg = "Le texte original a changé depuis : ajouter la reformulation à la fin de tes notes à la place ?";
+      newNotes = cur + (cur ? "\n\n" : "") + text;
+    }
+  } else {
+    confirmMsg = "Ajouter cette réponse de l'IA à la fin de tes notes ?";
+    newNotes = cur + (cur ? "\n\n" : "") + text;
+  }
+  if(!confirm(confirmMsg)) return;
+  saveCourseData(eventId, {notes: newNotes});
+  render();
+}
+
+function courseAiCopyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(()=>{});
+}
+
+function courseAiClearThread(eventId){
+  if(!confirm("Effacer la conversation IA de ce cours ? Tes notes, résumé et questions ne sont pas touchés.")) return;
+  saveCourseData(eventId, {aiThread: []});
+  state.courseAIUI.quizIndex = 0;
+  state.courseAIUI.quizRevealed = false;
+  render();
+}
+
+function courseAIStatusHtml(){
+  if(state.aiStatus === "checking"){
+    return `<div class="cw-ai-status checking"><span class="ai-spinner"></span> Vérification de la compatibilité de ton appareil…</div>`;
+  }
+  if(state.aiStatus === "nogpu"){
+    return `<div class="cw-ai-status ko">⚠️ Assistant IA indisponible sur cet appareil (WebGPU requis). La prise de notes reste disponible normalement.</div>`;
+  }
+  if(state.aiStatus === "loading" && state.courseAIUI.activeEventId === state.planning.selectedEventId){
+    const pct = Math.max(0, Math.min(100, state.aiLoadProgress || 0));
+    return `<div class="cw-ai-status loading"><span class="ai-spinner"></span> Chargement du modèle IA… ${pct}%
+      <div class="ai-loadbar" style="margin-top:6px;width:100%;"><div class="ai-loadbar-fill" style="width:${pct}%;"></div></div></div>`;
+  }
+  if(state.aiStatus === "error"){
+    return `<div class="cw-ai-status ko">⚠️ Le chargement de l'IA a échoué. <button class="btn-text" id="cw-ai-retry">Réessayer</button></div>`;
+  }
+  if(state.aiStatus === "idle"){
+    return `<div class="cw-ai-status idle">💤 Assistant IA disponible — clique sur une action pour le lancer (premier lancement : téléchargement unique du modèle).</div>`;
+  }
+  return "";
+}
+
+function courseAiDraftHtml(m, cd, eventId){
+  let arr;
+  try{ arr = JSON.parse(m.content); }catch(err){ return `<div class="ai-bubble assistant"><div class="ai-result-body">${escapeHtml(m.content)}</div></div>`; }
+  if(m.kind === "cards"){
+    return `<div class="ai-draft">
+      <div class="ai-draft-head"><b>${arr.length} flashcards générées</b></div>
+      ${arr.map(c=>`<div class="ai-draftcard"><div class="f">${escapeHtml(c.front)}</div><div class="b">${escapeHtml(c.back)}</div></div>`).join("")}
+      <button class="btn-text" id="cw-ai-copy-cards" style="margin-top:4px;">📋 Copier toutes les cartes</button>
+    </div>`;
+  }
+  const qi = Math.max(0, Math.min(arr.length - 1, state.courseAIUI.quizIndex || 0));
+  const q = arr[qi];
+  return `<div class="ai-draft cw-ai-quiz">
+    <div class="ai-draft-head"><b>Question de révision ${qi+1}/${arr.length}</b></div>
+    <div class="ai-draftcard">
+      <div class="f">${escapeHtml(q.q)}</div>
+      ${state.courseAIUI.quizRevealed ? `<div class="b">${escapeHtml(q.a)}</div>` : `<button class="btn-text" id="cw-ai-quiz-reveal">Afficher la réponse</button>`}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      ${qi > 0 ? `<button class="btn-text" id="cw-ai-quiz-prev">← Précédente</button>` : ""}
+      ${qi < arr.length - 1 ? `<button class="btn-text" id="cw-ai-quiz-next">Suivante →</button>` : ""}
+    </div>
+  </div>`;
+}
+
+function courseAiThreadHtml(eventId, cd){
+  const thread = cd.aiThread;
+  const visible = thread.filter(m => !m.hidden);
+  const showingActive = state.courseAIUI.busy && state.courseAIUI.activeEventId === eventId;
+  if(!visible.length && !showingActive) return "";
+  let html = `<div class="cw-ai-thread" id="cw-ai-thread">`;
+  visible.forEach(m=>{
+    const realIdx = thread.indexOf(m);
+    if(m.role === "user"){
+      html += `<div class="ai-bubble user">${escapeHtml(m.display || m.content)}</div>`;
+    } else if(m.kind === "cards" || m.kind === "questions"){
+      html += courseAiDraftHtml(m, cd, eventId);
+    } else {
+      if(m.kind === "reformulate-all" || m.kind === "reformulate-selection"){
+        const userTurn = thread[realIdx - 1];
+        const orig = userTurn && userTurn.meta ? userTurn.meta.originalText : "";
+        if(orig) html += `<div class="cw-ai-compare"><div class="lbl">Texte original</div><div class="orig">${escapeHtml(clip(orig,400))}</div></div>`;
+      }
+      html += `<div class="ai-bubble assistant">
+        <div class="ai-result-body">${renderAIMarkdown(m.content.replace(/\n\n\*\(génération interrompue\)\*$/,""))}</div>
+        <div class="cw-ai-msgactions">
+          <button class="btn-text" data-ai-copy="${realIdx}">📋 Copier</button>
+          <button class="btn-text" data-ai-insert="${realIdx}">➕ Insérer dans mes notes</button>
+        </div>
+      </div>`;
+    }
+  });
+  if(showingActive){
+    if(state.courseAIUI.pendingKind === "cards" || state.courseAIUI.pendingKind === "questions" || state.courseAIUI.pendingKind === "loading"){
+      html += `<div class="ai-bubble assistant"><span class="ai-loading" style="padding:0;"><span class="ai-spinner"></span>${state.courseAIUI.pendingKind === "loading" ? "Chargement du modèle…" : "Génération en cours…"}</span></div>`;
+    } else {
+      html += `<div class="ai-bubble assistant"><div class="ai-result-body" id="cw-ai-stream"><span class="ai-loading" style="padding:0;"><span class="ai-spinner"></span>L'IA réfléchit…</span></div></div>`;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
+
+function courseAiPanelHtml(e, cd){
+  const collapsed = state.planning.aiPanelCollapsed;
+  const mobileOpen = state.planning.aiPanelOpenMobile;
+  const busy = aiEngineBusy();
+  const hasConvo = cd.aiThread.filter(m=>!m.hidden).length > 0;
+
+  let html = `<div class="cw-aiside ${collapsed ? "collapsed" : ""} ${mobileOpen ? "is-open" : ""}" id="cw-aiside">
+    <div class="cw-ai-header">
+      <button class="cw-ai-iconbtn cw-ai-mobile-only" id="cw-ai-mobile-close" aria-label="Retour aux notes" title="Retour aux notes">←</button>
+      <span class="cw-ai-title">🤖 Assistant IA du cours</span>
+      <button class="cw-ai-iconbtn cw-ai-desktop-only" id="cw-ai-collapse-btn" aria-label="${collapsed ? "Agrandir" : "Réduire"} le panneau IA" title="${collapsed ? "Agrandir" : "Réduire"} le panneau">${collapsed ? "«" : "»"}</button>
+    </div>
+    <div class="cw-ai-body">`;
+
+  html += courseAIStatusHtml();
+
+  if(state.aiStatus !== "nogpu"){
+    html += `<div class="cw-ai-actions">
+      ${Object.entries(COURSE_AI_ACTIONS).map(([k,a])=>`
+        <button class="cw-ai-action" data-course-ai-action="${k}" ${busy ? "disabled" : ""}>
+          <span class="ico">${a.icon}</span><span class="t">${a.label}</span>
+        </button>`).join("")}
+    </div>
+    <div class="cw-ai-selection-row">
+      <button class="btn-text" id="cw-ai-reformulate-selection" ${busy ? "disabled" : ""}>✨ Reformuler la sélection dans mes notes</button>
+      ${state.courseAIUI.selectionHint ? `<div class="cw-ai-hint">${escapeHtml(state.courseAIUI.selectionHint)}</div>` : ""}
+    </div>`;
+  }
+
+  if(state.courseAIUI.error) html += `<div class="ai-error">${escapeHtml(state.courseAIUI.error)}</div>`;
+
+  html += courseAiThreadHtml(e.id, cd);
+
+  if(state.aiStatus !== "nogpu"){
+    html += `<div class="cw-ai-composer">
+      <textarea id="cw-ai-question" class="ai-textarea" placeholder="Pose une question libre… (Entrée pour envoyer, Maj+Entrée = retour à la ligne)" style="min-height:56px;">${escapeHtml(state.courseAIUI.question)}</textarea>
+      <div class="cw-ai-composer-row">
+        ${busy ? `<button class="btn outline small" id="cw-ai-cancel-btn">✕ Annuler</button>` : ""}
+        <button class="btn red small" id="cw-ai-send-btn" ${(!state.courseAIUI.question.trim() || busy) ? "disabled" : ""}>${busy ? "En cours…" : "Envoyer à l'IA"}</button>
+      </div>
+    </div>`;
+  }
+
+  if(hasConvo){
+    html += `<button class="btn-text" id="cw-ai-clear" style="margin-top:10px;color:var(--red-dark);">🗑️ Effacer la conversation IA</button>`;
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
 function courseWorkspaceModalHtml(e, opts){
   opts = opts || {};
   const subj = matchEventSubject(e.summary);
@@ -7256,12 +7748,14 @@ function courseWorkspaceModalHtml(e, opts){
   const hasData = !courseDataIsEmpty(cd);
 
   return `<div class="cal-modal-backdrop" id="cal-modal-backdrop">
-    <div class="cal-modal cal-modal-wide" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+    <div class="cal-modal cal-modal-wide cal-modal-workspace" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+    <div class="cw-main">
       <div class="cw-toprow">
         <h2 id="cal-modal-title" class="cw-title">${escapeHtml(e.summary)}</h2>
         <button type="button" class="cw-fav-btn ${cd.favorite ? "active" : ""}" id="cw-fav-btn" aria-pressed="${cd.favorite ? "true" : "false"}" aria-label="${cd.favorite ? "Retirer des favoris" : "Marquer comme favori"}" title="Favori">${cd.favorite ? "★" : "☆"}</button>
         <button class="btn-text" id="cal-modal-close" aria-label="Fermer les détails">✕</button>
       </div>
+      <button type="button" class="cw-ai-mobile-trigger" id="cw-ai-mobile-open">🤖 Demander à l'IA</button>
       <div class="cw-badges"><span class="cw-badge ${status}">${statusLabel}</span></div>
       ${progressHtml}
       <ul class="dash-progress-list">
@@ -7311,6 +7805,8 @@ function courseWorkspaceModalHtml(e, opts){
         ${hasData ? `<button class="btn-text" id="cw-delete-notes" style="margin-left:auto;color:var(--red-dark);">🗑️ Supprimer mes notes</button>` : ""}
       </div>
     </div>
+    ${courseAiPanelHtml(e, cd)}
+    </div>
   </div>`;
 }
 
@@ -7327,6 +7823,8 @@ function renderGlobalCourseModal(){
 }
 
 function attachCourseModalEvents(){
+  if(state.aiStatus === "checking") checkAIStatus();
+
   const modalClose = document.getElementById("cal-modal-close");
   if(modalClose) modalClose.addEventListener("click", closeCourseModal);
   const modalBackdrop = document.getElementById("cal-modal-backdrop");
@@ -7396,6 +7894,84 @@ function attachCourseModalEvents(){
       switchTab("library");
     });
   });
+
+  /* ---- assistant IA du cours ---- */
+  const evId = state.planning.selectedEventId;
+
+  const collapseBtn = document.getElementById("cw-ai-collapse-btn");
+  if(collapseBtn) collapseBtn.addEventListener("click", ()=>{
+    state.planning.aiPanelCollapsed = !state.planning.aiPanelCollapsed;
+    render();
+  });
+  const mobileOpenBtn = document.getElementById("cw-ai-mobile-open");
+  if(mobileOpenBtn) mobileOpenBtn.addEventListener("click", ()=>{
+    state.planning.aiPanelOpenMobile = true;
+    render();
+  });
+  const mobileCloseBtn = document.getElementById("cw-ai-mobile-close");
+  if(mobileCloseBtn) mobileCloseBtn.addEventListener("click", ()=>{
+    state.planning.aiPanelOpenMobile = false;
+    render();
+  });
+
+  const retryBtn = document.getElementById("cw-ai-retry");
+  if(retryBtn) retryBtn.addEventListener("click", ()=> aiLoadModel(state.aiModelId || pickModelForDevice()));
+
+  document.querySelectorAll("[data-course-ai-action]").forEach(btn=>{
+    if(btn.disabled) return;
+    btn.addEventListener("click", ()=> courseAiRunAction(evId, btn.dataset.courseAiAction));
+  });
+
+  const reformSelBtn = document.getElementById("cw-ai-reformulate-selection");
+  if(reformSelBtn && !reformSelBtn.disabled) reformSelBtn.addEventListener("click", ()=> courseAiReformulateSelection(evId));
+
+  const aiQuestion = document.getElementById("cw-ai-question");
+  const aiSendBtn = document.getElementById("cw-ai-send-btn");
+  if(aiQuestion){
+    aiQuestion.addEventListener("input", (e)=>{
+      state.courseAIUI.question = e.target.value;
+      if(aiSendBtn && !aiEngineBusy()) aiSendBtn.disabled = !e.target.value.trim();
+    });
+    aiQuestion.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        if(state.courseAIUI.question.trim() && !aiEngineBusy()) courseAiSendQuestion(evId);
+      }
+    });
+  }
+  if(aiSendBtn) aiSendBtn.addEventListener("click", ()=>{ if(!aiSendBtn.disabled) courseAiSendQuestion(evId); });
+  const aiCancelBtn = document.getElementById("cw-ai-cancel-btn");
+  if(aiCancelBtn) aiCancelBtn.addEventListener("click", aiCancelGeneration);
+
+  const aiClearBtn = document.getElementById("cw-ai-clear");
+  if(aiClearBtn) aiClearBtn.addEventListener("click", ()=> courseAiClearThread(evId));
+
+  document.querySelectorAll("[data-ai-copy]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const cd = getCourseData(evId);
+      const m = cd.aiThread[parseInt(btn.dataset.aiCopy)];
+      if(m) courseAiCopyText(m.content.replace(/\n\n\*\(génération interrompue\)\*$/, ""));
+    });
+  });
+  document.querySelectorAll("[data-ai-insert]").forEach(btn=>{
+    btn.addEventListener("click", ()=> courseAiInsertResponse(evId, parseInt(btn.dataset.aiInsert)));
+  });
+  const copyCardsBtn = document.getElementById("cw-ai-copy-cards");
+  if(copyCardsBtn) copyCardsBtn.addEventListener("click", ()=>{
+    const cd = getCourseData(evId);
+    const msg = cd.aiThread.slice().reverse().find(m => m.role === "assistant" && m.kind === "cards");
+    if(!msg) return;
+    try{
+      const arr = JSON.parse(msg.content);
+      courseAiCopyText(arr.map((c,i)=>`Carte ${i+1}\nQuestion : ${c.front}\nRéponse : ${c.back}`).join("\n\n"));
+    }catch(e){}
+  });
+  const quizReveal = document.getElementById("cw-ai-quiz-reveal");
+  if(quizReveal) quizReveal.addEventListener("click", ()=>{ state.courseAIUI.quizRevealed = true; render(); });
+  const quizNext = document.getElementById("cw-ai-quiz-next");
+  if(quizNext) quizNext.addEventListener("click", ()=>{ state.courseAIUI.quizIndex++; state.courseAIUI.quizRevealed = false; render(); });
+  const quizPrev = document.getElementById("cw-ai-quiz-prev");
+  if(quizPrev) quizPrev.addEventListener("click", ()=>{ state.courseAIUI.quizIndex = Math.max(0, state.courseAIUI.quizIndex - 1); state.courseAIUI.quizRevealed = false; render(); });
 
   if(state.planning.focusNotesOnOpen){
     state.planning.focusNotesOnOpen = false;
