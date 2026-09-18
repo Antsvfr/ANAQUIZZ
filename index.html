@@ -7251,7 +7251,13 @@ function aiModelMeta(id){
 async function checkWebGPUCompatibility(){
   const result = {
     supported: false, gpuApiAvailable: false, adapterAvailable: false, deviceAvailable: false,
-    adapterInfo: null, reason: "", errorCode: "no_api", recommendedAction: "",
+    adapterInfo: null, adapterInfoSupported: null, reason: "", errorCode: "no_api", recommendedAction: "",
+    // Résultat DÉTAILLÉ de CHAQUE tentative d'adaptateur, séparément — pour ne
+    // jamais résumer "high-performance" et "low-power" en un seul verdict.
+    adapterAttempts: [],
+    chosenPreference: null,
+    protocol: location.protocol,
+    isSecureContext: !!window.isSecureContext,
     ok: false, code: "no_api", message: "", detail: "",
   };
   if(!navigator.gpu || !navigator.gpu.requestAdapter){
@@ -7264,26 +7270,33 @@ async function checkWebGPUCompatibility(){
   result.gpuApiAvailable = true;
 
   let adapter = null;
-  let lastAdapterError = null;
   for(const powerPreference of ["high-performance", "low-power"]){
+    const attempt = { powerPreference, found: false, error: null };
     try{
-      adapter = await navigator.gpu.requestAdapter({ powerPreference });
+      const a = await navigator.gpu.requestAdapter({ powerPreference });
+      attempt.found = !!a;
+      if(a && !adapter){ adapter = a; result.chosenPreference = powerPreference; }
     }catch(e){
-      lastAdapterError = e;
-      adapter = null;
+      attempt.error = (e && e.message) ? e.message : String(e);
     }
-    if(adapter) break;
+    result.adapterAttempts.push(attempt);
   }
-  if(!adapter && !lastAdapterError){
+  if(!adapter && !result.adapterAttempts.some(a => a.error)){
     // Dernier essai sans préférence explicite, au cas où l'option elle-même ne serait pas prise en charge.
-    try{ adapter = await navigator.gpu.requestAdapter(); }
-    catch(e){ lastAdapterError = e; }
+    const attempt = { powerPreference: "(sans préférence)", found: false, error: null };
+    try{
+      const a = await navigator.gpu.requestAdapter();
+      attempt.found = !!a;
+      if(a){ adapter = a; result.chosenPreference = "(sans préférence)"; }
+    }catch(e){ attempt.error = (e && e.message) ? e.message : String(e); }
+    result.adapterAttempts.push(attempt);
   }
 
-  if(!adapter && lastAdapterError){
+  const attemptError = result.adapterAttempts.find(a => a.error);
+  if(!adapter && attemptError){
     result.errorCode = "adapter_error"; result.code = "adapter_error";
     result.message = "WebGPU est présent, mais l'accès à la carte graphique a échoué.";
-    result.reason = (lastAdapterError && lastAdapterError.message) ? lastAdapterError.message : "Erreur inconnue lors de la demande d'accès au GPU (navigator.gpu.requestAdapter).";
+    result.reason = attemptError.error || "Erreur inconnue lors de la demande d'accès au GPU (navigator.gpu.requestAdapter).";
     result.detail = result.reason;
     result.recommendedAction = "Vérifie que l'accélération matérielle est activée dans les réglages du navigateur, puis clique sur Réessayer.";
     return result;
@@ -7291,9 +7304,9 @@ async function checkWebGPUCompatibility(){
   if(!adapter){
     result.errorCode = "no_adapter"; result.code = "no_adapter";
     result.message = "WebGPU est présent, mais aucun adaptateur graphique utilisable n'a été trouvé.";
-    result.reason = "navigator.gpu.requestAdapter() n'a renvoyé aucun adaptateur, même en essayant les préférences « high-performance » et « low-power » : pilote graphique manquant ou trop ancien, GPU non pris en charge, ou accélération matérielle désactivée dans le navigateur.";
+    result.reason = "navigator.gpu.requestAdapter() n'a renvoyé aucun adaptateur, essayé séparément en « high-performance », « low-power » et sans préférence : pilote graphique manquant ou trop ancien, GPU bloqué spécifiquement pour WebGPU par le navigateur (indépendamment de l'accélération matérielle générale visible dans chrome://gpu), ou accélération désactivée pour ce contexte précis.";
     result.detail = result.reason;
-    result.recommendedAction = "Mets à jour tes pilotes graphiques, vérifie l'accélération matérielle du navigateur, ou essaie un autre appareil.";
+    result.recommendedAction = "Mets à jour tes pilotes graphiques, vérifie la section WebGPU (pas seulement la section générale) de chrome://gpu, ou essaie un autre appareil.";
     return result;
   }
   result.adapterAvailable = true;
@@ -7302,16 +7315,17 @@ async function checkWebGPUCompatibility(){
   // (propriétés standard de l'API GPUAdapterInfo — jamais inventées si absentes).
   try{
     let info = null;
-    if(typeof adapter.requestAdapterInfo === "function") info = await adapter.requestAdapterInfo();
-    else if(adapter.info) info = adapter.info;
+    if(typeof adapter.requestAdapterInfo === "function"){ result.adapterInfoSupported = true; info = await adapter.requestAdapterInfo(); }
+    else if(adapter.info){ result.adapterInfoSupported = true; info = adapter.info; }
+    else { result.adapterInfoSupported = false; }
     if(info){
       const picked = {};
       if(info.vendor) picked.vendor = info.vendor;
       if(info.architecture) picked.architecture = info.architecture;
       if(info.description) picked.description = info.description;
-      if(Object.keys(picked).length) result.adapterInfo = picked;
+      result.adapterInfo = picked;
     }
-  }catch(e){ /* purement informatif : ignoré si indisponible sur ce navigateur */ }
+  }catch(e){ result.adapterInfoSupported = false; }
 
   try{
     if(adapter.requestDevice) await adapter.requestDevice();
@@ -7411,10 +7425,15 @@ async function aiRunFullEngineTest(){
   state.aiFullTestBusy = true;
   state.aiDiagPanelOpen = true;
   state.aiFullTestResult = "";
+  // 11 étapes distinctes, chacune cochée séparément à partir d'un fait réel —
+  // les deux préférences d'adaptateur sont testées et affichées séparément
+  // (jamais fusionnées en un seul verdict "adaptateur").
   const steps = state.aiFullTestSteps = [
+    {key:"ctx", label:"Contexte sécurisé (https / localhost)", status:"pending"},
     {key:"gpu", label:"navigator.gpu présent", status:"pending"},
-    {key:"adapter", label:"Adaptateur GPU trouvé (requestAdapter)", status:"pending"},
-    {key:"device", label:"Périphérique GPU créé (requestDevice)", status:"pending"},
+    {key:"adapter_hp", label:"requestAdapter({powerPreference:\"high-performance\"})", status:"pending"},
+    {key:"adapter_lp", label:"requestAdapter({powerPreference:\"low-power\"})", status:"pending"},
+    {key:"device", label:"adapter.requestDevice() — périphérique créé", status:"pending"},
     {key:"worker", label:"Worker créé (ai-worker.js)", status:"pending"},
     {key:"webllm", label:"Module WebLLM chargé", status:"pending"},
     {key:"model", label:"Modèle demandé : " + (state.aiModelId || pickModelForDevice()), status:"pending"},
@@ -7426,54 +7445,59 @@ async function aiRunFullEngineTest(){
 
   const diag = await checkWebGPUCompatibility();
   state.aiGpuDiag = diag;
-  steps[0].status = diag.gpuApiAvailable ? "ok" : "fail";
-  steps[1].status = diag.gpuApiAvailable ? (diag.adapterAvailable ? "ok" : "fail") : "skip";
-  steps[2].status = diag.adapterAvailable ? (diag.deviceAvailable ? "ok" : "fail") : "skip";
+  steps[0].status = diag.isSecureContext ? "ok" : "fail";
+  steps[1].status = diag.gpuApiAvailable ? "ok" : "fail";
+  const hp = diag.adapterAttempts.find(a => a.powerPreference === "high-performance");
+  const lp = diag.adapterAttempts.find(a => a.powerPreference === "low-power");
+  steps[2].status = !diag.gpuApiAvailable ? "skip" : (hp ? (hp.found ? "ok" : "fail") : "skip");
+  steps[3].status = !diag.gpuApiAvailable ? "skip" : (lp ? (lp.found ? "ok" : "fail") : "skip");
+  steps[4].status = diag.adapterAvailable ? (diag.deviceAvailable ? "ok" : "fail") : "skip";
   render();
 
   if(!diag.ok){
-    for(let i=3;i<steps.length;i++) steps[i].status = "skip";
+    for(let i=5;i<steps.length;i++) steps[i].status = "skip";
     state.aiStatus = "nogpu";
-    state.aiFullTestResult = "❌ " + diag.message + " Impossible d'aller plus loin : sans adaptateur/périphérique GPU réel, le worker WebLLM ne peut pas être testé pour de vrai sur cet appareil.";
+    const attemptDetail = diag.adapterAttempts.map(a => a.powerPreference + " → " + (a.found ? "trouvé" : (a.error ? "erreur : " + a.error : "aucun adaptateur"))).join(" · ");
+    state.aiFullTestResult = "❌ " + diag.message + " Détail par tentative : " + attemptDetail + ". Impossible d'aller plus loin : sans adaptateur/périphérique GPU réel, le worker WebLLM ne peut pas être testé pour de vrai sur cet appareil.";
     state.aiFullTestBusy = false;
     render();
     return;
   }
 
-  steps[3].status = "running"; render();
+  steps[5].status = "running"; render();
   const modelId = state.aiModelId || pickModelForDevice();
   if(state.aiStatus !== "ready" || webllmLoadedModelId !== modelId){
     await aiLoadModel(modelId);
   }
   if(state.aiStatus !== "ready"){
     const stage = state.aiDiagnostic ? state.aiDiagnostic.stage : null;
-    steps[3].status = stage === "worker_start" ? "fail" : "ok";
-    steps[4].status = steps[3].status !== "ok" ? "skip" : (stage === "module_import" ? "fail" : "ok");
-    steps[5].status = steps[4].status !== "ok" ? "skip" : "ok";
-    steps[6].status = steps[5].status !== "ok" ? "skip" : "fail";
-    steps[7].status = "skip"; steps[8].status = "skip";
-    state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé réellement (étape : " + (state.aiDiagnostic ? state.aiDiagnostic.typeLabel : "inconnue") + "). " + (state.aiDiagnostic ? state.aiDiagnostic.message : "");
+    steps[5].status = stage === "worker_start" ? "fail" : "ok";
+    steps[6].status = steps[5].status !== "ok" ? "skip" : (stage === "module_import" ? "fail" : "ok");
+    steps[7].status = steps[6].status !== "ok" ? "skip" : "ok";
+    steps[8].status = steps[7].status !== "ok" ? "skip" : "fail";
+    steps[9].status = "skip"; steps[10].status = "skip";
+    state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé réellement (étape : " + (state.aiDiagnostic ? state.aiDiagnostic.typeLabel : "inconnue") + "). " + (state.aiDiagnostic ? state.aiDiagnostic.message : "") + " Adaptateur ET périphérique GPU étaient pourtant réels et fonctionnels — cherche la cause côté worker/réseau/mémoire/cache plutôt que côté GPU.";
     state.aiFullTestBusy = false;
     render();
     return;
   }
-  steps[3].status = "ok"; steps[4].status = "ok"; steps[5].status = "ok"; steps[6].status = "ok";
+  steps[5].status = "ok"; steps[6].status = "ok"; steps[7].status = "ok"; steps[8].status = "ok";
   render();
 
-  steps[7].status = "running"; render();
+  steps[9].status = "running"; render();
   try{
     const res = await webllmChat([{role:"user", content:"Réponds uniquement : IA LOCALE FONCTIONNELLE."}], {});
-    steps[7].status = "ok";
+    steps[9].status = "ok";
     const text = (res && res.text || "").trim();
     if(text){
-      steps[8].status = "ok";
+      steps[10].status = "ok";
       state.aiFullTestResult = "✅ Test réel réussi — le modèle « " + aiModelMeta(modelId).label + " » a répondu : « " + clip(text, 200) + " »";
     } else {
-      steps[8].status = "fail";
+      steps[10].status = "fail";
       state.aiFullTestResult = "❌ Requête envoyée, mais réponse vide reçue : le moteur tourne, mais la génération elle-même échoue.";
     }
   }catch(e){
-    steps[7].status = "fail"; steps[8].status = "skip";
+    steps[9].status = "fail"; steps[10].status = "skip";
     state.aiFullTestResult = "❌ Échec de la génération réelle : " + (e && e.message ? e.message : "erreur inconnue") + ".";
   }
   state.aiFullTestBusy = false;
@@ -7548,14 +7572,40 @@ function aiDiagnosticPanelHtml(){
       <summary>Détails techniques</summary>
       <div style="font-size:11.5px; line-height:1.8; margin-top:6px; color:var(--muted); font-family:monospace;">
         <div>code : ${escapeHtml(diag.errorCode || diag.code || "")}</div>
+        <div>protocol : ${escapeHtml(diag.protocol || "")} · isSecureContext : ${diag.isSecureContext ? "true" : "false"}</div>
         <div>gpuApiAvailable : ${diag.gpuApiAvailable ? "true" : "false"}</div>
-        <div>adapterAvailable : ${diag.adapterAvailable ? "true" : "false"}</div>
+        ${(diag.adapterAttempts||[]).map(a=>`<div>requestAdapter(${escapeHtml(a.powerPreference)}) : ${a.found ? "adaptateur trouvé" : (a.error ? "erreur — " + escapeHtml(a.error) : "aucun adaptateur (null)")}</div>`).join("")}
+        <div>adapterAvailable : ${diag.adapterAvailable ? "true" : "false"} (préférence retenue : ${escapeHtml(diag.chosenPreference || "—")})</div>
         <div>deviceAvailable : ${diag.deviceAvailable ? "true" : "false"}</div>
-        ${diag.adapterInfo ? `<div>adapterInfo : ${escapeHtml(JSON.stringify(diag.adapterInfo))}</div>` : ""}
+        <div>adapter.requestAdapterInfo/.info exposé par ce navigateur : ${diag.adapterInfoSupported === null ? "non testé" : (diag.adapterInfoSupported ? "oui" : "non")}</div>
+        ${diag.adapterInfo && Object.keys(diag.adapterInfo).length ? `<div>adapterInfo : ${escapeHtml(JSON.stringify(diag.adapterInfo))}</div>` : ""}
         ${diag.reason ? `<div style="margin-top:4px;">raison : ${escapeHtml(diag.reason)}</div>` : ""}
         ${diag.recommendedAction ? `<div style="margin-top:4px;">action recommandée : ${escapeHtml(diag.recommendedAction)}</div>` : ""}
       </div>
     </details>` : ""}
+    ${(diag && diag.gpuApiAvailable && !diag.adapterAvailable) ? aiChromeGpuContradictionHtml(diag) : ""}
+  </details>`;
+}
+
+/* Explique la contradiction "chrome://gpu dit Hardware accelerated" vs
+   "aucun adaptateur WebGPU trouvé ici" — cette page ne peut pas lire
+   chrome://gpu (page interne non exposée au web), donc ceci reste une liste
+   de causes réelles et connues, pas une certitude sur ta machine précise. */
+function aiChromeGpuContradictionHtml(diag){
+  return `<details class="ai-extra" style="margin-top:10px;">
+    <summary>⚠️ « chrome://gpu » dit WebGPU accéléré, mais aucun adaptateur n'est trouvé ici — pourquoi ?</summary>
+    <div style="font-size:12px; line-height:1.7; margin-top:6px; color:var(--ink-soft);">
+      <p>Cette page ne peut pas lire <code>chrome://gpu</code> (c'est une page interne du navigateur, non accessible aux sites web) : impossible pour ce diagnostic de comparer directement les deux. Voici les causes réelles connues pour cet écart précis :</p>
+      <ul class="fiche-list">
+        <li><b>chrome://gpu teste le rendu général</b> (compositing 2D/3D du navigateur lui-même), pas spécifiquement l'attribution d'un adaptateur WebGPU aux pages web — les deux peuvent diverger. Cherche, sur cette page, une section « WebGPU » séparée (souvent plus bas) qui peut indiquer un blocage spécifique (« blocklisted »/« disabled »).</li>
+        <li>Chrome maintient une liste de blocage GPU/pilote propre à WebGPU (différente de l'accélération générale) : un GPU/pilote précis peut y figurer même quand l'accélération classique fonctionne.</li>
+        <li>Contexte de la page : protocole détecté ici = <code>${escapeHtml(diag.protocol)}</code>, contexte sécurisé = <code>${diag.isSecureContext ? "oui" : "non"}</code>. WebGPU exige un contexte sécurisé (https, ou localhost) ; si tu ouvres le fichier directement depuis le disque, teste aussi via l'adresse GitHub Pages (https://…) pour éliminer cette piste.</li>
+        <li>Politique d'entreprise ou extension de navigateur désactivant spécifiquement WebGPU.</li>
+        <li>Machine virtuelle / bureau à distance / partage de GPU : l'accélération 2D/3D classique passe, mais l'exposition WebGPU à Chrome peut être bridée par l'hyperviseur.</li>
+        <li>Version de Chrome trop ancienne pour le support WebGPU par défaut sur ton système d'exploitation précis.</li>
+      </ul>
+      <p>Aucune de ces pistes n'est certaine à distance : elles sont données comme causes réelles possibles, à vérifier une par une sur ta machine — pas comme un diagnostic définitif.</p>
+    </div>
   </details>`;
 }
 
@@ -7592,11 +7642,11 @@ function buildAiDiagnostic(stage, raw){
   }
   if(stage === "engine_init"){
     return Object.assign(base, {
-      stageLabel: "Pendant l'initialisation du moteur",
+      stageLabel: "Pendant l'initialisation du moteur (adaptateur et périphérique GPU étaient pourtant réels)",
       typeLabel: "Le modèle n'a pas pu être initialisé",
       message: raw && raw.message ? raw.message : "Erreur inconnue pendant l'initialisation.",
-      cause: "Le téléchargement a pu aboutir, mais l'initialisation du modèle sur ton GPU a échoué (mémoire GPU insuffisante, pilote graphique trop ancien, ou onglet réel manquant de ressources).",
-      solution: "Essaie le modèle léger (moins gourmand en mémoire), ferme les autres onglets/applications, ou réessaie après avoir redémarré le navigateur.",
+      cause: "Le téléchargement a pu aboutir, mais l'initialisation a échoué après coup. Causes possibles à vérifier une par une : mémoire GPU insuffisante pour ce modèle précis (essaie le modèle léger) ; version de @mlc-ai/web-llm incompatible avec l'identifiant de modèle demandé (le CDN sert la dernière version, qui peut avoir retiré/renommé ce modèle) ; cache navigateur corrompu par un téléchargement précédent interrompu (utilise « Réinitialiser le cache IA » ci-dessous) ; message postMessage malformé entre la page et ai-worker.js (visible dans la console via les logs « [EM Lyon Révision · IA] »).",
+      solution: "1) Réinitialise le cache IA, 2) réessaie avec le modèle léger, 3) si ça persiste, regarde la console (F12) pour le message exact juste avant cette erreur.",
     });
   }
   return Object.assign(base, {
