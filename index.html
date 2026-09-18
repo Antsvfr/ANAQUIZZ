@@ -4081,12 +4081,13 @@ function renderChapterDetail(){
         </div>`;
       }
 
+      { const aiReadyNow = state.aiStatus === "ready";
       html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
-        <button class="ai-action" id="lib-ai-summary"><span class="ico">📖</span><span class="t">Résumer ce chapitre</span><span class="d">Fiche de révision générée par l'IA</span></button>
-        <button class="ai-action" id="lib-ai-drill"><span class="ico">🎤</span><span class="t">Me faire réviser</span><span class="d">Interrogation orale par l'IA</span></button>
-        <button class="ai-action" id="lib-ai-quiz"><span class="ico">🧠</span><span class="t">Générer un quiz</span><span class="d">${(ch.aiQuiz&&ch.aiQuiz.length) ? ch.aiQuiz.length+" questions déjà générées" : "QCM inédits sur ce chapitre"}</span></button>
-        <button class="ai-action" id="lib-ai-cards"><span class="ico">🃏</span><span class="t">Générer des flashcards</span><span class="d">${(ch.aiFlashcards&&ch.aiFlashcards.length) ? ch.aiFlashcards.length+" cartes déjà générées" : "Cartes recto/verso sur ce chapitre"}</span></button>
-      </div>`;
+        <button class="ai-action" id="lib-ai-summary"><span class="ico">📖</span><span class="t">Résumer ce chapitre</span><span class="d">${aiReadyNow ? "Résumé généré par l'IA" : "Mode simplifié (sans IA) — résumé basé sur le texte"}</span></button>
+        <button class="ai-action" id="lib-ai-drill" ${aiReadyNow?"":"disabled"}><span class="ico">🎤</span><span class="t">Me faire réviser</span><span class="d">${aiReadyNow ? "Interrogation orale par l'IA" : "Nécessite l'assistant IA (indisponible sur cet appareil)"}</span></button>
+        <button class="ai-action" id="lib-ai-quiz"><span class="ico">🧠</span><span class="t">Générer un quiz</span><span class="d">${(ch.aiQuiz&&ch.aiQuiz.length) ? ch.aiQuiz.length+" questions déjà générées" : (aiReadyNow ? "QCM inédits sur ce chapitre" : "Mode simplifié (sans IA) si possible")}</span></button>
+        <button class="ai-action" id="lib-ai-cards"><span class="ico">🃏</span><span class="t">Générer des flashcards</span><span class="d">${(ch.aiFlashcards&&ch.aiFlashcards.length) ? ch.aiFlashcards.length+" cartes déjà générées" : (aiReadyNow ? "Cartes recto/verso sur ce chapitre" : "Mode simplifié (sans IA) si possible")}</span></button>
+      </div>`; }
 
       if(ch.aiQuiz && ch.aiQuiz.length){
         html += `<button class="btn red small" id="lib-play-quiz" style="margin-top:14px;">▶️ Rejouer le quiz généré (${ch.aiQuiz.length} questions)</button>`;
@@ -4290,7 +4291,7 @@ function attachLibraryEvents(){
         libGoto("subjectDetail", {subjectId: subjId});
       });
       const sumBtn = document.getElementById("lib-ai-summary");
-      if(sumBtn) sumBtn.addEventListener("click", ()=> libRunUserChapterAI(ch, "summary"));
+      if(sumBtn) sumBtn.addEventListener("click", ()=> libGenerateUserChapterSummary(ch));
       const drillBtn = document.getElementById("lib-ai-drill");
       if(drillBtn) drillBtn.addEventListener("click", ()=> libRunUserChapterAI(ch, "drill"));
       const quizBtn = document.getElementById("lib-ai-quiz");
@@ -4515,14 +4516,52 @@ async function libRunUserChapterFree(ch){
   await aiSend();
 }
 
-async function libGenerateUserChapterQuiz(ch){
+/* "Résumer ce chapitre" : utilise l'IA si prête, sinon un résumé heuristique
+   (première phrase de chaque partie du texte) — jamais bloqué par WebGPU. */
+async function libGenerateUserChapterSummary(ch){
   const statusEl = () => document.getElementById("lib-ai-status");
-  if(state.aiStatus !== "ready"){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas chargé. Va dans l'onglet 🤖 Assistant IA pour le charger, puis reviens ici.</div>`;
+  if(!ch.content || !ch.content.trim()){
+    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer un résumé.</div>`;
     return;
   }
+  if(state.aiStatus !== "ready"){
+    const summary = heuristicSummary(ch.originalText || stripHtml(ch.content));
+    if(!summary){
+      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de texte structuré pour résumer ce chapitre.</div>`;
+      return;
+    }
+    ch.summary = summary;
+    saveUserChapters();
+    render();
+    return;
+  }
+  if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération du résumé…</div>`;
+  try{
+    const summary = await generateCourseSummary(clip(ch.originalText || stripHtml(ch.content), 20000), {title: ch.title, chapterTitle: ch.desc || ch.title, notions: ch.keyNotions || []});
+    ch.summary = summary;
+    saveUserChapters();
+    render();
+  }catch(e){
+    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Échec de la génération du résumé (${escapeHtml(e.message||"erreur")}). Le reste du chapitre est conservé — tu peux réessayer.</div>`;
+  }
+}
+
+async function libGenerateUserChapterQuiz(ch){
+  const statusEl = () => document.getElementById("lib-ai-status");
   if(!ch.content || !ch.content.trim()){
     if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer un quiz.</div>`;
+    return;
+  }
+  if(state.aiStatus !== "ready"){
+    const h = buildHeuristicCourseMaterials(ch.originalText || stripHtml(ch.content));
+    if(h.quiz.length === 0){
+      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de définitions claires dans ce chapitre pour générer un quiz fiable. Réessaie quand l'IA sera disponible.</div>`;
+      return;
+    }
+    ch.aiQuiz = h.quiz;
+    saveUserChapters();
+    render();
+    startQuiz("chapter:"+ch.id, ch.title, null, h.quiz);
     return;
   }
   if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération du quiz…</div>`;
@@ -4544,12 +4583,20 @@ async function libGenerateUserChapterQuiz(ch){
 
 async function libGenerateUserChapterCards(ch){
   const statusEl = () => document.getElementById("lib-ai-status");
-  if(state.aiStatus !== "ready"){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas chargé. Va dans l'onglet 🤖 Assistant IA pour le charger, puis reviens ici.</div>`;
-    return;
-  }
   if(!ch.content || !ch.content.trim()){
     if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer des flashcards.</div>`;
+    return;
+  }
+  if(state.aiStatus !== "ready"){
+    const h = buildHeuristicCourseMaterials(ch.originalText || stripHtml(ch.content));
+    if(h.flashcards.length === 0){
+      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a trouvé aucune définition claire (« terme : définition ») dans ce chapitre pour créer des flashcards. Réessaie quand l'IA sera disponible.</div>`;
+      return;
+    }
+    ch.aiFlashcards = h.flashcards;
+    saveUserChapters();
+    render();
+    startFlashDeck(ch.id, ch.title, h.flashcards);
     return;
   }
   if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération des flashcards…</div>`;
@@ -4992,6 +5039,23 @@ function buildHeuristicCourseMaterials(rawText){
     });
   }
   return { fiche, flashcards, quiz };
+}
+
+/* Résumé heuristique (sans IA) : première phrase de chaque partie du texte,
+   sans rien reformuler ni inventer. Utilisé quand l'IA locale est indisponible. */
+function heuristicSummary(rawText){
+  const text = String(rawText || "").replace(/\r/g, "");
+  const headings = heuristicExtractHeadings(text);
+  const paragraphs = text.split(/\n{2,}/).map(p=>p.trim()).filter(p=>p.length > 40).slice(0, 6);
+  if(!paragraphs.length) return "";
+  const bullets = paragraphs.map(p => {
+    const m = p.match(/^[^.!?]{15,220}[.!?]/);
+    return m ? m[0].trim() : clip(p, 180);
+  });
+  let out = `<p class="ai-hint" style="margin:0 0 10px;">⚙️ Résumé généré automatiquement <b>sans IA</b> (mode simplifié), à partir de la première phrase de chaque partie du texte.</p>`;
+  if(headings.length) out += `<p style="margin:0 0 8px;"><b>Plan repéré :</b> ${headings.slice(0,6).map(h=>escapeHtml(h)).join(" · ")}</p>`;
+  out += `<ul class="fiche-list">${bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>`;
+  return out;
 }
 
 function genImportId(){ return "imp" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -7176,42 +7240,97 @@ function aiModelMeta(id){
 /* Diagnostic WebGPU précis : distingue API absente / adaptateur introuvable /
    adaptateur trouvé mais périphérique impossible à initialiser, plutôt qu'un
    simple booléen — pour afficher un message exact à l'utilisateur. */
-async function diagnoseWebGPU(){
+/* Diagnostic WebGPU complet. Retourne un résultat structuré (avec les champs
+   historiques ok/code/message/detail conservés pour ne rien casser côté
+   appelants) : supported/gpuApiAvailable/adapterAvailable/deviceAvailable,
+   adapterInfo (seulement si réellement exposé par le navigateur),
+   reason/errorCode/recommendedAction. Essaie plusieurs préférences
+   d'adaptateur avant de conclure qu'aucun GPU n'est utilisable : certains
+   appareils (ex. portables avec GPU intégré + GPU dédié) n'exposent un
+   adaptateur que sous l'une des deux préférences. */
+async function checkWebGPUCompatibility(){
+  const result = {
+    supported: false, gpuApiAvailable: false, adapterAvailable: false, deviceAvailable: false,
+    adapterInfo: null, reason: "", errorCode: "no_api", recommendedAction: "",
+    ok: false, code: "no_api", message: "", detail: "",
+  };
   if(!navigator.gpu || !navigator.gpu.requestAdapter){
-    return {
-      code: "no_api", ok: false,
-      message: "WebGPU n'est pas disponible dans ce navigateur.",
-      detail: "navigator.gpu est absent : ce navigateur ne prend pas (encore) en charge WebGPU, ou la fonctionnalité est désactivée dans ses réglages.",
-    };
+    result.reason = "navigator.gpu est absent : ce navigateur ne prend pas (encore) en charge WebGPU, ou la fonctionnalité est désactivée dans ses réglages.";
+    result.message = "WebGPU n'est pas disponible dans ce navigateur.";
+    result.detail = result.reason;
+    result.recommendedAction = "Utilise une version récente de Google Chrome ou Microsoft Edge, ou utilise le mode simplifié en attendant.";
+    return result;
   }
-  let adapter;
-  try{
-    adapter = await navigator.gpu.requestAdapter();
-  }catch(e){
-    return {
-      code: "adapter_error", ok: false,
-      message: "WebGPU est présent, mais l'accès à la carte graphique a échoué.",
-      detail: (e && e.message) ? e.message : "Erreur inconnue lors de la demande d'accès au GPU (navigator.gpu.requestAdapter).",
-    };
+  result.gpuApiAvailable = true;
+
+  let adapter = null;
+  let lastAdapterError = null;
+  for(const powerPreference of ["high-performance", "low-power"]){
+    try{
+      adapter = await navigator.gpu.requestAdapter({ powerPreference });
+    }catch(e){
+      lastAdapterError = e;
+      adapter = null;
+    }
+    if(adapter) break;
+  }
+  if(!adapter && !lastAdapterError){
+    // Dernier essai sans préférence explicite, au cas où l'option elle-même ne serait pas prise en charge.
+    try{ adapter = await navigator.gpu.requestAdapter(); }
+    catch(e){ lastAdapterError = e; }
+  }
+
+  if(!adapter && lastAdapterError){
+    result.errorCode = "adapter_error"; result.code = "adapter_error";
+    result.message = "WebGPU est présent, mais l'accès à la carte graphique a échoué.";
+    result.reason = (lastAdapterError && lastAdapterError.message) ? lastAdapterError.message : "Erreur inconnue lors de la demande d'accès au GPU (navigator.gpu.requestAdapter).";
+    result.detail = result.reason;
+    result.recommendedAction = "Vérifie que l'accélération matérielle est activée dans les réglages du navigateur, puis clique sur Réessayer.";
+    return result;
   }
   if(!adapter){
-    return {
-      code: "no_adapter", ok: false,
-      message: "WebGPU est présent, mais aucune carte graphique compatible n'a été trouvée sur cet appareil.",
-      detail: "navigator.gpu.requestAdapter() n'a renvoyé aucun adaptateur : pilote graphique manquant ou trop ancien, GPU non pris en charge, ou accélération matérielle désactivée dans le navigateur.",
-    };
+    result.errorCode = "no_adapter"; result.code = "no_adapter";
+    result.message = "WebGPU est présent, mais aucun adaptateur graphique utilisable n'a été trouvé.";
+    result.reason = "navigator.gpu.requestAdapter() n'a renvoyé aucun adaptateur, même en essayant les préférences « high-performance » et « low-power » : pilote graphique manquant ou trop ancien, GPU non pris en charge, ou accélération matérielle désactivée dans le navigateur.";
+    result.detail = result.reason;
+    result.recommendedAction = "Mets à jour tes pilotes graphiques, vérifie l'accélération matérielle du navigateur, ou essaie un autre appareil.";
+    return result;
   }
+  result.adapterAvailable = true;
+
+  // Informations de l'adaptateur, seulement si réellement exposées par le navigateur
+  // (propriétés standard de l'API GPUAdapterInfo — jamais inventées si absentes).
+  try{
+    let info = null;
+    if(typeof adapter.requestAdapterInfo === "function") info = await adapter.requestAdapterInfo();
+    else if(adapter.info) info = adapter.info;
+    if(info){
+      const picked = {};
+      if(info.vendor) picked.vendor = info.vendor;
+      if(info.architecture) picked.architecture = info.architecture;
+      if(info.description) picked.description = info.description;
+      if(Object.keys(picked).length) result.adapterInfo = picked;
+    }
+  }catch(e){ /* purement informatif : ignoré si indisponible sur ce navigateur */ }
+
   try{
     if(adapter.requestDevice) await adapter.requestDevice();
   }catch(e){
-    return {
-      code: "device_error", ok: false,
-      message: "WebGPU est présent et une carte graphique a été détectée, mais son initialisation a échoué.",
-      detail: (e && e.message) ? e.message : "Erreur inconnue lors de la création du périphérique GPU (adapter.requestDevice).",
-    };
+    result.errorCode = "device_error"; result.code = "device_error";
+    result.message = "Le navigateur détecte une carte graphique, mais ne permet pas de créer un périphérique compatible.";
+    result.reason = (e && e.message) ? e.message : "Erreur inconnue lors de la création du périphérique GPU (adapter.requestDevice).";
+    result.detail = result.reason;
+    result.recommendedAction = "Redémarre le navigateur, ferme les autres onglets/applications qui utilisent le GPU, puis réessaie.";
+    return result;
   }
-  return { code: "ok", ok: true, message: "WebGPU est disponible.", detail: "" };
+  result.deviceAvailable = true;
+  result.supported = true; result.ok = true;
+  result.errorCode = "ok"; result.code = "ok";
+  result.message = "WebGPU est disponible."; result.detail = ""; result.reason = "";
+  return result;
 }
+/* Alias conservé pour la lisibilité des appels existants. */
+function diagnoseWebGPU(){ return checkWebGPUCompatibility(); }
 function pickModelForDevice(){
   const saved = lsGet(KEY_AIMODEL);
   if(saved === "small" || saved === "large") return AI_MODELS[saved].id;
@@ -7266,14 +7385,18 @@ async function aiRunQuickTest(){
   render();
 }
 
-/* Relance le diagnostic complet depuis le début (utilisé par "Réessayer"). */
-function aiRetryDetection(){
-  if(state.aiStatus === "loading") return;
+/* Relance le diagnostic complet depuis le début (utilisé par "Réessayer").
+   Se protège contre les doubles clics pendant la vérification. */
+async function aiRetryDetection(){
+  if(state.aiStatus === "loading" || state.aiRetryChecking) return;
+  state.aiRetryChecking = true;
   state.aiStatus = "checking";
   state.aiGpuDiag = null;
   state.aiTestResult = "";
   render();
-  checkAIStatus();
+  await checkAIStatus();
+  state.aiRetryChecking = false;
+  render();
 }
 
 function aiEnvSummary(){
@@ -7290,19 +7413,21 @@ function aiEnvSummary(){
    affiché quel que soit l'état de l'IA. */
 function aiDiagnosticPanelHtml(){
   const diag = state.aiGpuDiag;
-  const gpuLine = diag ? (diag.ok ? "disponible" : "indisponible — " + diag.message) : "non vérifié pour l'instant";
+  const gpuLine = diag ? (diag.ok ? "disponible" : "indisponible") : "non vérifié pour l'instant";
+  const adapterLine = !diag ? "non testé" : (diag.adapterAvailable ? "détectée" : (diag.gpuApiAvailable ? "non détectée" : "non testable (WebGPU absent)"));
   const workerLine = (state.aiStatus === "error" && state.aiDiagnostic && state.aiDiagnostic.stage === "worker_start")
     ? "erreur au démarrage"
     : (state.aiStatus === "ready" || state.aiStatus === "loading" ? "fonctionnel" : "non testé");
   const modelLine = state.aiStatus === "ready" ? "prêt (" + aiModelMeta(state.aiModelId).label + ")"
     : (state.aiStatus === "loading" ? "en cours de chargement" : "non chargé");
-  const modeLine = state.aiStatus === "ready" ? "IA locale (WebLLM)" : "extraction/mode simplifié (sans IA)";
+  const modeLine = state.aiStatus === "ready" ? "IA locale WebGPU" : (state.aiStatus === "nogpu" ? "IA locale simplifiée / extraction seule" : "extraction seule (IA non chargée)");
   return `<details class="ai-extra" id="ai-diag-panel" style="margin-top:12px;" ${state.aiDiagPanelOpen ? "open" : ""}>
     <summary>État de mon assistant IA</summary>
     <div style="font-size:12px; line-height:1.9; margin-top:6px; color:var(--ink-soft);">
       <div><b>Navigateur détecté :</b> ${escapeHtml(aiEnvSummary())}</div>
       <div><b>WebGPU :</b> ${escapeHtml(gpuLine)}</div>
-      <div><b>Worker IA :</b> ${escapeHtml(workerLine)}</div>
+      <div><b>Carte graphique :</b> ${escapeHtml(adapterLine)}</div>
+      <div><b>Moteur local (worker) :</b> ${escapeHtml(workerLine)}</div>
       <div><b>Modèle :</b> ${escapeHtml(modelLine)}</div>
       <div><b>Mode utilisé :</b> ${escapeHtml(modeLine)}</div>
     </div>
@@ -7311,6 +7436,18 @@ function aiDiagnosticPanelHtml(){
       <button class="btn-text" id="ai-retry-check-btn">🔄 Réessayer le chargement</button>
     </div>
     ${state.aiTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiTestResult)}</div>` : ""}
+    ${diag ? `<details class="ai-extra" style="margin-top:10px;">
+      <summary>Détails techniques</summary>
+      <div style="font-size:11.5px; line-height:1.8; margin-top:6px; color:var(--muted); font-family:monospace;">
+        <div>code : ${escapeHtml(diag.errorCode || diag.code || "")}</div>
+        <div>gpuApiAvailable : ${diag.gpuApiAvailable ? "true" : "false"}</div>
+        <div>adapterAvailable : ${diag.adapterAvailable ? "true" : "false"}</div>
+        <div>deviceAvailable : ${diag.deviceAvailable ? "true" : "false"}</div>
+        ${diag.adapterInfo ? `<div>adapterInfo : ${escapeHtml(JSON.stringify(diag.adapterInfo))}</div>` : ""}
+        ${diag.reason ? `<div style="margin-top:4px;">raison : ${escapeHtml(diag.reason)}</div>` : ""}
+        ${diag.recommendedAction ? `<div style="margin-top:4px;">action recommandée : ${escapeHtml(diag.recommendedAction)}</div>` : ""}
+      </div>
+    </details>` : ""}
   </details>`;
 }
 
@@ -7586,6 +7723,7 @@ Object.assign(state, {
   libGenerateBusy: null,
   libGenerateError: "",
   aiDiagPanelOpen: false,
+  aiRetryChecking: false,
 });
 
 const AI_ACTIONS = {
@@ -7595,7 +7733,7 @@ const AI_ACTIONS = {
     placeholder:"Ex : la différence entre données primaires et secondaires",
   },
   summary: {
-    icon:"📖", label:"Résumer un chapitre", needs:"chapter",
+    icon:"📖", label:"Résumer un chapitre", needs:"chapter", heuristic:true,
     desc:"L'essentiel d'un chapitre, structuré et prêt à réviser.",
   },
   drill: {
@@ -7603,11 +7741,11 @@ const AI_ACTIONS = {
     desc:"L'IA t'interroge question par question et corrige tes réponses.",
   },
   cards: {
-    icon:"🃏", label:"Créer des flashcards", needs:"chapter", mode:"cards",
+    icon:"🃏", label:"Créer des flashcards", needs:"chapter", mode:"cards", heuristic:true,
     desc:"Génère des cartes recto/verso, ajoutables à tes paquets.",
   },
   quiz: {
-    icon:"🧠", label:"Générer un quiz", needs:"chapter", mode:"quiz",
+    icon:"🧠", label:"Générer un quiz", needs:"chapter", mode:"quiz", heuristic:true,
     desc:"Des QCM inédits sur le chapitre, jouables immédiatement.",
   },
   errors: {
@@ -7756,7 +7894,12 @@ function buildPrompt(action, extra){
    ============================================================ */
 function aiErrorMessage(e){
   if(e && e.message === "cancelled") return "Génération annulée.";
-  if(e && e.message === "not_ready") return "L'assistant n'est pas encore chargé : clique sur « Charger l'assistant IA » ci-dessus.";
+  if(e && e.message === "not_ready"){
+    if(state.aiStatus === "nogpu"){
+      return (state.aiGpuDiag ? state.aiGpuDiag.message : "L'IA locale n'est pas disponible sur cet appareil.") + " Cette action a besoin d'un vrai modèle IA — le mode simplifié ne peut pas la remplacer de façon fiable.";
+    }
+    return "L'assistant n'est pas encore chargé : clique sur « Charger l'assistant IA » ci-dessus.";
+  }
   return "L'assistant n'a pas pu répondre" + (e && e.message ? " (" + e.message + ")" : "") + ". Tu peux réessayer.";
 }
 
@@ -7770,10 +7913,55 @@ async function aiRun(action, extra){
   state.aiQuizDraft = null;
   state.aiError = null;
   state.aiContextLabel = (extra && extra.contextLabel) || defaultContextLabel(action);
+
+  // IA locale indisponible : pour les actions marquées "heuristic" (résumé,
+  // quiz, flashcards sur un chapitre), on retombe sur le mode simplifié
+  // (règles locales, sans modèle) plutôt que de bloquer l'action. Si le
+  // mode simplifié ne peut rien produire d'honnête, on repasse par le
+  // chemin normal, qui affichera l'erreur explicite (aiErrorMessage).
+  if(state.aiStatus !== "ready" && a.heuristic && aiRunHeuristicChapterAction(action)) return;
+
   const prompt = buildPrompt(action, extra);
   const display = (extra && extra.display) || defaultDisplay(action);
   state.aiThread = [{role:"user", content: prompt, display: display}];
   await aiSend();
+}
+
+/* Variante sans IA de "Résumer un chapitre" / "Générer un quiz" / "Créer des
+   flashcards" pour un chapitre du programme (fiche déjà rédigée), à partir
+   des règles locales de buildHeuristicCourseMaterials/heuristicSummary.
+   Retourne false si rien d'honnête n'a pu être produit. */
+function aiRunHeuristicChapterAction(action){
+  const ch = CHAPTERS.find(c => c.id === state.aiChapter);
+  if(!ch || !FICHES[ch.id]) return false;
+  const raw = stripHtml(FICHES[ch.id]);
+  const display = AI_ACTIONS[action].label + " — " + ch.title + " (mode simplifié)";
+  if(action === "summary"){
+    const summary = heuristicSummary(raw);
+    if(!summary) return false;
+    state.aiThread = [
+      {role:"user", content:"", display},
+      {role:"assistant", content: "⚙️ Mode simplifié (sans IA) — généré à partir de la fiche de ce chapitre, sans modèle de langage.\n\n" + stripHtml(summary)},
+    ];
+    render();
+    return true;
+  }
+  const h = buildHeuristicCourseMaterials(raw);
+  if(action === "quiz"){
+    if(!h.quiz.length) return false;
+    state.aiQuizDraft = h.quiz;
+    state.aiThread = [{role:"user", content:"", display}];
+    render();
+    return true;
+  }
+  if(action === "cards"){
+    if(!h.flashcards.length) return false;
+    state.aiCardsDraft = h.flashcards;
+    state.aiThread = [{role:"user", content:"", display}];
+    render();
+    return true;
+  }
+  return false;
 }
 
 function defaultContextLabel(action){
@@ -8069,26 +8257,30 @@ function aiStatusHtml(){
 
   if(state.aiStatus === "nogpu"){
     const diag = state.aiGpuDiag;
-    const msg = diag ? diag.message : "L'IA locale n'est pas disponible sur cet appareil pour le moment.";
+    const msg = diag ? diag.message : "Ton appareil ne permet pas actuellement de lancer le modèle IA WebGPU.";
+    const checking = state.aiRetryChecking;
     return `<div class="ai-status ko"><span class="dot"></span><div>
       <b>${escapeHtml(msg)}</b>
-      <div class="s">Le reste du site (fiches, quiz, flashcards, mode examen, import de cours) fonctionne normalement — seule la génération automatique par IA est concernée. Ton cours importé n'est jamais perdu : il peut être enregistré sans IA, puis généré plus tard.</div>
+      <div class="s">Le reste du site (fiches, quiz, flashcards, mode examen, import de cours, planning, notes) fonctionne normalement — seule la génération par un vrai modèle IA est concernée. Un mode simplifié (sans IA) peut prendre le relais pour les résumés, quiz et flashcards de tes cours importés.</div>
       <details class="ai-extra" style="margin-top:10px;">
         <summary>Pourquoi ?</summary>
-        <p class="s" style="margin-top:6px;">L'assistant IA local utilise <b>WebGPU</b> pour exécuter le modèle directement dans ton navigateur, sans serveur ni clé API : rien de ce que tu écris ne quitte ton ordinateur. Certains navigateurs, appareils ou configurations matérielles ne le prennent pas encore en charge.${diag && diag.detail ? "<br><br><b>Détail technique :</b> " + escapeHtml(diag.detail) : ""}</p>
+        <p class="s" style="margin-top:6px;">L'assistant IA local utilise <b>WebGPU</b> pour exécuter le modèle directement dans ton navigateur, sans serveur ni clé API : rien de ce que tu écris ne quitte ton ordinateur. Certains navigateurs, appareils ou configurations matérielles ne le prennent pas encore en charge.${diag && diag.reason ? "<br><br><b>Détail technique :</b> " + escapeHtml(diag.reason) : ""}${diag && diag.recommendedAction ? "<br><br><b>À essayer :</b> " + escapeHtml(diag.recommendedAction) : ""}</p>
       </details>
       <div style="margin-top:10px; font-size:12px; color:var(--ink-soft); line-height:1.75;">
-        <b>Ce que tu peux essayer :</b>
+        <b>Comment essayer de rendre WebGPU disponible :</b>
         <ul class="fiche-list" style="margin:6px 0 0;">
           <li>Utiliser une version récente de <b>Google Chrome</b> ou <b>Microsoft Edge</b>.</li>
           <li>Vérifier que l'accélération matérielle est activée dans les réglages du navigateur.</li>
+          <li>Mettre à jour les pilotes graphiques.</li>
           <li>Redémarrer le navigateur.</li>
-          <li>Essayer depuis un autre appareil (ordinateur récent, ou Android récent).</li>
-          <li>Utiliser le <b>mode simplifié</b> lors de l'import d'un cours (fiche et flashcards générées sans IA).</li>
+          <li>Essayer un autre appareil (ordinateur récent, ou Android récent).</li>
         </ul>
+        <p class="s" style="margin-top:6px;">Ces pistes aident sur la plupart des appareils, mais certains ne pourront pas exécuter WebLLM correctement (matériel trop ancien ou non pris en charge) — ce n'est pas garanti.</p>
       </div>
-      <div style="margin-top:12px; display:flex; gap:14px; flex-wrap:wrap;">
-        <button class="btn outline small" id="ai-retry-check-btn">🔄 Réessayer</button>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn outline small" id="ai-retry-check-btn" ${checking?"disabled":""}>${checking ? "⏳ Vérification…" : "🔄 Réessayer"}</button>
+        <button class="btn-text" id="ai-goto-simplified-btn">⚙️ Utiliser le mode simplifié</button>
+        <button class="btn-text" id="ai-goto-import-noai-btn">📥 Importer et enregistrer sans IA</button>
       </div>
       </div></div>`;
   }
@@ -8161,12 +8353,13 @@ function renderAI(){
     ${aiStatusHtml()}
     ${aiDiagnosticPanelHtml()}
     <div class="ai-actiongrid">
-      ${Object.entries(AI_ACTIONS).map(([k,a])=>`
-        <button class="ai-action ${state.aiAction===k?"active":""}" data-aiaction="${k}" ${ready?"":"disabled"}>
+      ${Object.entries(AI_ACTIONS).map(([k,a])=>{
+        const usable = ready || a.heuristic;
+        return `<button class="ai-action ${state.aiAction===k?"active":""}" data-aiaction="${k}" ${usable?"":"disabled"}>
           <span class="ico">${a.icon}</span>
           <span class="t">${a.label}</span>
-          <span class="d">${a.desc}</span>
-        </button>`).join("")}
+          <span class="d">${(!ready && a.heuristic) ? "Mode simplifié (sans IA)" : a.desc}</span>
+        </button>`;}).join("")}
     </div>
   `;
 
@@ -8212,9 +8405,12 @@ function renderAI(){
       <span class="ai-charcount">${state.aiContextLabel ? escapeHtml(state.aiContextLabel) : defaultContextLabel(state.aiAction)}</span>
       <span style="display:flex; gap:10px;">
         ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">✕ Annuler</button>` : ""}
-        <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !ready ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
+        <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !(ready || (action && action.heuristic)) ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
       </span>
     </div>`;
+    if(!ready && action && action.heuristic){
+      html += `<p class="ai-hint" style="margin-top:6px;">⚙️ IA locale indisponible : ce bouton utilisera le <b>mode simplifié</b> (règles locales, sans modèle), à partir de la fiche de ce chapitre. Si le chapitre n'a pas assez de définitions repérables, un message clair te le dira plutôt qu'un faux résultat.</p>`;
+    }
 
     if(state.aiError) html += `<div class="ai-error">${state.aiError}</div>`;
 
@@ -8323,9 +8519,13 @@ function attachAIEvents(){
   const testBtn = document.getElementById("ai-test-btn");
   if(testBtn) testBtn.addEventListener("click", aiRunQuickTest);
   const retryCheckBtn = document.getElementById("ai-retry-check-btn");
-  if(retryCheckBtn) retryCheckBtn.addEventListener("click", aiRetryDetection);
+  if(retryCheckBtn && !retryCheckBtn.disabled) retryCheckBtn.addEventListener("click", aiRetryDetection);
   const diagPanel = document.getElementById("ai-diag-panel");
   if(diagPanel) diagPanel.addEventListener("toggle", ()=>{ state.aiDiagPanelOpen = diagPanel.open; });
+  const gotoSimplifiedBtn = document.getElementById("ai-goto-simplified-btn");
+  if(gotoSimplifiedBtn) gotoSimplifiedBtn.addEventListener("click", ()=> switchTab("fiches"));
+  const gotoImportNoAiBtn = document.getElementById("ai-goto-import-noai-btn");
+  if(gotoImportNoAiBtn) gotoImportNoAiBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
 
   const resetCacheBtn = document.getElementById("ai-reset-cache");
   if(resetCacheBtn) resetCacheBtn.addEventListener("click", ()=>{
