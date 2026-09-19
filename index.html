@@ -10252,7 +10252,7 @@ function renderCalendarMonth(){
    ============================================================ */
 
 /* Verrou partagé avec l'onglet Assistant IA : un seul modèle, une seule génération à la fois. */
-function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy || state.courseImport.busy || !!state.libGenerateBusy; }
+function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy || state.courseImport.busy || !!state.libGenerateBusy || !!state.libToolsBusy; }
 
 const COURSE_AI_SYSTEM = "Tu aides un élève de terminale à comprendre son cours. Réponds en français, de façon claire, structurée et pédagogique, adaptée au niveau lycée : phrases courtes, vocabulaire compliqué expliqué, exemples concrets, une analogie si utile. Pas de jargon inutile, pas de préambule ni de flatterie. Appuie-toi en priorité sur les informations du cours fournies ci-dessous (notes, résumé, description de l'événement). Si elles ne suffisent pas pour répondre précisément, dis-le clairement et, si besoin, demande une précision à l'élève plutôt que d'inventer un contenu de cours qui n'y figure pas.";
 
