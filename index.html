@@ -320,6 +320,17 @@
     border-bottom: 1.5px solid transparent; transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
   }
   .btn-text:hover{ color: var(--red); border-color: var(--red); }
+  .btn-text.active{ color: var(--red); border-color: var(--red); }
+
+  /* ===== MON COMPTE ===== */
+  .account-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; max-width:420px; }
+  .account-row:last-of-type{ border-bottom:none; }
+  .account-row .lbl{ color:var(--muted); font-weight:700; }
+  .account-row .val{ color:var(--ink); font-weight:600; text-align:right; }
+  .account-code{ display:flex; align-items:center; gap:10px; }
+  .account-code code{ background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-size:12.5px; letter-spacing:0.02em; }
+  .account-status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; vertical-align:middle; }
+  @media (max-width:560px){ .account-row{ flex-direction:column; align-items:flex-start; gap:2px; } .account-row .val{ text-align:left; } }
 
   /* ===== LEVEL CHIPS (shared: quiz / fiches / flashcards) ===== */
   .levelchips{ display:flex; gap: 8px; margin: 26px 0 22px; flex-wrap:wrap; }
@@ -1599,6 +1610,16 @@
     <path d="M9 18h6" stroke="var(--red-dark)" stroke-width="1.6" stroke-linecap="round"/>
   </svg>
 </button>
+
+<!-- Compte utilisateur (Supabase) : chargés AVANT le script principal pour
+     que window.LyonAuth existe dès son démarrage. Si supabase-config.js
+     n'existe pas encore (pas configuré par l'utilisateur), ce <script src>
+     échoue silencieusement (404) et auth.js le détecte pour désactiver
+     proprement les fonctionnalités de compte — le reste du site continue de
+     fonctionner normalement (voir auth.js, "available"). -->
+<script src="supabase-config.js" onerror="console.warn('[LyonAuth] supabase-config.js introuvable — copie supabase-config.example.js et renseigne tes valeurs (voir SETUP_SUPABASE.md). Le site continue de fonctionner sans compte.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="auth.js"></script>
 
 <script>
 /* ============================================================
@@ -8415,6 +8436,8 @@ Object.assign(state, {
   aiFullTestResult: "",
   aiFullTestBusy: false,
   aiFullTestSteps: [],
+  // --- état d'interface du formulaire de compte ("Mon espace") ---
+  accountUI: { mode: "signin" },
 });
 
 const AI_ACTIONS = {
@@ -9688,11 +9711,148 @@ function attachSettingsEvents(){
 /* ============================================================
    15quinquies. MON ESPACE — profil local
    ============================================================ */
+/* ---------- Mon compte (Supabase Auth) — section de "Mon espace" ----------
+   Formulaire connexion/inscription si déconnecté, profil + code utilisateur
+   + déconnexion si connecté. Aucun mot de passe n'est jamais stocké ni
+   manipulé ici : LyonAuth (auth.js) délègue tout à Supabase Auth. */
+function renderAccountSection(){
+  if(!window.LyonAuth || !LyonAuth.available){
+    return `<div class="dash-section">
+      <div class="section-title">Mon compte</div>
+      <p class="dash-empty" style="margin-top:0;">La connexion à un compte n'est pas encore configurée sur ce site. Tes données restent enregistrées dans ce navigateur, comme aujourd'hui.</p>
+    </div>`;
+  }
+
+  const a = LyonAuth.state;
+
+  if(a.status === "signed-in"){
+    const code = (a.profile && a.profile.user_code) || "…";
+    const email = a.user ? a.user.email : "";
+    const name = (a.profile && a.profile.display_name) || "";
+    return `<div class="dash-section" id="account-section">
+      <div class="section-title">Mon compte</div>
+      <div class="account-row"><span class="lbl">Email</span><span class="val">${escapeHtml(email)}</span></div>
+      ${name ? `<div class="account-row"><span class="lbl">Pseudo</span><span class="val">${escapeHtml(name)}</span></div>` : ""}
+      <div class="account-row">
+        <span class="lbl">Code utilisateur</span>
+        <span class="val account-code"><code>${escapeHtml(code)}</code><button class="btn-text" id="account-copy-code-btn" type="button">Copier</button></span>
+      </div>
+      <div class="account-row"><span class="lbl">Statut</span><span class="val"><span class="account-status-dot"></span>Connecté</span></div>
+      <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+        <button class="btn outline small" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
+        <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
+      </div>
+    </div>`;
+  }
+
+  const mode = state.accountUI.mode;
+  return `<div class="dash-section" id="account-section">
+    <div class="section-title">Mon compte</div>
+    <p class="dash-empty" style="margin-top:0;">Crée un compte pour retrouver tes matières, cours et progression sur tous tes appareils.</p>
+    <div class="actions" style="justify-content:flex-start;margin:0 0 14px;gap:14px;">
+      <button class="btn-text${mode==="signin"?" active":""}" data-account-mode="signin" type="button">Se connecter</button>
+      <button class="btn-text${mode==="signup"?" active":""}" data-account-mode="signup" type="button">Créer un compte</button>
+    </div>
+    <form id="account-form" style="max-width:340px;">
+      ${mode==="signup" ? `<div class="ai-field"><label for="account-name">Pseudo (facultatif)</label><input type="text" id="account-name" class="ai-select" placeholder="Ex. Anton" autocomplete="nickname"></div>` : ""}
+      <div class="ai-field"><label for="account-email">Email</label><input type="email" id="account-email" class="ai-select" placeholder="toi@exemple.com" autocomplete="email" required></div>
+      <div class="ai-field"><label for="account-password">Mot de passe</label><input type="password" id="account-password" class="ai-select" placeholder="${mode==="signup"?"6 caractères minimum":"••••••••"}" autocomplete="${mode==="signup"?"new-password":"current-password"}" required></div>
+      ${mode==="signup" ? `<div class="ai-field"><label for="account-password2">Confirmer le mot de passe</label><input type="password" id="account-password2" class="ai-select" autocomplete="new-password" required></div>` : ""}
+      <div class="actions" style="justify-content:flex-start;margin-top:14px;">
+        <button class="btn red small" id="account-submit-btn" type="submit" ${a.busy?"disabled":""}>${a.busy ? "…" : (mode==="signup" ? "Créer mon compte" : "Se connecter")}</button>
+        ${mode==="signin" ? `<button class="btn-text" id="account-forgot-btn" type="button">Mot de passe oublié</button>` : ""}
+      </div>
+      <div id="account-form-msg" style="margin-top:10px;font-size:12.5px;"></div>
+    </form>
+  </div>`;
+}
+
+function attachAccountEvents(){
+  if(!window.LyonAuth || !LyonAuth.available) return;
+
+  document.querySelectorAll("[data-account-mode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.accountUI.mode = btn.dataset.accountMode;
+      render();
+    });
+  });
+
+  const form = document.getElementById("account-form");
+  if(form) form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    // LyonAuth.signUp/signIn déclenchent un render() en cours de route (état
+    // "busy"), qui remplace #content et donc l'élément de message : on le
+    // relit à chaque appel plutôt que de garder une référence devenue
+    // obsolète après ce re-rendu.
+    const setMsg = (text, isError) => {
+      const el = document.getElementById("account-form-msg");
+      if(el){ el.textContent = text; el.style.color = isError ? "var(--red-dark)" : "var(--green)"; }
+    };
+    const email = document.getElementById("account-email").value.trim();
+    const password = document.getElementById("account-password").value;
+    if(state.accountUI.mode === "signup"){
+      const name = document.getElementById("account-name").value.trim();
+      const password2 = document.getElementById("account-password2").value;
+      if(!email){ setMsg("Adresse email requise.", true); return; }
+      if(password.length < 6){ setMsg("Le mot de passe doit contenir au moins 6 caractères.", true); return; }
+      if(password !== password2){ setMsg("Les deux mots de passe ne correspondent pas.", true); return; }
+      const res = await LyonAuth.signUp({ email, password, displayName: name });
+      if(res.error){ setMsg(res.error, true); return; }
+      if(res.needsEmailConfirmation) setMsg("Compte créé ! Vérifie tes emails pour confirmer ton adresse avant de te connecter.", false);
+      else showToast("Compte créé — tu es connecté.");
+    } else {
+      if(!email || !password){ setMsg("Email et mot de passe requis.", true); return; }
+      const res = await LyonAuth.signIn({ email, password });
+      if(res.error){ setMsg(res.error, true); return; }
+      showToast("Connecté.");
+    }
+  });
+
+  const forgotBtn = document.getElementById("account-forgot-btn");
+  if(forgotBtn) forgotBtn.addEventListener("click", async ()=>{
+    const emailEl = document.getElementById("account-email");
+    const email = emailEl ? emailEl.value.trim() : "";
+    if(!email){ showToast("Renseigne ton email d'abord."); return; }
+    const res = await LyonAuth.resetPassword(email);
+    showToast(res.error ? res.error : "Email de réinitialisation envoyé si ce compte existe.");
+  });
+
+  const signoutBtn = document.getElementById("account-signout-btn");
+  if(signoutBtn) signoutBtn.addEventListener("click", async ()=>{
+    await LyonAuth.signOut();
+    showToast("Déconnecté.");
+  });
+
+  const deleteBtn = document.getElementById("account-delete-btn");
+  if(deleteBtn) deleteBtn.addEventListener("click", ()=>{
+    showToast("Suppression de compte non disponible pour l'instant (nécessite une configuration serveur supplémentaire).");
+  });
+
+  const copyBtn = document.getElementById("account-copy-code-btn");
+  if(copyBtn) copyBtn.addEventListener("click", async ()=>{
+    const code = (LyonAuth.state.profile && LyonAuth.state.profile.user_code) || "";
+    if(!code) return;
+    try{
+      await navigator.clipboard.writeText(code);
+      showToast("Code copié.");
+    }catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = code; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); showToast("Code copié."); }
+      catch(e2){ showToast("Impossible de copier automatiquement — sélectionne le code manuellement."); }
+      document.body.removeChild(ta);
+    }
+  });
+}
+
 function renderMySpace(){
   const firstName = state.profile.firstName || "";
   return `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
-    <p class="ai-intro">Ton profil, raccourcis vers l'assistant IA et les paramètres.</p>
+    <p class="ai-intro">Ton profil, ton compte et les raccourcis vers l'assistant IA.</p>
+
+    ${renderAccountSection()}
 
     <div class="dash-section">
       <div class="section-title">Mon profil</div>
@@ -9727,6 +9887,7 @@ function renderMySpace(){
 }
 
 function attachMySpaceEvents(){
+  attachAccountEvents();
   const saveBtn = document.getElementById("profile-save-btn");
   if(saveBtn) saveBtn.addEventListener("click", ()=>{
     const val = document.getElementById("profile-firstname-input").value.trim();
@@ -11281,12 +11442,30 @@ function updateNavDynamic(){
     el.classList.toggle("active-group", el.dataset.nav === group);
   });
 
-  // profil (header)
+  // profil (header) — reflète l'état du compte quand LyonAuth est disponible,
+  // sinon le comportement local existant (prénom / "Mon espace") est inchangé.
   const firstName = (state.profile.firstName || "").trim();
   const nameLbl = document.getElementById("profile-label");
-  if(nameLbl) nameLbl.textContent = firstName ? "Bonjour " + firstName : "Mon espace";
   const avatar = document.getElementById("profile-avatar");
-  if(avatar) avatar.textContent = firstName ? firstName.charAt(0).toUpperCase() : "🎓";
+  const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in";
+  if(nameLbl){
+    if(authed){
+      const label = (LyonAuth.state.profile && LyonAuth.state.profile.display_name) || firstName || "Mon compte";
+      nameLbl.textContent = label;
+    } else if(window.LyonAuth && LyonAuth.available){
+      nameLbl.textContent = "Connexion";
+    } else {
+      nameLbl.textContent = firstName ? "Bonjour " + firstName : "Mon espace";
+    }
+  }
+  if(avatar){
+    if(authed){
+      const src = (LyonAuth.state.profile && LyonAuth.state.profile.display_name) || firstName;
+      avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
+    } else {
+      avatar.textContent = firstName ? firstName.charAt(0).toUpperCase() : "🎓";
+    }
+  }
 }
 
 function updateNavMenuState(){
@@ -11569,6 +11748,14 @@ document.addEventListener("keydown", (e)=>{
 });
 
 setInterval(updateCurrentTimeIndicator, 1000);
+
+// Compte utilisateur : re-rend l'UI à chaque changement d'état d'auth
+// (connexion/déconnexion/rafraîchissement de session) — un seul abonnement,
+// LyonAuth garantit lui-même une seule initialisation.
+if(window.LyonAuth){
+  LyonAuth.onChange(()=> render());
+  LyonAuth.init();
+}
 
 (async function init(){
   await loadAllData();
