@@ -436,6 +436,40 @@
   .fiche-tip{ background: var(--bg); border-radius: 10px; padding: 12px 15px; font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height:1.6; border: 1px solid var(--border); }
   .fiche-tip b{ color: var(--ink); }
 
+  /* ===== FICHE DE COURS — rendu premium (IA structurée + anciennes fiches) ===== */
+  .fiche-content h3{ display:flex; align-items:center; font-size: 14.5px; font-weight: 800; margin: 22px 0 10px; color: var(--ink); letter-spacing:-0.005em; }
+  .fiche-content h3:first-of-type{ margin-top: 0; }
+  .fiche-content > p{ font-size: 13.5px; color: var(--ink-soft); line-height:1.7; margin: 0 0 12px; }
+  .fiche-intro{ font-size: 13.5px; color: var(--ink-soft); line-height:1.7; margin: 0 0 18px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .fiche-secnum{
+    display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; flex-shrink:0;
+    background: var(--red); color:#fff; border-radius:999px; font-size:10.5px; font-weight:800; margin-right:8px;
+  }
+  .fiche-notion{ padding:10px 0; border-bottom:1px solid var(--bg); }
+  .fiche-notion:last-child{ border-bottom:none; }
+  .fiche-notion-title{ font-size:13.5px; font-weight:800; color:var(--ink); margin-bottom:3px; }
+  .fiche-notion-content{ font-size:13px; color:var(--ink-soft); line-height:1.6; }
+  .fiche-notion-example{ font-size:12px; color:var(--muted); margin-top:6px; padding-left:10px; border-left:2px solid var(--border-strong); line-height:1.55; }
+  .fiche-notion-example .lbl{ font-weight:700; color:var(--ink-soft); }
+  .fiche-steps{ list-style:none; margin:0 0 6px; padding:0; counter-reset:fichestep; }
+  .fiche-steps li{ display:flex; align-items:center; gap:11px; padding:7px 0; font-size:13.5px; color:var(--ink-soft); line-height:1.5; }
+  .fiche-step-num{ flex-shrink:0; }
+  .fiche-step-num::before{
+    counter-increment: fichestep; content: counter(fichestep, decimal-leading-zero);
+    display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+    background: var(--red-tint); color: var(--red-dark); border-radius:8px; font-size:11px; font-weight:800;
+  }
+  .fiche-keypoints{ background: var(--red-tint); border-radius: var(--radius-md); padding:16px 18px; margin-top:22px; }
+  .fiche-keypoints-title{ font-size:13px; font-weight:800; color:var(--red-dark); margin-bottom:9px; letter-spacing:-0.005em; }
+  .fiche-keypoints-list{ list-style:none; margin:0; padding:0; }
+  .fiche-keypoints-list li{ font-size:13px; color:var(--ink); line-height:1.6; padding-left:22px; position:relative; margin-bottom:7px; }
+  .fiche-keypoints-list li:last-child{ margin-bottom:0; }
+  .fiche-keypoints-list li::before{ content:"✓"; position:absolute; left:0; top:0; color:var(--red); font-weight:800; }
+  @media (max-width:560px){
+    .fiche-notion-example{ padding-left:8px; }
+    .fiche-keypoints{ padding:14px 15px; }
+  }
+
   /* ===== QUIZ CARD ===== */
   .card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px 30px; box-shadow: var(--shadow-md); }
 
@@ -4071,7 +4105,7 @@ function renderChapterDetail(){
       html += `<div class="card" style="margin-bottom:20px;">
         <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Fiche de cours</span>
           <button class="btn-text" id="lib-regen-fiche" >🔄 Régénérer</button></div>
-        <div class="ai-result-body" style="white-space:pre-wrap;max-height:340px;overflow:auto;">${escapeHtml(ch.content)}</div>
+        <div class="fiche-content">${renderFicheContent(ch.content)}</div>
       </div>`;
 
       if(ch.summary){
@@ -4157,7 +4191,7 @@ function renderChapterDetail(){
     if(FICHES[ch.id]){
       html += `<div class="card" id="chapterdetail-fiche" style="margin-top:20px;">
         <div class="section-title">Fiche de cours</div>
-        ${FICHES[ch.id]}
+        <div class="fiche-content">${FICHES[ch.id]}</div>
       </div>`;
     }
   }
@@ -4475,11 +4509,43 @@ function attachLibraryEvents(){
   if(lib.view === "import") attachCourseImportEvents();
 }
 
+/* Convertit le contenu d'une fiche (JSON structuré, HTML ou texte/Markdown
+   hérité) en texte brut exploitable comme contexte IA, sans jamais exposer
+   de JSON brut au modèle. */
+function ficheContentToPlainText(raw){
+  const text = String(raw || "").trim();
+  if(!text) return "";
+  if(text[0] === "{"){
+    try{
+      const parsed = JSON.parse(text);
+      if(parsed && Array.isArray(parsed.sections)){
+        const parts = [];
+        if(parsed.introduction) parts.push(parsed.introduction);
+        parsed.sections.forEach(sec=>{
+          if(sec.title) parts.push(sec.title + " :");
+          (sec.items||[]).forEach(it=>{
+            if(it.title && it.content) parts.push(it.title + " : " + it.content);
+            else if(it.content) parts.push(it.content);
+            else if(it.label && it.value) parts.push(it.label + " : " + it.value);
+            if(it.example) parts.push("Exemple : " + it.example);
+          });
+        });
+        if(parsed.keyPoints && parsed.keyPoints.length) parts.push("À retenir : " + parsed.keyPoints.join(" ; "));
+        return parts.join("\n");
+      }
+    }catch(e){ /* pas du JSON : continue vers le nettoyage HTML/texte ci-dessous */ }
+  }
+  return stripHtml(text);
+}
+function chapterSourceText(ch){
+  return ch.originalText || ficheContentToPlainText(ch.content) || "";
+}
+
 /* ---------- Actions IA pour un chapitre créé par l'utilisateur ----------
    Réutilise intégralement le moteur WebLLM déjà en place (webllmChat /
    webllmJsonChat), sans dupliquer de logique. */
 function libChapterContext(ch){
-  return clip("CHAPITRE : " + ch.title + (ch.desc ? " — " + ch.desc : "") + "\n\nCONTENU DU COURS :\n" + (ch.content || ""));
+  return clip("CHAPITRE : " + ch.title + (ch.desc ? " — " + ch.desc : "") + "\n\nCONTENU DU COURS :\n" + chapterSourceText(ch));
 }
 
 async function libRunUserChapterAI(ch, mode){
@@ -4526,7 +4592,7 @@ async function libGenerateUserChapterSummary(ch){
     return;
   }
   if(state.aiStatus !== "ready"){
-    const summary = heuristicSummary(ch.originalText || stripHtml(ch.content));
+    const summary = heuristicSummary(chapterSourceText(ch));
     if(!summary){
       if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de texte structuré pour résumer ce chapitre.</div>`;
       return;
@@ -4538,7 +4604,7 @@ async function libGenerateUserChapterSummary(ch){
   }
   if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération du résumé…</div>`;
   try{
-    const summary = await generateCourseSummary(clip(ch.originalText || stripHtml(ch.content), 20000), {title: ch.title, chapterTitle: ch.desc || ch.title, notions: ch.keyNotions || []});
+    const summary = await generateCourseSummary(clip(chapterSourceText(ch), 20000), {title: ch.title, chapterTitle: ch.desc || ch.title, notions: ch.keyNotions || []});
     ch.summary = summary;
     saveUserChapters();
     render();
@@ -4554,7 +4620,7 @@ async function libGenerateUserChapterQuiz(ch){
     return;
   }
   if(state.aiStatus !== "ready"){
-    const h = buildHeuristicCourseMaterials(ch.originalText || stripHtml(ch.content));
+    const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
     if(h.quiz.length === 0){
       if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de définitions claires dans ce chapitre pour générer un quiz fiable. Réessaie quand l'IA sera disponible.</div>`;
       return;
@@ -4589,7 +4655,7 @@ async function libGenerateUserChapterCards(ch){
     return;
   }
   if(state.aiStatus !== "ready"){
-    const h = buildHeuristicCourseMaterials(ch.originalText || stripHtml(ch.content));
+    const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
     if(h.flashcards.length === 0){
       if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a trouvé aucune définition claire (« terme : définition ») dans ce chapitre pour créer des flashcards. Réessaie quand l'IA sera disponible.</div>`;
       return;
@@ -4653,7 +4719,7 @@ function libAddQuizQuestion(ch, q, opts, correct, exp){
 /* ---- régénération indépendante d'un support (fiche / résumé / quiz / flashcards / questions) ----
    Repart du texte source d'origine si disponible (chapitre importé), sinon du contenu actuel
    (chapitre créé/édité à la main) — jamais d'un support déjà régénéré, pour éviter l'effet de dérive. */
-function libChapterWorkingText(ch){ return (ch.originalText || ch.content || "").trim(); }
+function libChapterWorkingText(ch){ return chapterSourceText(ch).trim(); }
 function libChapterMeta(ch){ return { title: ch.title, chapterTitle: ch.desc || "", notions: ch.keyNotions || [] }; }
 
 async function libRegeneratePart(ch, key){
@@ -5072,13 +5138,55 @@ function withGenTimeout(promise, ms, label){
   return Promise.race([promise, timeout]).finally(()=>{ if(timer) clearTimeout(timer); });
 }
 
+/* Repère les tournures creuses qu'un modèle peut produire pour une section
+   sans contenu réel ("information manquante", "si applicable"…) — utilisé à
+   la fois pour nettoyer les nouvelles fiches structurées (JSON) et pour
+   filtrer les anciennes fiches déjà enregistrées en texte/Markdown. */
+function isPlaceholderLine(s){
+  return /information manquante|non précisé|non renseigné|à compléter|aucune information disponible|si applicable|si présent/i.test(String(s||""));
+}
+
+/* Types de section que le rendu sait afficher intelligemment. Toute valeur
+   inconnue retombe sur "notions" (terme + définition), jamais une erreur. */
+const FICHE_SECTION_TYPES = ["notions", "concepts", "steps", "data", "examples"];
+
+/* Valide et nettoie la fiche JSON renvoyée par le modèle : supprime les
+   sections/items vides ou creux, plafonne les quantités, ne garde que des
+   champs textuels sûrs. Retourne null si rien d'exploitable n'a été produit
+   (l'appelant traite alors ça comme un échec de cette étape, exactement
+   comme un JSON invalide — le cours et les autres supports restent intacts). */
+function sanitizeFicheData(parsed){
+  if(!parsed || typeof parsed !== "object") return null;
+  const cleanStr = (s) => {
+    const v = String(s == null ? "" : s).trim();
+    return (!v || isPlaceholderLine(v)) ? "" : v;
+  };
+  const sections = (Array.isArray(parsed.sections) ? parsed.sections : []).slice(0, 10).map(sec=>{
+    const type = FICHE_SECTION_TYPES.includes(sec && sec.type) ? sec.type : "notions";
+    const items = (Array.isArray(sec && sec.items) ? sec.items : []).slice(0, 12).map(it=>{
+      if(type === "data") return { label: cleanStr(it && it.label), value: cleanStr(it && it.value) };
+      if(type === "steps" || type === "examples") return { content: cleanStr(it && (it.content || it.label)) };
+      return { title: cleanStr(it && it.title), content: cleanStr(it && it.content), example: cleanStr(it && it.example) };
+    }).filter(it => type === "data" ? (it.label || it.value) : (it.content || it.title));
+    const defaultTitle = type === "steps" ? "Méthode" : type === "data" ? "Chiffres et dates" : type === "examples" ? "Exemples" : "Notions essentielles";
+    return { type, title: cleanStr(sec && sec.title) || defaultTitle, items };
+  }).filter(sec => sec.items.length > 0);
+  const keyPoints = (Array.isArray(parsed.keyPoints) ? parsed.keyPoints : []).map(cleanStr).filter(Boolean).slice(0, 8);
+  const introduction = cleanStr(parsed.introduction);
+  if(sections.length === 0 && keyPoints.length === 0 && !introduction) return null;
+  return { introduction, sections, keyPoints };
+}
+
 async function generateCourseFiche(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : rédige une fiche de cours structurée à partir UNIQUEMENT de ce contenu, sans rien inventer. Utilise seulement les sections que le contenu permet de remplir, parmi :\n## Définitions importantes\n## Notions essentielles\n## Mécanismes / raisonnements\n## Exemples\n## Formules ou dates si présentes\n## Points à retenir\nPuces courtes, pas de phrases longues. Aucune introduction, aucune conclusion, aucun commentaire sur ta tâche. Signale [information manquante] seulement si un passage semblait incomplet.";
+    "\n\nTÂCHE : à partir UNIQUEMENT de ce contenu, sans rien inventer, produis une fiche de révision structurée au format JSON strict, sans aucun texte ni Markdown autour :\n" +
+    "{\"introduction\":\"2-3 phrases max pour situer le sujet\",\"sections\":[{\"type\":\"notions\",\"title\":\"...\",\"items\":[{\"title\":\"terme\",\"content\":\"définition courte et claire\",\"example\":\"exemple concret, optionnel\"}]},{\"type\":\"steps\",\"title\":\"...\",\"items\":[{\"content\":\"étape\"}]},{\"type\":\"data\",\"title\":\"...\",\"items\":[{\"label\":\"...\",\"value\":\"...\"}]},{\"type\":\"examples\",\"title\":\"...\",\"items\":[{\"content\":\"...\"}]}],\"keyPoints\":[\"point essentiel court\"]}\n" +
+    "RÈGLES STRICTES : n'inclus une section \"steps\", \"data\" ou \"examples\" QUE si le cours contient réellement des étapes/mécanismes, des chiffres/formules/dates, ou des exemples — sinon ne l'écris pas du tout. N'écris jamais \"information manquante\", \"non précisé\", \"si applicable\" ou une phrase équivalente : si une information n'existe pas, ne l'écris pas. 4 à 8 sections maximum, 5 à 8 \"keyPoints\" maximum (une phrase courte chacun). Contenu concis et reformulé, sans répéter le cours mot pour mot.";
   const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 90000, "fiche");
-  const text = (res && res.text) ? res.text.trim() : "";
-  if(!text) throw new Error("la fiche générée est vide");
-  return text;
+  const raw = (res && res.text) ? res.text.trim() : "";
+  const clean = sanitizeFicheData(extractJsonObject(raw));
+  if(!clean) throw new Error("la fiche générée est vide ou dans un format inattendu");
+  return JSON.stringify(clean);
 }
 
 async function generateCourseSummary(workingText, meta, signal){
@@ -5188,9 +5296,9 @@ function buildHeuristicCourseMaterials(rawText){
   const paragraphs = text.split(/\n{2,}/).map(p=>p.trim()).filter(p=>p.length > 60).slice(0, 6);
 
   let fiche = `<p class="ai-hint" style="margin:0 0 14px;">⚙️ Fiche générée automatiquement <b>sans IA</b> (mode simplifié), à partir des titres et définitions repérés dans le texte. Aucun contenu n'a été inventé.</p>`;
-  if(headings.length) fiche += `<h4>Plan repéré</h4><ul class="fiche-list">${headings.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}</ul>`;
-  if(defs.length) fiche += `<h4>Définitions repérées</h4><ul class="fiche-list">${defs.map(d=>`<li><b>${escapeHtml(d.term)}</b> : ${escapeHtml(d.def)}</li>`).join("")}</ul>`;
-  if(paragraphs.length) fiche += `<h4>Extraits du cours</h4>` + paragraphs.map(p=>`<p>${escapeHtml(clip(p, 400))}</p>`).join("");
+  if(headings.length) fiche += `<h3>Plan repéré</h3><ul class="fiche-list">${headings.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}</ul>`;
+  if(defs.length) fiche += `<h3>Définitions repérées</h3><ul class="fiche-list">${defs.map(d=>`<li><b>${escapeHtml(d.term)}</b> : ${escapeHtml(d.def)}</li>`).join("")}</ul>`;
+  if(paragraphs.length) fiche += `<h3>Extraits du cours</h3>` + paragraphs.map(p=>`<p>${escapeHtml(clip(p, 400))}</p>`).join("");
   if(!headings.length && !defs.length && !paragraphs.length){
     fiche += `<p>Le texte a bien été importé, mais aucune structure claire (titres, définitions) n'a pu être détectée automatiquement. Consulte le texte original du cours.</p>`;
   }
@@ -5568,7 +5676,7 @@ async function libGenerateChapterAI(chapterId){
   }
   state.libGenerateBusy = chapterId;
   render();
-  const sourceText = ch.originalText || ch.content || "";
+  const sourceText = chapterSourceText(ch);
   const item = {
     workingText: clip(sourceText, COURSE_GEN_CONTEXT_CHARS),
     charCount: sourceText.length,
@@ -8714,6 +8822,65 @@ function renderAIMarkdown(text){
   });
   flushList();
   return html;
+}
+
+/* ---- rendu premium des fiches de cours (nouveau format JSON structuré,
+   avec repli propre sur les anciennes fiches texte/Markdown ou HTML) ---- */
+function renderFicheStructuredHtml(data){
+  let html = "";
+  if(data.introduction) html += `<p class="fiche-intro">${escapeHtml(data.introduction)}</p>`;
+  data.sections.forEach((sec, i)=>{
+    html += `<h3><span class="fiche-secnum">${i+1}</span>${escapeHtml(sec.title)}</h3>`;
+    if(sec.type === "steps"){
+      html += `<ol class="fiche-steps">${sec.items.map(it=>
+        `<li><span class="fiche-step-num"></span><span class="fiche-step-content">${escapeHtml(it.content)}</span></li>`
+      ).join("")}</ol>`;
+    } else if(sec.type === "data"){
+      html += `<ul class="fiche-list">${sec.items.map(it=>
+        `<li>${it.label ? `<b>${escapeHtml(it.label)}</b>` : ""}${it.label && it.value ? " : " : ""}${it.value ? escapeHtml(it.value) : ""}</li>`
+      ).join("")}</ul>`;
+    } else if(sec.type === "examples"){
+      html += sec.items.map(it => `<div class="fiche-tip">${escapeHtml(it.content)}</div>`).join("");
+    } else {
+      html += sec.items.map(it => `<div class="fiche-notion">
+        ${it.title ? `<div class="fiche-notion-title">${escapeHtml(it.title)}</div>` : ""}
+        ${it.content ? `<div class="fiche-notion-content">${escapeHtml(it.content)}</div>` : ""}
+        ${it.example ? `<div class="fiche-notion-example"><span class="lbl">Exemple</span> ${escapeHtml(it.example)}</div>` : ""}
+      </div>`).join("");
+    }
+  });
+  if(data.keyPoints.length){
+    html += `<div class="fiche-keypoints">
+      <div class="fiche-keypoints-title">À retenir</div>
+      <ul class="fiche-keypoints-list">${data.keyPoints.map(p=>`<li>${escapeHtml(p)}</li>`).join("")}</ul>
+    </div>`;
+  }
+  return html;
+}
+
+/* Anciennes fiches (texte brut / Markdown généré par l'IA avant l'introduction
+   du format JSON) : filtre d'abord les lignes creuses ("[information
+   manquante]"…), puis réutilise le même moteur que les bulles de chat —
+   juste retitré en <h3> pour s'aligner avec le nouveau rendu. */
+function markdownLiteFicheHtml(text){
+  const filtered = String(text || "").split("\n").filter(l => !isPlaceholderLine(l.trim())).join("\n");
+  return renderAIMarkdown(filtered).replace(/<h4>/g, "<h3>").replace(/<\/h4>/g, "</h3>");
+}
+
+/* Point d'entrée unique pour afficher le contenu d'une fiche, quel que soit
+   son format d'origine : nouvelles fiches structurées (JSON), fiches HTML
+   déjà construites (mode simplifié), ou anciennes fiches texte/Markdown. */
+function renderFicheContent(raw){
+  const text = String(raw || "").trim();
+  if(!text) return "";
+  if(text[0] === "{"){
+    try{
+      const parsed = JSON.parse(text);
+      if(parsed && Array.isArray(parsed.sections)) return renderFicheStructuredHtml(parsed);
+    }catch(e){ /* pas un JSON valide : traité comme du texte plus bas */ }
+  }
+  if(/^\s*<(h\d|p|ul|ol|div)[ >]/i.test(text)) return text;
+  return markdownLiteFicheHtml(text);
 }
 
 /* ============================================================
