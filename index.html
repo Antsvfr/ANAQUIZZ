@@ -4699,8 +4699,23 @@ async function libRegeneratePart(ch, key){
    ============================================================ */
 const COURSE_IMPORT_MAX_BYTES = 15 * 1024 * 1024; // ~15 Mo par fichier
 const COURSE_IMPORT_MIN_CHARS = 40;               // en dessous : considéré vide/illisible
-const COURSE_CHUNK_CHARS = 5000;
-const COURSE_CONDENSE_THRESHOLD = 9000;
+/* Budget de contexte envoyé au modèle pour LA génération des supports (fiche,
+   résumé, quiz, flashcards, questions) — une seule constante réutilisée
+   partout pour rester cohérent, au lieu de plusieurs limites différentes
+   choisies au hasard à chaque fonction. ~7000 caractères ≈ 1700-1800 tokens :
+   large pour un seul chapitre/document, mais assez petit pour que le
+   pré-traitement (prefill) du modèle 3B reste rapide sur GPU grand public. */
+const COURSE_GEN_CONTEXT_CHARS = 7000;
+/* Un cours qui dépasse ce seuil est condensé par blocs avant d'être utilisé —
+   mais SEULEMENT au-delà de cette taille : condenser un cours qui tient déjà
+   dans COURSE_GEN_CONTEXT_CHARS + une marge raisonnable n'apporterait rien et
+   coûterait plusieurs appels IA inutiles. Fixé nettement au-dessus du budget
+   de génération pour éviter de condenser des cours seulement "un peu longs". */
+const COURSE_CONDENSE_THRESHOLD = 20000;
+/* Chunks plus larges = moins d'allers-retours avec le modèle pour condenser
+   un cours très long (chaque appel a un coût fixe de pré-traitement, donc
+   moins d'appels vaut mieux que des chunks plus petits mais plus nombreux). */
+const COURSE_CHUNK_CHARS = 9000;
 
 /* ---- fichiers PDF originaux : trop volumineux pour localStorage, stockés dans IndexedDB,
    indexés par l'identifiant du chapitre (les métadonnées légères restent dans le chapitre
@@ -4948,13 +4963,16 @@ function classifyGenerationError(e){
   if(/cancelled/i.test(low)){
     return { kind:"cancelled", message:"Génération annulée." };
   }
+  if(/^timeout:/i.test(msg)){
+    return { kind:"timeout", message:"Cette étape a pris trop de temps et a été interrompue. Ton cours original est conservé — tu peux réessayer cette étape, ou choisir le modèle léger." };
+  }
   return { kind:"generic", message:"La génération a rencontré un problème. Ton cours original est conservé. Tu peux réessayer.", detail: msg };
 }
 
 async function condenseCourseChunk(chunkText, index, total, signal){
   const prompt = AI_SYSTEM + "\n\nEXTRAIT " + (index+1) + "/" + total + " D'UN COURS :\n" + chunkText +
-    "\n\nTÂCHE : condense cet extrait en une liste dense de points (définitions, faits, formules, exemples, dates, auteurs), sans rien inventer ni interpréter. Conserve le vocabulaire exact du cours. Réponds uniquement par la liste condensée, sans commentaire autour.";
-  const res = await webllmChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : condense cet extrait en une liste dense de points (définitions, faits, formules, exemples, dates, auteurs), sans rien inventer ni interpréter. Conserve le vocabulaire exact du cours. Réponds uniquement par la liste condensée, sans commentaire autour, sans introduction ni conclusion.";
+  const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 60000, "condensation");
   return (res && res.text) ? res.text.trim() : "";
 }
 
@@ -4967,12 +4985,12 @@ async function buildWorkingCourseText(rawText, onProgress, signal){
   const chunks = chunkCourseText(trimmed);
   const digests = [];
   for(let i=0; i<chunks.length; i++){
-    if(signal && signal.cancelled) return { text: clip(digests.join("\n\n"), 12000), wasCondensed: true, chunkCount: chunks.length };
+    if(signal && signal.cancelled) return { text: clip(digests.join("\n\n"), COURSE_GEN_CONTEXT_CHARS), wasCondensed: true, chunkCount: chunks.length };
     if(onProgress) onProgress(i, chunks.length);
     const digest = await condenseCourseChunk(chunks[i], i, chunks.length, signal);
     if(digest) digests.push(digest);
   }
-  return { text: clip(digests.join("\n\n"), 12000), wasCondensed: true, chunkCount: chunks.length };
+  return { text: clip(digests.join("\n\n"), COURSE_GEN_CONTEXT_CHARS), wasCondensed: true, chunkCount: chunks.length };
 }
 
 /* ---- détection matière / titre / notions ---- */
@@ -5002,8 +5020,8 @@ async function detectCourseMeta(workingText, fileName, signal){
   const existingSubjects = allSubjects().map(s=>s.name).join(", ");
   const prompt = AI_SYSTEM + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
     "\n\nMatières déjà existantes sur ce site : " + (existingSubjects || "(aucune)") +
-    "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, un niveau probable (L1, L2 ou L3 — ou une chaîne vide si tu ne peux pas le déterminer), et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"level\":\"...\",\"notions\":[\"...\"]}";
-  const res = await webllmChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, un niveau probable (L1, L2 ou L3 — ou une chaîne vide si tu ne peux pas le déterminer), et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), sans texte autour, au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"level\":\"...\",\"notions\":[\"...\"]}";
+  const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 45000, "détection du cours");
   const parsed = extractJsonObject(res && res.text);
   const fallbackTitle = (fileName || "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
   return {
@@ -5022,14 +5040,42 @@ function courseGenContext(workingText, meta){
     (meta.chapterTitle ? "\nCHAPITRE : " + meta.chapterTitle : "") +
     (meta.notions && meta.notions.length ? "\nNOTIONS DÉTECTÉES : " + meta.notions.join(", ") : "") +
     "\n\nCONTENU DU COURS :\n" + workingText,
-    9000
+    COURSE_GEN_CONTEXT_CHARS
   );
+}
+
+/* Nombre d'éléments demandés au modèle (quiz / flashcards / questions de
+   révision), proportionné à la taille réelle du cours : un cours d'une page
+   n'a pas besoin d'autant de questions qu'un cours de 20 pages, et demander
+   moins de contenu accélère directement la génération (le décodage est à
+   peu près linéaire avec la longueur de la réponse). */
+function courseItemCounts(charCount){
+  if(charCount < 4000) return { quiz: 4, flashcards: 5, reviewQ: 3 };
+  if(charCount < 12000) return { quiz: 6, flashcards: 8, reviewQ: 4 };
+  return { quiz: 8, flashcards: 10, reviewQ: 6 };
+}
+
+/* Empêche un appel IA de bloquer indéfiniment l'interface (device GPU
+   figé, promesse WebLLM jamais résolue…) : au-delà de `ms`, on considère
+   l'appel en échec, on tente d'interrompre proprement la génération en
+   cours côté moteur (best-effort, sans erreur si rien n'est en cours), et
+   on relance une erreur "timeout" classifiable comme les autres échecs —
+   jamais un blocage silencieux et permanent. */
+function withGenTimeout(promise, ms, label){
+  let timer = null;
+  const timeout = new Promise((_, reject)=>{
+    timer = setTimeout(async ()=>{
+      try{ if(webllmEngine && webllmEngine.interruptGenerate) await webllmEngine.interruptGenerate(); }catch(e){}
+      reject(new Error("timeout:" + (label || "génération") + " a dépassé " + Math.round(ms/1000) + " s sans réponse."));
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(()=>{ if(timer) clearTimeout(timer); });
 }
 
 async function generateCourseFiche(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : rédige une fiche de cours structurée à partir UNIQUEMENT de ce contenu, sans rien inventer. Utilise ces sections, seulement celles que le contenu permet de remplir :\n## Grandes parties\n## Définitions importantes\n## Notions essentielles\n## Mécanismes / raisonnements\n## Exemples\n## Formules ou dates si présentes\n## Points à retenir\nSignale entre crochets [information manquante] si un passage du cours semblait incomplet ou illisible.";
-  const res = await webllmChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : rédige une fiche de cours structurée à partir UNIQUEMENT de ce contenu, sans rien inventer. Utilise seulement les sections que le contenu permet de remplir, parmi :\n## Définitions importantes\n## Notions essentielles\n## Mécanismes / raisonnements\n## Exemples\n## Formules ou dates si présentes\n## Points à retenir\nPuces courtes, pas de phrases longues. Aucune introduction, aucune conclusion, aucun commentaire sur ta tâche. Signale [information manquante] seulement si un passage semblait incomplet.";
+  const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 90000, "fiche");
   const text = (res && res.text) ? res.text.trim() : "";
   if(!text) throw new Error("la fiche générée est vide");
   return text;
@@ -5037,17 +5083,18 @@ async function generateCourseFiche(workingText, meta, signal){
 
 async function generateCourseSummary(workingText, meta, signal){
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : rédige, sans rien inventer : 1) un résumé court (3 à 5 phrases) ; 2) une liste des idées essentielles (une ligne chacune). Commence par « Résumé court » puis « Idées essentielles ».";
-  const res = await webllmChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : rédige, sans rien inventer, un résumé très court (3 à 5 phrases maximum) puis une liste des idées essentielles (une ligne chacune, 5 à 8 lignes). Commence directement par « Résumé court » puis « Idées essentielles », sans aucune autre introduction.";
+  const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 60000, "résumé");
   const text = (res && res.text) ? res.text.trim() : "";
   if(!text) throw new Error("le résumé généré est vide");
   return text;
 }
 
 async function generateCourseQuizFromText(workingText, meta, signal){
+  const n = courseItemCounts(meta.sourceCharCount || workingText.length).quiz;
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : génère 8 questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : génère " + n + " questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse, explication en une phrase courte. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
+  const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "quiz");
   const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
     .map((q,i)=>({ uid:"import-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String), correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"" }));
   if(quiz.length === 0) throw new Error("aucune question générée (format inattendu)");
@@ -5055,18 +5102,20 @@ async function generateCourseQuizFromText(workingText, meta, signal){
 }
 
 async function generateCourseFlashcardsFromText(workingText, meta, signal){
+  const n = courseItemCounts(meta.sourceCharCount || workingText.length).flashcards;
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : génère 10 flashcards de révision (définitions, notions, formules, auteurs, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : génère " + n + " flashcards de révision (définitions, notions, formules, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Recto court (question/notion), verso court (réponse en une phrase). Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"front\":\"...\",\"back\":\"...\"}]";
+  const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "flashcards");
   const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front), back:String(c.back), ai:true}));
   if(cards.length === 0) throw new Error("aucune flashcard générée (format inattendu)");
   return cards;
 }
 
 async function generateCourseReviewQuestions(workingText, meta, signal){
+  const n = courseItemCounts(meta.sourceCharCount || workingText.length).reviewQ;
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : génère 6 questions de révision variées sur ce contenu (définition, compréhension, application, et une question plus difficile si le contenu le permet), avec leur réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"a\":\"...\"}]";
-  const arr = await webllmJsonChat([{role:"user", content: prompt}], { signal });
+    "\n\nTÂCHE : génère " + n + " questions de révision variées sur ce contenu (définition, compréhension, application), avec leur réponse courte. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"a\":\"...\"}]";
+  const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 60000, "questions de révision");
   const qs = (arr||[]).filter(q=>q&&q.q&&q.a).map(q=>({q:String(q.q), a:String(q.a)}));
   if(qs.length === 0) throw new Error("aucune question de révision générée (format inattendu)");
   return qs;
@@ -5429,7 +5478,7 @@ async function courseImportSaveWithoutAI(index){
 }
 
 async function courseImportRunAllSteps(item, signal){
-  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions };
+  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions, sourceCharCount: item.charCount };
   const steps = [
     {key:"fiche", fn: generateCourseFiche},
     {key:"summary", fn: generateCourseSummary},
@@ -5469,7 +5518,7 @@ async function courseImportRetryStep(index, key){
   item.status = "generating";
   item.genStepIndex = COURSE_IMPORT_STEP_LABELS.length; // affiche juste "génération en cours" générique
   render();
-  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions };
+  const meta = { title: item.detected.title, chapterTitle: item.detected.chapterTitle, notions: item.detected.notions, sourceCharCount: item.charCount };
   try{
     item.generated[key] = await fns[key](item.workingText, meta);
     item.failedSteps = item.failedSteps.filter(k => k !== key);
@@ -5519,8 +5568,10 @@ async function libGenerateChapterAI(chapterId){
   }
   state.libGenerateBusy = chapterId;
   render();
+  const sourceText = ch.originalText || ch.content || "";
   const item = {
-    workingText: clip(ch.originalText || ch.content || "", 20000),
+    workingText: clip(sourceText, COURSE_GEN_CONTEXT_CHARS),
+    charCount: sourceText.length,
     detected: { title: ch.title, chapterTitle: ch.desc || ch.title, notions: ch.keyNotions || [] },
     generated: {}, failedSteps: [], genStepIndex: -1,
   };
