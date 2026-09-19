@@ -2593,8 +2593,8 @@ let state = {
   examsSujetStatus: "",
   resourcesDocStatus: "",
 
-  // --- bulle assistant IA (position libre, en pixels) ---
-  aiBubble: { x: null, y: null },
+  // --- bulle assistant IA (bord gauche/droit + hauteur en pixels) ---
+  aiBubble: { side: null, y: null },
 
   // --- quiz ---
   quizLevel: "all",
@@ -2947,9 +2947,15 @@ async function loadAllData(){
   state.documents = await loadKey(KEY_DOCUMENTS, []);
   state.courseData = await loadKey(KEY_COURSE_DATA, {});
   const savedBubble = lsGet(KEY_AIBUBBLE);
-  if(savedBubble && typeof savedBubble.x === "number" && typeof savedBubble.y === "number"){
-    state.aiBubble.x = savedBubble.x;
-    state.aiBubble.y = savedBubble.y;
+  if(savedBubble){
+    if(savedBubble.side === "left" || savedBubble.side === "right"){
+      state.aiBubble.side = savedBubble.side;
+    } else if(typeof savedBubble.x === "number"){
+      // ancienne position libre (avant la contrainte bord gauche/droit) : on la
+      // convertit une fois vers le bord le plus proche, sans rien casser.
+      state.aiBubble.side = nearestFabSide(savedBubble.x + 28);
+    }
+    if(typeof savedBubble.y === "number") state.aiBubble.y = savedBubble.y;
   }
   const savedModelChoice = lsGet(KEY_AIMODEL);
   if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
@@ -2969,7 +2975,7 @@ function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
 function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
 function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl, lastSyncAt: state.planning.lastSyncAt }); }
 function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
-function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { x: state.aiBubble.x, y: state.aiBubble.y }); }
+function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { side: state.aiBubble.side, y: state.aiBubble.y }); }
 
 const DEFAULT_CHECKLIST = { relire:false, exercices:false, definitions:false, prochain:false };
 function courseDataDefaults(){
@@ -9709,10 +9715,10 @@ function renderMySpace(){
 
     <div class="dash-section">
       <div class="section-title">Position de l'assistant IA</div>
-      <p class="dash-empty" style="margin-top:0;">Le mode principal reste le glisser-déposer : clique-glisse la bulle n'importe où sur l'écran, à la souris ou au doigt. Ces boutons sont une alternative si le glisser-déposer n'est pas pratique pour toi.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;">
-        ${["tl","tc","tr","ml","mc","mr","bl","bc","br"].map(key=>{
-          const labels = {tl:"Haut gauche", tc:"Haut centre", tr:"Haut droite", ml:"Milieu gauche", mc:"Milieu centre", mr:"Milieu droite", bl:"Bas gauche", bc:"Bas centre", br:"Bas droite"};
+      <p class="dash-empty" style="margin-top:0;">Le mode principal reste le glisser-déposer : clique-glisse la bulle le long du bord gauche ou du bord droit, à la souris ou au doigt. Ces boutons sont une alternative si le glisser-déposer n'est pas pratique pour toi.</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:320px;">
+        ${["tl","tr","ml","mr","bl","br"].map(key=>{
+          const labels = {tl:"Haut gauche", tr:"Haut droite", ml:"Milieu gauche", mr:"Milieu droite", bl:"Bas gauche", br:"Bas droite"};
           return `<button class="btn outline small" data-bubble-preset="${key}" style="text-align:center;">${labels[key]}</button>`;
         }).join("")}
       </div>
@@ -11373,29 +11379,44 @@ function attachMainNavEvents(){
 }
 
 /* ============================================================
-   15decies. BULLE ASSISTANT IA — déplaçable librement (souris + tactile)
+   15decies. BULLE ASSISTANT IA — déplaçable uniquement le long du bord
+   gauche ou du bord droit de l'écran (souris + tactile, Pointer Events).
+   Jamais au centre, jamais "accrochée" au bord haut/bas : sa position est
+   donc { side: "left"|"right", y } plutôt qu'un x/y libres. Pendant le
+   glisser, le bouton suit librement le curseur/doigt (x compris) ; au
+   relâchement, il se "snappe" automatiquement sur le bord gauche ou droit
+   le plus proche, à la hauteur relâchée.
    ============================================================ */
-const AI_FAB_MARGIN = 8;
-const AI_FAB_TOP_MIN = 60; // laisse le header cliquable
+const AI_FAB_MARGIN = 20;        // marge de sécurité horizontale (bord gauche/droit)
+const AI_FAB_MARGIN_BOTTOM = 20; // marge de sécurité verticale basse
+const AI_FAB_TOP_MIN = 60;       // marge verticale haute : laisse le header cliquable
 
 function aiFabSize(){
   const bubble = document.getElementById("ai-bubble");
   return bubble ? bubble.offsetWidth : 56;
 }
 
-function clampAIFabX(x){
-  const size = aiFabSize();
-  return Math.max(AI_FAB_MARGIN, Math.min(window.innerWidth - size - AI_FAB_MARGIN, x));
-}
 function clampAIFabY(y){
   const size = aiFabSize();
-  return Math.max(AI_FAB_TOP_MIN, Math.min(window.innerHeight - size - AI_FAB_MARGIN, y));
+  return Math.max(AI_FAB_TOP_MIN, Math.min(window.innerHeight - size - AI_FAB_MARGIN_BOTTOM, y));
 }
 
-/* Position par défaut si aucune position n'a jamais été enregistrée : bas droite. */
-function defaultAIFabXY(){
+/* X imposé par le bord (gauche/droite) — jamais une valeur libre/centrale. */
+function aiFabXForSide(side){
   const size = aiFabSize();
-  return { x: window.innerWidth - size - 20, y: window.innerHeight - size - 20 };
+  return side === "left" ? AI_FAB_MARGIN : (window.innerWidth - size - AI_FAB_MARGIN);
+}
+
+/* Détermine le bord le plus proche à partir du centre du bouton. */
+function nearestFabSide(centerX){
+  return centerX < window.innerWidth / 2 ? "left" : "right";
+}
+
+/* Position par défaut si aucune position n'a jamais été enregistrée : bas droite
+   (même emplacement par défaut qu'auparavant). */
+function defaultAIFabPos(){
+  const size = aiFabSize();
+  return { side: "right", y: window.innerHeight - size - AI_FAB_MARGIN_BOTTOM };
 }
 
 function applyAIFabPosition(x, y){
@@ -11407,26 +11428,39 @@ function applyAIFabPosition(x, y){
   bubble.style.bottom = "auto";
 }
 
-function setAIFabXY(x, y, persist){
-  const cx = clampAIFabX(x), cy = clampAIFabY(y);
-  state.aiBubble.x = cx; state.aiBubble.y = cy;
-  applyAIFabPosition(cx, cy);
+/* Fixe (et mémorise) la position définitive du bouton : toujours un bord
+   (gauche ou droite) + une hauteur, jamais un x libre. */
+function setAIFabSideY(side, y, persist){
+  const s = (side === "left") ? "left" : "right";
+  const cy = clampAIFabY(y);
+  state.aiBubble.side = s;
+  state.aiBubble.y = cy;
+  applyAIFabPosition(aiFabXForSide(s), cy);
   if(persist !== false) saveAIBubblePos();
 }
 
-/* Positions nommées pour l'alternative accessible (Mon espace) : grille 3x3. */
-function aiFabPresetXY(key){
+/* Pendant le glisser uniquement : le bouton peut suivre librement le
+   curseur/doigt (x compris), en restant toujours entièrement visible à
+   l'écran. Le "snap" sur un bord n'a lieu qu'au relâchement. */
+function followAIFabDrag(x, y){
   const size = aiFabSize();
-  const m = 20;
-  const row = key[0], col = key[1];
-  const x = col === "l" ? m : (col === "c" ? (window.innerWidth - size) / 2 : window.innerWidth - size - m);
-  const y = row === "t" ? 70 : (row === "m" ? (window.innerHeight - size) / 2 : window.innerHeight - size - m);
-  return { x, y };
+  const cx = Math.max(0, Math.min(window.innerWidth - size, x));
+  const cy = Math.max(0, Math.min(window.innerHeight - size, y));
+  applyAIFabPosition(cx, cy);
+}
+
+/* Positions nommées pour l'alternative accessible (Mon espace) : bord
+   gauche/droit × haut/milieu/bas — jamais de position centrale. */
+function aiFabPresetSideY(key){
+  const row = key[0], side = key[1] === "l" ? "left" : "right";
+  const size = aiFabSize();
+  const y = row === "t" ? AI_FAB_TOP_MIN : (row === "m" ? (window.innerHeight - size) / 2 : window.innerHeight - size - AI_FAB_MARGIN_BOTTOM);
+  return { side, y };
 }
 
 function setAIFabPreset(key){
-  const { x, y } = aiFabPresetXY(key);
-  setAIFabXY(x, y);
+  const { side, y } = aiFabPresetSideY(key);
+  setAIFabSideY(side, y);
 }
 
 function openAIBubble(){
@@ -11452,14 +11486,19 @@ function initAIBubble(){
     const dx = e.clientX - startX, dy = e.clientY - startY;
     if(!moved && Math.hypot(dx, dy) < 6) return;
     moved = true;
-    setAIFabXY(startLeft + dx, startTop + dy, false);
+    followAIFabDrag(startLeft + dx, startTop + dy);
   });
 
   bubble.addEventListener("pointerup", ()=>{
     if(!dragging) return;
     dragging = false;
-    if(moved) saveAIBubblePos();
-    else openAIBubble();
+    if(moved){
+      const rect = bubble.getBoundingClientRect();
+      const side = nearestFabSide(rect.left + rect.width / 2);
+      setAIFabSideY(side, rect.top);
+    } else {
+      openAIBubble();
+    }
   });
 
   bubble.addEventListener("pointercancel", ()=>{ dragging = false; });
@@ -11468,8 +11507,12 @@ function initAIBubble(){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openAIBubble(); }
   });
 
+  // Recalcule la position au redimensionnement (et au changement d'orientation,
+  // qui déclenche aussi "resize") : toujours ré-attachée au même bord, à la
+  // même hauteur relative, jamais hors écran.
   window.addEventListener("resize", ()=>{
-    setAIFabXY(state.aiBubble.x, state.aiBubble.y);
+    if(!state.aiBubble.side) return;
+    setAIFabSideY(state.aiBubble.side, state.aiBubble.y, false);
   });
 }
 
@@ -11529,11 +11572,11 @@ setInterval(updateCurrentTimeIndicator, 1000);
 
 (async function init(){
   await loadAllData();
-  if(typeof state.aiBubble.x === "number" && typeof state.aiBubble.y === "number"){
-    setAIFabXY(state.aiBubble.x, state.aiBubble.y, false);
+  if(state.aiBubble.side && typeof state.aiBubble.y === "number"){
+    setAIFabSideY(state.aiBubble.side, state.aiBubble.y, false);
   } else {
-    const def = defaultAIFabXY();
-    setAIFabXY(def.x, def.y);
+    const def = defaultAIFabPos();
+    setAIFabSideY(def.side, def.y);
   }
   render();
   lastKnownCurrentCourseId = getCurrentCourse() ? getCurrentCourse().id : null;
