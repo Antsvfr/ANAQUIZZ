@@ -515,6 +515,28 @@
 
   .actions{ display:flex; justify-content: space-between; align-items:center; margin-top: 26px; gap:10px; flex-wrap:wrap; }
 
+  /* En-tête compact de page « Mes matières » : titre + actions secondaires discrètes,
+     à la place des gros bandeaux colorés qui occupaient tout le haut de la page. */
+  .lib-pagehead{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin:28px 0 22px; flex-wrap:wrap; }
+  @media (max-width:560px){ .lib-pagehead{ margin:20px 0 18px; } }
+
+  /* Cartes de chapitre compactes de « Mes matières » : un seul repère visuel clair
+     (numéro, titre, contenu dispo, progression) et une action « Réviser » dominante. */
+  .lib-chgrid{ display:flex; flex-direction:column; gap:12px; margin-bottom:8px; }
+  .lib-chcard{ background:#fff; border:1.5px solid var(--border); border-radius: var(--radius-lg); padding:17px 19px; cursor:pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .lib-chcard:hover{ border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+  .lib-chcard-top{ display:flex; align-items:flex-start; gap:13px; margin-bottom:11px; }
+  .lib-chcard-num{ flex-shrink:0; width:34px; height:34px; border-radius:10px; background:var(--bg); color:var(--ink-soft); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .lib-chcard-titles{ min-width:0; }
+  .lib-chcard-titles h2{ font-size:15.5px; font-weight:800; margin:0; letter-spacing:-0.01em; }
+  .lib-chcard-titles p{ margin:3px 0 0; font-size:12px; color:var(--ink-soft); line-height:1.5; }
+  .lib-chcard-meta{ font-size:11.5px; color:var(--muted); font-weight:700; margin-bottom:11px; }
+  .lib-chcard-progress{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .lib-chcard-progress .chapter-progress-track{ flex:1; }
+  .lib-chcard-pct{ font-size:11.5px; font-weight:800; color:var(--ink-soft); white-space:nowrap; }
+  .lib-chcard-foot{ display:flex; justify-content:flex-end; }
+  @media (max-width:560px){ .lib-chcard{ padding:15px 16px; } .lib-chcard-foot .btn{ flex:1; text-align:center; } }
+
   /* ===== RESULTS (quiz) ===== */
   .results h2{ font-size: 21px; font-weight: 800; margin: 0 0 4px; letter-spacing:-0.01em; }
   .results .scoretag{ font-size: 10.5px; text-transform:uppercase; letter-spacing:0.06em; color: var(--muted); font-weight:700; margin-bottom: 18px; }
@@ -658,6 +680,18 @@
   .ai-loading{ display:flex; align-items:center; gap: 11px; font-size: 13.5px; color: var(--ink-soft); padding: 20px 0; }
   .ai-spinner{ width:17px; height:17px; border-radius:50%; border: 2.5px solid var(--border); border-top-color: var(--red); animation: ai-spin 0.7s linear infinite; }
   @keyframes ai-spin{ to{ transform: rotate(360deg); } }
+
+  /* Toast discret : pour signaler un échec ponctuel (régénération, génération…)
+     sans laisser de gros bloc rouge permanent dans la page. */
+  .app-toast{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(14px);
+    background: var(--ink); color:#fff; font-size:13px; font-weight:600; line-height:1.4;
+    padding:12px 18px; border-radius:999px; box-shadow: var(--shadow-md);
+    opacity:0; pointer-events:none; transition: opacity 0.22s ease, transform 0.22s ease;
+    z-index: 500; max-width: min(420px, calc(100vw - 32px)); text-align:center;
+  }
+  .app-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  @media (max-width:560px){ .app-toast{ bottom:18px; font-size:12.5px; padding:11px 16px; } }
 
   .ai-result{ margin-top: 24px; animation: content-in 0.3s var(--ease); }
   .ai-result-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 13px; gap: 10px; flex-wrap:wrap; }
@@ -1060,6 +1094,16 @@
   .ai-actiongrid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:22px; }
   @media (max-width:860px){ .ai-actiongrid{ grid-template-columns: repeat(2,1fr); } }
   @media (max-width:480px){ .ai-actiongrid{ grid-template-columns: 1fr; } }
+
+  /* Action de révision dominante d'un chapitre : un seul CTA rouge visuellement
+     fort, les autres fonctionnalités restent discrètes (bouton secondaire + panneau
+     "Outils IA" replié par défaut). */
+  .lib-revise-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .lib-revise-row .btn{ min-height:46px; }
+  .lib-tools summary{ font-size:13px; font-weight:800; color:var(--ink-soft); }
+  .lib-tools summary:hover{ color: var(--red); }
+  .lib-tools[open] summary{ margin-bottom:2px; }
+  @media (max-width:560px){ .lib-revise-row{ flex-direction:column; align-items:stretch; } .lib-revise-row .btn{ width:100%; text-align:center; } }
   .ai-action{
     display:flex; flex-direction:column; gap:5px; text-align:left; cursor:pointer;
     background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-md);
@@ -2166,7 +2210,11 @@ const CHAPTERS = [
 ];
 
 const LEVELS = ["L1","L2","L3"];
-function levelName(lv){ return lv === "L1" ? "Licence 1" : lv === "L2" ? "Licence 2" : "Licence 3"; }
+/* L1/L2/L3 sont des identifiants internes historiques qui regroupent les chapitres
+   du cours (pas des niveaux Licence) — on les garde tels quels comme clés de données
+   (progression déjà enregistrée sous ces clés), mais on les affiche toujours à
+   l'utilisateur sous la forme S1/S2/S3. */
+function levelName(lv){ return lv === "L1" ? "S1" : lv === "L2" ? "S2" : lv === "L3" ? "S3" : (lv || ""); }
 function levelDesc(lv){
   if(lv==="L1") return "Les bases du processus d'étude de marché";
   if(lv==="L2") return "La recherche qualitative en pratique";
@@ -2626,6 +2674,24 @@ let state = {
 };
 
 let lastActionTs = null;
+
+/* Toast discret et éphémère — jamais de détails techniques, un message humain
+   court qui disparaît tout seul. Ne dépend pas de #content (survit à un render()). */
+let toastHideTimer = null;
+function showToast(message){
+  let el = document.getElementById("app-toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "app-toast";
+    el.className = "app-toast";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(()=>{ el.classList.remove("show"); }, 3400);
+}
 
 function shuffle(arr){
   const a = arr.slice();
@@ -3952,21 +4018,12 @@ function renderLibrary(){
 function renderSubjectsList(){
   const subjects = allSubjects();
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mes matières</h1>
-    <p class="ai-intro">Retrouve ici toutes tes matières — le cours d'étude de marché déjà intégré au site, et celles que tu ajoutes toi-même au fil de l'année.</p>
-    <div class="hero-mix hero-mix-import">
-      <div class="txt">
-        <div class="h">📥 Importer un cours</div>
-        <div class="d">Dépose un fichier ou colle ton cours : fiche, résumé, quiz, flashcards et questions de révision sont générés automatiquement.</div>
+    <div class="lib-pagehead">
+      <h1 style="font-size:22px;font-weight:800;margin:0;">Mes matières</h1>
+      <div class="actions" style="justify-content:flex-start;margin:0;">
+        <button class="btn-text" id="lib-import-course-btn">📥 Importer un cours</button>
+        <button class="btn-text" id="lib-add-subject-btn">+ Ajouter une matière</button>
       </div>
-      <button class="btn red" id="lib-import-course-btn">Importer un cours</button>
-    </div>
-    <div class="hero-mix">
-      <div class="txt">
-        <div class="h">Créer une nouvelle matière</div>
-        <div class="d">Nom, semestre, icône, couleur — tu pourras y ajouter des chapitres ensuite.</div>
-      </div>
-      <button class="btn outline" id="lib-add-subject-btn">+ Ajouter une matière</button>
     </div>
   `;
 
@@ -3985,13 +4042,13 @@ function renderSubjectsList(){
             <span class="icon" style="background:${s.color}22;">${s.icon || "📘"}</span>
             <div>
               <div class="name">${escapeHtml(s.name)}</div>
-              <div class="desc">${chs.length} chapitre${chs.length>1?"s":""}${s.builtin ? " · intégré" : ""}</div>
+              <div class="desc">${chs.length} chapitre${chs.length>1?"s":""}</div>
             </div>
           </div>
         </div>
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${s.color};"></div></div>
         <div class="bottom">
-          <span class="mastery ${tier.key}">${prog===null ? "Pas encore commencé" : "Progression : " + prog + "%"}</span>
+          <span class="mastery ${tier.key}">${prog===null ? "Pas encore commencé" : prog + "% de progression"}</span>
           <span class="btn-text" style="pointer-events:none;">Ouvrir →</span>
         </div>
       </div>`;
@@ -4029,26 +4086,33 @@ function renderSubjectDetail(){
   if(chs.length === 0){
     html += `<div class="empty-state"><div class="big">📄</div>Aucun chapitre dans cette matière.<br>Clique sur « + Ajouter un chapitre » pour commencer.</div>`;
   } else {
+    html += `<div class="lib-chgrid">`;
     chs.forEach(ch=>{
       const isUser = isUserChapter(ch.id);
       const prog = isUser ? userChapterProgress(ch) : chapterMetrics(ch).mastery;
-      const answered = isUser ? (prog !== null) : chapterMetrics(ch).answered > 0;
       const tier = isUser ? statusTier(prog===null?null:{best:prog}) : (chapterMetrics(ch).answered===0 ? {key:"none",label:"Non commencé"} : (chapterMetrics(ch).mastered ? {key:"done",label:"Maîtrisé"} : {key:"progress",label:"En cours"}));
-      html += `<div class="chapter" data-open-chapter="${ch.id}" style="cursor:pointer;">
-        <div class="chapter-head">
-          <div class="chapter-num">${ch.num || ""}</div>
-          <div class="chapter-headtext">
-            <div class="title-row"><h2>${escapeHtml(ch.title)}</h2>${isUser ? '' : `<span class="level-badge ${ch.level}">${ch.level}</span>`}</div>
-            <p>${escapeHtml(ch.desc || "")}</p>
-          </div>
-          <div class="chapter-headright">
-            <div class="avg ${prog===null?'none':''}">${prog===null ? "—" : prog+"%"}</div>
-            <span class="status-pill ${tier.key}">${tier.label}</span>
+      const qCount = isUser ? (ch.aiQuiz ? ch.aiQuiz.length : 0) : chapterMetrics(ch).total;
+      const cCount = isUser ? (ch.aiFlashcards ? ch.aiFlashcards.length : 0) : deckCards(ch.id).length;
+      const metaParts = [];
+      if(qCount) metaParts.push(qCount + " question" + (qCount>1?"s":""));
+      if(cCount) metaParts.push(cCount + " flashcard" + (cCount>1?"s":""));
+      html += `<div class="lib-chcard" data-open-chapter="${ch.id}">
+        <div class="lib-chcard-top">
+          <span class="lib-chcard-num">${escapeHtml(chapterNumBadge(ch))}</span>
+          <div class="lib-chcard-titles">
+            <h2>${escapeHtml(ch.title)}</h2>
+            ${ch.desc ? `<p>${escapeHtml(ch.desc)}</p>` : ""}
           </div>
         </div>
-        <div class="chapter-progress-track"><div class="chapter-progress-fill ${tier.key}" style="width:${prog||0}%"></div></div>
+        <div class="lib-chcard-meta">${metaParts.length ? metaParts.join(" · ") : "Pas encore de contenu généré"}</div>
+        <div class="lib-chcard-progress">
+          <div class="chapter-progress-track" style="margin-bottom:0;"><div class="chapter-progress-fill ${tier.key}" style="width:${prog||0}%"></div></div>
+          <span class="lib-chcard-pct">${prog===null ? "—" : prog+"%"}</span>
+        </div>
+        <div class="lib-chcard-foot"><span class="btn red small" style="pointer-events:none;">Réviser</span></div>
       </div>`;
     });
+    html += `</div>`;
   }
 
   return html;
@@ -4090,12 +4154,9 @@ function renderChapterDetail(){
 
     if(ch.generationPending){
       const busy = state.libGenerateBusy === ch.id;
-      html += `<div class="ai-notice" style="margin-bottom:18px;">
-        🤖 <b>Génération IA en attente</b> — Ce cours est importé et sauvegardé${ch.heuristicMode ? " (fiche construite en mode simplifié, sans IA)" : ""}. La fiche complète, le résumé, le quiz et les flashcards pourront être générés dès que l'assistant IA local sera disponible sur cet appareil.
-        <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-          <button class="btn red small" id="lib-generate-ai-btn" ${busy || aiEngineBusy() ? "disabled" : ""}>${busy ? "Génération en cours…" : "🤖 Générer avec l'IA"}</button>
-        </div>
-        ${state.libGenerateError ? `<div class="ai-error" style="margin-top:10px;">${escapeHtml(state.libGenerateError)}</div>` : ""}
+      html += `<div class="ai-notice" style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <span>Ce cours est enregistré${ch.heuristicMode ? " (mode simplifié)" : ""}. La fiche complète, le résumé, le quiz et les flashcards seront prêts dès que l'assistant IA sera disponible.</span>
+        <button class="btn red small" id="lib-generate-ai-btn" ${busy || aiEngineBusy() ? "disabled" : ""}>${busy ? "Génération…" : "🤖 Générer avec l'IA"}</button>
       </div>`;
     }
 
@@ -4103,39 +4164,49 @@ function renderChapterDetail(){
       html += `<div class="empty-state"><div class="big">✍️</div>Ce chapitre n'a pas encore de contenu.<br>Clique sur « Modifier le chapitre » pour coller ou écrire ton cours, ou importe un fichier depuis « Mes matières ».</div>`;
     } else {
       html += `<div class="card" style="margin-bottom:20px;">
-        <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Fiche de cours</span>
-          <button class="btn-text" id="lib-regen-fiche" >🔄 Régénérer</button></div>
+        <div class="section-title">Fiche de cours</div>
         <div class="fiche-content">${renderFicheContent(ch.content)}</div>
       </div>`;
 
       if(ch.summary){
         html += `<div class="card" style="margin-bottom:20px;">
-          <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Résumé</span>
-            <button class="btn-text" id="lib-regen-summary">🔄 Régénérer</button></div>
+          <div class="section-title">Résumé</div>
           <div class="ai-result-body" style="white-space:pre-wrap;">${escapeHtml(ch.summary)}</div>
         </div>`;
       }
 
-      { const aiReadyNow = state.aiStatus === "ready";
-      html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
-        <button class="ai-action" id="lib-ai-summary"><span class="ico">📖</span><span class="t">Résumer ce chapitre</span><span class="d">${aiReadyNow ? "Résumé généré par l'IA" : "Mode simplifié (sans IA) — résumé basé sur le texte"}</span></button>
-        <button class="ai-action" id="lib-ai-drill" ${aiReadyNow?"":"disabled"}><span class="ico">🎤</span><span class="t">Me faire réviser</span><span class="d">${aiReadyNow ? "Interrogation orale par l'IA" : "Nécessite l'assistant IA (indisponible sur cet appareil)"}</span></button>
-        <button class="ai-action" id="lib-ai-quiz"><span class="ico">🧠</span><span class="t">Générer un quiz</span><span class="d">${(ch.aiQuiz&&ch.aiQuiz.length) ? ch.aiQuiz.length+" questions déjà générées" : (aiReadyNow ? "QCM inédits sur ce chapitre" : "Mode simplifié (sans IA) si possible")}</span></button>
-        <button class="ai-action" id="lib-ai-cards"><span class="ico">🃏</span><span class="t">Générer des flashcards</span><span class="d">${(ch.aiFlashcards&&ch.aiFlashcards.length) ? ch.aiFlashcards.length+" cartes déjà générées" : (aiReadyNow ? "Cartes recto/verso sur ce chapitre" : "Mode simplifié (sans IA) si possible")}</span></button>
-      </div>`; }
+      const aiReadyNow = state.aiStatus === "ready";
+      const hasQuiz = !!(ch.aiQuiz && ch.aiQuiz.length);
+      const hasCards = !!(ch.aiFlashcards && ch.aiFlashcards.length);
+      const hasReviewQ = !!(ch.aiReviewQuestions && ch.aiReviewQuestions.length);
+      const toolsBusy = !!state.libToolsBusy;
 
-      if(ch.aiQuiz && ch.aiQuiz.length){
-        html += `<button class="btn red small" id="lib-play-quiz" style="margin-top:14px;">▶️ Rejouer le quiz généré (${ch.aiQuiz.length} questions)</button>`;
-      }
-      if(ch.aiFlashcards && ch.aiFlashcards.length){
-        html += `<button class="btn outline small" id="lib-play-flash" style="margin-top:14px;margin-left:10px;">🃏 Réviser les flashcards générées (${ch.aiFlashcards.length})</button>`;
-      }
-      html += `<div id="lib-ai-status"></div>`;
+      // Une seule action dominante : réviser ce qui existe déjà, ou le créer
+      // directement en un clic quand rien n'a encore été généré.
+      let primaryId = "lib-primary-quiz", primaryLabel = state.libToolsBusy==="quiz" ? "Préparation…" : "✨ Réviser ce chapitre";
+      if(hasQuiz){ primaryId = "lib-play-quiz"; primaryLabel = "▶️ Réviser (" + ch.aiQuiz.length + " question" + (ch.aiQuiz.length>1?"s":"") + ")"; }
+      else if(hasCards){ primaryId = "lib-play-flash"; primaryLabel = "🃏 Réviser (" + ch.aiFlashcards.length + " flashcard" + (ch.aiFlashcards.length>1?"s":"") + ")"; }
 
-      if(ch.aiReviewQuestions && ch.aiReviewQuestions.length){
+      html += `<div class="lib-revise-row">
+        <button class="btn red" id="${primaryId}" ${(primaryId==="lib-primary-quiz" && toolsBusy) ? "disabled" : ""}>${primaryLabel}</button>
+        ${(hasQuiz && hasCards) ? `<button class="btn outline" id="lib-play-flash">🃏 Flashcards (${ch.aiFlashcards.length})</button>` : ""}
+      </div>`;
+
+      html += `<details class="ai-extra lib-tools" style="margin-top:18px;" ${state.libToolsOpen ? "open" : ""}>
+        <summary>🛠️ Outils IA</summary>
+        <div class="ai-actiongrid" style="margin-top:12px;">
+          <button class="ai-action" id="lib-ai-summary" ${toolsBusy?"disabled":""}><span class="ico">📖</span><span class="t">${ch.summary ? "Régénérer le résumé" : "Résumer ce chapitre"}</span><span class="d">${state.libToolsBusy==="summary" ? "Génération…" : (aiReadyNow ? "Résumé généré par l'IA" : "Mode simplifié (sans IA)")}</span></button>
+          <button class="ai-action" id="lib-ai-drill" ${(!aiReadyNow || toolsBusy)?"disabled":""}><span class="ico">🎤</span><span class="t">Me faire réviser</span><span class="d">${aiReadyNow ? "Interrogation orale par l'IA" : "Nécessite l'assistant IA"}</span></button>
+          <button class="ai-action" id="lib-ai-quiz" ${toolsBusy?"disabled":""}><span class="ico">🧠</span><span class="t">${hasQuiz ? "Régénérer le quiz" : "Générer un quiz"}</span><span class="d">${state.libToolsBusy==="quiz" ? "Génération…" : (hasQuiz ? ch.aiQuiz.length+" question"+(ch.aiQuiz.length>1?"s":"")+" actuelle"+(ch.aiQuiz.length>1?"s":"") : (aiReadyNow ? "QCM inédits" : "Mode simplifié si possible"))}</span></button>
+          <button class="ai-action" id="lib-ai-cards" ${toolsBusy?"disabled":""}><span class="ico">🃏</span><span class="t">${hasCards ? "Régénérer les flashcards" : "Générer des flashcards"}</span><span class="d">${state.libToolsBusy==="flashcards" ? "Génération…" : (hasCards ? ch.aiFlashcards.length+" carte"+(ch.aiFlashcards.length>1?"s":"")+" actuelle"+(ch.aiFlashcards.length>1?"s":"") : (aiReadyNow ? "Cartes recto/verso" : "Mode simplifié si possible"))}</span></button>
+          <button class="ai-action" id="lib-regen-fiche" ${toolsBusy?"disabled":""}><span class="ico">🔄</span><span class="t">Régénérer la fiche</span><span class="d">${state.libToolsBusy==="fiche" ? "Génération…" : "Reprend le texte source"}</span></button>
+          ${hasReviewQ ? `<button class="ai-action" id="lib-regen-reviewq" ${toolsBusy?"disabled":""}><span class="ico">🎯</span><span class="t">Régénérer les questions</span><span class="d">${state.libToolsBusy==="reviewQuestions" ? "Génération…" : ch.aiReviewQuestions.length+" question"+(ch.aiReviewQuestions.length>1?"s":"")+" actuelle"+(ch.aiReviewQuestions.length>1?"s":"")}</span></button>` : ""}
+        </div>
+      </details>`;
+
+      if(hasReviewQ){
         html += `<div class="card" style="margin-top:20px;">
-          <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Questions de révision (${ch.aiReviewQuestions.length})</span>
-            <button class="btn-text" id="lib-regen-reviewq">🔄 Régénérer</button></div>
+          <div class="section-title">Questions de révision (${ch.aiReviewQuestions.length})</div>
           <div class="lib-reviewq-list">${ch.aiReviewQuestions.map((rq,i)=>`
             <details class="lib-reviewq-item"><summary>${i+1}. ${escapeHtml(rq.q)}</summary><div class="a">${escapeHtml(rq.a)}</div></details>`).join("")}</div>
         </div>`;
@@ -4181,13 +4252,18 @@ function renderChapterDetail(){
       }
     }
   } else {
-    // Chapitre intégré : on renvoie simplement vers les outils déjà existants, avec le contexte pré-rempli.
-    html += `<div class="mode-grid">
-      <button class="mode-card" id="lib-goto-fiche"><div class="mc-top"><span class="mc-title">📖 Voir la fiche</span></div><span class="mc-desc">Fiche de révision complète du chapitre.</span></button>
-      <button class="mode-card" id="lib-goto-quiz"><div class="mc-top"><span class="mc-title">🧠 Lancer le quiz</span></div><span class="mc-desc">Toutes les questions du chapitre.</span></button>
-      <button class="mode-card" id="lib-goto-flash"><div class="mc-top"><span class="mc-title">🃏 Réviser les flashcards</span></div><span class="mc-desc">Le paquet complet du chapitre.</span></button>
-      <button class="mode-card" id="lib-goto-ai"><div class="mc-top"><span class="mc-title">🤖 Assistant IA</span></div><span class="mc-desc">Résumé, interrogation ou question libre.</span></button>
-    </div>`;
+    // Chapitre intégré : une action dominante (réviser le quiz), le reste discret.
+    html += `<div class="lib-revise-row">
+      <button class="btn red" id="lib-goto-quiz">▶️ Réviser (quiz)</button>
+      <button class="btn outline" id="lib-goto-flash">🃏 Flashcards</button>
+    </div>
+    <details class="ai-extra lib-tools" style="margin-top:18px;">
+      <summary>🛠️ Plus d'outils</summary>
+      <div class="ai-actiongrid" style="margin-top:12px;grid-template-columns:repeat(2,1fr);">
+        <button class="ai-action" id="lib-goto-fiche"><span class="ico">📖</span><span class="t">Voir la fiche</span><span class="d">Fiche de révision complète du chapitre</span></button>
+        <button class="ai-action" id="lib-goto-ai"><span class="ico">🤖</span><span class="t">Assistant IA</span><span class="d">Résumé, interrogation ou question libre</span></button>
+      </div>
+    </details>`;
     if(FICHES[ch.id]){
       html += `<div class="card" id="chapterdetail-fiche" style="margin-top:20px;">
         <div class="section-title">Fiche de cours</div>
@@ -4197,6 +4273,14 @@ function renderChapterDetail(){
   }
 
   return html;
+}
+
+/* Badge "S1", "S2"… affiché sur les cartes de chapitre de « Mes matières »
+   (numéro d'ordre du chapitre, pas les identifiants internes L1/L2/L3). */
+function chapterNumBadge(ch){
+  const raw = String(ch.num || "").trim();
+  const n = parseInt(raw, 10);
+  return isFinite(n) ? "S" + n : raw;
 }
 
 function statusTierGeneric(pct){
@@ -4331,12 +4415,16 @@ function attachLibraryEvents(){
       if(drillBtn) drillBtn.addEventListener("click", ()=> libRunUserChapterAI(ch, "drill"));
       const quizBtn = document.getElementById("lib-ai-quiz");
       if(quizBtn) quizBtn.addEventListener("click", ()=> libGenerateUserChapterQuiz(ch));
+      const primaryQuizBtn = document.getElementById("lib-primary-quiz");
+      if(primaryQuizBtn) primaryQuizBtn.addEventListener("click", ()=> libGenerateUserChapterQuiz(ch));
       const cardsBtn = document.getElementById("lib-ai-cards");
       if(cardsBtn) cardsBtn.addEventListener("click", ()=> libGenerateUserChapterCards(ch));
       const playQuizBtn = document.getElementById("lib-play-quiz");
       if(playQuizBtn) playQuizBtn.addEventListener("click", ()=> startQuiz("chapter:"+ch.id, ch.title, null, ch.aiQuiz.slice()));
       const playFlashBtn = document.getElementById("lib-play-flash");
       if(playFlashBtn) playFlashBtn.addEventListener("click", ()=> startFlashDeck(ch.id, ch.title, ch.aiFlashcards.slice()));
+      const toolsDetails = document.querySelector(".lib-tools");
+      if(toolsDetails) toolsDetails.addEventListener("toggle", ()=>{ state.libToolsOpen = toolsDetails.open; });
 
       const markReviewedBtn = document.getElementById("lib-mark-reviewed-btn");
       if(markReviewedBtn) markReviewedBtn.addEventListener("click", ()=>{
@@ -4377,8 +4465,6 @@ function attachLibraryEvents(){
       });
       const regenFiche = document.getElementById("lib-regen-fiche");
       if(regenFiche) regenFiche.addEventListener("click", ()=> libRegeneratePart(ch, "fiche"));
-      const regenSummary = document.getElementById("lib-regen-summary");
-      if(regenSummary) regenSummary.addEventListener("click", ()=> libRegeneratePart(ch, "summary"));
       const regenReviewQ = document.getElementById("lib-regen-reviewq");
       if(regenReviewQ) regenReviewQ.addEventListener("click", ()=> libRegeneratePart(ch, "reviewQuestions"));
 
@@ -4586,52 +4672,43 @@ async function libRunUserChapterFree(ch){
 /* "Résumer ce chapitre" : utilise l'IA si prête, sinon un résumé heuristique
    (première phrase de chaque partie du texte) — jamais bloqué par WebGPU. */
 async function libGenerateUserChapterSummary(ch){
-  const statusEl = () => document.getElementById("lib-ai-status");
-  if(!ch.content || !ch.content.trim()){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer un résumé.</div>`;
-    return;
-  }
+  if(!ch.content || !ch.content.trim()){ showToast("Ajoute du contenu à ce chapitre avant de générer un résumé."); return; }
   if(state.aiStatus !== "ready"){
     const summary = heuristicSummary(chapterSourceText(ch));
-    if(!summary){
-      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de texte structuré pour résumer ce chapitre.</div>`;
-      return;
-    }
+    if(!summary){ showToast("Pas assez de texte structuré pour résumer ce chapitre."); return; }
     ch.summary = summary;
     saveUserChapters();
     render();
     return;
   }
-  if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération du résumé…</div>`;
+  state.libToolsBusy = "summary";
+  render();
   try{
     const summary = await generateCourseSummary(clip(chapterSourceText(ch), 20000), {title: ch.title, chapterTitle: ch.desc || ch.title, notions: ch.keyNotions || []});
     ch.summary = summary;
     saveUserChapters();
+    state.libToolsBusy = null;
     render();
   }catch(e){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Échec de la génération du résumé (${escapeHtml(e.message||"erreur")}). Le reste du chapitre est conservé — tu peux réessayer.</div>`;
+    state.libToolsBusy = null;
+    render();
+    showToast("Impossible de générer le résumé pour l'instant.");
   }
 }
 
 async function libGenerateUserChapterQuiz(ch){
-  const statusEl = () => document.getElementById("lib-ai-status");
-  if(!ch.content || !ch.content.trim()){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer un quiz.</div>`;
-    return;
-  }
+  if(!ch.content || !ch.content.trim()){ showToast("Ajoute du contenu à ce chapitre avant de générer un quiz."); return; }
   if(state.aiStatus !== "ready"){
     const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
-    if(h.quiz.length === 0){
-      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a pas trouvé assez de définitions claires dans ce chapitre pour générer un quiz fiable. Réessaie quand l'IA sera disponible.</div>`;
-      return;
-    }
+    if(h.quiz.length === 0){ showToast("Pas assez de définitions claires pour générer un quiz fiable."); return; }
     ch.aiQuiz = h.quiz;
     saveUserChapters();
     render();
     startQuiz("chapter:"+ch.id, ch.title, null, h.quiz);
     return;
   }
-  if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération du quiz…</div>`;
+  state.libToolsBusy = "quiz";
+  render();
   const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
     "\n\nTÂCHE : génère 6 questions à choix multiples inédites sur ce contenu, 4 options chacune, une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
   try{
@@ -4641,32 +4718,29 @@ async function libGenerateUserChapterQuiz(ch){
     if(quiz.length === 0) throw new Error("format inattendu");
     ch.aiQuiz = quiz;
     saveUserChapters();
+    state.libToolsBusy = null;
     render();
     startQuiz("chapter:"+ch.id, ch.title, null, quiz);
   }catch(e){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Échec de la génération du quiz (${escapeHtml(e.message||"erreur")}). Réessaie.</div>`;
+    state.libToolsBusy = null;
+    render();
+    showToast("Impossible de générer le quiz pour l'instant.");
   }
 }
 
 async function libGenerateUserChapterCards(ch){
-  const statusEl = () => document.getElementById("lib-ai-status");
-  if(!ch.content || !ch.content.trim()){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Ajoute du contenu à ce chapitre avant de générer des flashcards.</div>`;
-    return;
-  }
+  if(!ch.content || !ch.content.trim()){ showToast("Ajoute du contenu à ce chapitre avant de générer des flashcards."); return; }
   if(state.aiStatus !== "ready"){
     const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
-    if(h.flashcards.length === 0){
-      if(statusEl()) statusEl().innerHTML = `<div class="ai-error">L'assistant IA n'est pas disponible sur cet appareil, et le mode simplifié n'a trouvé aucune définition claire (« terme : définition ») dans ce chapitre pour créer des flashcards. Réessaie quand l'IA sera disponible.</div>`;
-      return;
-    }
+    if(h.flashcards.length === 0){ showToast("Aucune définition claire trouvée pour créer des flashcards."); return; }
     ch.aiFlashcards = h.flashcards;
     saveUserChapters();
     render();
     startFlashDeck(ch.id, ch.title, h.flashcards);
     return;
   }
-  if(statusEl()) statusEl().innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span>Génération des flashcards…</div>`;
+  state.libToolsBusy = "flashcards";
+  render();
   const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
     "\n\nTÂCHE : génère 10 flashcards de révision sur ce contenu. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\"}]";
   try{
@@ -4675,10 +4749,13 @@ async function libGenerateUserChapterCards(ch){
     if(cards.length === 0) throw new Error("format inattendu");
     ch.aiFlashcards = cards;
     saveUserChapters();
+    state.libToolsBusy = null;
     render();
     startFlashDeck(ch.id, ch.title, cards);
   }catch(e){
-    if(statusEl()) statusEl().innerHTML = `<div class="ai-error">Échec de la génération des flashcards (${escapeHtml(e.message||"erreur")}). Réessaie.</div>`;
+    state.libToolsBusy = null;
+    render();
+    showToast("Impossible de générer les flashcards pour l'instant.");
   }
 }
 
@@ -4723,20 +4800,19 @@ function libChapterWorkingText(ch){ return chapterSourceText(ch).trim(); }
 function libChapterMeta(ch){ return { title: ch.title, chapterTitle: ch.desc || "", notions: ch.keyNotions || [] }; }
 
 async function libRegeneratePart(ch, key){
-  const statusEl = () => document.getElementById("lib-ai-status");
-  const setStatus = (html) => { const el = statusEl(); if(el) el.innerHTML = html; };
+  const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
   if(state.aiStatus !== "ready"){
-    setStatus(`<div class="ai-error">L'assistant IA n'est pas chargé. Va dans l'onglet 🤖 Assistant IA pour le charger, puis reviens ici.</div>`);
+    showToast("Assistant IA non chargé — va dans l'onglet 🤖 Assistant IA.");
     return;
   }
   const text = libChapterWorkingText(ch);
   if(!text){
-    setStatus(`<div class="ai-error">Ce chapitre n'a pas de contenu source à partir duquel régénérer.</div>`);
+    showToast("Ce chapitre n'a pas encore de contenu à régénérer.");
     return;
   }
-  const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
   const fns = { fiche: generateCourseFiche, summary: generateCourseSummary, quiz: generateCourseQuizFromText, flashcards: generateCourseFlashcardsFromText, reviewQuestions: generateCourseReviewQuestions };
-  setStatus(`<div class="ai-loading"><span class="ai-spinner"></span>Régénération de ${labels[key]}…</div>`);
+  state.libToolsBusy = key;
+  render();
   try{
     const result = await fns[key](text, libChapterMeta(ch));
     if(key === "fiche") ch.content = result;
@@ -4746,9 +4822,12 @@ async function libRegeneratePart(ch, key){
     else if(key === "reviewQuestions") ch.aiReviewQuestions = result;
     ch.updatedAt = Date.now();
     saveUserChapters();
+    state.libToolsBusy = null;
     render();
   }catch(e){
-    setStatus(`<div class="ai-error">Échec de la régénération de ${labels[key]} (${escapeHtml(e.message||"erreur")}). Réessaie.</div>`);
+    state.libToolsBusy = null;
+    render();
+    showToast("Impossible de régénérer " + labels[key] + " — l'ancienne version est conservée.");
   }
 }
 
@@ -5670,8 +5749,7 @@ async function libGenerateChapterAI(chapterId){
   try{
     await ensureImportAIReady();
   }catch(e){
-    state.libGenerateError = e.message;
-    render();
+    showToast("Assistant IA indisponible pour le moment.");
     return;
   }
   state.libGenerateBusy = chapterId;
@@ -5961,7 +6039,7 @@ function renderImportDetectOrReview(){
       <div class="ai-field"><label for="import-level-select">Niveau (facultatif)</label>
         <select class="ai-select" id="import-level-select">
           <option value="" ${!d.level?"selected":""}>Non précisé</option>
-          ${LEVELS.map(lv=>`<option value="${lv}" ${d.level===lv?"selected":""}>${lv}</option>`).join("")}
+          ${LEVELS.map(lv=>`<option value="${lv}" ${d.level===lv?"selected":""}>${levelName(lv)}</option>`).join("")}
         </select>
       </div>
       <div class="ai-field" id="import-semester-wrap" style="${d.subjectId ? "display:none;" : ""}">
@@ -6058,7 +6136,7 @@ function renderImportResult(){
       </div>`;
     } else if(item.failedSteps && item.failedSteps.length){
       const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
-      html += `<div class="ai-error" style="margin-top:14px;">Certains supports n'ont pas pu être générés (${item.failedSteps.map(k=>labels[k]).join(", ")}). Tu peux les régénérer depuis la fiche du chapitre.</div>`;
+      html += `<div class="ai-notice" style="margin-top:14px;">${item.failedSteps.map(k=>labels[k]).join(", ")} : à régénérer depuis les outils IA du chapitre.</div>`;
     }
     html += `<div class="import-result-actions">
         <button class="btn red" data-goto-chapter="${item.resultChapterId}">📖 Ouvrir la fiche de cours</button>
@@ -6326,7 +6404,7 @@ function renderReview(){
           const tier = masteryTier(cm.answered === 0 ? null : cm.mastery);
           const statusLbl = cm.mastered ? "Maîtrisé" : (cm.answered === 0 ? "Non commencé" : tier.label);
           return `<tr>
-            <td><span class="chname">${ch.num} · ${ch.title}</span><br><span style="font-size:11px;color:var(--muted);font-weight:700;">${ch.level} · ${cm.total} questions</span></td>
+            <td><span class="chname">${ch.num} · ${ch.title}</span><br><span style="font-size:11px;color:var(--muted);font-weight:700;">${levelName(ch.level)} · ${cm.total} questions</span></td>
             <td>${cm.answered}/${cm.total}</td>
             <td>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -6831,7 +6909,7 @@ function chapterHtml(ch){
       <div class="chapter-headtext">
         <div class="title-row">
           <h2>${ch.title}</h2>
-          <span class="level-badge ${ch.level}">${ch.level}</span>
+          <span class="level-badge ${ch.level}">${levelName(ch.level)}</span>
         </div>
         <p>${ch.desc}</p>
       </div>
@@ -6870,9 +6948,9 @@ function chapterHtml(ch){
 function levelChips(activeKey, dataAttr){
   return `<div class="levelchips">
     <button data-${dataAttr}="all" class="${activeKey==='all'?'active':''}">Tous les niveaux</button>
-    <button data-${dataAttr}="L1" class="${activeKey==='L1'?'active':''}">L1</button>
-    <button data-${dataAttr}="L2" class="${activeKey==='L2'?'active':''}">L2</button>
-    <button data-${dataAttr}="L3" class="${activeKey==='L3'?'active L3':''}">L3</button>
+    <button data-${dataAttr}="L1" class="${activeKey==='L1'?'active':''}">S1</button>
+    <button data-${dataAttr}="L2" class="${activeKey==='L2'?'active':''}">S2</button>
+    <button data-${dataAttr}="L3" class="${activeKey==='L3'?'active L3':''}">S3</button>
   </div>`;
 }
 
@@ -6919,9 +6997,9 @@ function renderPicker(){
     const lvQs = QUESTIONS.filter(q => chs.some(c => c.themes.includes(q.theme)));
     const lvMastery = lvQs.length ? Math.round(lvQs.reduce((acc,q)=>{ const m = masteryOf(q); return acc + (m===null?0:m); },0)/lvQs.length) : 0;
     html += `<div class="level-heading">
-      <span class="tag ${lv}">${lv}</span>
-      <span class="name">${levelName(lv)}</span>
-      <span class="desc">${levelDesc(lv)} · ${lvMastery}% de maîtrise</span>
+      <span class="tag ${lv}">${levelName(lv)}</span>
+      <span class="name">${levelDesc(lv)}</span>
+      <span class="desc">${lvMastery}% de maîtrise</span>
       <span class="line"></span>
       <button class="btn outline small" data-mixlevel="${lv}">Réviser ce niveau</button>
     </div>`;
@@ -6930,7 +7008,7 @@ function renderPicker(){
 
   const importedWithQuiz = state.userChapters.filter(ch => ch.aiQuiz && ch.aiQuiz.length);
   if(importedWithQuiz.length){
-    html += `<div class="level-heading"><span class="tag">Mes cours</span><span class="name">Cours importés</span><span class="line"></span></div>
+    html += `<div class="level-heading"><span class="tag">📚</span><span class="name">Mes cours</span><span class="line"></span></div>
     <div class="flash-deckgrid">` + importedWithQuiz.map(ch=>{
       const s = subjectOfChapter(ch);
       return `<div class="flash-deckcard">
@@ -6976,7 +7054,7 @@ function attachPickerEvents(){
     btn.addEventListener("click", ()=>{
       const lv = btn.dataset.mixlevel;
       const themes = CHAPTERS.filter(c=>c.level===lv).flatMap(c=>c.themes);
-      startQuiz("level:"+lv, "Niveau " + lv + " — " + levelName(lv), themes);
+      startQuiz("level:"+lv, "Niveau " + levelName(lv), themes);
     });
   });
   const mixAll = document.querySelector("[data-mixall]");
@@ -7182,7 +7260,7 @@ function renderCourseCard(ch){
     <div class="course-card-top">
       <span class="course-card-icon" style="background:${subj?subj.color:"#8a8f9c"}22;color:${subj?subj.color:"#8a8f9c"};">${subj&&subj.icon?subj.icon:"📘"}</span>
       <div class="course-card-badges">
-        ${ch.level ? `<span class="level-badge ${ch.level}">${ch.level}</span>` : ""}
+        ${ch.level ? `<span class="level-badge ${ch.level}">${levelName(ch.level)}</span>` : ""}
         ${ch.generationPending ? `<span class="course-card-chip" title="Génération IA en attente">🤖⏳</span>` : ""}
         ${revised ? `<span class="course-card-chip ok">✅</span>` : ""}
       </div>
@@ -7257,7 +7335,7 @@ function renderCourseLibrarySection(){
       </select>
       <select id="catalog-level" class="ai-select">
         <option value="all">Tous niveaux</option>
-        ${LEVELS.map(lv=>`<option value="${lv}" ${levelFilter===lv?"selected":""}>${lv}</option>`).join("")}
+        ${LEVELS.map(lv=>`<option value="${lv}" ${levelFilter===lv?"selected":""}>${levelName(lv)}</option>`).join("")}
       </select>
       <select id="catalog-revision" class="ai-select">
         <option value="all" ${revisionFilter==="all"?"selected":""}>Statut : tous</option>
@@ -7454,8 +7532,8 @@ function renderFlashPicker(){
     if(chs.length === 0) return;
     const lvCards = chs.flatMap(c => deckCards(c.id));
     html += `<div class="level-heading">
-      <span class="tag ${lv}">${lv}</span><span class="name">${levelName(lv)}</span>
-      <span class="desc">${levelDesc(lv)}</span><span class="line"></span>
+      <span class="tag ${lv}">${levelName(lv)}</span><span class="name">${levelDesc(lv)}</span>
+      <span class="line"></span>
       <button class="btn outline small" data-flashlevelmix="${lv}">Réviser ce niveau (${lvCards.length})</button>
     </div>`;
 
@@ -7484,7 +7562,7 @@ function renderFlashPicker(){
 
   const importedWithCards = state.userChapters.filter(ch => ch.aiFlashcards && ch.aiFlashcards.length);
   if(importedWithCards.length){
-    html += `<div class="level-heading"><span class="tag">Mes cours</span><span class="name">Cours importés</span><span class="line"></span></div>
+    html += `<div class="level-heading"><span class="tag">📚</span><span class="name">Mes cours</span><span class="line"></span></div>
     <div class="flash-deckgrid">` + importedWithCards.map(ch=>{
       const s = subjectOfChapter(ch);
       return `<div class="flash-deckcard">
@@ -7525,7 +7603,7 @@ function attachFlashPickerEvents(){
       const lv = btn.dataset.flashlevelmix;
       const chs = CHAPTERS.filter(c=>c.level===lv);
       const cards = chs.flatMap(c => deckCards(c.id));
-      startFlashDeck("level:"+lv, "Niveau " + lv + " — " + levelName(lv), cards);
+      startFlashDeck("level:"+lv, "Niveau " + levelName(lv), cards);
     });
   });
   const mixAll = document.querySelector("[data-flashall]");
@@ -8324,6 +8402,8 @@ Object.assign(state, {
   aiContextLabel: "",
   libGenerateBusy: null,
   libGenerateError: "",
+  libToolsBusy: null,
+  libToolsOpen: false,
   aiDiagPanelOpen: false,
   aiRetryChecking: false,
   aiFullTestResult: "",
@@ -9043,7 +9123,7 @@ function renderAI(){
       html += `<div class="ai-field">
         <label for="ai-chapter-select">Chapitre</label>
         <select class="ai-select" id="ai-chapter-select">
-          ${CHAPTERS.map(c=>`<option value="${c.id}" ${state.aiChapter===c.id?"selected":""}>${c.num} · ${c.title} (${c.level})</option>`).join("")}
+          ${CHAPTERS.map(c=>`<option value="${c.id}" ${state.aiChapter===c.id?"selected":""}>${c.num} · ${c.title} (${levelName(c.level)})</option>`).join("")}
         </select>
       </div>`;
     }
