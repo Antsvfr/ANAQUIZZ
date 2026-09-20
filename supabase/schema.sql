@@ -350,13 +350,24 @@ alter table public.preferences       enable row level security;
 alter table public.documents         enable row level security;
 
 -- profiles : la clé primaire EST l'utilisateur (id = auth.uid()).
--- Pas d'INSERT/DELETE côté client : la ligne est créée par le trigger
--- on_auth_user_created (SECURITY DEFINER) et supprimée par la cascade
--- lors de la suppression du compte (auth.users), jamais directement par
--- l'utilisateur — voir SETUP_SUPABASE.md, section "Supprimer mon compte".
+-- La ligne est normalement déjà créée par le trigger on_auth_user_created
+-- (SECURITY DEFINER) à l'inscription, et supprimée par la cascade lors de la
+-- suppression du compte (auth.users) — voir SETUP_SUPABASE.md, section
+-- "Supprimer mon compte". Pas de DELETE côté client.
+--
+-- profiles_insert_own (v3, 20/09) : le frontend enregistre désormais son
+-- profil via upsert() plutôt que update() seul — corrige un cas où
+-- "Modifier mes informations" ne persistait rien si la ligne n'existait pas
+-- déjà (update() sur 0 ligne = aucun effet, sans jamais créer le profil).
+-- Un upsert() a besoin du droit d'INSERT en plus de l'UPDATE pour pouvoir
+-- créer la ligne manquante ; cette policy le limite strictement à sa PROPRE
+-- ligne, exactement comme les policies select/update ci-dessous.
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles
   for select using (auth.uid() = id);
+drop policy if exists "profiles_insert_own" on public.profiles;
+create policy "profiles_insert_own" on public.profiles
+  for insert with check (auth.uid() = id);
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles
   for update using (auth.uid() = id) with check (auth.uid() = id);
