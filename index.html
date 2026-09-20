@@ -323,30 +323,76 @@
   .btn-text:hover{ color: var(--red); border-color: var(--red); }
   .btn-text.active{ color: var(--red); border-color: var(--red); }
 
-  /* ===== MON COMPTE / MON ESPACE ===== */
-  .myspace-greeting{ font-size:20px; font-weight:800; letter-spacing:-0.01em; margin:28px 0 22px; }
+  /* ===== MON COMPTE / MON ESPACE (V2 premium) ===== */
+  .myspace-greeting{ font-size:22px; font-weight:800; letter-spacing:-0.01em; margin:28px 0 2px; }
+  .myspace-subtext{ font-size:13.5px; color:var(--muted); font-weight:600; margin:0 0 22px; }
+  .account-status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); vertical-align:middle; }
 
-  .dash-card.myspace-infocard{ padding:26px; margin:0 0 18px; }
-  .myspace-infocard-top{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; }
-  .myspace-avatar, .myspace-avatar-photo{
-    width:72px; height:72px; border-radius:50%; flex-shrink:0;
+  /* -- carte profil premium (identité, en haut de page) -- */
+  .myspace-hero-card{
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:26px 28px; margin:0 0 18px; box-shadow: var(--shadow-sm);
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
   }
-  .myspace-avatar{
+  .myspace-hero-avatar, .myspace-hero-avatar-photo{ width:88px; height:88px; border-radius:50%; flex-shrink:0; }
+  .myspace-hero-avatar{
     background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-    color:#fff; font-size:26px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:32px; font-weight:800; display:flex; align-items:center; justify-content:center;
   }
-  .myspace-avatar-photo{ object-fit:cover; border:1px solid var(--border); }
-  .myspace-infocard-fields{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:9px; }
-  .myspace-info-row{ display:flex; align-items:baseline; gap:14px; font-size:13px; }
-  .myspace-info-row .lbl{ color:var(--muted); font-weight:700; width:130px; flex-shrink:0; }
-  .myspace-info-row .val{ color:var(--ink); font-weight:600; }
+  .myspace-hero-avatar-photo{ object-fit:cover; border:1px solid var(--border); }
+  .myspace-hero-identity{ flex:1; min-width:180px; }
+  .myspace-hero-name{ font-size:19px; font-weight:800; letter-spacing:-0.01em; margin:0 0 2px; }
+  .myspace-hero-handle{ font-size:13px; color:var(--muted); font-weight:700; }
+  .myspace-hero-email{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
+  .myspace-hero-status{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--green); margin-top:10px; }
+  .myspace-hero-card-actions{ display:flex; flex-direction:column; gap:8px; flex-shrink:0; align-items:flex-end; }
+  @media (max-width:640px){
+    .myspace-hero-card{ flex-direction:column; text-align:center; padding:24px 20px; }
+    .myspace-hero-identity{ text-align:center; }
+    .myspace-hero-status{ justify-content:center; }
+    .myspace-hero-card-actions{ align-items:stretch; width:100%; }
+    .myspace-hero-card-actions .btn, .myspace-hero-card-actions .btn-text{ width:100%; text-align:center; }
+  }
+
+  /* -- onboarding : profil totalement vide -- */
+  .myspace-onboard{
+    background: var(--red-tint); border:1px solid var(--red-tint-strong); border-radius: var(--radius-lg);
+    padding:18px 22px; margin:0 0 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .myspace-onboard h3{ font-size:14.5px; font-weight:800; margin:0 0 3px; color:var(--red-dark); }
+  .myspace-onboard p{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+
+  /* -- mes raccourcis -- */
+  .myspace-shortcuts-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:12px; }
+  .myspace-shortcut{
+    display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--border); border-radius: var(--radius-md);
+    padding:15px 16px; text-align:left; cursor:pointer; font-family: var(--font-main);
+    transition: border-color 0.15s var(--ease), transform 0.15s var(--ease);
+  }
+  .myspace-shortcut:hover{ border-color: var(--red); transform: translateY(-1px); }
+  .myspace-shortcut:active{ transform: scale(0.98); }
+  .myspace-shortcut .ico{
+    font-size:19px; flex-shrink:0; width:38px; height:38px; border-radius:10px;
+    background: var(--red-tint); display:flex; align-items:center; justify-content:center;
+  }
+  .myspace-shortcut .txt{ min-width:0; }
+  .myspace-shortcut .t{ font-size:13.5px; font-weight:800; color:var(--ink); display:block; }
+  .myspace-shortcut .d{ font-size:11.5px; color:var(--muted); font-weight:600; display:block; margin-top:2px; }
+
+  /* -- mes informations (carte compacte, sous les raccourcis) -- */
+  .dash-card.myspace-infocard{ padding:24px 26px; margin:0 0 18px; }
+  .myspace-infocard-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .myspace-infocard-badge{ font-size:11px; font-weight:800; color:var(--red); background:var(--red-tint); padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  .myspace-info-row{ display:flex; align-items:baseline; justify-content:space-between; gap:14px; font-size:13px; padding:9px 0; border-bottom:1px solid var(--bg); }
+  .myspace-info-row:last-of-type{ border-bottom:none; }
+  .myspace-info-row .lbl{ color:var(--muted); font-weight:700; }
+  .myspace-info-row .val{ color:var(--ink); font-weight:600; text-align:right; }
+  .myspace-info-row .val.todo{ color:var(--muted); font-style:italic; font-weight:600; }
   .myspace-unverified{ color:var(--muted); font-weight:600; font-size:11.5px; }
-  .myspace-hero-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; padding-top:18px; border-top:1px solid var(--border); }
   @media (max-width:560px){
     .dash-card.myspace-infocard{ padding:20px 18px; }
-    .myspace-infocard-top{ flex-direction:column; align-items:center; text-align:center; }
-    .myspace-info-row{ justify-content:center; }
-    .myspace-info-row .lbl{ width:auto; }
+    .myspace-info-row{ flex-direction:column; align-items:flex-start; gap:2px; }
+    .myspace-info-row .val{ text-align:left; }
   }
 
   /* ---- modal "Mes informations" (réutilise .cal-modal-backdrop/.cal-modal) ---- */
@@ -9777,6 +9823,10 @@ function attachSettingsEvents(){
    Formulaire connexion/inscription si déconnecté, profil + code utilisateur
    + déconnexion si connecté. Aucun mot de passe n'est jamais stocké ni
    manipulé ici : LyonAuth (auth.js) délègue tout à Supabase Auth. */
+/* Rôle unique de renderAccountSection() depuis la V2 : la "porte" auth
+   (formulaire connexion/inscription, état "vérifie ton email"). L'état
+   connecté a ses propres blocs dédiés (renderProfileHero/renderInfoCard/
+   renderOnboardingNudge, plus bas) — voir renderMySpace(). */
 function renderAccountSection(){
   if(!window.LyonAuth || !LyonAuth.available){
     return `<div class="dash-section">
@@ -9786,37 +9836,6 @@ function renderAccountSection(){
   }
 
   const a = LyonAuth.state;
-
-  if(a.status === "signed-in"){
-    const p = a.profile || {};
-    const email = a.user ? a.user.email : "";
-    const firstName = p.first_name || "";
-    const lastName = p.last_name || "";
-    const displayName = p.display_name || "";
-    const phone = p.phone || "";
-    const avatarUrl = p._avatarSignedUrl || null;
-    const initial = (displayName || firstName || email || "?").charAt(0).toUpperCase();
-    return `<div class="dash-card myspace-infocard" id="account-section">
-      <div class="dash-card-eyebrow">Mes informations</div>
-      <div class="myspace-infocard-top">
-        ${avatarUrl
-          ? `<img class="myspace-avatar-photo" src="${escapeHtml(avatarUrl)}" alt="">`
-          : `<div class="myspace-avatar">${escapeHtml(initial)}</div>`}
-        <div class="myspace-infocard-fields">
-          <div class="myspace-info-row"><span class="lbl">Prénom</span><span class="val">${firstName ? escapeHtml(firstName) : "—"}</span></div>
-          <div class="myspace-info-row"><span class="lbl">Nom</span><span class="val">${lastName ? escapeHtml(lastName) : "—"}</span></div>
-          <div class="myspace-info-row"><span class="lbl">Pseudo</span><span class="val">${displayName ? escapeHtml(displayName) : "—"}</span></div>
-          <div class="myspace-info-row"><span class="lbl">Numéro de téléphone</span><span class="val">${phone ? escapeHtml(phone) + ` <span class="myspace-unverified">(non vérifié)</span>` : "—"}</span></div>
-          <div class="myspace-info-row"><span class="lbl">Adresse e-mail</span><span class="val">${escapeHtml(email)}</span></div>
-        </div>
-      </div>
-      <div class="myspace-hero-actions">
-        <button class="btn red small" id="account-edit-btn" type="button">Modifier mes informations</button>
-        <button class="btn outline small" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
-        <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
-      </div>
-    </div>`;
-  }
 
   if(state.accountUI.pendingConfirmationEmail){
     return `<div class="auth-confirm" id="account-section">
@@ -9958,6 +9977,86 @@ function accountDisplayName(){
   return email ? email.split("@")[0] : "";
 }
 
+/* "Prénom Nom" si l'un des deux est renseigné, sinon vide (jamais dérivé de
+   l'email/du pseudo ici — voir accountDisplayName pour ce cas). */
+function accountFullName(p){
+  const fn = (p.first_name || "").trim(), ln = (p.last_name || "").trim();
+  return [fn, ln].filter(Boolean).join(" ");
+}
+
+/* Pourcentage réel de complétion du profil (5 champs éditables dans la
+   modal). N'inclut pas l'email : il vient de Supabase Auth, toujours
+   renseigné, ce n'est pas une information "à compléter". */
+function profileCompletionPct(p){
+  const fields = [p.first_name, p.last_name, p.display_name, p.phone, p.avatar_url];
+  const filled = fields.filter(v => v && String(v).trim()).length;
+  return Math.round((filled / fields.length) * 100);
+}
+
+/* ---------- "Mon espace" connecté : carte profil premium (identité) ---------- */
+function renderProfileHero(){
+  const a = LyonAuth.state;
+  const p = a.profile || {};
+  const email = a.user ? a.user.email : "";
+  const name = accountFullName(p);
+  const title = name || p.display_name || "Ton espace personnel";
+  const avatarUrl = p._avatarSignedUrl || null;
+  const initial = (p.display_name || p.first_name || email || "?").charAt(0).toUpperCase();
+  return `<div class="myspace-hero-card" id="account-section">
+    ${avatarUrl
+      ? `<img class="myspace-hero-avatar-photo" src="${escapeHtml(avatarUrl)}" alt="">`
+      : `<div class="myspace-hero-avatar">${escapeHtml(initial)}</div>`}
+    <div class="myspace-hero-identity">
+      <div class="myspace-hero-name">${escapeHtml(title)}</div>
+      ${p.display_name ? `<div class="myspace-hero-handle">@${escapeHtml(p.display_name)}</div>` : ""}
+      <div class="myspace-hero-email">${escapeHtml(email)}</div>
+      <div class="myspace-hero-status"><span class="account-status-dot"></span>Compte actif</div>
+    </div>
+    <div class="myspace-hero-card-actions">
+      <button class="btn red small" id="account-edit-btn" type="button">Modifier mon profil</button>
+      <button class="btn-text" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
+    </div>
+  </div>`;
+}
+
+/* Nudge d'onboarding : uniquement si RIEN n'est encore renseigné. Dès qu'un
+   seul champ est rempli, la carte "Mes informations" (avec son badge de
+   complétion) prend le relais — pas de doublon des deux à la fois. */
+function renderOnboardingNudge(){
+  const p = LyonAuth.state.profile || {};
+  if(profileCompletionPct(p) > 0) return "";
+  return `<div class="myspace-onboard">
+    <div>
+      <h3>Complète ton profil</h3>
+      <p>Ajoute quelques informations pour personnaliser ton espace.</p>
+    </div>
+    <button class="btn outline small" id="account-onboard-btn" type="button">Compléter mon profil</button>
+  </div>`;
+}
+
+/* ---------- "Mon espace" connecté : carte compacte "Mes informations" ---------- */
+function renderInfoCard(){
+  const p = LyonAuth.state.profile || {};
+  const email = LyonAuth.state.user ? LyonAuth.state.user.email : "";
+  const pct = profileCompletionPct(p);
+  const row = (label, value, extra) => `<div class="myspace-info-row"><span class="lbl">${label}</span><span class="val${value?"":" todo"}">${value ? escapeHtml(value) + (extra||"") : "À compléter"}</span></div>`;
+  return `<div class="dash-card myspace-infocard">
+    <div class="myspace-infocard-head">
+      <span class="dash-card-eyebrow" style="margin-bottom:0;">Mes informations</span>
+      ${pct < 100 ? `<span class="myspace-infocard-badge">Profil complété à ${pct}%</span>` : ""}
+    </div>
+    ${row("Prénom", p.first_name)}
+    ${row("Nom", p.last_name)}
+    ${row("Pseudo", p.display_name ? "@" + p.display_name : "")}
+    ${row("Téléphone", p.phone, p.phone ? ` <span class="myspace-unverified">(non vérifié)</span>` : "")}
+    <div class="myspace-info-row"><span class="lbl">Adresse e-mail</span><span class="val">${escapeHtml(email)}</span></div>
+    <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+      <button class="btn outline small" id="account-edit-btn-2" type="button">Modifier mes informations</button>
+      <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
+    </div>
+  </div>`;
+}
+
 function renderMySpace(){
   const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
   const firstName = state.profile.firstName || "";
@@ -9968,13 +10067,24 @@ function renderMySpace(){
   const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
   const d = state.dash;
 
+  const rc = d.recentChapters && d.recentChapters[0];
+  const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
+  const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
+
+  let subtext = "Ton compte, ta progression et tes raccourcis, au même endroit.";
+  if(authed){
+    if(rcChapter) subtext = "Prêt à continuer tes révisions ?";
+    else if(subjects.length > 0) subtext = "Choisis un chapitre pour commencer à réviser.";
+    else subtext = "Ajoute ta première matière pour démarrer.";
+  }
+
   return `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
     ${authed
-      ? `<p class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</p>`
-      : `<p class="ai-intro">Ton compte, ta progression et tes raccourcis, au même endroit.</p>`}
+      ? `<p class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</p><p class="myspace-subtext">${subtext}</p>`
+      : `<p class="ai-intro">${subtext}</p>`}
 
-    ${renderAccountSection()}
+    ${authed ? renderProfileHero() : renderAccountSection()}
 
     ${authed ? "" : `
     <div class="myspace-localname-standalone">
@@ -9983,6 +10093,8 @@ function renderMySpace(){
       <button class="btn-text" id="local-firstname-save-btn" type="button">Enregistrer</button>
       <span id="local-firstname-status"></span>
     </div>`}
+
+    ${authed ? renderOnboardingNudge() : ""}
 
     <div class="dash-grid2">
       <div class="dash-card">
@@ -9998,21 +10110,44 @@ function renderMySpace(){
       </div>
 
       <div class="dash-card">
-        <div class="dash-card-eyebrow">Mes révisions &amp; activités</div>
-        <div class="dash-quicklinks">
-          <button class="dash-quick-btn" id="myspace-library-btn"><span class="ico">📚</span><span class="lbl">Mes matières</span></button>
-          <button class="dash-quick-btn" id="myspace-activities-btn"><span class="ico">🧠</span><span class="lbl">Activités</span></button>
-          <button class="dash-quick-btn" id="myspace-ai-btn"><span class="ico">🤖</span><span class="lbl">Assistant IA</span></button>
-          <button class="dash-quick-btn" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="lbl">Planning</span></button>
-          <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
-        </div>
+        <div class="dash-card-eyebrow">Continuer à réviser</div>
+        ${rcChapter ? `
+          <h2 class="dash-card-title">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</h2>
+          <p class="dash-card-meta">Dernière activité : ${fmtRelativeDate(dateKey(new Date(rc.ts))).toLowerCase()}</p>
+          <button class="btn red" id="myspace-continue-btn">▶️ Reprendre</button>
+        ` : `
+          <h2 class="dash-card-title">Commence une nouvelle révision</h2>
+          <p class="dash-card-meta">Ouvre une matière pour lancer ton premier quiz.</p>
+          <button class="btn outline" id="myspace-library-btn2">Voir mes matières</button>
+        `}
       </div>
     </div>
+
+    <div class="section-title" style="margin-top:22px;">Mes raccourcis</div>
+    <div class="myspace-shortcuts-grid" style="margin-bottom:22px;">
+      <button class="myspace-shortcut" id="myspace-library-btn"><span class="ico">📚</span><span class="txt"><span class="t">Mes matières</span><span class="d">Accéder à mes cours</span></span></button>
+      <button class="myspace-shortcut" id="myspace-ai-btn"><span class="ico">🤖</span><span class="txt"><span class="t">Assistant IA</span><span class="d">Poser une question</span></span></button>
+      <button class="myspace-shortcut" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="txt"><span class="t">Planning</span><span class="d">Voir mes prochaines révisions</span></span></button>
+      <button class="myspace-shortcut" id="myspace-activities-btn"><span class="ico">🎯</span><span class="txt"><span class="t">Activités</span><span class="d">Continuer mes activités</span></span></button>
+      <button class="myspace-shortcut" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="txt"><span class="t">Paramètres</span><span class="d">Sauvegarde, cache IA…</span></span></button>
+    </div>
+
+    ${authed ? renderInfoCard() : ""}
   `;
 }
 
 function attachMySpaceEvents(){
   attachAccountEvents();
+
+  const onboardBtn = document.getElementById("account-onboard-btn");
+  if(onboardBtn) onboardBtn.addEventListener("click", openAccountEditModal);
+  const editBtn2 = document.getElementById("account-edit-btn-2");
+  if(editBtn2) editBtn2.addEventListener("click", openAccountEditModal);
+
+  const continueBtn = document.getElementById("myspace-continue-btn");
+  if(continueBtn) continueBtn.addEventListener("click", continueRevision);
+  const libBtn2 = document.getElementById("myspace-library-btn2");
+  if(libBtn2) libBtn2.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
 
   const localNameInput = document.getElementById("local-firstname-input");
   const localNameSaveBtn = document.getElementById("local-firstname-save-btn");
