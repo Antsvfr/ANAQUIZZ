@@ -154,6 +154,9 @@
   .dropdown-menu button:hover, .dropdown-menu a:hover{ background: var(--red-tint); color: var(--red-dark); }
   .dropdown-menu hr{ border:none; border-top:1px solid var(--border); margin: 6px 2px; }
   .dropdown-menu .dd-add{ color: var(--red); font-weight:800; }
+  .dropdown-menu button[aria-current="true"]{ background: var(--red-tint); color: var(--red-dark); }
+  .dropdown-menu button[aria-current="true"]::after{ content:"✓"; margin-left:auto; padding-left:8px; }
+  #lang-trigger-code{ font-weight:800; letter-spacing:0.03em; }
 
   .topbar-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
   .topbar-divider{ width:1px; height:28px; background: rgba(255,255,255,0.28); }
@@ -1618,59 +1621,72 @@
 
       <nav class="mainnav" id="mainnav">
         <div class="mainnav-item" data-nav="dashboard">
-          <button class="mainnav-link" data-goto="dashboard">Accueil</button>
+          <button class="mainnav-link" data-goto="dashboard" data-i18n="nav.home">Accueil</button>
         </div>
 
         <div class="mainnav-item" data-nav="library">
-          <button class="mainnav-link" data-menu-toggle="library">Mes matières <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="library"><span data-i18n="nav.subjects">Mes matières</span> <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-library">
-            <button data-goto="library">Toutes mes matières</button>
+            <button data-goto="library" data-i18n="nav.subjects_all">Toutes mes matières</button>
             <div id="menu-library-subjects"></div>
             <hr>
-            <button class="dd-add" data-goto="library-add">+ Ajouter une matière</button>
+            <button class="dd-add" data-goto="library-add" data-i18n="nav.subjects_add">+ Ajouter une matière</button>
           </div>
         </div>
 
         <div class="mainnav-item" data-nav="activities">
-          <button class="mainnav-link" data-menu-toggle="activities">Activités <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="activities"><span data-i18n="nav.activities">Activités</span> <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-activities">
-            <button data-goto="activities">Toutes les activités</button>
+            <button data-goto="activities" data-i18n="nav.activities_all">Toutes les activités</button>
             <hr>
-            <button data-goto="quiz">Quiz</button>
-            <button data-goto="flash">Flashcards</button>
-            <button data-goto="oral">Interrogation orale</button>
-            <button data-goto="ai">Questions ouvertes</button>
+            <button data-goto="quiz" data-i18n="nav.activities_quiz">Quiz</button>
+            <button data-goto="flash" data-i18n="nav.activities_flash">Flashcards</button>
+            <button data-goto="oral" data-i18n="nav.activities_oral">Interrogation orale</button>
+            <button data-goto="ai" data-i18n="nav.activities_open">Questions ouvertes</button>
           </div>
         </div>
 
         <div class="mainnav-item" data-nav="resources">
-          <button class="mainnav-link" data-menu-toggle="resources">Ressources <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="resources"><span data-i18n="nav.resources">Ressources</span> <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-resources">
-            <button data-goto="fiches" data-filter="all">Bibliothèque de cours</button>
-            <button data-goto="import-course">📥 Importer un cours</button>
+            <button data-goto="fiches" data-filter="all" data-i18n="nav.resources_library">Bibliothèque de cours</button>
+            <button data-goto="import-course" data-i18n="nav.resources_import">📥 Importer un cours</button>
           </div>
         </div>
 
         <div class="mainnav-item" data-nav="exams">
-          <button class="mainnav-link" data-menu-toggle="exams">Examens <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="exams"><span data-i18n="nav.exams">Examens</span> <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-exams">
-            <button data-goto="exams">Vue d'ensemble</button>
+            <button data-goto="exams" data-i18n="nav.exams_overview">Vue d'ensemble</button>
             <hr>
-            <button data-goto="exam">Examens blancs</button>
-            <button data-goto="exams-sujets">Mes sujets</button>
+            <button data-goto="exam" data-i18n="nav.exams_mocks">Examens blancs</button>
+            <button data-goto="exams-sujets" data-i18n="nav.exams_subjects">Mes sujets</button>
           </div>
         </div>
 
         <div class="mainnav-item" data-nav="planning">
-          <button class="mainnav-link" data-goto="planning">Planning</button>
+          <button class="mainnav-link" data-goto="planning" data-i18n="nav.planning">Planning</button>
         </div>
 
         <div class="mainnav-item" data-nav="progress">
-          <button class="mainnav-link" data-menu-toggle="progress">Progression <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="progress"><span data-i18n="nav.progress">Progression</span> <span class="caret">▾</span></button>
           <div class="dropdown-menu" id="menu-progress">
-            <button data-goto="progress">Vue globale</button>
-            <button data-goto="progress">Progression par matière</button>
-            <button data-goto="library">Progression par chapitre</button>
+            <button data-goto="progress" data-i18n="nav.progress_global">Vue globale</button>
+            <button data-goto="progress" data-i18n="nav.progress_bysubject">Progression par matière</button>
+            <button data-goto="library" data-i18n="nav.progress_bychapter">Progression par chapitre</button>
+          </div>
+        </div>
+
+        <div class="mainnav-item" data-nav="lang">
+          <button class="mainnav-link" data-menu-toggle="lang" id="lang-trigger-btn" aria-label="Langue de l'interface" data-i18n-attr="aria-label:lang.selector_label">
+            <span id="lang-trigger-flag" aria-hidden="true">🌐</span><span id="lang-trigger-code">FR</span> <span class="caret">▾</span>
+          </button>
+          <div class="dropdown-menu" id="menu-lang" role="menu">
+            <button type="button" data-set-lang="fr" role="menuitemradio"><span aria-hidden="true">🇫🇷</span> <span data-i18n="lang.fr">Français</span></button>
+            <button type="button" data-set-lang="en" role="menuitemradio"><span aria-hidden="true">🇬🇧</span> <span data-i18n="lang.en">English</span></button>
+            <button type="button" data-set-lang="es" role="menuitemradio"><span aria-hidden="true">🇪🇸</span> <span data-i18n="lang.es">Español</span></button>
+            <button type="button" data-set-lang="de" role="menuitemradio"><span aria-hidden="true">🇩🇪</span> <span data-i18n="lang.de">Deutsch</span></button>
+            <button type="button" data-set-lang="it" role="menuitemradio"><span aria-hidden="true">🇮🇹</span> <span data-i18n="lang.it">Italiano</span></button>
           </div>
         </div>
       </nav>
@@ -1681,7 +1697,7 @@
           <span class="profile-avatar" id="profile-avatar">?</span>
           <span class="profile-label" id="profile-label">Bonjour</span>
         </button>
-        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu">☰</button>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" data-i18n-attr="aria-label:nav.menu_aria">☰</button>
       </div>
     </div>
   </div>
@@ -1710,6 +1726,10 @@
 <script src="supabase-config.js" onerror="console.warn('[LyonAuth] supabase-config.js introuvable — copie supabase-config.example.js et renseigne tes valeurs (voir SETUP_SUPABASE.md). Le site continue de fonctionner sans compte.')"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="auth.js"></script>
+<!-- Traductions de l'interface (i18n) : module autonome, chargé avant le
+     script principal pour que window.LyonI18n existe dès le premier rendu
+     (même principe que auth.js). Voir translations.js. -->
+<script src="translations.js"></script>
 
 <script>
 /* ============================================================
@@ -2814,6 +2834,18 @@ function escapeHtml(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
+/* Raccourci global vers le système de traduction (translations.js) : toutes
+   les chaînes affichées à l'utilisateur passent par t("namespace.cle") au
+   lieu d'être écrites en dur — voir translations.js pour l'architecture
+   complète. Si LyonI18n n'a pas pu se charger (fichier manquant), on
+   retombe sur la clé elle-même plutôt que de casser le rendu. */
+function t(key, vars){
+  return window.LyonI18n ? LyonI18n.t(key, vars) : key;
+}
+function currentLocaleTag(){
+  return window.LyonI18n ? LyonI18n.localeTag() : "fr-FR";
+}
+
 function genLibId(prefix){
   return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
 }
@@ -2886,12 +2918,12 @@ function fmtRelativeDate(k){
   const today = todayKey();
   const yestDate = new Date(); yestDate.setDate(yestDate.getDate()-1);
   const yest = dateKey(yestDate);
-  if(k === today) return "Aujourd'hui";
-  if(k === yest) return "Hier";
+  if(k === today) return t("date.today");
+  if(k === yest) return t("date.yesterday");
   const diff = diffDaysKeys(k, today);
-  if(diff < 7 && diff > 0) return "Il y a " + diff + " jours";
+  if(diff < 7 && diff > 0) return t("date.days_ago", {n: diff});
   const dt = new Date(k+"T00:00:00");
-  return dt.toLocaleDateString("fr-FR", {day:"2-digit", month:"short"});
+  return dt.toLocaleDateString(currentLocaleTag(), {day:"2-digit", month:"short"});
 }
 
 function chapterIdFromQuizScope(scope){
@@ -3737,18 +3769,19 @@ function renderDashboard(){
 
   /* ---------- Bannière de bienvenue ---------- */
   const today = new Date();
-  const dateLabel = today.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  const dateLabel = today.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  const greeting = greetName ? t("greeting.hello_name_plain", {name: escapeHtml(greetName)}) : t("greeting.hello_plain");
   html += `<div class="dash-banner">
     <div class="dash-banner-left">
       <div class="dash-banner-eyebrow">${dateLabel}</div>
-      <h1 class="dash-banner-title">Bonjour${greetName ? " " + escapeHtml(greetName) : ""}</h1>
-      <p class="dash-banner-sub">Prêt à continuer tes révisions ?</p>
-      <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
+      <h1 class="dash-banner-title">${greeting}</h1>
+      <p class="dash-banner-sub">${t("dashboard.subtitle")}</p>
+      <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? t("dashboard.resume") : t("dashboard.start")}</button>
     </div>
     <div class="dash-banner-actions">
-      <button class="dash-banner-action" id="dash-banner-import-btn"><span class="ico">📥</span>Importer un cours</button>
-      <button class="dash-banner-action" id="dash-banner-planning-btn"><span class="ico">🗓️</span>Planning</button>
-      <button class="dash-banner-action" id="dash-banner-ai-btn"><span class="ico">🤖</span>Assistant IA</button>
+      <button class="dash-banner-action" id="dash-banner-import-btn"><span class="ico">📥</span>${t("dashboard.import_course")}</button>
+      <button class="dash-banner-action" id="dash-banner-planning-btn"><span class="ico">🗓️</span>${t("dashboard.planning")}</button>
+      <button class="dash-banner-action" id="dash-banner-ai-btn"><span class="ico">🤖</span>${t("dashboard.ai_assistant")}</button>
     </div>
   </div>`;
 
@@ -3761,40 +3794,40 @@ function renderDashboard(){
   if(rcChapter){
     const lastKey = dateKey(new Date(rc.ts));
     html += `<div class="dash-card dash-card-primary">
-      <div class="dash-card-eyebrow">Reprendre mes révisions</div>
+      <div class="dash-card-eyebrow">${t("dashboard.resume_revisions")}</div>
       <h2 class="dash-card-title">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</h2>
-      <p class="dash-card-meta">Dernière révision : ${fmtRelativeDate(lastKey).toLowerCase()}</p>
-      <button class="btn red" id="dash-continue-btn">▶️ Reprendre</button>
+      <p class="dash-card-meta">${t("dashboard.last_revision", {when: fmtRelativeDate(lastKey).toLowerCase()})}</p>
+      <button class="btn red" id="dash-continue-btn">${t("dashboard.resume_btn")}</button>
     </div>`;
   } else {
     html += `<div class="dash-card dash-card-primary">
-      <div class="dash-card-eyebrow">Reprendre mes révisions</div>
-      <h2 class="dash-card-title">Commence ta première révision</h2>
-      <p class="dash-card-meta">Ouvre une matière et un chapitre pour lancer ton premier quiz.</p>
-      <button class="btn outline" id="dash-library-btn">Voir mes matières</button>
+      <div class="dash-card-eyebrow">${t("dashboard.resume_revisions")}</div>
+      <h2 class="dash-card-title">${t("dashboard.start_first")}</h2>
+      <p class="dash-card-meta">${t("dashboard.start_first_desc")}</p>
+      <button class="btn outline" id="dash-library-btn">${t("dashboard.view_subjects")}</button>
     </div>`;
   }
 
   /* ---------- Bloc 2 : progression globale ---------- */
   const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
   html += `<div class="dash-card">
-    <div class="dash-card-eyebrow">Ma progression</div>
+    <div class="dash-card-eyebrow">${t("dashboard.my_progress")}</div>
     <div class="dash-progress-big">${g.mastery}%</div>
     <ul class="dash-progress-list">
-      <li><span>Matières commencées</span><b>${startedSubjects}/${subjects.length}</b></li>
-      <li><span>Chapitres maîtrisés</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
-      <li><span>Questions travaillées</span><b>${g.answered}/${g.total}</b></li>
-      <li><span>Temps de révision</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
+      <li><span>${t("dashboard.subjects_started")}</span><b>${startedSubjects}/${subjects.length}</b></li>
+      <li><span>${t("dashboard.chapters_mastered")}</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
+      <li><span>${t("dashboard.questions_worked")}</span><b>${g.answered}/${g.total}</b></li>
+      <li><span>${t("dashboard.revision_time")}</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
     </ul>
-    <button class="btn-text" id="dash-progress-link">Voir le détail →</button>
+    <button class="btn-text" id="dash-progress-link">${t("dashboard.view_detail")}</button>
   </div>`;
 
   /* ---------- Bloc 3 : mes matières ---------- */
   html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Mes matières</span></div>`;
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.my_subjects")}</span></div>`;
   if(subjects.length === 0){
-    html += `<p class="dash-empty">Tu n'as pas encore ajouté de matière.</p>
-      <button class="btn outline small" id="dash-addcourse-btn" style="margin-top:10px;">+ Ajouter ma première matière</button>`;
+    html += `<p class="dash-empty">${t("dashboard.no_subjects")}</p>
+      <button class="btn outline small" id="dash-addcourse-btn" style="margin-top:10px;">${t("dashboard.add_first_subject")}</button>`;
   } else {
     recentSubjectsPreview(3).forEach(s=>{
       const chs = chaptersOfSubject(s.id);
@@ -3808,16 +3841,16 @@ function renderDashboard(){
         <span class="pct">${prog===null?"—":prog+"%"}</span>
       </div>`;
     });
-    html += `<button class="btn-text" id="dash-viewall-subjects" style="margin-top:10px;">Voir toutes mes matières →</button>`;
+    html += `<button class="btn-text" id="dash-viewall-subjects" style="margin-top:10px;">${t("dashboard.view_all_subjects")}</button>`;
   }
   html += `</div>`;
 
   /* ---------- Bloc 4 : activité récente ---------- */
   const feed = recentFeedItems(5);
   html += `<div class="dash-card" id="dash-recent-activity">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Activité récente</span></div>`;
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.recent_activity")}</span></div>`;
   if(feed.length === 0){
-    html += `<p class="dash-empty">Aucune activité récente.<br>Commence une première révision pour voir apparaître ton historique.</p>`;
+    html += `<p class="dash-empty">${t("dashboard.no_recent_activity")}</p>`;
   } else {
     html += `<div class="dash-feed">` + feed.map(it => `<div class="dash-feed-item">${it}</div>`).join("") + `</div>`;
   }
@@ -3825,14 +3858,14 @@ function renderDashboard(){
 
   /* ---------- Bloc 5 : actions rapides ---------- */
   html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Actions rapides</span></div>
+    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.quick_actions")}</span></div>
     <div class="dash-quicklinks">
-      <button class="dash-quick-btn" id="dash-import-course-btn"><span class="ico">📥</span><span class="lbl">Importer un cours</span></button>
-      <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">Voir mes matières</span></button>
-      <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">Ajouter un cours</span></button>
-      <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">Faire une activité</span></button>
-      <button class="dash-quick-btn" id="dash-exams-btn"><span class="ico">📝</span><span class="lbl">Passer un examen</span></button>
-      <button class="dash-quick-btn" id="dash-planning-btn"><span class="ico">🗓️</span><span class="lbl">Voir mon planning</span></button>
+      <button class="dash-quick-btn" id="dash-import-course-btn"><span class="ico">📥</span><span class="lbl">${t("dashboard.quick_import")}</span></button>
+      <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">${t("dashboard.quick_view_subjects")}</span></button>
+      <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">${t("dashboard.quick_add_course")}</span></button>
+      <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">${t("dashboard.quick_activity")}</span></button>
+      <button class="dash-quick-btn" id="dash-exams-btn"><span class="ico">📝</span><span class="lbl">${t("dashboard.quick_exam")}</span></button>
+      <button class="dash-quick-btn" id="dash-planning-btn"><span class="ico">🗓️</span><span class="lbl">${t("dashboard.quick_planning")}</span></button>
     </div>
   </div>`;
 
@@ -3840,7 +3873,7 @@ function renderDashboard(){
 
   html += renderDashboardRevisions();
 
-  html += `<footer class="hint">Toutes tes données sont enregistrées dans ce navigateur (localStorage) et restent disponibles après fermeture.${storageAvailable ? "" : " ⚠️ Le stockage local semble bloqué : cette session ne sera pas conservée."}</footer>`;
+  html += `<footer class="hint">${t("dashboard.storage_hint")}${storageAvailable ? "" : t("dashboard.storage_warning")}</footer>`;
 
   return html;
 }
@@ -3886,17 +3919,17 @@ function renderDashboardSchedule(){
   const previewDay = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
   let html = `<div class="dash-card dash-schedule-card" id="dash-schedule-card">
     <div class="dash-card-head">
-      <span class="section-title" style="margin-bottom:0;">🗓️ Mon emploi du temps</span>
+      <span class="section-title" style="margin-bottom:0;">${t("dashboard.schedule_title")}</span>
       <div class="dash-schedule-nav">
-        <button class="dash-schedule-navbtn ${previewDay===0?"active":""}" data-schedule-day="today">Aujourd'hui</button>
-        <button class="dash-schedule-navbtn ${previewDay===1?"active":""}" data-schedule-day="tomorrow">Demain</button>
-        <button class="dash-schedule-navbtn" id="dash-schedule-week">Semaine</button>
+        <button class="dash-schedule-navbtn ${previewDay===0?"active":""}" data-schedule-day="today">${t("dashboard.today")}</button>
+        <button class="dash-schedule-navbtn ${previewDay===1?"active":""}" data-schedule-day="tomorrow">${t("dashboard.tomorrow")}</button>
+        <button class="dash-schedule-navbtn" id="dash-schedule-week">${t("dashboard.week")}</button>
       </div>
     </div>`;
 
   if(state.planning.events.length === 0){
-    html += `<p class="dash-empty">Aucun planning importé pour l'instant.</p>
-      <button class="btn outline small" id="dash-schedule-setup" style="margin-top:6px;">Configurer mon planning</button></div>`;
+    html += `<p class="dash-empty">${t("dashboard.no_planning")}</p>
+      <button class="btn outline small" id="dash-schedule-setup" style="margin-top:6px;">${t("dashboard.setup_planning")}</button></div>`;
     return html;
   }
 
@@ -3926,7 +3959,7 @@ function renderDashboardSchedule(){
   if(others.length){
     html += `<div class="dash-schedule-list">` + others.map(e=>{
       const st = getCourseStatus(e);
-      const stLabel = st === "past" ? "Terminé" : (st === "current" ? "En cours" : "À venir");
+      const stLabel = st === "past" ? t("dashboard.status_done") : (st === "current" ? t("dashboard.status_current") : t("dashboard.status_upcoming"));
       return `<div class="dash-schedule-row status-${st}" data-open-event="${e.id}" tabindex="0" role="button" aria-label="${escapeHtml(e.summary)}">
         <span class="dash-schedule-time">${fmtEventTimeRange(e)}</span>
         <span class="dash-schedule-title">${escapeHtml(e.summary)}</span>
@@ -3934,10 +3967,10 @@ function renderDashboardSchedule(){
       </div>`;
     }).join("") + `</div>`;
   } else if(!current){
-    html += `<p class="dash-empty">Aucun cours ${previewDay === 0 ? "aujourd'hui" : "demain"}.</p>`;
+    html += `<p class="dash-empty">${previewDay === 0 ? t("dashboard.no_course_today") : t("dashboard.no_course_tomorrow")}</p>`;
   }
 
-  html += `<button class="btn-text" id="dash-schedule-full" style="margin-top:10px;">Voir le planning complet →</button>`;
+  html += `<button class="btn-text" id="dash-schedule-full" style="margin-top:10px;">${t("dashboard.view_full_planning")}</button>`;
   html += `</div>`;
   return html;
 }
@@ -5983,7 +6016,7 @@ function renderCourseImportWizard(){
 
 function renderImportCancelled(item){
   return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Génération annulée</h1>
-  <div class="ai-notice">Génération annulée.<br>Ton cours original n'a pas été supprimé${item.charCount ? " — le texte extrait (" + item.charCount.toLocaleString("fr-FR") + " caractères) reste disponible" : ""}.</div>
+  <div class="ai-notice">Génération annulée.<br>Ton cours original n'a pas été supprimé${item.charCount ? " — le texte extrait (" + item.charCount.toLocaleString(currentLocaleTag()) + " caractères) reste disponible" : ""}.</div>
   <div class="actions" style="justify-content:flex-start;margin-top:16px;flex-wrap:wrap;">
     <button class="btn red" id="import-relaunch-btn">🔄 Relancer la génération</button>
     <button class="btn-text" id="import-cancel-back-btn">← Retour à mes cours</button>
@@ -6163,7 +6196,7 @@ function renderImportDetectOrReview(){
 
     <div class="import-stats-row">
       ${item.numPages ? `<span>📑 ${item.numPages} page${item.numPages>1?"s":""}</span>` : ""}
-      <span>📄 ${item.charCount.toLocaleString("fr-FR")} caractères</span>
+      <span>📄 ${item.charCount.toLocaleString(currentLocaleTag())} caractères</span>
       <span>💡 ${d.notions.length} notion${d.notions.length>1?"s":""} détectée${d.notions.length>1?"s":""}</span>
       ${matched ? `<span>♻️ Ajouté à « ${escapeHtml(matched.name)} »</span>` : `<span>✨ Nouvelle matière</span>`}
     </div>
@@ -6239,7 +6272,7 @@ function renderImportResult(){
         <span>🃏 ${cardsLen} flashcard${cardsLen>1?"s":""}</span>
         <span>🎯 ${qLen} question${qLen>1?"s":""} de révision</span>
         <span>💡 ${(item.detected.notions||[]).length} notion${(item.detected.notions||[]).length>1?"s":""}</span>
-        <span>📅 importé le ${new Date(ch?ch.createdAt:Date.now()).toLocaleDateString("fr-FR")}</span>
+        <span>📅 importé le ${new Date(ch?ch.createdAt:Date.now()).toLocaleDateString(currentLocaleTag())}</span>
       </div>`;
     if(item.heuristicMode){
       html += `<div class="ai-notice" style="margin-top:14px;">⚙️ Cours enregistré <b>sans IA</b> (mode simplifié) : la fiche${cardsLen?" et les flashcards ont":" a"} été construite automatiquement à partir des titres et définitions repérés dans le texte, sans rien inventer. Le résumé, les questions de révision${quizLen?"":" et un quiz plus riche"} pourront être générés dès que l'assistant IA local sera disponible.
@@ -9327,7 +9360,7 @@ function renderAI(){
             <div class="htype">${escapeHtml(h.typeLabel || "Assistant")}</div>
             <div class="hprompt">${escapeHtml(h.prompt || "")}</div>
           </div>
-          <span class="hdate">${d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})} · ${d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>
+          <span class="hdate">${d.toLocaleDateString(currentLocaleTag(),{day:"2-digit",month:"short"})} · ${d.toLocaleTimeString(currentLocaleTag(),{hour:"2-digit",minute:"2-digit"})}</span>
         </button>`;
       }).join("")}
     </div>`;
@@ -9714,42 +9747,62 @@ function resetAllData(){
 }
 
 function renderSettings(){
+  const curLang = window.LyonI18n ? LyonI18n.getLang() : "fr";
+  const langOption = (code, flagEmoji, key, fallback) => `<button type="button" class="btn ${curLang===code?"red":"outline"} small" data-settings-lang="${code}" aria-current="${curLang===code?"true":"false"}">${flagEmoji} ${t(key) || fallback}</button>`;
   return `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Paramètres</h1>
-    <p class="ai-intro">Toutes tes données (matières, chapitres, quiz, flashcards, examens, IA) sont stockées uniquement dans ce navigateur — aucun serveur n'est utilisé.</p>
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("settings.title")}</h1>
+    <p class="ai-intro">${t("settings.intro")}</p>
 
     <div class="dash-section">
-      <div class="section-title">Sauvegarder / restaurer mes données</div>
-      <p class="dash-empty" style="margin-top:0;">Exporte une sauvegarde complète de ton compte, pour la garder ou la transférer sur un autre navigateur. Pour importer un cours (PDF, DOCX, TXT...), utilise « Importer un cours » depuis Mes matières — pas cette section.</p>
+      <div class="section-title">${t("settings.language_title")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("settings.language_desc")}</p>
+      <div class="actions" style="justify-content:flex-start;gap:8px;flex-wrap:wrap;">
+        ${langOption("fr","🇫🇷","lang.fr","Français")}
+        ${langOption("en","🇬🇧","lang.en","English")}
+        ${langOption("es","🇪🇸","lang.es","Español")}
+        ${langOption("de","🇩🇪","lang.de","Deutsch")}
+        ${langOption("it","🇮🇹","lang.it","Italiano")}
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-title">${t("settings.backup_title")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("settings.backup_desc")}</p>
       <div class="actions" style="justify-content:flex-start;gap:10px;">
-        <button class="btn outline small" id="settings-export-btn">⬇️ Exporter toutes mes données (sauvegarde JSON)</button>
-        <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="settings-import-input" accept=".json,application/json" style="display:none;"></label>
+        <button class="btn outline small" id="settings-export-btn">${t("settings.export_btn")}</button>
+        <label class="btn outline small" style="cursor:pointer;margin:0;">${t("settings.import_btn")}<input type="file" id="settings-import-input" accept=".json,application/json" style="display:none;"></label>
       </div>
       <div id="settings-status" style="margin-top:10px;font-size:13px;color:var(--ink-soft);"></div>
     </div>
 
     <div class="dash-section">
-      <div class="section-title">Réinitialiser mon historique de réponses</div>
-      <p class="dash-empty" style="margin-top:0;">Remet à zéro la maîtrise de toutes les questions, sans supprimer tes matières et chapitres.</p>
-      <button class="btn-text" id="settings-reset-stats-btn">Réinitialiser mon historique de réponses</button>
+      <div class="section-title">${t("settings.reset_stats_title")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("settings.reset_stats_desc")}</p>
+      <button class="btn-text" id="settings-reset-stats-btn">${t("settings.reset_stats_btn")}</button>
     </div>
 
     <div class="dash-section">
-      <div class="section-title">Réinitialiser le cache IA</div>
-      <p class="dash-empty" style="margin-top:0;">Force le rechargement du modèle d'IA au prochain lancement de l'assistant.</p>
-      <button class="btn-text" id="settings-reset-ai-btn">Réinitialiser le cache IA</button>
+      <div class="section-title">${t("settings.reset_ai_title")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("settings.reset_ai_desc")}</p>
+      <button class="btn-text" id="settings-reset-ai-btn">${t("settings.reset_ai_btn")}</button>
     </div>
 
     <div class="dash-section">
-      <div class="section-title" style="color:var(--red-dark);">Zone de danger</div>
-      <p class="dash-empty" style="margin-top:0;">Supprime définitivement toutes tes données locales (matières, chapitres, quiz, flashcards, examens, progression). Cette action est irréversible.</p>
-      <button class="btn red small" id="settings-reset-all-btn">🗑️ Réinitialiser toutes mes données</button>
+      <div class="section-title" style="color:var(--red-dark);">${t("settings.danger_zone")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("settings.danger_desc")}</p>
+      <button class="btn red small" id="settings-reset-all-btn">${t("settings.reset_all_btn")}</button>
     </div>
   `;
 }
 
 function attachSettingsEvents(){
   const statusEl = () => document.getElementById("settings-status");
+
+  document.querySelectorAll("[data-settings-lang]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(window.LyonI18n) LyonI18n.setLang(btn.dataset.settingsLang);
+    });
+  });
 
   const exportBtn = document.getElementById("settings-export-btn");
   if(exportBtn) exportBtn.addEventListener("click", exportAllData);
@@ -9758,19 +9811,19 @@ function attachSettingsEvents(){
   if(importInput) importInput.addEventListener("change", async ()=>{
     const file = importInput.files[0];
     if(!file) return;
-    if(!confirm("Importer cette sauvegarde va remplacer tes données actuelles pour les clés qu'elle contient. Continuer ?")) { importInput.value = ""; return; }
+    if(!confirm(t("settings.confirm_import"))) { importInput.value = ""; return; }
     try{
       await importAllDataFromFile(file);
-      if(statusEl()) statusEl().textContent = "Import réussi. Rechargement…";
+      if(statusEl()) statusEl().textContent = t("settings.import_success");
       setTimeout(()=> location.reload(), 600);
     }catch(e){
-      if(statusEl()) statusEl().textContent = "Erreur lors de l'import : " + e.message;
+      if(statusEl()) statusEl().textContent = t("settings.import_error_prefix") + e.message;
     }
   });
 
   const resetStatsBtn = document.getElementById("settings-reset-stats-btn");
   if(resetStatsBtn) resetStatsBtn.addEventListener("click", ()=>{
-    if(!confirm("Réinitialiser tout ton historique de réponses aux quiz ? Cette action est définitive.")) return;
+    if(!confirm(t("settings.confirm_reset_stats"))) return;
     state.qstats = {};
     state.progress = {};
     saveQStats();
@@ -9780,13 +9833,13 @@ function attachSettingsEvents(){
 
   const resetAIBtn = document.getElementById("settings-reset-ai-btn");
   if(resetAIBtn) resetAIBtn.addEventListener("click", ()=>{
-    if(confirm("Réinitialiser le cache IA ? Le modèle devra être retéléchargé au prochain lancement.")) aiResetCache();
+    if(confirm(t("settings.confirm_reset_ai"))) aiResetCache();
   });
 
   const resetAllBtn = document.getElementById("settings-reset-all-btn");
   if(resetAllBtn) resetAllBtn.addEventListener("click", ()=>{
-    if(!confirm("Supprimer TOUTES tes données locales (matières, chapitres, quiz, flashcards, examens, progression) ? Cette action est irréversible.")) return;
-    if(!confirm("Dernière confirmation : toutes tes données seront perdues définitivement. Continuer ?")) return;
+    if(!confirm(t("settings.confirm_reset_all_1"))) return;
+    if(!confirm(t("settings.confirm_reset_all_2"))) return;
     resetAllData();
     location.reload();
   });
@@ -9806,8 +9859,8 @@ function attachSettingsEvents(){
 function renderAccountSection(){
   if(!window.LyonAuth || !LyonAuth.available){
     return `<div class="dash-section">
-      <div class="section-title">Mon compte</div>
-      <p class="dash-empty" style="margin-top:0;">La connexion à un compte n'est pas encore configurée sur ce site. Tes données restent enregistrées dans ce navigateur, comme aujourd'hui.</p>
+      <div class="section-title">${t("account.mycompte")}</div>
+      <p class="dash-empty" style="margin-top:0;">${t("auth.not_configured")}</p>
     </div>`;
   }
 
@@ -9817,32 +9870,32 @@ function renderAccountSection(){
     return `<div class="auth-confirm" id="account-section">
       <span class="ico">📧</span>
       <div>
-        <h2>Vérifie ton adresse e-mail</h2>
-        <p>Un e-mail de confirmation a été envoyé à <b>${escapeHtml(state.accountUI.pendingConfirmationEmail)}</b>. Clique sur le lien reçu pour activer ton compte, puis reviens te connecter ici.</p>
-        <button class="btn-text" id="account-back-to-signin-btn" type="button">← Revenir à la connexion</button>
+        <h2>${t("auth.check_email_title")}</h2>
+        <p>${t("auth.check_email_body", {email: "<b>" + escapeHtml(state.accountUI.pendingConfirmationEmail) + "</b>"})}</p>
+        <button class="btn-text" id="account-back-to-signin-btn" type="button">${t("auth.back_to_signin")}</button>
       </div>
     </div>`;
   }
 
   const mode = state.accountUI.mode;
-  const busyLabel = mode === "signup" ? "Création du compte…" : "Connexion…";
+  const busyLabel = mode === "signup" ? t("auth.busy_signup") : t("auth.busy_signin");
   return `<div class="dash-section" id="account-section">
     <div class="auth-card-head">
-      <h2>${mode === "signup" ? "Créer mon compte" : "Content de te revoir"}</h2>
-      <p>Crée un compte pour retrouver tes matières, cours et progression sur tous tes appareils. Tes données restent aussi disponibles hors connexion.</p>
+      <h2>${mode === "signup" ? t("auth.create_account_title") : t("auth.welcome_back")}</h2>
+      <p>${t("auth.intro")}</p>
     </div>
     <div class="auth-toggle">
-      <button class="${mode==="signin"?"active":""}" data-account-mode="signin" type="button">Se connecter</button>
-      <button class="${mode==="signup"?"active":""}" data-account-mode="signup" type="button">Créer un compte</button>
+      <button class="${mode==="signin"?"active":""}" data-account-mode="signin" type="button">${t("auth.signin")}</button>
+      <button class="${mode==="signup"?"active":""}" data-account-mode="signup" type="button">${t("auth.signup")}</button>
     </div>
     <form id="account-form" style="max-width:360px;">
-      ${mode==="signup" ? `<div class="ai-field"><label for="account-name">Pseudo (facultatif)</label><input type="text" id="account-name" class="ai-select" placeholder="Votre pseudo" autocomplete="nickname"></div>` : ""}
-      <div class="ai-field"><label for="account-email">Email</label><input type="email" id="account-email" class="ai-select" placeholder="toi@exemple.com" autocomplete="email" required></div>
-      <div class="ai-field"><label for="account-password">Mot de passe</label><input type="password" id="account-password" class="ai-select" placeholder="${mode==="signup"?"6 caractères minimum":"••••••••"}" autocomplete="${mode==="signup"?"new-password":"current-password"}" required></div>
-      ${mode==="signup" ? `<div class="ai-field"><label for="account-password2">Confirmer le mot de passe</label><input type="password" id="account-password2" class="ai-select" autocomplete="new-password" required></div>` : ""}
+      ${mode==="signup" ? `<div class="ai-field"><label for="account-name">${t("auth.nickname_optional")}</label><input type="text" id="account-name" class="ai-select" placeholder="${t("auth.nickname_ph")}" autocomplete="nickname"></div>` : ""}
+      <div class="ai-field"><label for="account-email">${t("account.email")}</label><input type="email" id="account-email" class="ai-select" placeholder="${t("auth.email_ph")}" autocomplete="email" required></div>
+      <div class="ai-field"><label for="account-password">${t("auth.password")}</label><input type="password" id="account-password" class="ai-select" placeholder="${mode==="signup"?t("auth.password_ph_signup"):t("auth.password_ph_signin")}" autocomplete="${mode==="signup"?"new-password":"current-password"}" required></div>
+      ${mode==="signup" ? `<div class="ai-field"><label for="account-password2">${t("auth.password_confirm")}</label><input type="password" id="account-password2" class="ai-select" autocomplete="new-password" required></div>` : ""}
       <div class="actions" style="justify-content:flex-start;margin-top:14px;">
-        <button class="btn red small" id="account-submit-btn" type="submit" ${a.busy?"disabled":""}>${a.busy ? busyLabel : (mode==="signup" ? "Créer mon compte" : "Se connecter")}</button>
-        ${mode==="signin" ? `<button class="btn-text" id="account-forgot-btn" type="button">Mot de passe oublié</button>` : ""}
+        <button class="btn red small" id="account-submit-btn" type="submit" ${a.busy?"disabled":""}>${a.busy ? busyLabel : (mode==="signup" ? t("auth.signup") : t("auth.signin"))}</button>
+        ${mode==="signin" ? `<button class="btn-text" id="account-forgot-btn" type="button">${t("auth.forgot")}</button>` : ""}
       </div>
       <div id="account-form-msg"></div>
     </form>
@@ -9886,9 +9939,9 @@ function attachAccountEvents(){
     if(state.accountUI.mode === "signup"){
       const name = document.getElementById("account-name").value.trim();
       const password2 = document.getElementById("account-password2").value;
-      if(!email){ setMsg("Adresse email requise.", true); return; }
-      if(password.length < 6){ setMsg("Le mot de passe doit contenir au moins 6 caractères.", true); return; }
-      if(password !== password2){ setMsg("Les deux mots de passe ne correspondent pas.", true); return; }
+      if(!email){ setMsg(t("auth.email_required"), true); return; }
+      if(password.length < 6){ setMsg(t("auth.password_min"), true); return; }
+      if(password !== password2){ setMsg(t("auth.password_mismatch"), true); return; }
       const res = await LyonAuth.signUp({ email, password, displayName: name });
       if(res.error){ setMsg(res.error, true); return; }
       if(res.needsEmailConfirmation){
@@ -9897,10 +9950,10 @@ function attachAccountEvents(){
         state.accountUI.pendingConfirmationEmail = email;
         render();
       } else {
-        showToast("Compte créé — tu es connecté.");
+        showToast(t("auth.signed_up_toast"));
       }
     } else {
-      if(!email || !password){ setMsg("Email et mot de passe requis.", true); return; }
+      if(!email || !password){ setMsg(t("auth.email_password_required"), true); return; }
       const res = await LyonAuth.signIn({ email, password });
       if(res.error){
         // Cas précis "email non confirmé" : même état accueillant que juste après
@@ -9913,7 +9966,7 @@ function attachAccountEvents(){
         setMsg(res.error, true);
         return;
       }
-      showToast("Connecté.");
+      showToast(t("auth.signed_in_toast"));
     }
   });
 
@@ -9921,20 +9974,20 @@ function attachAccountEvents(){
   if(forgotBtn) forgotBtn.addEventListener("click", async ()=>{
     const emailEl = document.getElementById("account-email");
     const email = emailEl ? emailEl.value.trim() : "";
-    if(!email){ showToast("Renseigne ton email d'abord."); return; }
+    if(!email){ showToast(t("auth.enter_email_first")); return; }
     const res = await LyonAuth.resetPassword(email);
-    showToast(res.error ? res.error : "Email de réinitialisation envoyé si ce compte existe.");
+    showToast(res.error ? res.error : t("auth.reset_sent"));
   });
 
   const signoutBtn = document.getElementById("account-signout-btn");
   if(signoutBtn) signoutBtn.addEventListener("click", async ()=>{
     await LyonAuth.signOut();
-    showToast("Déconnecté.");
+    showToast(t("auth.signed_out_toast"));
   });
 
   const deleteBtn = document.getElementById("account-delete-btn");
   if(deleteBtn) deleteBtn.addEventListener("click", ()=>{
-    showToast("Suppression de compte non disponible pour l'instant (nécessite une configuration serveur supplémentaire).");
+    showToast(t("account.delete_unavailable"));
   });
 
   const editBtn = document.getElementById("account-edit-btn");
@@ -9999,7 +10052,7 @@ function renderProfileHero(){
   const p = a.profile || {};
   const email = a.user ? a.user.email : "";
   const name = accountFullName(p);
-  const title = name || p.display_name || "Ton espace personnel";
+  const title = name || p.display_name || t("account.personal_space");
   const avatarUrl = p._avatarSignedUrl || null;
   const initial = (p.display_name || p.first_name || email || "?").charAt(0).toUpperCase();
   return `<div class="myspace-hero-card" id="account-section">
@@ -10010,11 +10063,11 @@ function renderProfileHero(){
       <div class="myspace-hero-name">${escapeHtml(title)}</div>
       ${p.display_name ? `<div class="myspace-hero-handle">@${escapeHtml(p.display_name)}</div>` : ""}
       <div class="myspace-hero-email">${escapeHtml(email)}</div>
-      <div class="myspace-hero-status"><span class="account-status-dot"></span>Compte actif</div>
+      <div class="myspace-hero-status"><span class="account-status-dot"></span>${t("account.active")}</div>
     </div>
     <div class="myspace-hero-card-actions">
-      <button class="btn red small" id="account-edit-btn" type="button">Modifier mon profil</button>
-      <button class="btn-text" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
+      <button class="btn red small" id="account-edit-btn" type="button">${t("account.edit_profile")}</button>
+      <button class="btn-text" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : t("account.signout")}</button>
     </div>
   </div>`;
 }
@@ -10024,19 +10077,19 @@ function renderInfoCard(){
   const p = LyonAuth.state.profile || {};
   const email = LyonAuth.state.user ? LyonAuth.state.user.email : "";
   const pct = profileCompletionPct(p);
-  const row = (label, value, extra) => `<div class="myspace-info-row"><span class="lbl">${label}</span><span class="val${value?"":" todo"}">${value ? escapeHtml(value) + (extra||"") : "À compléter"}</span></div>`;
+  const row = (label, value, extra) => `<div class="myspace-info-row"><span class="lbl">${label}</span><span class="val${value?"":" todo"}">${value ? escapeHtml(value) + (extra||"") : t("account.todo")}</span></div>`;
   return `<div class="dash-card myspace-infocard">
     <div class="myspace-infocard-head">
-      <span class="dash-card-eyebrow" style="margin-bottom:0;">Mes informations</span>
-      ${pct < 100 ? `<span class="myspace-infocard-badge">Profil complété à ${pct}%</span>` : ""}
+      <span class="dash-card-eyebrow" style="margin-bottom:0;">${t("account.my_info")}</span>
+      ${pct < 100 ? `<span class="myspace-infocard-badge">${t("account.completed_pct", {pct})}</span>` : ""}
     </div>
-    ${row("Prénom", p.first_name)}
-    ${row("Nom", p.last_name)}
-    ${row("Pseudo", p.display_name ? "@" + p.display_name : "")}
-    ${row("Téléphone", p.phone, p.phone ? ` <span class="myspace-unverified">(non vérifié)</span>` : "")}
-    <div class="myspace-info-row"><span class="lbl">Adresse e-mail</span><span class="val">${escapeHtml(email)}</span></div>
+    ${row(t("account.firstname"), p.first_name)}
+    ${row(t("account.lastname"), p.last_name)}
+    ${row(t("account.username"), p.display_name ? "@" + p.display_name : "")}
+    ${row(t("account.phone"), p.phone, p.phone ? ` <span class="myspace-unverified">${t("account.unverified")}</span>` : "")}
+    <div class="myspace-info-row"><span class="lbl">${t("account.email")}</span><span class="val">${escapeHtml(email)}</span></div>
     <div class="actions" style="justify-content:flex-start;margin-top:16px;">
-      <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
+      <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">${t("account.delete_account")}</button>
     </div>
   </div>`;
 }
@@ -10054,55 +10107,56 @@ function renderMySpace(){
   const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
   const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
 
-  let subtext = "Ton compte, ta progression et tes raccourcis, au même endroit.";
+  let subtext = t("account.subtext_default");
   if(authed){
-    if(rcChapter) subtext = "Prêt à continuer tes révisions ?";
-    else if(subjects.length > 0) subtext = "Choisis un chapitre pour commencer à réviser.";
-    else subtext = "Ajoute ta première matière pour démarrer.";
+    if(rcChapter) subtext = t("account.subtext_continue");
+    else if(subjects.length > 0) subtext = t("account.subtext_choose_chapter");
+    else subtext = t("account.subtext_add_first");
   }
 
+  const greeting = greetName ? t("greeting.hello_name", {name: escapeHtml(greetName)}) : t("greeting.hello");
   return `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
+    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("account.myspace_title")}</h1>
     ${authed
-      ? `<p class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</p><p class="myspace-subtext">${subtext}</p>`
+      ? `<p class="myspace-greeting">${greeting}</p><p class="myspace-subtext">${subtext}</p>`
       : `<p class="ai-intro">${subtext}</p>`}
 
     ${authed ? renderProfileHero() : renderAccountSection()}
 
     <div class="dash-grid2">
       <div class="dash-card">
-        <div class="dash-card-eyebrow">Ma progression</div>
+        <div class="dash-card-eyebrow">${t("dashboard.my_progress")}</div>
         <div class="dash-progress-big">${g.mastery}%</div>
         <ul class="dash-progress-list">
-          <li><span>Matières commencées</span><b>${startedSubjects}/${subjects.length}</b></li>
-          <li><span>Chapitres maîtrisés</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
-          <li><span>Questions travaillées</span><b>${g.answered}/${g.total}</b></li>
-          <li><span>Temps de révision</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
+          <li><span>${t("dashboard.subjects_started")}</span><b>${startedSubjects}/${subjects.length}</b></li>
+          <li><span>${t("dashboard.chapters_mastered")}</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
+          <li><span>${t("dashboard.questions_worked")}</span><b>${g.answered}/${g.total}</b></li>
+          <li><span>${t("dashboard.revision_time")}</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
         </ul>
-        <button class="btn-text" id="myspace-progress-link">Voir le détail →</button>
+        <button class="btn-text" id="myspace-progress-link">${t("dashboard.view_detail")}</button>
       </div>
 
       <div class="dash-card">
-        <div class="dash-card-eyebrow">Continuer à réviser</div>
+        <div class="dash-card-eyebrow">${t("myspace.continue_title")}</div>
         ${rcChapter ? `
           <h2 class="dash-card-title">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</h2>
-          <p class="dash-card-meta">Dernière activité : ${fmtRelativeDate(dateKey(new Date(rc.ts))).toLowerCase()}</p>
-          <button class="btn red" id="myspace-continue-btn">▶️ Reprendre</button>
+          <p class="dash-card-meta">${t("myspace.last_activity", {when: fmtRelativeDate(dateKey(new Date(rc.ts))).toLowerCase()})}</p>
+          <button class="btn red" id="myspace-continue-btn">${t("dashboard.resume_btn")}</button>
         ` : `
-          <h2 class="dash-card-title">Commence une nouvelle révision</h2>
-          <p class="dash-card-meta">Ouvre une matière pour lancer ton premier quiz.</p>
-          <button class="btn outline" id="myspace-library-btn2">Voir mes matières</button>
+          <h2 class="dash-card-title">${t("myspace.continue_new")}</h2>
+          <p class="dash-card-meta">${t("myspace.continue_new_desc")}</p>
+          <button class="btn outline" id="myspace-library-btn2">${t("dashboard.view_subjects")}</button>
         `}
       </div>
     </div>
 
-    <div class="section-title" style="margin-top:22px;">Mes raccourcis</div>
+    <div class="section-title" style="margin-top:22px;">${t("myspace.shortcuts_title")}</div>
     <div class="myspace-shortcuts-grid" style="margin-bottom:22px;">
-      <button class="myspace-shortcut" id="myspace-library-btn"><span class="ico">📚</span><span class="txt"><span class="t">Mes matières</span><span class="d">Accéder à mes cours</span></span></button>
-      <button class="myspace-shortcut" id="myspace-ai-btn"><span class="ico">🤖</span><span class="txt"><span class="t">Assistant IA</span><span class="d">Poser une question</span></span></button>
-      <button class="myspace-shortcut" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="txt"><span class="t">Planning</span><span class="d">Voir mes prochaines révisions</span></span></button>
-      <button class="myspace-shortcut" id="myspace-activities-btn"><span class="ico">🎯</span><span class="txt"><span class="t">Activités</span><span class="d">Continuer mes activités</span></span></button>
-      <button class="myspace-shortcut" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="txt"><span class="t">Paramètres</span><span class="d">Sauvegarde, cache IA…</span></span></button>
+      <button class="myspace-shortcut" id="myspace-library-btn"><span class="ico">📚</span><span class="txt"><span class="t">${t("myspace.shortcut_subjects")}</span><span class="d">${t("myspace.shortcut_subjects_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-ai-btn"><span class="ico">🤖</span><span class="txt"><span class="t">${t("myspace.shortcut_ai")}</span><span class="d">${t("myspace.shortcut_ai_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="txt"><span class="t">${t("myspace.shortcut_planning")}</span><span class="d">${t("myspace.shortcut_planning_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-activities-btn"><span class="ico">🎯</span><span class="txt"><span class="t">${t("myspace.shortcut_activities")}</span><span class="d">${t("myspace.shortcut_activities_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="txt"><span class="t">${t("myspace.shortcut_settings")}</span><span class="d">${t("myspace.shortcut_settings_desc")}</span></span></button>
     </div>
 
     ${authed ? renderInfoCard() : ""}
@@ -10181,8 +10235,8 @@ function accountEditModalHtml(){
   return `<div class="cal-modal-backdrop" id="account-modal-backdrop">
     <div class="cal-modal" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
       <div class="account-modal-head">
-        <h2 id="account-modal-title">Mes informations</h2>
-        <button class="btn-text" id="account-modal-close" type="button" aria-label="Fermer">✕</button>
+        <h2 id="account-modal-title">${t("account.my_info")}</h2>
+        <button class="btn-text" id="account-modal-close" type="button" aria-label="${t("account.close")}">✕</button>
       </div>
 
       <div class="account-modal-avatar-row">
@@ -10190,25 +10244,25 @@ function accountEditModalHtml(){
           ? `<img class="account-modal-avatar-img" src="${escapeHtml(d.avatarPreviewUrl)}" alt="">`
           : `<div class="account-modal-avatar-fallback">${escapeHtml(initial)}</div>`}
         <div class="account-modal-avatar-actions">
-          <label class="btn outline small" style="cursor:pointer;margin:0;">Modifier<input type="file" id="account-avatar-input" accept="image/jpeg,image/png,image/webp" style="display:none;"></label>
-          ${d.avatarPreviewUrl ? `<button class="btn-text" id="account-avatar-remove-btn" type="button">Supprimer la photo</button>` : ""}
+          <label class="btn outline small" style="cursor:pointer;margin:0;">${t("account.change_photo")}<input type="file" id="account-avatar-input" accept="image/jpeg,image/png,image/webp" style="display:none;"></label>
+          ${d.avatarPreviewUrl ? `<button class="btn-text" id="account-avatar-remove-btn" type="button">${t("account.remove_photo")}</button>` : ""}
         </div>
       </div>
 
-      <div class="ai-field"><label for="account-edit-firstname">Prénom</label><input type="text" id="account-edit-firstname" class="ai-select" value="${escapeHtml(d.firstName)}" placeholder="Votre prénom"></div>
-      <div class="ai-field"><label for="account-edit-lastname">Nom</label><input type="text" id="account-edit-lastname" class="ai-select" value="${escapeHtml(d.lastName)}" placeholder="Votre nom"></div>
-      <div class="ai-field"><label for="account-edit-username">Pseudo</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="Votre pseudo"></div>
-      <div class="ai-field"><label for="account-edit-phone">Numéro de téléphone</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="Votre numéro de téléphone"></div>
+      <div class="ai-field"><label for="account-edit-firstname">${t("account.firstname")}</label><input type="text" id="account-edit-firstname" class="ai-select" value="${escapeHtml(d.firstName)}" placeholder="${t("account.firstname_ph")}"></div>
+      <div class="ai-field"><label for="account-edit-lastname">${t("account.lastname")}</label><input type="text" id="account-edit-lastname" class="ai-select" value="${escapeHtml(d.lastName)}" placeholder="${t("account.lastname_ph")}"></div>
+      <div class="ai-field"><label for="account-edit-username">${t("account.username")}</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="${t("account.username_ph")}"></div>
+      <div class="ai-field"><label for="account-edit-phone">${t("account.phone")}</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="${t("account.phone_ph")}"></div>
       <div class="ai-field">
-        <label>E-mail</label>
-        <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">(compte, non modifiable ici)</span></div>
+        <label>${t("account.email")}</label>
+        <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">${t("account.email_readonly")}</span></div>
       </div>
 
       <div id="account-edit-msg">${d.error ? `<div class="auth-msg" style="color:var(--red-dark);"><span class="ico">⚠️</span><span>${escapeHtml(d.error)}</span></div>` : ""}</div>
 
       <div class="actions" style="justify-content:flex-end;margin-top:8px;">
-        <button class="btn-text" id="account-modal-cancel" type="button">Annuler</button>
-        <button class="btn red small" id="account-modal-save" type="button" ${d.saving?"disabled":""}>${d.saving ? "Enregistrement…" : "Enregistrer"}</button>
+        <button class="btn-text" id="account-modal-cancel" type="button">${t("account.cancel")}</button>
+        <button class="btn red small" id="account-modal-save" type="button" ${d.saving?"disabled":""}>${d.saving ? t("account.saving") : t("account.save")}</button>
       </div>
     </div>
   </div>`;
@@ -10263,12 +10317,12 @@ function handleAccountAvatarFileChange(e){
   if(!file) return;
   const okTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
   if(!okTypes.includes(file.type)){
-    showToast("Format non supporté — utilise un JPG, PNG ou WebP.");
+    showToast(t("account.avatar_bad_format"));
     return;
   }
   const MAX_RAW_BYTES = 8 * 1024 * 1024;
   if(file.size > MAX_RAW_BYTES){
-    showToast("Image trop lourde (8 Mo maximum).");
+    showToast(t("account.avatar_too_large"));
     return;
   }
   compressAvatarImage(file).then(blob=>{
@@ -10281,7 +10335,7 @@ function handleAccountAvatarFileChange(e){
     d.avatarRemoved = false;
     renderAccountEditModal();
   }).catch(()=>{
-    showToast("Impossible de traiter cette image.");
+    showToast(t("account.avatar_process_error"));
   });
 }
 
@@ -10315,7 +10369,7 @@ async function handleAccountModalSave(){
   const phone = document.getElementById("account-edit-phone").value.trim();
 
   if(phone && !/^[0-9+()\s.-]{6,20}$/.test(phone)){
-    d.error = "Numéro de téléphone invalide (chiffres, espaces, +, - uniquement).";
+    d.error = t("account.phone_invalid");
     renderAccountEditModal();
     return;
   }
@@ -10344,7 +10398,7 @@ async function handleAccountModalSave(){
   }
 
   closeAccountEditModal();
-  showToast("Informations enregistrées.");
+  showToast(t("account.info_saved"));
 }
 
 /* ============================================================
@@ -10532,7 +10586,7 @@ function mergePlanningEvents(parsed){
 function fmtEventTimeRange(e){
   if(e.allDay) return "Toute la journée";
   const s = new Date(e.start);
-  const timeFmt = d => d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  const timeFmt = d => d.toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
   if(!e.end || e.end === e.start) return timeFmt(s);
   return timeFmt(s) + " – " + timeFmt(new Date(e.end));
 }
@@ -10557,7 +10611,7 @@ function nowLineHtml(minH, maxH){
   const now = new Date();
   if(now.getHours() < minH || now.getHours() >= maxH) return "";
   const top = ((now.getHours()-minH) + now.getMinutes()/60) * CAL_HOUR_H;
-  const label = now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  const label = now.toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
   return `<div class="cal-now-line" data-grid-min-h="${minH}" data-grid-max-h="${maxH}" style="top:${top}px;">
     <span class="cal-now-time">${label}</span>
   </div>`;
@@ -10687,11 +10741,11 @@ function planningNavigate(dir){
 function planningTitle(){
   const anchor = new Date(planningAnchor());
   const view = state.planning.calView;
-  if(view === "day") return anchor.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-  if(view === "month") return anchor.toLocaleDateString("fr-FR", {month:"long", year:"numeric"});
+  if(view === "day") return anchor.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  if(view === "month") return anchor.toLocaleDateString(currentLocaleTag(), {month:"long", year:"numeric"});
   const [monday, , , , , , sunday] = planningWeekDays(anchor.getTime());
   const df = d => d.getDate();
-  const monthName = d => d.toLocaleDateString("fr-FR", {month:"long"});
+  const monthName = d => d.toLocaleDateString(currentLocaleTag(), {month:"long"});
   const label = monday.getMonth() === sunday.getMonth()
     ? `${df(monday)} – ${df(sunday)} ${monthName(sunday)} ${sunday.getFullYear()}`
     : `${df(monday)} ${monthName(monday)} – ${df(sunday)} ${monthName(sunday)} ${sunday.getFullYear()}`;
@@ -10776,7 +10830,7 @@ function renderCalendarWeek(){
     ${days.map(d=>{
       const isToday = d.toDateString() === todayStr;
       return `<div class="cal-daylabel ${isToday?"is-today":""}" data-open-day="${d.getTime()}">
-        <div class="wd">${d.toLocaleDateString("fr-FR",{weekday:"short"})}</div>
+        <div class="wd">${d.toLocaleDateString(currentLocaleTag(),{weekday:"short"})}</div>
         <div class="dn">${d.getDate()}</div>
       </div>`;
     }).join("")}
@@ -10863,7 +10917,7 @@ function courseAiContextBlock(e, cd){
   const lines = [];
   lines.push("COURS : " + e.summary);
   if(subj) lines.push("MATIÈRE : " + subj.name);
-  lines.push("DATE : " + new Date(e.start).toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"}));
+  lines.push("DATE : " + new Date(e.start).toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"}));
   if(e.organizer) lines.push("PROFESSEUR : " + e.organizer);
   if(e.location) lines.push("SALLE : " + e.location);
   if(e.description) lines.push("DESCRIPTION DE L'ÉVÉNEMENT :\n" + e.description);
@@ -11288,7 +11342,7 @@ function courseWorkspaceModalHtml(e, opts){
       <div class="cw-badges"><span class="cw-badge ${status}">${statusLabel}</span></div>
       ${progressHtml}
       <ul class="dash-progress-list">
-        <li><span>Date</span><b>${new Date(e.start).toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long"})}</b></li>
+        <li><span>Date</span><b>${new Date(e.start).toLocaleDateString(currentLocaleTag(),{weekday:"long", day:"numeric", month:"long"})}</b></li>
         <li><span>Horaire</span><b>${fmtEventTimeRange(e)}</b></li>
         ${durMin > 0 && !e.allDay ? `<li><span>Durée</span><b>${durMin >= 60 ? (Math.round(durMin/6)/10) + " h" : durMin + " min"}</b></li>` : ""}
         ${e.location ? `<li><span>Lieu</span><b>${escapeHtml(e.location)}</b></li>` : ""}
@@ -11539,7 +11593,7 @@ function renderPlanning(){
     html += `<p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. Ré-importer le même fichier met à jour les cours modifiés sans créer de doublon (basé sur l'identifiant de chaque événement). C'est actuellement la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification).</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
       <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer / actualiser (.ics)<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
-      <span style="font-size:12px;color:var(--muted);">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() + " à " + new Date(state.planning.lastSyncAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "Jamais synchronisé"}</span>
+      <span style="font-size:12px;color:var(--muted);">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() + " à " + new Date(state.planning.lastSyncAt).toLocaleTimeString(currentLocaleTag(),{hour:"2-digit",minute:"2-digit"}) : "Jamais synchronisé"}</span>
     </div>
     <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
 
@@ -11891,9 +11945,9 @@ function updateNavDynamic(){
   const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in";
   if(nameLbl){
     if(authed){
-      nameLbl.textContent = accountDisplayName() || "Mon compte";
+      nameLbl.textContent = accountDisplayName() || t("account.mycompte");
     } else {
-      nameLbl.textContent = (window.LyonAuth && LyonAuth.available) ? "Connexion" : "Mon espace";
+      nameLbl.textContent = (window.LyonAuth && LyonAuth.available) ? t("nav.login") : t("nav.myspace");
     }
   }
   if(avatar){
@@ -11909,6 +11963,42 @@ function updateNavDynamic(){
       avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
     }
   }
+}
+
+/* Traduit toutes les zones "statiques" du chœur de page (barre de
+   navigation, menus déroulants, sélecteur de langue…) : ces éléments vivent
+   HORS de #content et ne sont donc jamais recréés par render() — on met
+   juste leur texte à jour en place (textContent / attribut ciblé), sans
+   toucher à leur structure DOM, pour ne jamais perdre les écouteurs
+   d'évènements déjà attachés (voir attachMainNavEvents). Le contenu de
+   #content, lui, est déjà régénéré à chaque appel de render() avec les
+   bonnes traductions puisque ses fonctions renderXxx() appellent t()
+   directement dans leurs template strings. */
+function applyStaticTranslations(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-attr]").forEach(el=>{
+    el.dataset.i18nAttr.split(",").forEach(pair=>{
+      const [attr, key] = pair.split(":");
+      if(attr && key) el.setAttribute(attr, t(key));
+    });
+  });
+  updateLangSwitcherUi();
+}
+
+function updateLangSwitcherUi(){
+  if(!window.LyonI18n) return;
+  const lang = LyonI18n.getLang();
+  const flagEl = document.getElementById("lang-trigger-flag");
+  const codeEl = document.getElementById("lang-trigger-code");
+  if(flagEl) flagEl.textContent = LyonI18n.flag(lang);
+  if(codeEl) codeEl.textContent = lang.toUpperCase();
+  document.querySelectorAll("#menu-lang [data-set-lang]").forEach(btn=>{
+    const isActive = btn.dataset.setLang === lang;
+    btn.setAttribute("aria-current", isActive ? "true" : "false");
+  });
+  document.documentElement.setAttribute("lang", lang);
 }
 
 function updateNavMenuState(){
@@ -11969,6 +12059,13 @@ function attachMainNavEvents(){
   });
 
   nav.addEventListener("click", (e)=>{
+    const langBtn = e.target.closest("[data-set-lang]");
+    if(langBtn){
+      e.stopPropagation();
+      closeAllNavMenus();
+      if(window.LyonI18n) LyonI18n.setLang(langBtn.dataset.setLang);
+      return;
+    }
     const leaf = e.target.closest("[data-goto]");
     if(!leaf) return;
     e.stopPropagation();
@@ -12134,7 +12231,7 @@ let lastKnownCurrentCourseId = null;
    que si le cours "en cours" a réellement changé (démarré / terminé). */
 function updateCurrentTimeIndicator(){
   const now = new Date();
-  const label = now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+  const label = now.toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
   document.querySelectorAll(".cal-now-line").forEach(el=>{
     const minH = Number(el.dataset.gridMinH), maxH = Number(el.dataset.gridMaxH);
     if(now.getHours() < minH || now.getHours() >= maxH){ el.remove(); return; }
@@ -12171,6 +12268,15 @@ function updateCurrentTimeIndicator(){
    ============================================================ */
 attachMainNavEvents();
 initAIBubble();
+
+// Traduction de l'interface : applique tout de suite la langue restaurée
+// (localStorage, cf. translations.js) sur la navigation statique, puis à
+// chaque changement de langue — sur la nav statique ET sur #content, qui
+// doit être régénéré pour que ses propres t() reflètent la nouvelle langue.
+applyStaticTranslations();
+if(window.LyonI18n){
+  LyonI18n.onChange(()=>{ applyStaticTranslations(); render(); });
+}
 
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && state.planning.selectedEventId) closeCourseModal();
