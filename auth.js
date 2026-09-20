@@ -80,8 +80,18 @@ window.LyonAuth = (function(){
 
   async function fetchProfile(userId){
     if(!client) return null;
+    console.log("[PROFILE] user id =", userId);
+    console.log("[PROFILE LOAD] select * from profiles where id =", userId);
     const { data, error } = await client.from("profiles").select("*").eq("id", userId).single();
-    if(error){ console.error("[LyonAuth] fetchProfile", error.message); return null; }
+    if(error){
+      // Ne JAMAIS avaler cette erreur en silence : si elle se produit, c'est
+      // la cause la plus probable d'un profil qui "ne persiste pas" (colonne
+      // manquante si supabase/schema.sql n'a pas été rejoué, RLS SELECT trop
+      // restrictive, ligne absente...). Toujours visible en console.
+      console.error("[PROFILE LOAD ERROR]", error);
+      return null;
+    }
+    console.log("[PROFILE LOAD] result =", data);
     if(data && data.avatar_url) data._avatarSignedUrl = await resolveAvatarUrl(data.avatar_url);
     return data;
   }
@@ -91,6 +101,30 @@ window.LyonAuth = (function(){
     state.profile = await fetchProfile(state.user.id);
     notify();
     return state.profile;
+  }
+
+  /* upsert() plutôt que update() : la ligne "profiles" est normalement déjà
+     créée par le trigger on_auth_user_created au moment de l'inscription,
+     mais un update() sur une ligne qui n'existe pas (pour quelque raison que
+     ce soit — trigger jamais exécuté sur ce projet, ligne supprimée...) ne
+     modifie 0 ligne et échoue ensuite sur .single(), donnant l'impression
+     que "rien ne s'enregistre" sans jamais créer le profil. upsert() couvre
+     les deux cas (création ET mise à jour) avec la même logique — nécessite
+     la policy RLS "profiles_insert_own" (voir supabase/schema.sql). Ne gère
+     pas state.busy/notify() elle-même : réservé aux fonctions publiques
+     ci-dessous, qui l'appellent chacune une seule fois. */
+  async function saveProfileFields(extraFields){
+    const payload = Object.assign({ id: state.user.id }, extraFields);
+    console.log("[PROFILE SAVE] payload =", payload);
+    const { data, error } = await client.from("profiles").upsert(payload, { onConflict: "id" }).select().single();
+    if(error){
+      console.error("[PROFILE SAVE ERROR]", error);
+      return { error: "Impossible d'enregistrer les informations." };
+    }
+    console.log("[PROFILE SAVE RESULT]", data);
+    data._avatarSignedUrl = state.profile ? state.profile._avatarSignedUrl : null;
+    state.profile = data;
+    return { profile: data };
   }
 
   /* Met à jour prénom/nom/pseudo/téléphone. L'email (Supabase Auth) et
@@ -103,13 +137,10 @@ window.LyonAuth = (function(){
       ["first_name", "last_name", "display_name", "phone"].forEach(k=>{
         if(Object.prototype.hasOwnProperty.call(fields, k)) patch[k] = fields[k];
       });
-      const { data, error } = await client.from("profiles").update(patch).eq("id", state.user.id).select().single();
-      if(error) return { error: humanError(error) };
-      data._avatarSignedUrl = state.profile ? state.profile._avatarSignedUrl : null;
-      state.profile = data;
-      return { profile: data };
+      return await saveProfileFields(patch);
     }catch(e){
-      return { error: humanError(e) };
+      console.error("[PROFILE SAVE ERROR]", e);
+      return { error: "Impossible d'enregistrer les informations." };
     }finally{
       state.busy = false; notify();
     }
@@ -117,25 +148,30 @@ window.LyonAuth = (function(){
 
   /* blob : image déjà validée/redimensionnée côté appelant (voir index.html,
      modal "Mes informations"). ext : extension sans le point (ex. "webp").
-     Chemin fixe par utilisateur (upsert) : pas de fichiers orphelins à
-     nettoyer à chaque changement de photo. */
+     Chemin fixe par utilisateur (upsert Storage) : pas de fichiers orphelins
+     à nettoyer à chaque changement de photo. */
   async function uploadAvatar(blob, ext){
     if(!available || !state.user) return { error: humanError(null) };
     state.busy = true; notify();
     try{
       const path = state.user.id + "/avatar." + ext;
+      console.log("[PROFILE SAVE] avatar upload path =", path, "size =", blob.size, "type =", blob.type);
       const { error: upErr } = await client.storage.from("avatars").upload(path, blob, {
         upsert: true,
         contentType: blob.type || "image/webp",
       });
-      if(upErr) return { error: humanError(upErr) };
-      const { data, error } = await client.from("profiles").update({ avatar_url: path }).eq("id", state.user.id).select().single();
-      if(error) return { error: humanError(error) };
-      data._avatarSignedUrl = await resolveAvatarUrl(path);
-      state.profile = data;
-      return { profile: data };
+      if(upErr){
+        console.error("[PROFILE SAVE ERROR]", upErr);
+        return { error: "Impossible d'enregistrer les informations." };
+      }
+      const res = await saveProfileFields({ avatar_url: path });
+      if(res.error) return res;
+      res.profile._avatarSignedUrl = await resolveAvatarUrl(path);
+      state.profile = res.profile;
+      return res;
     }catch(e){
-      return { error: humanError(e) };
+      console.error("[PROFILE SAVE ERROR]", e);
+      return { error: "Impossible d'enregistrer les informations." };
     }finally{
       state.busy = false; notify();
     }
@@ -146,17 +182,18 @@ window.LyonAuth = (function(){
     state.busy = true; notify();
     try{
       const oldPath = state.profile && state.profile.avatar_url;
-      const { data, error } = await client.from("profiles").update({ avatar_url: null }).eq("id", state.user.id).select().single();
-      if(error) return { error: humanError(error) };
+      const res = await saveProfileFields({ avatar_url: null });
+      if(res.error) return res;
       if(oldPath){
         try{ await client.storage.from("avatars").remove([oldPath]); }
-        catch(e){ console.error("[LyonAuth] removeAvatar storage", e); }
+        catch(e){ console.error("[PROFILE SAVE ERROR] removeAvatar storage", e); }
       }
-      data._avatarSignedUrl = null;
-      state.profile = data;
-      return { profile: data };
+      res.profile._avatarSignedUrl = null;
+      state.profile = res.profile;
+      return res;
     }catch(e){
-      return { error: humanError(e) };
+      console.error("[PROFILE SAVE ERROR]", e);
+      return { error: "Impossible d'enregistrer les informations." };
     }finally{
       state.busy = false; notify();
     }

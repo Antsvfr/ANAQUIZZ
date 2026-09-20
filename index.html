@@ -10191,6 +10191,7 @@ function openAccountEditModal(){
     avatarExt: null,
     avatarRemoved: false,
     saving: false,
+    error: "",
   };
   state.accountUI.editOpen = true;
   renderAccountEditModal();
@@ -10245,7 +10246,7 @@ function accountEditModalHtml(){
         <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">(compte, non modifiable ici)</span></div>
       </div>
 
-      <div id="account-edit-msg"></div>
+      <div id="account-edit-msg">${d.error ? `<div class="auth-msg" style="color:var(--red-dark);"><span class="ico">⚠️</span><span>${escapeHtml(d.error)}</span></div>` : ""}</div>
 
       <div class="actions" style="justify-content:flex-end;margin-top:8px;">
         <button class="btn-text" id="account-modal-cancel" type="button">Annuler</button>
@@ -10341,11 +10342,14 @@ async function handleAccountModalSave(){
   const d = state.accountUI.editDraft;
   if(!d || d.saving) return;
 
-  const setErr = (msg) => {
-    const el = document.getElementById("account-edit-msg");
-    if(!el) return;
-    el.innerHTML = msg ? `<div class="auth-msg" style="color:var(--red-dark);"><span class="ico">⚠️</span><span>${escapeHtml(msg)}</span></div>` : "";
-  };
+  // Le message d'erreur vit dans l'état de la modal (d.error), pas dans une
+  // mutation directe du DOM : LyonAuth.updateProfile()/uploadAvatar() etc.
+  // déclenchent notify() (busy=true puis busy=false), ce qui fait tourner
+  // render() -> renderAccountEditModal() PENDANT ce await et régénère tout
+  // le HTML de la modal — un innerHTML posé "à la main" sur #account-edit-msg
+  // se faisait donc immédiatement écraser par ce re-rendu automatique, et
+  // l'utilisateur ne voyait jamais l'erreur (bug corrigé le 20/09).
+  d.error = "";
 
   const firstName = document.getElementById("account-edit-firstname").value.trim();
   const lastName = document.getElementById("account-edit-lastname").value.trim();
@@ -10353,7 +10357,8 @@ async function handleAccountModalSave(){
   const phone = document.getElementById("account-edit-phone").value.trim();
 
   if(phone && !/^[0-9+()\s.-]{6,20}$/.test(phone)){
-    setErr("Numéro de téléphone invalide (chiffres, espaces, +, - uniquement).");
+    d.error = "Numéro de téléphone invalide (chiffres, espaces, +, - uniquement).";
+    renderAccountEditModal();
     return;
   }
 
@@ -10375,7 +10380,7 @@ async function handleAccountModalSave(){
 
   if(err){
     d.saving = false;
-    setErr(err);
+    d.error = err;
     renderAccountEditModal();
     return;
   }
