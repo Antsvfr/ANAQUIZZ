@@ -354,13 +354,6 @@
     .myspace-hero-card-actions .btn, .myspace-hero-card-actions .btn-text{ width:100%; text-align:center; }
   }
 
-  /* -- onboarding : profil totalement vide -- */
-  .myspace-onboard{
-    background: var(--red-tint); border:1px solid var(--red-tint-strong); border-radius: var(--radius-lg);
-    padding:18px 22px; margin:0 0 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  }
-  .myspace-onboard h3{ font-size:14.5px; font-weight:800; margin:0 0 3px; color:var(--red-dark); }
-  .myspace-onboard p{ font-size:12.5px; color:var(--ink-soft); margin:0; }
 
   /* -- mes raccourcis -- */
   .myspace-shortcuts-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:12px; }
@@ -427,16 +420,6 @@
   .auth-confirm .ico{ font-size:26px; line-height:1; }
   .auth-confirm h2{ font-size:16px; font-weight:800; margin:0 0 6px; color:var(--green); }
   .auth-confirm p{ font-size:13px; color:var(--ink-soft); margin:0 0 12px; line-height:1.6; }
-
-  .myspace-localname-standalone{
-    display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted);
-    margin:0 0 22px; padding:12px 16px; background:var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-md);
-  }
-  .myspace-localname-standalone input{
-    border:1.5px solid var(--border-strong); border-radius:8px; padding:6px 10px; font-size:12.5px;
-    font-family: var(--font-main); width:150px; color:var(--ink);
-  }
-  @media (max-width:560px){ .myspace-localname-standalone{ flex-direction:column; align-items:stretch; } .myspace-localname-standalone input{ width:100%; } }
 
   /* ===== LEVEL CHIPS (shared: quiz / fiches / flashcards) ===== */
   .levelchips{ display:flex; gap: 8px; margin: 26px 0 22px; flex-wrap:wrap; }
@@ -2666,9 +2649,6 @@ let state = {
   openMenu: null,
   mobileMenuOpen: false,
 
-  // --- profil (affichage uniquement, pas de compte) ---
-  profile: { firstName: "" },
-
   // --- planning / calendrier (import manuel .ics, aucune donnée distante) ---
   planning: {
     events: [], officialUrl: "",
@@ -2981,7 +2961,6 @@ const KEY_AICARDS = "ai-flashcards";
 const KEY_BADGES = "badges";
 const KEY_USER_SUBJECTS = "user-subjects";
 const KEY_USER_CHAPTERS = "user-chapters";
-const KEY_PROFILE = "profile";
 const KEY_PLANNING = "planning";
 const KEY_DOCUMENTS = "documents";
 const KEY_AIBUBBLE = "ai-bubble-pos";
@@ -3064,8 +3043,6 @@ async function loadAllData(){
   state.badges = await loadKey(KEY_BADGES, {});
   state.userSubjects = await loadKey(KEY_USER_SUBJECTS, []);
   state.userChapters = await loadKey(KEY_USER_CHAPTERS, []);
-  const savedProfile = await loadKey(KEY_PROFILE, null);
-  if(savedProfile && typeof savedProfile.firstName === "string") state.profile.firstName = savedProfile.firstName;
   const savedPlanning = await loadKey(KEY_PLANNING, null);
   if(savedPlanning){
     state.planning.events = Array.isArray(savedPlanning.events) ? savedPlanning.events : [];
@@ -3100,7 +3077,6 @@ function saveQStats(){ lsSet(KEY_QSTATS, state.qstats); }
 function saveAIHistory(){ lsSet(KEY_AI, state.aiHistory.slice(-20)); }
 function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
-function saveProfile(){ lsSet(KEY_PROFILE, state.profile); }
 function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl, lastSyncAt: state.planning.lastSyncAt }); }
 function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
 function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { side: state.aiBubble.side, y: state.aiBubble.y }); }
@@ -3751,7 +3727,7 @@ function renderDashboard(){
   const d = state.dash;
   const g = globalMetrics();
   const subjects = allSubjects();
-  const firstName = (state.profile.firstName || "").trim();
+  const greetName = getCurrentUserDisplayName();
 
   const rc = d.recentChapters && d.recentChapters[0];
   const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
@@ -3765,7 +3741,7 @@ function renderDashboard(){
   html += `<div class="dash-banner">
     <div class="dash-banner-left">
       <div class="dash-banner-eyebrow">${dateLabel}</div>
-      <h1 class="dash-banner-title">Bonjour${firstName ? " " + escapeHtml(firstName) : ""}</h1>
+      <h1 class="dash-banner-title">Bonjour${greetName ? " " + escapeHtml(greetName) : ""}</h1>
       <p class="dash-banner-sub">Prêt à continuer tes révisions ?</p>
       <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? "▶️ Reprendre mes révisions" : "Commencer à réviser"}</button>
     </div>
@@ -9825,8 +9801,8 @@ function attachSettingsEvents(){
    manipulé ici : LyonAuth (auth.js) délègue tout à Supabase Auth. */
 /* Rôle unique de renderAccountSection() depuis la V2 : la "porte" auth
    (formulaire connexion/inscription, état "vérifie ton email"). L'état
-   connecté a ses propres blocs dédiés (renderProfileHero/renderInfoCard/
-   renderOnboardingNudge, plus bas) — voir renderMySpace(). */
+   connecté a ses propres blocs dédiés (renderProfileHero/renderInfoCard,
+   plus bas) — voir renderMySpace(). */
 function renderAccountSection(){
   if(!window.LyonAuth || !LyonAuth.available){
     return `<div class="dash-section">
@@ -9984,12 +9960,22 @@ function accountFullName(p){
   return [fn, ln].filter(Boolean).join(" ");
 }
 
-/* Nom utilisé UNIQUEMENT par le message d'accueil "Bonjour ... 👋" : prénom
-   si renseigné, sinon nom, sinon rien ("Bonjour 👋") — jamais le pseudo, ni
-   l'email, ni une valeur écrite en dur. Toujours dérivé du profil Supabase
-   de l'utilisateur actuellement connecté (LyonAuth.state.profile). */
-function accountGreetingName(){
+/* Source UNIQUE du nom utilisé par le message d'accueil "Bonjour ... 👋",
+   partagée entre le dashboard et "Mon espace" (jamais deux logiques
+   séparées qui pourraient se désynchroniser) :
+     1. vérifie la session Supabase (LyonAuth.state.status) ;
+     2. utilise l'utilisateur connecté (LyonAuth.state.user) ;
+     3. lit SON profil (LyonAuth.state.profile) ;
+     4. retourne le prénom si disponible ;
+     5. sinon le nom si disponible ;
+     6. sinon une chaîne vide ("Bonjour 👋").
+   Jamais le pseudo, jamais l'email, jamais une valeur écrite en dur, et
+   jamais une donnée locale (state.profile n'existe plus : jusqu'ici ce
+   dernier stockait un prénom local totalement indépendant de la connexion,
+   ce qui faisait apparaître "Bonjour {ancien prénom}" même déconnecté). */
+function getCurrentUserDisplayName(){
   if(!window.LyonAuth || !LyonAuth.available || LyonAuth.state.status !== "signed-in") return "";
+  if(!LyonAuth.state.user) return "";
   const p = LyonAuth.state.profile || {};
   const firstName = (p.first_name || "").trim();
   if(firstName) return firstName;
@@ -10033,21 +10019,6 @@ function renderProfileHero(){
   </div>`;
 }
 
-/* Nudge d'onboarding : uniquement si RIEN n'est encore renseigné. Dès qu'un
-   seul champ est rempli, la carte "Mes informations" (avec son badge de
-   complétion) prend le relais — pas de doublon des deux à la fois. */
-function renderOnboardingNudge(){
-  const p = LyonAuth.state.profile || {};
-  if(profileCompletionPct(p) > 0) return "";
-  return `<div class="myspace-onboard">
-    <div>
-      <h3>Complète ton profil</h3>
-      <p>Ajoute quelques informations pour personnaliser ton espace.</p>
-    </div>
-    <button class="btn outline small" id="account-onboard-btn" type="button">Compléter mon profil</button>
-  </div>`;
-}
-
 /* ---------- "Mon espace" connecté : carte compacte "Mes informations" ---------- */
 function renderInfoCard(){
   const p = LyonAuth.state.profile || {};
@@ -10073,8 +10044,7 @@ function renderInfoCard(){
 
 function renderMySpace(){
   const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
-  const firstName = state.profile.firstName || "";
-  const greetName = accountGreetingName();
+  const greetName = getCurrentUserDisplayName();
 
   const g = globalMetrics();
   const subjects = allSubjects();
@@ -10099,16 +10069,6 @@ function renderMySpace(){
       : `<p class="ai-intro">${subtext}</p>`}
 
     ${authed ? renderProfileHero() : renderAccountSection()}
-
-    ${authed ? "" : `
-    <div class="myspace-localname-standalone">
-      <span>Tu utilises l'application sans compte ? Ton prénom personnalise l'accueil (gardé uniquement dans ce navigateur).</span>
-      <input type="text" id="local-firstname-input" placeholder="Ton prénom" value="${escapeHtml(firstName)}">
-      <button class="btn-text" id="local-firstname-save-btn" type="button">Enregistrer</button>
-      <span id="local-firstname-status"></span>
-    </div>`}
-
-    ${authed ? renderOnboardingNudge() : ""}
 
     <div class="dash-grid2">
       <div class="dash-card">
@@ -10153,8 +10113,6 @@ function renderMySpace(){
 function attachMySpaceEvents(){
   attachAccountEvents();
 
-  const onboardBtn = document.getElementById("account-onboard-btn");
-  if(onboardBtn) onboardBtn.addEventListener("click", openAccountEditModal);
   const editBtn2 = document.getElementById("account-edit-btn-2");
   if(editBtn2) editBtn2.addEventListener("click", openAccountEditModal);
 
@@ -10162,16 +10120,6 @@ function attachMySpaceEvents(){
   if(continueBtn) continueBtn.addEventListener("click", continueRevision);
   const libBtn2 = document.getElementById("myspace-library-btn2");
   if(libBtn2) libBtn2.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
-
-  const localNameInput = document.getElementById("local-firstname-input");
-  const localNameSaveBtn = document.getElementById("local-firstname-save-btn");
-  if(localNameSaveBtn) localNameSaveBtn.addEventListener("click", ()=>{
-    state.profile.firstName = localNameInput.value.trim();
-    saveProfile();
-    updateNavDynamic();
-    const status = document.getElementById("local-firstname-status");
-    if(status) status.textContent = "Enregistré.";
-  });
 
   const progressLink = document.getElementById("myspace-progress-link");
   if(progressLink) progressLink.addEventListener("click", ()=> switchTab("progress"));
@@ -11939,19 +11887,17 @@ function updateNavDynamic(){
     el.classList.toggle("active-group", el.dataset.nav === group);
   });
 
-  // profil (header) — reflète l'état du compte quand LyonAuth est disponible,
-  // sinon le comportement local existant (prénom / "Mon espace") est inchangé.
-  const firstName = (state.profile.firstName || "").trim();
+  // profil (header) — reflète exclusivement l'utilisateur Supabase
+  // actuellement connecté ; jamais de prénom local ni de donnée d'une
+  // session précédente (voir getCurrentUserDisplayName).
   const nameLbl = document.getElementById("profile-label");
   const avatar = document.getElementById("profile-avatar");
   const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in";
   if(nameLbl){
     if(authed){
       nameLbl.textContent = accountDisplayName() || "Mon compte";
-    } else if(window.LyonAuth && LyonAuth.available){
-      nameLbl.textContent = "Connexion";
     } else {
-      nameLbl.textContent = firstName ? "Bonjour " + firstName : "Mon espace";
+      nameLbl.textContent = (window.LyonAuth && LyonAuth.available) ? "Connexion" : "Mon espace";
     }
   }
   if(avatar){
@@ -11963,7 +11909,7 @@ function updateNavDynamic(){
     } else {
       avatar.style.backgroundImage = "";
       avatar.classList.remove("has-photo");
-      const src = authed ? accountDisplayName() : firstName;
+      const src = authed ? accountDisplayName() : "";
       avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
     }
   }

@@ -112,9 +112,22 @@ window.LyonAuth = (function(){
      les deux cas (création ET mise à jour) avec la même logique — nécessite
      la policy RLS "profiles_insert_own" (voir supabase/schema.sql). Ne gère
      pas state.busy/notify() elle-même : réservé aux fonctions publiques
-     ci-dessous, qui l'appellent chacune une seule fois. */
+     ci-dessous, qui l'appellent chacune une seule fois.
+
+     Revérifie l'utilisateur via client.auth.getUser() (plutôt que de faire
+     confiance à state.user, mis en cache depuis le dernier événement
+     onAuthStateChange) juste avant d'écrire : garantit que le profil est
+     toujours lié au VRAI utilisateur actuellement authentifié auprès de
+     Supabase, jamais à une référence obsolète. */
   async function saveProfileFields(extraFields){
-    const payload = Object.assign({ id: state.user.id }, extraFields);
+    const { data: { user }, error: userErr } = await client.auth.getUser();
+    console.log("[PROFILE DEBUG] user.id =", user && user.id);
+    console.log("[PROFILE DEBUG] user.email =", user && user.email);
+    if(userErr || !user){
+      console.error("[PROFILE SAVE ERROR]", userErr || new Error("no authenticated user"));
+      return { error: "Impossible d'enregistrer les informations." };
+    }
+    const payload = Object.assign({ id: user.id }, extraFields);
     console.log("[PROFILE SAVE] payload =", payload);
     const { data, error } = await client.from("profiles").upsert(payload, { onConflict: "id" }).select().single();
     if(error){
@@ -280,10 +293,15 @@ window.LyonAuth = (function(){
     // Un seul abonnement pour toute la durée de vie de la page. Le premier
     // appel (événement "INITIAL_SESSION") reflète déjà la session existante
     // (persistée par le SDK) : pas besoin d'appeler getSession() en plus.
-    client.auth.onAuthStateChange(async (_event, session) => {
+    client.auth.onAuthStateChange(async (event, session) => {
       state.user = session ? session.user : null;
       state.status = state.user ? "signed-in" : "signed-out";
+      // Toujours réévalué depuis LA session courante : jamais de résidu d'un
+      // utilisateur précédent (déconnexion -> state.profile repasse à null
+      // immédiatement ci-dessous ; reconnexion, même sous un autre compte ->
+      // fetchProfile relit le bon profil pour le nouvel state.user.id).
       state.profile = state.user ? await fetchProfile(state.user.id) : null;
+      console.log("[PROFILE DEBUG] auth event =", event, "-> status =", state.status, "profile =", state.profile);
       notify();
       // Point d'accroche pour la synchronisation (préparée mais pas encore
       // implémentée à ce stade du chantier) : sync.js définira cette
