@@ -44,6 +44,25 @@ window.LyonAuth = (function(){
   function onChange(fn){ listeners.push(fn); }
   function notify(){ listeners.forEach(fn => { try{ fn(state); }catch(e){ console.error("[LyonAuth] listener error", e); } }); }
 
+  /* Diagnostic temporaire (demande du 20/09) : affiche le détail COMPLET
+     d'une erreur Supabase/Postgrest — message, code, details, hint — sur 4
+     lignes distinctes en console, jamais masqué derrière un seul message
+     générique. error.code est aussi répercuté dans le message utilisateur
+     (entre parenthèses) : permet de nous le communiquer même sans ouvrir
+     la console. À réduire une fois la cause du bug de sauvegarde confirmée
+     réglée en conditions réelles. */
+  function logProfileError(context, error){
+    console.error("[PROFILE SAVE ERROR]", context, error);
+    console.error("[PROFILE SAVE ERROR] error.message =", error && error.message);
+    console.error("[PROFILE SAVE ERROR] error.code =", error && error.code);
+    console.error("[PROFILE SAVE ERROR] error.details =", error && error.details);
+    console.error("[PROFILE SAVE ERROR] error.hint =", error && error.hint);
+  }
+  function profileErrorMessage(error){
+    const code = error && error.code;
+    return "Impossible d'enregistrer les informations." + (code ? " (code Supabase : " + code + ")" : "");
+  }
+
   /* Traduit les erreurs Supabase/Postgrest en messages humains courts,
      jamais de détail technique côté utilisateur (le détail reste en
      console). */
@@ -87,8 +106,13 @@ window.LyonAuth = (function(){
       // Ne JAMAIS avaler cette erreur en silence : si elle se produit, c'est
       // la cause la plus probable d'un profil qui "ne persiste pas" (colonne
       // manquante si supabase/schema.sql n'a pas été rejoué, RLS SELECT trop
-      // restrictive, ligne absente...). Toujours visible en console.
+      // restrictive, ligne absente...). Toujours visible en console, détail
+      // complet (message/code/details/hint), pas juste un message générique.
       console.error("[PROFILE LOAD ERROR]", error);
+      console.error("[PROFILE LOAD ERROR] error.message =", error.message);
+      console.error("[PROFILE LOAD ERROR] error.code =", error.code);
+      console.error("[PROFILE LOAD ERROR] error.details =", error.details);
+      console.error("[PROFILE LOAD ERROR] error.hint =", error.hint);
       return null;
     }
     console.log("[PROFILE LOAD] result =", data);
@@ -124,15 +148,15 @@ window.LyonAuth = (function(){
     console.log("[PROFILE DEBUG] user.id =", user && user.id);
     console.log("[PROFILE DEBUG] user.email =", user && user.email);
     if(userErr || !user){
-      console.error("[PROFILE SAVE ERROR]", userErr || new Error("no authenticated user"));
-      return { error: "Impossible d'enregistrer les informations." };
+      logProfileError("getUser", userErr || new Error("no authenticated user"));
+      return { error: profileErrorMessage(userErr) };
     }
     const payload = Object.assign({ id: user.id }, extraFields);
     console.log("[PROFILE SAVE] payload =", payload);
     const { data, error } = await client.from("profiles").upsert(payload, { onConflict: "id" }).select().single();
     if(error){
-      console.error("[PROFILE SAVE ERROR]", error);
-      return { error: "Impossible d'enregistrer les informations." };
+      logProfileError("upsert profiles", error);
+      return { error: profileErrorMessage(error) };
     }
     console.log("[PROFILE SAVE RESULT]", data);
     data._avatarSignedUrl = state.profile ? state.profile._avatarSignedUrl : null;
@@ -152,8 +176,8 @@ window.LyonAuth = (function(){
       });
       return await saveProfileFields(patch);
     }catch(e){
-      console.error("[PROFILE SAVE ERROR]", e);
-      return { error: "Impossible d'enregistrer les informations." };
+      logProfileError("updateProfile", e);
+      return { error: profileErrorMessage(e) };
     }finally{
       state.busy = false; notify();
     }
@@ -174,8 +198,8 @@ window.LyonAuth = (function(){
         contentType: blob.type || "image/webp",
       });
       if(upErr){
-        console.error("[PROFILE SAVE ERROR]", upErr);
-        return { error: "Impossible d'enregistrer les informations." };
+        logProfileError("storage.upload avatars", upErr);
+        return { error: profileErrorMessage(upErr) };
       }
       const res = await saveProfileFields({ avatar_url: path });
       if(res.error) return res;
@@ -183,8 +207,8 @@ window.LyonAuth = (function(){
       state.profile = res.profile;
       return res;
     }catch(e){
-      console.error("[PROFILE SAVE ERROR]", e);
-      return { error: "Impossible d'enregistrer les informations." };
+      logProfileError("uploadAvatar", e);
+      return { error: profileErrorMessage(e) };
     }finally{
       state.busy = false; notify();
     }
@@ -199,14 +223,14 @@ window.LyonAuth = (function(){
       if(res.error) return res;
       if(oldPath){
         try{ await client.storage.from("avatars").remove([oldPath]); }
-        catch(e){ console.error("[PROFILE SAVE ERROR] removeAvatar storage", e); }
+        catch(e){ logProfileError("removeAvatar storage", e); }
       }
       res.profile._avatarSignedUrl = null;
       state.profile = res.profile;
       return res;
     }catch(e){
-      console.error("[PROFILE SAVE ERROR]", e);
-      return { error: "Impossible d'enregistrer les informations." };
+      logProfileError("removeAvatar", e);
+      return { error: profileErrorMessage(e) };
     }finally{
       state.busy = false; notify();
     }
