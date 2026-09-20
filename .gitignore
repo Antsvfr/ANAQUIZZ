@@ -1,0 +1,6 @@
+# Configuration Supabase locale (contient ton SUPABASE_URL / SUPABASE_ANON_KEY réels).
+# La clé "anon" n'est pas un secret (voir supabase-config.example.js), mais ce
+# fichier reste ignoré par défaut pour garder une configuration propre par
+# environnement/déploiement. Copie supabase-config.example.js → supabase-config.js
+# et renseigne tes valeurs.
+supabase-config.js
