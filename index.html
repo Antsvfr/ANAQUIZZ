@@ -322,15 +322,63 @@
   .btn-text:hover{ color: var(--red); border-color: var(--red); }
   .btn-text.active{ color: var(--red); border-color: var(--red); }
 
-  /* ===== MON COMPTE ===== */
-  .account-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; max-width:420px; }
-  .account-row:last-of-type{ border-bottom:none; }
-  .account-row .lbl{ color:var(--muted); font-weight:700; }
-  .account-row .val{ color:var(--ink); font-weight:600; text-align:right; }
+  /* ===== MON COMPTE / MON ESPACE ===== */
   .account-code{ display:flex; align-items:center; gap:10px; }
   .account-code code{ background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-size:12.5px; letter-spacing:0.02em; }
   .account-status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; vertical-align:middle; }
-  @media (max-width:560px){ .account-row{ flex-direction:column; align-items:flex-start; gap:2px; } .account-row .val{ text-align:left; } }
+
+  .myspace-hero{
+    background: linear-gradient(155deg, var(--surface) 0%, var(--red-tint) 160%);
+    border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:26px 26px; margin:24px 0 18px; box-shadow: var(--shadow-sm);
+  }
+  .myspace-hero-top{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .myspace-avatar{
+    width:56px; height:56px; border-radius:50%; flex-shrink:0;
+    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    color:#fff; font-size:21px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .myspace-greeting{ font-size:20px; font-weight:800; letter-spacing:-0.01em; margin:0 0 3px; }
+  .myspace-email{ font-size:13px; color:var(--muted); font-weight:600; }
+  .myspace-hero-body{ margin-top:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+  .myspace-code-box{ display:flex; align-items:center; gap:10px; }
+  .myspace-code-box .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-weight:800; color:var(--muted); }
+  .myspace-code-box code{ background:#fff; border:1px solid var(--border-strong); border-radius:8px; padding:6px 12px; font-size:14px; font-weight:700; letter-spacing:0.03em; }
+  .myspace-status-pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--green); }
+  .myspace-hero-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  @media (max-width:560px){
+    .myspace-hero{ padding:20px 18px; }
+    .myspace-hero-body{ flex-direction:column; align-items:flex-start; }
+  }
+
+  .auth-card-head{ margin-bottom:18px; }
+  .auth-card-head h2{ font-size:19px; font-weight:800; margin:0 0 6px; letter-spacing:-0.01em; }
+  .auth-card-head p{ font-size:13px; color:var(--muted); margin:0; line-height:1.6; max-width:480px; }
+  .auth-toggle{ display:inline-flex; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px; margin-bottom:20px; }
+  .auth-toggle button{
+    border:none; background:none; border-radius:999px; padding:8px 18px; font-size:12.5px; font-weight:700;
+    color:var(--ink-soft); cursor:pointer; font-family:var(--font-main); transition: all 0.15s var(--ease);
+  }
+  .auth-toggle button.active{ background:#fff; color:var(--red); box-shadow: var(--shadow-xs); }
+  .auth-msg{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; line-height:1.55; margin-top:12px; }
+  .auth-msg .ico{ flex-shrink:0; }
+  .auth-confirm{
+    display:flex; gap:14px; align-items:flex-start; background: var(--green-tint); border:1px solid var(--green-strong);
+    border-radius: var(--radius-lg); padding:20px 22px; margin:24px 0 18px;
+  }
+  .auth-confirm .ico{ font-size:26px; line-height:1; }
+  .auth-confirm h2{ font-size:16px; font-weight:800; margin:0 0 6px; color:var(--green); }
+  .auth-confirm p{ font-size:13px; color:var(--ink-soft); margin:0 0 12px; line-height:1.6; }
+
+  .myspace-localname-standalone{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted);
+    margin:0 0 22px; padding:12px 16px; background:var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-md);
+  }
+  .myspace-localname-standalone input{
+    border:1.5px solid var(--border-strong); border-radius:8px; padding:6px 10px; font-size:12.5px;
+    font-family: var(--font-main); width:150px; color:var(--ink);
+  }
+  @media (max-width:560px){ .myspace-localname-standalone{ flex-direction:column; align-items:stretch; } .myspace-localname-standalone input{ width:100%; } }
 
   /* ===== LEVEL CHIPS (shared: quiz / fiches / flashcards) ===== */
   .levelchips{ display:flex; gap: 8px; margin: 26px 0 22px; flex-wrap:wrap; }
@@ -8437,7 +8485,7 @@ Object.assign(state, {
   aiFullTestBusy: false,
   aiFullTestSteps: [],
   // --- état d'interface du formulaire de compte ("Mon espace") ---
-  accountUI: { mode: "signin" },
+  accountUI: { mode: "signin", pendingConfirmationEmail: null },
 });
 
 const AI_ACTIONS = {
@@ -9729,40 +9777,63 @@ function renderAccountSection(){
     const code = (a.profile && a.profile.user_code) || "…";
     const email = a.user ? a.user.email : "";
     const name = (a.profile && a.profile.display_name) || "";
-    return `<div class="dash-section" id="account-section">
-      <div class="section-title">Mon compte</div>
-      <div class="account-row"><span class="lbl">Email</span><span class="val">${escapeHtml(email)}</span></div>
-      ${name ? `<div class="account-row"><span class="lbl">Pseudo</span><span class="val">${escapeHtml(name)}</span></div>` : ""}
-      <div class="account-row">
-        <span class="lbl">Code utilisateur</span>
-        <span class="val account-code"><code>${escapeHtml(code)}</code><button class="btn-text" id="account-copy-code-btn" type="button">Copier</button></span>
+    const greetName = name || (email ? email.split("@")[0] : "");
+    const initial = (name || email || "?").charAt(0).toUpperCase();
+    return `<div class="myspace-hero" id="account-section">
+      <div class="myspace-hero-top">
+        <div class="myspace-avatar">${escapeHtml(initial)}</div>
+        <div>
+          <div class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</div>
+          <div class="myspace-email">${escapeHtml(email)}</div>
+        </div>
       </div>
-      <div class="account-row"><span class="lbl">Statut</span><span class="val"><span class="account-status-dot"></span>Connecté</span></div>
-      <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+      <div class="myspace-hero-body">
+        <div class="myspace-code-box">
+          <span class="lbl">Code utilisateur</span>
+          <code>${escapeHtml(code)}</code>
+          <button class="btn-text" id="account-copy-code-btn" type="button">Copier</button>
+        </div>
+        <span class="myspace-status-pill"><span class="account-status-dot"></span>Connecté</span>
+      </div>
+      <div class="myspace-hero-actions">
         <button class="btn outline small" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
         <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
       </div>
     </div>`;
   }
 
+  if(state.accountUI.pendingConfirmationEmail){
+    return `<div class="auth-confirm" id="account-section">
+      <span class="ico">📧</span>
+      <div>
+        <h2>Vérifie ton adresse e-mail</h2>
+        <p>Un e-mail de confirmation a été envoyé à <b>${escapeHtml(state.accountUI.pendingConfirmationEmail)}</b>. Clique sur le lien reçu pour activer ton compte, puis reviens te connecter ici.</p>
+        <button class="btn-text" id="account-back-to-signin-btn" type="button">← Revenir à la connexion</button>
+      </div>
+    </div>`;
+  }
+
   const mode = state.accountUI.mode;
+  const busyLabel = mode === "signup" ? "Création du compte…" : "Connexion…";
   return `<div class="dash-section" id="account-section">
-    <div class="section-title">Mon compte</div>
-    <p class="dash-empty" style="margin-top:0;">Crée un compte pour retrouver tes matières, cours et progression sur tous tes appareils.</p>
-    <div class="actions" style="justify-content:flex-start;margin:0 0 14px;gap:14px;">
-      <button class="btn-text${mode==="signin"?" active":""}" data-account-mode="signin" type="button">Se connecter</button>
-      <button class="btn-text${mode==="signup"?" active":""}" data-account-mode="signup" type="button">Créer un compte</button>
+    <div class="auth-card-head">
+      <h2>${mode === "signup" ? "Créer mon compte" : "Content de te revoir"}</h2>
+      <p>Crée un compte pour retrouver tes matières, cours et progression sur tous tes appareils. Tes données restent aussi disponibles hors connexion.</p>
     </div>
-    <form id="account-form" style="max-width:340px;">
+    <div class="auth-toggle">
+      <button class="${mode==="signin"?"active":""}" data-account-mode="signin" type="button">Se connecter</button>
+      <button class="${mode==="signup"?"active":""}" data-account-mode="signup" type="button">Créer un compte</button>
+    </div>
+    <form id="account-form" style="max-width:360px;">
       ${mode==="signup" ? `<div class="ai-field"><label for="account-name">Pseudo (facultatif)</label><input type="text" id="account-name" class="ai-select" placeholder="Ex. Anton" autocomplete="nickname"></div>` : ""}
       <div class="ai-field"><label for="account-email">Email</label><input type="email" id="account-email" class="ai-select" placeholder="toi@exemple.com" autocomplete="email" required></div>
       <div class="ai-field"><label for="account-password">Mot de passe</label><input type="password" id="account-password" class="ai-select" placeholder="${mode==="signup"?"6 caractères minimum":"••••••••"}" autocomplete="${mode==="signup"?"new-password":"current-password"}" required></div>
       ${mode==="signup" ? `<div class="ai-field"><label for="account-password2">Confirmer le mot de passe</label><input type="password" id="account-password2" class="ai-select" autocomplete="new-password" required></div>` : ""}
       <div class="actions" style="justify-content:flex-start;margin-top:14px;">
-        <button class="btn red small" id="account-submit-btn" type="submit" ${a.busy?"disabled":""}>${a.busy ? "…" : (mode==="signup" ? "Créer mon compte" : "Se connecter")}</button>
+        <button class="btn red small" id="account-submit-btn" type="submit" ${a.busy?"disabled":""}>${a.busy ? busyLabel : (mode==="signup" ? "Créer mon compte" : "Se connecter")}</button>
         ${mode==="signin" ? `<button class="btn-text" id="account-forgot-btn" type="button">Mot de passe oublié</button>` : ""}
       </div>
-      <div id="account-form-msg" style="margin-top:10px;font-size:12.5px;"></div>
+      <div id="account-form-msg"></div>
     </form>
   </div>`;
 }
@@ -9773,8 +9844,16 @@ function attachAccountEvents(){
   document.querySelectorAll("[data-account-mode]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       state.accountUI.mode = btn.dataset.accountMode;
+      state.accountUI.pendingConfirmationEmail = null;
       render();
     });
+  });
+
+  const backBtn = document.getElementById("account-back-to-signin-btn");
+  if(backBtn) backBtn.addEventListener("click", ()=>{
+    state.accountUI.pendingConfirmationEmail = null;
+    state.accountUI.mode = "signin";
+    render();
   });
 
   const form = document.getElementById("account-form");
@@ -9786,7 +9865,10 @@ function attachAccountEvents(){
     // obsolète après ce re-rendu.
     const setMsg = (text, isError) => {
       const el = document.getElementById("account-form-msg");
-      if(el){ el.textContent = text; el.style.color = isError ? "var(--red-dark)" : "var(--green)"; }
+      if(!el) return;
+      el.innerHTML = text
+        ? `<div class="auth-msg" style="color:${isError ? "var(--red-dark)" : "var(--green)"};"><span class="ico">${isError ? "⚠️" : "✓"}</span><span>${escapeHtml(text)}</span></div>`
+        : "";
     };
     const email = document.getElementById("account-email").value.trim();
     const password = document.getElementById("account-password").value;
@@ -9798,12 +9880,28 @@ function attachAccountEvents(){
       if(password !== password2){ setMsg("Les deux mots de passe ne correspondent pas.", true); return; }
       const res = await LyonAuth.signUp({ email, password, displayName: name });
       if(res.error){ setMsg(res.error, true); return; }
-      if(res.needsEmailConfirmation) setMsg("Compte créé ! Vérifie tes emails pour confirmer ton adresse avant de te connecter.", false);
-      else showToast("Compte créé — tu es connecté.");
+      if(res.needsEmailConfirmation){
+        // Ne pas afficher ceci comme une erreur : état dédié "vérifie ton email"
+        // (voir renderAccountSection) plutôt qu'un simple message de formulaire.
+        state.accountUI.pendingConfirmationEmail = email;
+        render();
+      } else {
+        showToast("Compte créé — tu es connecté.");
+      }
     } else {
       if(!email || !password){ setMsg("Email et mot de passe requis.", true); return; }
       const res = await LyonAuth.signIn({ email, password });
-      if(res.error){ setMsg(res.error, true); return; }
+      if(res.error){
+        // Cas précis "email non confirmé" : même état accueillant que juste après
+        // l'inscription, plutôt qu'un message d'erreur générique.
+        if(/vérifie tes emails/i.test(res.error)){
+          state.accountUI.pendingConfirmationEmail = email;
+          render();
+          return;
+        }
+        setMsg(res.error, true);
+        return;
+      }
       showToast("Connecté.");
     }
   });
@@ -9847,40 +9945,49 @@ function attachAccountEvents(){
 }
 
 function renderMySpace(){
+  const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
   const firstName = state.profile.firstName || "";
+
+  const g = globalMetrics();
+  const subjects = allSubjects();
+  const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
+  const d = state.dash;
+
   return `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
-    <p class="ai-intro">Ton profil, ton compte et les raccourcis vers l'assistant IA.</p>
+    <p class="ai-intro">Ton compte, ta progression et tes raccourcis, au même endroit.</p>
 
     ${renderAccountSection()}
 
-    <div class="dash-section">
-      <div class="section-title">Mon profil</div>
-      <p class="dash-empty" style="margin-top:0;">Ton prénom est utilisé uniquement pour personnaliser l'affichage (header, accueil). Il reste stocké dans ce navigateur.</p>
-      <div class="ai-field" style="max-width:320px;">
-        <label for="profile-firstname-input">Ton prénom</label>
-        <input type="text" id="profile-firstname-input" class="ai-select" placeholder="Ex. Anton" value="${escapeHtml(firstName)}">
-      </div>
-      <button class="btn red small" id="profile-save-btn" style="margin-top:6px;">Enregistrer</button>
-      <span id="profile-save-status" style="margin-left:10px;font-size:12.5px;color:var(--muted);"></span>
-    </div>
+    ${authed ? "" : `
+    <div class="myspace-localname-standalone">
+      <span>Tu utilises l'application sans compte ? Ton prénom personnalise l'accueil (gardé uniquement dans ce navigateur).</span>
+      <input type="text" id="local-firstname-input" placeholder="Ton prénom" value="${escapeHtml(firstName)}">
+      <button class="btn-text" id="local-firstname-save-btn" type="button">Enregistrer</button>
+      <span id="local-firstname-status"></span>
+    </div>`}
 
-    <div class="dash-section">
-      <div class="section-title">Raccourcis</div>
-      <div class="dash-quicklinks">
-        <button class="dash-quick-btn" id="myspace-ai-btn"><span class="ico">🤖</span><span class="lbl">Assistant IA</span></button>
-        <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
+    <div class="dash-grid2">
+      <div class="dash-card">
+        <div class="dash-card-eyebrow">Ma progression</div>
+        <div class="dash-progress-big">${g.mastery}%</div>
+        <ul class="dash-progress-list">
+          <li><span>Matières commencées</span><b>${startedSubjects}/${subjects.length}</b></li>
+          <li><span>Chapitres maîtrisés</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
+          <li><span>Questions travaillées</span><b>${g.answered}/${g.total}</b></li>
+          <li><span>Temps de révision</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
+        </ul>
+        <button class="btn-text" id="myspace-progress-link">Voir le détail →</button>
       </div>
-    </div>
 
-    <div class="dash-section">
-      <div class="section-title">Position de l'assistant IA</div>
-      <p class="dash-empty" style="margin-top:0;">Le mode principal reste le glisser-déposer : clique-glisse la bulle le long du bord gauche ou du bord droit, à la souris ou au doigt. Ces boutons sont une alternative si le glisser-déposer n'est pas pratique pour toi.</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:320px;">
-        ${["tl","tr","ml","mr","bl","br"].map(key=>{
-          const labels = {tl:"Haut gauche", tr:"Haut droite", ml:"Milieu gauche", mr:"Milieu droite", bl:"Bas gauche", br:"Bas droite"};
-          return `<button class="btn outline small" data-bubble-preset="${key}" style="text-align:center;">${labels[key]}</button>`;
-        }).join("")}
+      <div class="dash-card">
+        <div class="dash-card-eyebrow">Mes révisions &amp; activités</div>
+        <div class="dash-quicklinks">
+          <button class="dash-quick-btn" id="myspace-library-btn"><span class="ico">📚</span><span class="lbl">Mes matières</span></button>
+          <button class="dash-quick-btn" id="myspace-ai-btn"><span class="ico">🤖</span><span class="lbl">Assistant IA</span></button>
+          <button class="dash-quick-btn" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="lbl">Planning</span></button>
+          <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
+        </div>
       </div>
     </div>
   `;
@@ -9888,22 +9995,27 @@ function renderMySpace(){
 
 function attachMySpaceEvents(){
   attachAccountEvents();
-  const saveBtn = document.getElementById("profile-save-btn");
-  if(saveBtn) saveBtn.addEventListener("click", ()=>{
-    const val = document.getElementById("profile-firstname-input").value.trim();
-    state.profile.firstName = val;
+
+  const localNameInput = document.getElementById("local-firstname-input");
+  const localNameSaveBtn = document.getElementById("local-firstname-save-btn");
+  if(localNameSaveBtn) localNameSaveBtn.addEventListener("click", ()=>{
+    state.profile.firstName = localNameInput.value.trim();
     saveProfile();
     updateNavDynamic();
-    const status = document.getElementById("profile-save-status");
+    const status = document.getElementById("local-firstname-status");
     if(status) status.textContent = "Enregistré.";
   });
+
+  const progressLink = document.getElementById("myspace-progress-link");
+  if(progressLink) progressLink.addEventListener("click", ()=> switchTab("progress"));
+  const libBtn = document.getElementById("myspace-library-btn");
+  if(libBtn) libBtn.addEventListener("click", ()=> switchTab("library"));
   const aiBtn = document.getElementById("myspace-ai-btn");
   if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
+  const planningBtn = document.getElementById("myspace-planning-btn");
+  if(planningBtn) planningBtn.addEventListener("click", ()=> switchTab("planning"));
   const settingsBtn = document.getElementById("myspace-settings-btn");
   if(settingsBtn) settingsBtn.addEventListener("click", ()=> switchTab("settings"));
-  document.querySelectorAll("[data-bubble-preset]").forEach(btn=>{
-    btn.addEventListener("click", ()=> setAIFabPreset(btn.dataset.bubblePreset));
-  });
 }
 
 /* ============================================================
@@ -11626,20 +11738,6 @@ function followAIFabDrag(x, y){
   const cx = Math.max(0, Math.min(window.innerWidth - size, x));
   const cy = Math.max(0, Math.min(window.innerHeight - size, y));
   applyAIFabPosition(cx, cy);
-}
-
-/* Positions nommées pour l'alternative accessible (Mon espace) : bord
-   gauche/droit × haut/milieu/bas — jamais de position centrale. */
-function aiFabPresetSideY(key){
-  const row = key[0], side = key[1] === "l" ? "left" : "right";
-  const size = aiFabSize();
-  const y = row === "t" ? AI_FAB_TOP_MIN : (row === "m" ? (window.innerHeight - size) / 2 : window.innerHeight - size - AI_FAB_MARGIN_BOTTOM);
-  return { side, y };
-}
-
-function setAIFabPreset(key){
-  const { side, y } = aiFabPresetSideY(key);
-  setAIFabSideY(side, y);
 }
 
 function openAIBubble(){
