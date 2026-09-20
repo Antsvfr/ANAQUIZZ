@@ -52,17 +52,28 @@ Dashboard Supabase → **SQL Editor** → **New query**. Colle l'intégralité d
 contenu de [`supabase/schema.sql`](supabase/schema.sql) et exécute ("Run").
 
 Ce script est idempotent (`if not exists`, `or replace`) : tu peux le relancer
-sans risque s'il y a une erreur au milieu, une fois le problème corrigé.
+sans risque s'il y a une erreur au milieu, une fois le problème corrigé — et
+**tu dois le relancer** si ton projet a été initialisé avant le 20/09 (v2
+profil enrichi), même s'il tournait déjà correctement : les `alter table`
+ajoutés ne touchent que ce qui manque, aucune donnée existante n'est perdue.
 
-Il crée :
+Il crée/met à jour :
 - 13 tables (`profiles`, `subjects`, `chapters`, `progress`, `question_stats`,
   `exam_history`, `badges`, `ai_cards`, `course_notes`, `planning_events`,
   `ai_history`, `preferences`, `documents`) ;
 - les index nécessaires ;
 - les triggers `updated_at` automatiques ;
-- la génération automatique du code utilisateur (`LYON-XXXXXX`) à la
-  création d'un compte ;
-- **toutes les policies RLS** (voir section 6).
+- **toutes les policies RLS** (voir section 6) ;
+- le bucket Storage privé `avatars` (photos de profil) + ses policies.
+
+**Changement du 20/09 (v2 — profil enrichi) :** `profiles` gagne
+`first_name`, `last_name`, `phone`, `avatar_url` (`display_name` sert
+toujours de pseudo, pas de colonne dupliquée). La colonne `user_code`
+(`LYON-XXXXXX`) et sa fonction de génération ont été **supprimées** : ce code
+n'était affiché qu'à titre indicatif dans "Mon espace" et n'était utilisé par
+aucune autre fonctionnalité de l'application (pas de connexion par code, pas
+de partage, pas de synchronisation par code) — il a donc été retiré plutôt
+que maintenu sans usage réel.
 
 ## 6. Vérifier les policies RLS
 
@@ -81,6 +92,16 @@ Pour **chaque** table listée ci-dessus, vérifie que :
 **Ne passe pas à la suite tant que ce point n'est pas vérifié.** C'est la
 seule chose qui empêche un utilisateur de lire/modifier les données d'un
 autre. Un test concret est décrit dans la section 11.
+
+**Bucket `avatars` (Storage) :** Dashboard Supabase → **Storage**, vérifie
+qu'un bucket `avatars` existe et est marqué **Private** (pas de bouton "Make
+public" activé — le script le crée déjà privé, ceci est une vérification).
+Dans **Storage → Policies**, vérifie que 4 policies existent sur
+`storage.objects` pour ce bucket (`avatars_select_own`, `avatars_insert_own`,
+`avatars_update_own`, `avatars_delete_own`), chacune limitée au dossier
+`<user_id>/…` du propriétaire — testé directement contre PostgreSQL avant
+livraison (voir le rapport de cette étape), mais à revérifier ici sur ton
+projet réel comme pour le reste des policies.
 
 ## 7. Configurer l'authentification (Auth)
 

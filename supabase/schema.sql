@@ -31,58 +31,48 @@ $$;
 -- ----------------------------------------------------------------------------
 -- profiles — un compte = une ligne. id = auth.uid() directement (pas de
 -- colonne user_id séparée ici : la clé primaire EST l'identifiant utilisateur).
--- user_code = code utilisateur visible ("LYON-7K4P92"), distinct de l'id
--- technique Supabase, jamais basé sur l'email ni le nom.
+--
+-- display_name sert de "pseudo" (déjà demandé et enregistré depuis le
+-- formulaire d'inscription) : on ne duplique pas cette notion dans une
+-- colonne "username" séparée, réutilisée telle quelle par "Mes informations".
+--
+-- v2 (profil enrichi) : ajout de first_name/last_name/phone/avatar_url.
+-- Suppression de user_code (v1) : ce code n'était affiché que dans "Mon
+-- espace" et n'était utilisé par AUCUNE autre fonctionnalité (pas de
+-- connexion par code, pas de partage, pas de sync par code) — retiré à la
+-- demande explicite du 20/09, avec sa fonction de génération dédiée.
 -- ----------------------------------------------------------------------------
 create table if not exists public.profiles (
   id               uuid primary key references auth.users(id) on delete cascade,
-  user_code        text not null unique,
-  display_name     text,
+  display_name     text,   -- pseudo affiché dans l'application
+  first_name       text,
+  last_name        text,
+  phone            text,   -- information de profil, PAS un identifiant de connexion/2FA
+  avatar_url       text,   -- chemin dans le bucket Storage "avatars" (pas une URL publique : bucket privé, signée à la demande)
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now(),
   last_synced_at   timestamptz
 );
 
+-- Additifs idempotents pour un projet où "profiles" existait déjà (v1) :
+-- CREATE TABLE IF NOT EXISTS ci-dessus n'ajoute pas de colonne à une table
+-- existante, d'où ces ALTER explicites.
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name  text;
+alter table public.profiles add column if not exists phone      text;
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles drop column if exists user_code;
+
 create or replace trigger trg_profiles_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
 
--- Génère un code utilisateur du type "LYON-7K4P92" : 6 caractères alphanumériques
--- majuscules (hors caractères ambigus 0/O/1/I), non dérivé de l'email/du nom,
--- avec vérification d'unicité (boucle courte, collision quasi impossible sur
--- 6 caractères en base 32 mais on se protège quand même).
-create or replace function public.generate_user_code()
-returns text
-language plpgsql
-as $$
-declare
-  alphabet text := '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; -- sans 0/O/1/I
-  code text;
-  i int;
-  attempt int := 0;
-begin
-  loop
-    code := '';
-    for i in 1..6 loop
-      code := code || substr(alphabet, floor(random() * length(alphabet) + 1)::int, 1);
-    end loop;
-    code := 'LYON-' || code;
-    exit when not exists (select 1 from public.profiles where user_code = code);
-    attempt := attempt + 1;
-    if attempt > 20 then
-      -- filet de sécurité théorique : ne devrait jamais arriver sur 32^6 combinaisons.
-      code := 'LYON-' || upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 6));
-      exit;
-    end if;
-  end loop;
-  return code;
-end;
-$$;
-
--- Crée automatiquement le profil (avec code utilisateur) dès qu'un compte
--- Supabase Auth est créé — SECURITY DEFINER car le client n'a pas le droit
--- d'insérer directement dans profiles pour un autre id que le sien, et au
--- moment de l'inscription la session n'est pas encore pleinement établie.
+-- Crée automatiquement le profil dès qu'un compte Supabase Auth est créé —
+-- SECURITY DEFINER car le client n'a pas le droit d'insérer directement dans
+-- profiles pour un autre id que le sien, et au moment de l'inscription la
+-- session n'est pas encore pleinement établie.
+-- Redéfinie AVANT de supprimer generate_user_code() ci-dessous : elle ne doit
+-- plus l'appeler au moment où la fonction disparaît.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -90,8 +80,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, user_code, display_name)
-  values (new.id, public.generate_user_code(), coalesce(new.raw_user_meta_data->>'display_name', ''))
+  insert into public.profiles (id, display_name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'display_name', ''))
   on conflict (id) do nothing;
   return new;
 end;
@@ -101,6 +91,10 @@ drop trigger if exists on_auth_user_created on auth.users;
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- v1 seulement — supprimé en v2 (voir commentaire sur la table profiles).
+-- handle_new_user() vient d'être redéfinie ci-dessus pour ne plus l'appeler.
+drop function if exists public.generate_user_code();
 
 -- ----------------------------------------------------------------------------
 -- subjects — state.userSubjects (matières créées/importées par l'élève).
@@ -431,6 +425,36 @@ begin
     );
   end loop;
 end $$;
+
+-- ============================================================================
+-- STORAGE — bucket "avatars" (photos de profil, v2 du 20/09).
+-- Bucket PRIVÉ (public = false) : une photo de profil n'est pas publiée sur
+-- le web, l'app la lit via une URL signée à durée limitée (voir auth.js,
+-- resolveAvatarUrl). Chaque fichier est rangé sous "<user_id>/avatar.<ext>" —
+-- le premier segment du chemin sert de propriétaire pour les policies
+-- ci-dessous (storage.foldername), donc chaque utilisateur ne peut lire/
+-- écrire/supprimer que dans SON PROPRE dossier, jamais celui d'un autre.
+-- ============================================================================
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', false)
+on conflict (id) do nothing;
+
+drop policy if exists "avatars_select_own" on storage.objects;
+create policy "avatars_select_own" on storage.objects
+  for select using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists "avatars_insert_own" on storage.objects;
+create policy "avatars_insert_own" on storage.objects
+  for insert with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists "avatars_update_own" on storage.objects;
+create policy "avatars_update_own" on storage.objects
+  for update using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1])
+  with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists "avatars_delete_own" on storage.objects;
+create policy "avatars_delete_own" on storage.objects
+  for delete using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
 
 -- ============================================================================
 -- Fin du schéma. Prochaine étape : SETUP_SUPABASE.md pour la configuration

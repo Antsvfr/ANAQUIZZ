@@ -32,7 +32,11 @@ window.LyonAuth = (function(){
   const state = {
     status: "idle",   // idle | signed-out | signed-in
     user: null,       // objet utilisateur Supabase Auth (id, email, ...)
-    profile: null,    // ligne de la table "profiles" (user_code, display_name, ...)
+    // ligne de la table "profiles" (display_name/first_name/last_name/phone/
+    // avatar_url) + profile._avatarSignedUrl : URL signée temporaire résolue
+    // côté client à partir d'avatar_url (le bucket Storage est privé), jamais
+    // stockée en base.
+    profile: null,
     busy: false,      // une opération d'auth (signUp/signIn/...) est en cours
   };
 
@@ -58,10 +62,27 @@ window.LyonAuth = (function(){
     return "Une erreur est survenue. Réessaie dans un instant.";
   }
 
+  // Bucket Storage "avatars" privé (voir schema.sql) : avatar_url en base
+  // n'est qu'un CHEMIN ("<user_id>/avatar.webp"), jamais une URL publique.
+  // On la résout en URL signée à durée limitée, à la demande.
+  const AVATAR_SIGNED_URL_TTL = 3600;
+  async function resolveAvatarUrl(path){
+    if(!client || !path) return null;
+    try{
+      const { data, error } = await client.storage.from("avatars").createSignedUrl(path, AVATAR_SIGNED_URL_TTL);
+      if(error){ console.error("[LyonAuth] createSignedUrl", error.message); return null; }
+      return data ? data.signedUrl : null;
+    }catch(e){
+      console.error("[LyonAuth] createSignedUrl", e);
+      return null;
+    }
+  }
+
   async function fetchProfile(userId){
     if(!client) return null;
     const { data, error } = await client.from("profiles").select("*").eq("id", userId).single();
     if(error){ console.error("[LyonAuth] fetchProfile", error.message); return null; }
+    if(data && data.avatar_url) data._avatarSignedUrl = await resolveAvatarUrl(data.avatar_url);
     return data;
   }
 
@@ -70,6 +91,75 @@ window.LyonAuth = (function(){
     state.profile = await fetchProfile(state.user.id);
     notify();
     return state.profile;
+  }
+
+  /* Met à jour prénom/nom/pseudo/téléphone. L'email (Supabase Auth) et
+     l'avatar (uploadAvatar/removeAvatar) ne passent pas par ici. */
+  async function updateProfile(fields){
+    if(!available || !state.user) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const patch = {};
+      ["first_name", "last_name", "display_name", "phone"].forEach(k=>{
+        if(Object.prototype.hasOwnProperty.call(fields, k)) patch[k] = fields[k];
+      });
+      const { data, error } = await client.from("profiles").update(patch).eq("id", state.user.id).select().single();
+      if(error) return { error: humanError(error) };
+      data._avatarSignedUrl = state.profile ? state.profile._avatarSignedUrl : null;
+      state.profile = data;
+      return { profile: data };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
+  }
+
+  /* blob : image déjà validée/redimensionnée côté appelant (voir index.html,
+     modal "Mes informations"). ext : extension sans le point (ex. "webp").
+     Chemin fixe par utilisateur (upsert) : pas de fichiers orphelins à
+     nettoyer à chaque changement de photo. */
+  async function uploadAvatar(blob, ext){
+    if(!available || !state.user) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const path = state.user.id + "/avatar." + ext;
+      const { error: upErr } = await client.storage.from("avatars").upload(path, blob, {
+        upsert: true,
+        contentType: blob.type || "image/webp",
+      });
+      if(upErr) return { error: humanError(upErr) };
+      const { data, error } = await client.from("profiles").update({ avatar_url: path }).eq("id", state.user.id).select().single();
+      if(error) return { error: humanError(error) };
+      data._avatarSignedUrl = await resolveAvatarUrl(path);
+      state.profile = data;
+      return { profile: data };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
+  }
+
+  async function removeAvatar(){
+    if(!available || !state.user) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const oldPath = state.profile && state.profile.avatar_url;
+      const { data, error } = await client.from("profiles").update({ avatar_url: null }).eq("id", state.user.id).select().single();
+      if(error) return { error: humanError(error) };
+      if(oldPath){
+        try{ await client.storage.from("avatars").remove([oldPath]); }
+        catch(e){ console.error("[LyonAuth] removeAvatar storage", e); }
+      }
+      data._avatarSignedUrl = null;
+      state.profile = data;
+      return { profile: data };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
   }
 
   async function signUp({ email, password, displayName }){
@@ -170,6 +260,7 @@ window.LyonAuth = (function(){
   return {
     available, state, init, onChange,
     signUp, signIn, signOut, resetPassword, refreshProfile, humanError,
+    updateProfile, uploadAvatar, removeAvatar,
     get client(){ return client; },
   };
 })();
