@@ -165,6 +165,7 @@
     width:28px; height:28px; border-radius:50%; background: rgba(255,255,255,0.22);
     display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#fff;
   }
+  .profile-avatar.has-photo{ background-size:cover; background-position:center; }
   .hamburger-btn{
     display:none; border:none; background:none; color:#fff; font-size:22px; cursor:pointer;
     width:38px; height:38px; align-items:center; justify-content:center; border-radius:8px; flex-shrink:0;
@@ -323,33 +324,44 @@
   .btn-text.active{ color: var(--red); border-color: var(--red); }
 
   /* ===== MON COMPTE / MON ESPACE ===== */
-  .account-code{ display:flex; align-items:center; gap:10px; }
-  .account-code code{ background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-size:12.5px; letter-spacing:0.02em; }
-  .account-status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; vertical-align:middle; }
+  .myspace-greeting{ font-size:20px; font-weight:800; letter-spacing:-0.01em; margin:28px 0 22px; }
 
-  .myspace-hero{
-    background: linear-gradient(155deg, var(--surface) 0%, var(--red-tint) 160%);
-    border:1px solid var(--border); border-radius: var(--radius-lg);
-    padding:26px 26px; margin:24px 0 18px; box-shadow: var(--shadow-sm);
+  .dash-card.myspace-infocard{ padding:26px; margin:0 0 18px; }
+  .myspace-infocard-top{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; }
+  .myspace-avatar, .myspace-avatar-photo{
+    width:72px; height:72px; border-radius:50%; flex-shrink:0;
   }
-  .myspace-hero-top{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
   .myspace-avatar{
-    width:56px; height:56px; border-radius:50%; flex-shrink:0;
     background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-    color:#fff; font-size:21px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:26px; font-weight:800; display:flex; align-items:center; justify-content:center;
   }
-  .myspace-greeting{ font-size:20px; font-weight:800; letter-spacing:-0.01em; margin:0 0 3px; }
-  .myspace-email{ font-size:13px; color:var(--muted); font-weight:600; }
-  .myspace-hero-body{ margin-top:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
-  .myspace-code-box{ display:flex; align-items:center; gap:10px; }
-  .myspace-code-box .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-weight:800; color:var(--muted); }
-  .myspace-code-box code{ background:#fff; border:1px solid var(--border-strong); border-radius:8px; padding:6px 12px; font-size:14px; font-weight:700; letter-spacing:0.03em; }
-  .myspace-status-pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--green); }
-  .myspace-hero-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .myspace-avatar-photo{ object-fit:cover; border:1px solid var(--border); }
+  .myspace-infocard-fields{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:9px; }
+  .myspace-info-row{ display:flex; align-items:baseline; gap:14px; font-size:13px; }
+  .myspace-info-row .lbl{ color:var(--muted); font-weight:700; width:130px; flex-shrink:0; }
+  .myspace-info-row .val{ color:var(--ink); font-weight:600; }
+  .myspace-unverified{ color:var(--muted); font-weight:600; font-size:11.5px; }
+  .myspace-hero-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; padding-top:18px; border-top:1px solid var(--border); }
   @media (max-width:560px){
-    .myspace-hero{ padding:20px 18px; }
-    .myspace-hero-body{ flex-direction:column; align-items:flex-start; }
+    .dash-card.myspace-infocard{ padding:20px 18px; }
+    .myspace-infocard-top{ flex-direction:column; align-items:center; text-align:center; }
+    .myspace-info-row{ justify-content:center; }
+    .myspace-info-row .lbl{ width:auto; }
   }
+
+  /* ---- modal "Mes informations" (réutilise .cal-modal-backdrop/.cal-modal) ---- */
+  .account-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .account-modal-head h2{ font-size:18px; font-weight:800; margin:0; }
+  .account-modal-avatar-row{ display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+  .account-modal-avatar-img{ width:76px; height:76px; border-radius:50%; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+  .account-modal-avatar-fallback{
+    width:76px; height:76px; border-radius:50%; flex-shrink:0;
+    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    color:#fff; font-size:27px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .account-modal-avatar-actions{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+  .account-modal-email-info{ font-size:13px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--border); border-radius: var(--radius-md); padding:10px 12px; }
+  .account-modal-email-info .muted{ color:var(--muted); font-size:11.5px; }
 
   .auth-card-head{ margin-bottom:18px; }
   .auth-card-head h2{ font-size:19px; font-weight:800; margin:0 0 6px; letter-spacing:-0.01em; }
@@ -1648,6 +1660,7 @@
 
 <div id="content" class="wrap"></div>
 <div id="course-modal-root"></div>
+<div id="account-modal-root"></div>
 
 <button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -3476,6 +3489,7 @@ function switchTab(tab){
 function render(){
   updateNavDynamic();
   renderGlobalCourseModal();
+  renderAccountEditModal();
 
   // mode sans distraction pendant l'épreuve
   const inExam = state.tab === "exam" && state.exam.screen === "running";
@@ -8485,7 +8499,7 @@ Object.assign(state, {
   aiFullTestBusy: false,
   aiFullTestSteps: [],
   // --- état d'interface du formulaire de compte ("Mon espace") ---
-  accountUI: { mode: "signin", pendingConfirmationEmail: null },
+  accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null },
 });
 
 const AI_ACTIONS = {
@@ -9774,28 +9788,30 @@ function renderAccountSection(){
   const a = LyonAuth.state;
 
   if(a.status === "signed-in"){
-    const code = (a.profile && a.profile.user_code) || "…";
+    const p = a.profile || {};
     const email = a.user ? a.user.email : "";
-    const name = (a.profile && a.profile.display_name) || "";
-    const greetName = name || (email ? email.split("@")[0] : "");
-    const initial = (name || email || "?").charAt(0).toUpperCase();
-    return `<div class="myspace-hero" id="account-section">
-      <div class="myspace-hero-top">
-        <div class="myspace-avatar">${escapeHtml(initial)}</div>
-        <div>
-          <div class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</div>
-          <div class="myspace-email">${escapeHtml(email)}</div>
+    const firstName = p.first_name || "";
+    const lastName = p.last_name || "";
+    const displayName = p.display_name || "";
+    const phone = p.phone || "";
+    const avatarUrl = p._avatarSignedUrl || null;
+    const initial = (displayName || firstName || email || "?").charAt(0).toUpperCase();
+    return `<div class="dash-card myspace-infocard" id="account-section">
+      <div class="dash-card-eyebrow">Mes informations</div>
+      <div class="myspace-infocard-top">
+        ${avatarUrl
+          ? `<img class="myspace-avatar-photo" src="${escapeHtml(avatarUrl)}" alt="">`
+          : `<div class="myspace-avatar">${escapeHtml(initial)}</div>`}
+        <div class="myspace-infocard-fields">
+          <div class="myspace-info-row"><span class="lbl">Prénom</span><span class="val">${firstName ? escapeHtml(firstName) : "—"}</span></div>
+          <div class="myspace-info-row"><span class="lbl">Nom</span><span class="val">${lastName ? escapeHtml(lastName) : "—"}</span></div>
+          <div class="myspace-info-row"><span class="lbl">Pseudo</span><span class="val">${displayName ? escapeHtml(displayName) : "—"}</span></div>
+          <div class="myspace-info-row"><span class="lbl">Numéro de téléphone</span><span class="val">${phone ? escapeHtml(phone) + ` <span class="myspace-unverified">(non vérifié)</span>` : "—"}</span></div>
+          <div class="myspace-info-row"><span class="lbl">Adresse e-mail</span><span class="val">${escapeHtml(email)}</span></div>
         </div>
-      </div>
-      <div class="myspace-hero-body">
-        <div class="myspace-code-box">
-          <span class="lbl">Code utilisateur</span>
-          <code>${escapeHtml(code)}</code>
-          <button class="btn-text" id="account-copy-code-btn" type="button">Copier</button>
-        </div>
-        <span class="myspace-status-pill"><span class="account-status-dot"></span>Connecté</span>
       </div>
       <div class="myspace-hero-actions">
+        <button class="btn red small" id="account-edit-btn" type="button">Modifier mes informations</button>
         <button class="btn outline small" id="account-signout-btn" ${a.busy?"disabled":""}>${a.busy ? "…" : "Se déconnecter"}</button>
         <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
       </div>
@@ -9926,27 +9942,26 @@ function attachAccountEvents(){
     showToast("Suppression de compte non disponible pour l'instant (nécessite une configuration serveur supplémentaire).");
   });
 
-  const copyBtn = document.getElementById("account-copy-code-btn");
-  if(copyBtn) copyBtn.addEventListener("click", async ()=>{
-    const code = (LyonAuth.state.profile && LyonAuth.state.profile.user_code) || "";
-    if(!code) return;
-    try{
-      await navigator.clipboard.writeText(code);
-      showToast("Code copié.");
-    }catch(e){
-      const ta = document.createElement("textarea");
-      ta.value = code; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select();
-      try{ document.execCommand("copy"); showToast("Code copié."); }
-      catch(e2){ showToast("Impossible de copier automatiquement — sélectionne le code manuellement."); }
-      document.body.removeChild(ta);
-    }
-  });
+  const editBtn = document.getElementById("account-edit-btn");
+  if(editBtn) editBtn.addEventListener("click", openAccountEditModal);
+}
+
+/* Pseudo si renseigné, sinon prénom, sinon (dernier recours) le préfixe de
+   l'email — jamais l'email complet ni son identifiant tronqué comme nom
+   d'affichage principal. Utilisé par "Mon espace" et par updateNavDynamic(). */
+function accountDisplayName(){
+  if(!window.LyonAuth || !LyonAuth.available || LyonAuth.state.status !== "signed-in") return "";
+  const p = LyonAuth.state.profile || {};
+  if(p.display_name) return p.display_name;
+  if(p.first_name) return p.first_name;
+  const email = LyonAuth.state.user ? LyonAuth.state.user.email : "";
+  return email ? email.split("@")[0] : "";
 }
 
 function renderMySpace(){
   const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
   const firstName = state.profile.firstName || "";
+  const greetName = accountDisplayName();
 
   const g = globalMetrics();
   const subjects = allSubjects();
@@ -9955,7 +9970,9 @@ function renderMySpace(){
 
   return `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mon espace</h1>
-    <p class="ai-intro">Ton compte, ta progression et tes raccourcis, au même endroit.</p>
+    ${authed
+      ? `<p class="myspace-greeting">Bonjour${greetName ? " " + escapeHtml(greetName) : ""} 👋</p>`
+      : `<p class="ai-intro">Ton compte, ta progression et tes raccourcis, au même endroit.</p>`}
 
     ${renderAccountSection()}
 
@@ -9984,6 +10001,7 @@ function renderMySpace(){
         <div class="dash-card-eyebrow">Mes révisions &amp; activités</div>
         <div class="dash-quicklinks">
           <button class="dash-quick-btn" id="myspace-library-btn"><span class="ico">📚</span><span class="lbl">Mes matières</span></button>
+          <button class="dash-quick-btn" id="myspace-activities-btn"><span class="ico">🧠</span><span class="lbl">Activités</span></button>
           <button class="dash-quick-btn" id="myspace-ai-btn"><span class="ico">🤖</span><span class="lbl">Assistant IA</span></button>
           <button class="dash-quick-btn" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="lbl">Planning</span></button>
           <button class="dash-quick-btn" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="lbl">Paramètres</span></button>
@@ -10010,12 +10028,225 @@ function attachMySpaceEvents(){
   if(progressLink) progressLink.addEventListener("click", ()=> switchTab("progress"));
   const libBtn = document.getElementById("myspace-library-btn");
   if(libBtn) libBtn.addEventListener("click", ()=> switchTab("library"));
+  const activitiesBtn = document.getElementById("myspace-activities-btn");
+  if(activitiesBtn) activitiesBtn.addEventListener("click", ()=> switchTab("activities"));
   const aiBtn = document.getElementById("myspace-ai-btn");
   if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
   const planningBtn = document.getElementById("myspace-planning-btn");
   if(planningBtn) planningBtn.addEventListener("click", ()=> switchTab("planning"));
   const settingsBtn = document.getElementById("myspace-settings-btn");
   if(settingsBtn) settingsBtn.addEventListener("click", ()=> switchTab("settings"));
+}
+
+/* ---------- Modal "Mes informations" (édition du profil Supabase) ----------
+   Rendue dans #account-modal-root (racine globale, hors #content — même
+   principe que #course-modal-root), pour rester ouverte/à jour à travers les
+   render() déclenchés automatiquement par LyonAuth.onChange() pendant la
+   sauvegarde (voir handleAccountModalSave). state.accountUI.editDraft porte
+   l'état d'édition en mémoire (jamais persisté). */
+function openAccountEditModal(){
+  const p = (window.LyonAuth && LyonAuth.state.profile) || {};
+  state.accountUI.editDraft = {
+    firstName: p.first_name || "",
+    lastName: p.last_name || "",
+    displayName: p.display_name || "",
+    phone: p.phone || "",
+    avatarPreviewUrl: p._avatarSignedUrl || null,
+    avatarBlob: null,
+    avatarExt: null,
+    avatarRemoved: false,
+    saving: false,
+  };
+  state.accountUI.editOpen = true;
+  renderAccountEditModal();
+}
+
+function closeAccountEditModal(){
+  const d = state.accountUI.editDraft;
+  if(d && d.avatarPreviewUrl && d.avatarPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(d.avatarPreviewUrl);
+  state.accountUI.editOpen = false;
+  state.accountUI.editDraft = null;
+  renderAccountEditModal();
+}
+
+function renderAccountEditModal(){
+  const root = document.getElementById("account-modal-root");
+  if(!root) return;
+  if(!state.accountUI.editOpen || !state.accountUI.editDraft){
+    if(root.innerHTML) root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = accountEditModalHtml();
+  attachAccountEditModalEvents();
+}
+
+function accountEditModalHtml(){
+  const d = state.accountUI.editDraft;
+  const email = (window.LyonAuth && LyonAuth.state.user && LyonAuth.state.user.email) || "";
+  const initial = (d.displayName || d.firstName || email || "?").charAt(0).toUpperCase();
+  return `<div class="cal-modal-backdrop" id="account-modal-backdrop">
+    <div class="cal-modal" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+      <div class="account-modal-head">
+        <h2 id="account-modal-title">Mes informations</h2>
+        <button class="btn-text" id="account-modal-close" type="button" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="account-modal-avatar-row">
+        ${d.avatarPreviewUrl
+          ? `<img class="account-modal-avatar-img" src="${escapeHtml(d.avatarPreviewUrl)}" alt="">`
+          : `<div class="account-modal-avatar-fallback">${escapeHtml(initial)}</div>`}
+        <div class="account-modal-avatar-actions">
+          <label class="btn outline small" style="cursor:pointer;margin:0;">Modifier<input type="file" id="account-avatar-input" accept="image/jpeg,image/png,image/webp" style="display:none;"></label>
+          ${d.avatarPreviewUrl ? `<button class="btn-text" id="account-avatar-remove-btn" type="button">Supprimer la photo</button>` : ""}
+        </div>
+      </div>
+
+      <div class="ai-field"><label for="account-edit-firstname">Prénom</label><input type="text" id="account-edit-firstname" class="ai-select" value="${escapeHtml(d.firstName)}" placeholder="Ex. Antoine"></div>
+      <div class="ai-field"><label for="account-edit-lastname">Nom</label><input type="text" id="account-edit-lastname" class="ai-select" value="${escapeHtml(d.lastName)}" placeholder="Ex. Savatier"></div>
+      <div class="ai-field"><label for="account-edit-username">Pseudo</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="Ex. anton"></div>
+      <div class="ai-field"><label for="account-edit-phone">Numéro de téléphone</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="+33 6 12 34 56 78"></div>
+      <div class="ai-field">
+        <label>E-mail</label>
+        <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">(compte, non modifiable ici)</span></div>
+      </div>
+
+      <div id="account-edit-msg"></div>
+
+      <div class="actions" style="justify-content:flex-end;margin-top:8px;">
+        <button class="btn-text" id="account-modal-cancel" type="button">Annuler</button>
+        <button class="btn red small" id="account-modal-save" type="button" ${d.saving?"disabled":""}>${d.saving ? "Enregistrement…" : "Enregistrer"}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function attachAccountEditModalEvents(){
+  const closeBtn = document.getElementById("account-modal-close");
+  if(closeBtn) closeBtn.addEventListener("click", closeAccountEditModal);
+  const cancelBtn = document.getElementById("account-modal-cancel");
+  if(cancelBtn) cancelBtn.addEventListener("click", closeAccountEditModal);
+  const backdrop = document.getElementById("account-modal-backdrop");
+  if(backdrop) backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) closeAccountEditModal(); });
+
+  const fileInput = document.getElementById("account-avatar-input");
+  if(fileInput) fileInput.addEventListener("change", handleAccountAvatarFileChange);
+  const removeBtn = document.getElementById("account-avatar-remove-btn");
+  if(removeBtn) removeBtn.addEventListener("click", handleAccountAvatarRemove);
+
+  const saveBtn = document.getElementById("account-modal-save");
+  if(saveBtn) saveBtn.addEventListener("click", handleAccountModalSave);
+}
+
+/* Redimensionne (max 512px de côté) et compresse en WebP côté client avant
+   upload — évite de stocker des photos brutes de plusieurs Mo. */
+function compressAvatarImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const MAX_DIM = 512;
+        let { width, height } = img;
+        if(width > height){ if(width > MAX_DIM){ height = Math.round(height * MAX_DIM / width); width = MAX_DIM; } }
+        else { if(height > MAX_DIM){ width = Math.round(width * MAX_DIM / height); height = MAX_DIM; } }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("toBlob failed")), "image/webp", 0.85);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleAccountAvatarFileChange(e){
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ""; // permet de resélectionner le même fichier ensuite
+  if(!file) return;
+  const okTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  if(!okTypes.includes(file.type)){
+    showToast("Format non supporté — utilise un JPG, PNG ou WebP.");
+    return;
+  }
+  const MAX_RAW_BYTES = 8 * 1024 * 1024;
+  if(file.size > MAX_RAW_BYTES){
+    showToast("Image trop lourde (8 Mo maximum).");
+    return;
+  }
+  compressAvatarImage(file).then(blob=>{
+    const d = state.accountUI.editDraft;
+    if(!d) return; // la modal a été fermée entre-temps
+    if(d.avatarPreviewUrl && d.avatarPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(d.avatarPreviewUrl);
+    d.avatarBlob = blob;
+    d.avatarExt = "webp";
+    d.avatarPreviewUrl = URL.createObjectURL(blob);
+    d.avatarRemoved = false;
+    renderAccountEditModal();
+  }).catch(()=>{
+    showToast("Impossible de traiter cette image.");
+  });
+}
+
+function handleAccountAvatarRemove(){
+  const d = state.accountUI.editDraft;
+  if(!d) return;
+  if(d.avatarPreviewUrl && d.avatarPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(d.avatarPreviewUrl);
+  d.avatarBlob = null;
+  d.avatarExt = null;
+  d.avatarPreviewUrl = null;
+  d.avatarRemoved = true;
+  renderAccountEditModal();
+}
+
+async function handleAccountModalSave(){
+  const d = state.accountUI.editDraft;
+  if(!d || d.saving) return;
+
+  const setErr = (msg) => {
+    const el = document.getElementById("account-edit-msg");
+    if(!el) return;
+    el.innerHTML = msg ? `<div class="auth-msg" style="color:var(--red-dark);"><span class="ico">⚠️</span><span>${escapeHtml(msg)}</span></div>` : "";
+  };
+
+  const firstName = document.getElementById("account-edit-firstname").value.trim();
+  const lastName = document.getElementById("account-edit-lastname").value.trim();
+  const displayName = document.getElementById("account-edit-username").value.trim();
+  const phone = document.getElementById("account-edit-phone").value.trim();
+
+  if(phone && !/^[0-9+()\s.-]{6,20}$/.test(phone)){
+    setErr("Numéro de téléphone invalide (chiffres, espaces, +, - uniquement).");
+    return;
+  }
+
+  d.saving = true;
+  renderAccountEditModal();
+
+  let err = null;
+  if(d.avatarBlob){
+    const res = await LyonAuth.uploadAvatar(d.avatarBlob, d.avatarExt);
+    if(res.error) err = res.error;
+  } else if(d.avatarRemoved){
+    const res = await LyonAuth.removeAvatar();
+    if(res.error) err = res.error;
+  }
+  if(!err){
+    const res = await LyonAuth.updateProfile({ first_name: firstName, last_name: lastName, display_name: displayName, phone });
+    if(res.error) err = res.error;
+  }
+
+  if(err){
+    d.saving = false;
+    setErr(err);
+    renderAccountEditModal();
+    return;
+  }
+
+  closeAccountEditModal();
+  showToast("Informations enregistrées.");
 }
 
 /* ============================================================
@@ -11562,8 +11793,7 @@ function updateNavDynamic(){
   const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in";
   if(nameLbl){
     if(authed){
-      const label = (LyonAuth.state.profile && LyonAuth.state.profile.display_name) || firstName || "Mon compte";
-      nameLbl.textContent = label;
+      nameLbl.textContent = accountDisplayName() || "Mon compte";
     } else if(window.LyonAuth && LyonAuth.available){
       nameLbl.textContent = "Connexion";
     } else {
@@ -11571,11 +11801,16 @@ function updateNavDynamic(){
     }
   }
   if(avatar){
-    if(authed){
-      const src = (LyonAuth.state.profile && LyonAuth.state.profile.display_name) || firstName;
-      avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
+    const photoUrl = authed && LyonAuth.state.profile ? LyonAuth.state.profile._avatarSignedUrl : null;
+    if(photoUrl){
+      avatar.style.backgroundImage = `url("${photoUrl}")`;
+      avatar.classList.add("has-photo");
+      avatar.textContent = "";
     } else {
-      avatar.textContent = firstName ? firstName.charAt(0).toUpperCase() : "🎓";
+      avatar.style.backgroundImage = "";
+      avatar.classList.remove("has-photo");
+      const src = authed ? accountDisplayName() : firstName;
+      avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
     }
   }
 }
