@@ -9860,7 +9860,7 @@ function renderAccountSection(){
       <button class="${mode==="signup"?"active":""}" data-account-mode="signup" type="button">Créer un compte</button>
     </div>
     <form id="account-form" style="max-width:360px;">
-      ${mode==="signup" ? `<div class="ai-field"><label for="account-name">Pseudo (facultatif)</label><input type="text" id="account-name" class="ai-select" placeholder="Ex. Anton" autocomplete="nickname"></div>` : ""}
+      ${mode==="signup" ? `<div class="ai-field"><label for="account-name">Pseudo (facultatif)</label><input type="text" id="account-name" class="ai-select" placeholder="Votre pseudo" autocomplete="nickname"></div>` : ""}
       <div class="ai-field"><label for="account-email">Email</label><input type="email" id="account-email" class="ai-select" placeholder="toi@exemple.com" autocomplete="email" required></div>
       <div class="ai-field"><label for="account-password">Mot de passe</label><input type="password" id="account-password" class="ai-select" placeholder="${mode==="signup"?"6 caractères minimum":"••••••••"}" autocomplete="${mode==="signup"?"new-password":"current-password"}" required></div>
       ${mode==="signup" ? `<div class="ai-field"><label for="account-password2">Confirmer le mot de passe</label><input type="password" id="account-password2" class="ai-select" autocomplete="new-password" required></div>` : ""}
@@ -9984,6 +9984,20 @@ function accountFullName(p){
   return [fn, ln].filter(Boolean).join(" ");
 }
 
+/* Nom utilisé UNIQUEMENT par le message d'accueil "Bonjour ... 👋" : prénom
+   si renseigné, sinon nom, sinon rien ("Bonjour 👋") — jamais le pseudo, ni
+   l'email, ni une valeur écrite en dur. Toujours dérivé du profil Supabase
+   de l'utilisateur actuellement connecté (LyonAuth.state.profile). */
+function accountGreetingName(){
+  if(!window.LyonAuth || !LyonAuth.available || LyonAuth.state.status !== "signed-in") return "";
+  const p = LyonAuth.state.profile || {};
+  const firstName = (p.first_name || "").trim();
+  if(firstName) return firstName;
+  const lastName = (p.last_name || "").trim();
+  if(lastName) return lastName;
+  return "";
+}
+
 /* Pourcentage réel de complétion du profil (5 champs éditables dans la
    modal). N'inclut pas l'email : il vient de Supabase Auth, toujours
    renseigné, ce n'est pas une information "à compléter". */
@@ -10060,7 +10074,7 @@ function renderInfoCard(){
 function renderMySpace(){
   const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
   const firstName = state.profile.firstName || "";
-  const greetName = accountDisplayName();
+  const greetName = accountGreetingName();
 
   const g = globalMetrics();
   const subjects = allSubjects();
@@ -10237,10 +10251,10 @@ function accountEditModalHtml(){
         </div>
       </div>
 
-      <div class="ai-field"><label for="account-edit-firstname">Prénom</label><input type="text" id="account-edit-firstname" class="ai-select" value="${escapeHtml(d.firstName)}" placeholder="Ex. Antoine"></div>
-      <div class="ai-field"><label for="account-edit-lastname">Nom</label><input type="text" id="account-edit-lastname" class="ai-select" value="${escapeHtml(d.lastName)}" placeholder="Ex. Savatier"></div>
-      <div class="ai-field"><label for="account-edit-username">Pseudo</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="Ex. anton"></div>
-      <div class="ai-field"><label for="account-edit-phone">Numéro de téléphone</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="+33 6 12 34 56 78"></div>
+      <div class="ai-field"><label for="account-edit-firstname">Prénom</label><input type="text" id="account-edit-firstname" class="ai-select" value="${escapeHtml(d.firstName)}" placeholder="Votre prénom"></div>
+      <div class="ai-field"><label for="account-edit-lastname">Nom</label><input type="text" id="account-edit-lastname" class="ai-select" value="${escapeHtml(d.lastName)}" placeholder="Votre nom"></div>
+      <div class="ai-field"><label for="account-edit-username">Pseudo</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="Votre pseudo"></div>
+      <div class="ai-field"><label for="account-edit-phone">Numéro de téléphone</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="Votre numéro de téléphone"></div>
       <div class="ai-field">
         <label>E-mail</label>
         <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">(compte, non modifiable ici)</span></div>
