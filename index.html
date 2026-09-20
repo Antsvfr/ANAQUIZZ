@@ -10036,7 +10036,6 @@ function renderInfoCard(){
     ${row("Téléphone", p.phone, p.phone ? ` <span class="myspace-unverified">(non vérifié)</span>` : "")}
     <div class="myspace-info-row"><span class="lbl">Adresse e-mail</span><span class="val">${escapeHtml(email)}</span></div>
     <div class="actions" style="justify-content:flex-start;margin-top:16px;">
-      <button class="btn outline small" id="account-edit-btn-2" type="button">Modifier mes informations</button>
       <button class="btn-text" id="account-delete-btn" style="color:var(--muted);">Supprimer mon compte</button>
     </div>
   </div>`;
@@ -10112,9 +10111,6 @@ function renderMySpace(){
 
 function attachMySpaceEvents(){
   attachAccountEvents();
-
-  const editBtn2 = document.getElementById("account-edit-btn-2");
-  if(editBtn2) editBtn2.addEventListener("click", openAccountEditModal);
 
   const continueBtn = document.getElementById("myspace-continue-btn");
   if(continueBtn) continueBtn.addEventListener("click", continueRevision);
