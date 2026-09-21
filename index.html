@@ -728,6 +728,29 @@
   .flash-judge button:disabled{ opacity: 0.35; cursor:not-allowed; transform:none; }
   .flash-hintline{ text-align:center; font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
+  /* ---------- Flashcards : "📖 Dans ton cours" (passage source) ---------- */
+  .flash-source{
+    width:100%; max-width:480px; margin: 4px 0 18px; padding: 14px 18px;
+    border:1.5px solid var(--border); border-radius: var(--radius-md); background: var(--surface-2);
+    animation: flashSourceIn 0.22s var(--ease);
+  }
+  @keyframes flashSourceIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
+  .flash-source-head{ display:flex; align-items:center; gap:7px; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-weight:800; color: var(--red-dark); }
+  .flash-source-toggle{
+    display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer;
+    padding: 6px 0 0; font-size: 13px; font-weight:700; color: var(--red); font-family: var(--font-main);
+  }
+  .flash-source-toggle:hover{ color: var(--red-dark); text-decoration: underline; }
+  .flash-source-collapse{
+    display:grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s var(--ease), opacity 0.22s var(--ease); opacity:0;
+  }
+  .flash-source.open .flash-source-collapse{ grid-template-rows: 1fr; opacity:1; margin-top:10px; }
+  .flash-source-body{ overflow:hidden; min-height:0; }
+  .flash-source-excerpt{ font-size: 13.5px; line-height:1.65; color: var(--ink-soft); white-space:pre-line; }
+  .flash-source-excerpt mark.flash-source-mark{ background: var(--red-tint); color: var(--red-dark); font-weight:700; border-radius:3px; padding: 0 2px; }
+  .flash-source-example{ margin: 10px 0 0; padding-top:10px; border-top:1px dashed var(--border); font-size:13px; line-height:1.6; color: var(--ink-soft); white-space:pre-line; }
+  .flash-source-empty{ margin:0; font-size:13px; color: var(--muted); font-style:italic; }
+
   .flash-summary{ text-align:center; padding: 8px 0 4px; }
   .flash-summary .ring{
     width: 132px; height:132px; border-radius:50%; margin: 8px auto 20px; position:relative;
@@ -1601,6 +1624,8 @@
     .fiche-card-head{ flex-wrap:wrap; }
     .flashcard-front .q{ font-size: 17px; }
     .flashcard-back .a{ font-size: 14px; }
+    .flash-source{ padding: 12px 14px; }
+    .flash-source-excerpt, .flash-source-example{ font-size: 13px; }
     .ai-history-item .hprompt{ max-width: 180px; }
     .level-heading{ align-items:flex-start; }
     .level-heading .line{ display:none; }
@@ -4771,6 +4796,18 @@ function chapterSourceText(ch){
   return ch.originalText || ficheContentToPlainText(ch.content) || "";
 }
 
+/* Texte source d'un chapitre, quel que soit son type (matière intégrée ou
+   chapitre utilisateur) — utilisé par la liaison flashcard → cours
+   ("Dans ton cours", voir plus bas). Ne duplique rien : relit simplement le
+   texte déjà stocké (FICHES pour les chapitres intégrés, ch.originalText/
+   ch.content pour les chapitres utilisateur). */
+function flashcardSourceText(chapterId){
+  if(!chapterId) return "";
+  if(FICHES[chapterId] !== undefined) return stripHtml(FICHES[chapterId]);
+  const ch = state.userChapters.find(c => c.id === chapterId);
+  return ch ? chapterSourceText(ch) : "";
+}
+
 /* ---------- Actions IA pour un chapitre créé par l'utilisateur ----------
    Réutilise intégralement le moteur WebLLM déjà en place (webllmChat /
    webllmJsonChat), sans dupliquer de logique. */
@@ -4877,19 +4914,24 @@ async function libGenerateUserChapterCards(ch){
   if(state.aiStatus !== "ready"){
     const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
     if(h.flashcards.length === 0){ showToast("Aucune définition claire trouvée pour créer des flashcards."); return; }
-    ch.aiFlashcards = h.flashcards;
+    const cardsH = h.flashcards.map(c => Object.assign({}, c, {chapterId: ch.id}));
+    ch.aiFlashcards = cardsH;
     saveUserChapters();
     render();
-    startFlashDeck(ch.id, ch.title, h.flashcards);
+    startFlashDeck(ch.id, ch.title, cardsH);
     return;
   }
   state.libToolsBusy = "flashcards";
   render();
   const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
-    "\n\nTÂCHE : génère 10 flashcards de révision sur ce contenu. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\"}]";
+    "\n\nTÂCHE : génère 10 flashcards de révision sur ce contenu. Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu du cours ci-dessus, qui justifie la réponse. Si un exemple lié à la notion apparaît juste à côté dans le cours, ajoute \"exampleQuote\" (citation exacte de cet exemple) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   try{
     const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
-    const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front), back:String(c.back), ai:true}));
+    const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({
+      front:String(c.front), back:String(c.back), ai:true, chapterId: ch.id,
+      sourceQuote: c.sourceQuote ? String(c.sourceQuote) : "",
+      exampleQuote: c.exampleQuote ? String(c.exampleQuote) : "",
+    }));
     if(cards.length === 0) throw new Error("format inattendu");
     ch.aiFlashcards = cards;
     saveUserChapters();
@@ -4906,7 +4948,10 @@ async function libGenerateUserChapterCards(ch){
 /* ---------- édition manuelle des flashcards / questions générées ---------- */
 function libUpdateFlashcard(ch, idx, front, back){
   if(!ch.aiFlashcards || !ch.aiFlashcards[idx]) return;
-  ch.aiFlashcards[idx] = {front, back, ai: ch.aiFlashcards[idx].ai};
+  // Object.assign (et non un objet neuf) : préserve chapterId/sourceQuote/
+  // exampleQuote déjà attachés à la carte — modifier le texte recto/verso
+  // ne doit pas faire perdre son lien "Dans ton cours".
+  ch.aiFlashcards[idx] = Object.assign({}, ch.aiFlashcards[idx], {front, back});
   saveUserChapters();
 }
 function libDeleteFlashcard(ch, idx){
@@ -5435,9 +5480,13 @@ async function generateCourseQuizFromText(workingText, meta, signal){
 async function generateCourseFlashcardsFromText(workingText, meta, signal){
   const n = courseItemCounts(meta.sourceCharCount || workingText.length).flashcards;
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : génère " + n + " flashcards de révision (définitions, notions, formules, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Recto court (question/notion), verso court (réponse en une phrase). Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"front\":\"...\",\"back\":\"...\"}]";
+    "\n\nTÂCHE : génère " + n + " flashcards de révision (définitions, notions, formules, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Recto court (question/notion), verso court (réponse en une phrase). Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la réponse. Si un exemple lié à la notion apparaît juste à côté dans le texte, ajoute \"exampleQuote\" (citation exacte de cet exemple) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"front\":\"...\",\"back\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "flashcards");
-  const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front), back:String(c.back), ai:true}));
+  const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({
+    front:String(c.front), back:String(c.back), ai:true,
+    sourceQuote: c.sourceQuote ? String(c.sourceQuote) : "",
+    exampleQuote: c.exampleQuote ? String(c.exampleQuote) : "",
+  }));
   if(cards.length === 0) throw new Error("aucune flashcard générée (format inattendu)");
   return cards;
 }
@@ -5494,7 +5543,7 @@ function heuristicExtractDefinitions(text){
   for(const l of lines){
     const m = l.match(reColon) || l.match(reEst);
     if(m){
-      defs.push({ term: m[1].trim(), def: m[2].trim().replace(/[.]+$/, "") });
+      defs.push({ term: m[1].trim(), def: m[2].trim().replace(/[.]+$/, ""), line: l });
       if(defs.length >= 12) break;
     }
   }
@@ -5526,7 +5575,7 @@ function buildHeuristicCourseMaterials(rawText){
     fiche += `<p>Le texte a bien été importé, mais aucune structure claire (titres, définitions) n'a pu être détectée automatiquement. Consulte le texte original du cours.</p>`;
   }
 
-  const flashcards = defs.slice(0, 10).map(d => ({ front: d.term, back: d.def, heuristic: true }));
+  const flashcards = defs.slice(0, 10).map(d => ({ front: d.term, back: d.def, heuristic: true, sourceQuote: d.line }));
 
   const quiz = [];
   if(defs.length >= 3){
@@ -5950,7 +5999,7 @@ async function courseImportFinalize(index, opts){
     originalText: clip(item.extractedText, 20000),
     summary: item.generated.summary || "",
     aiQuiz: item.generated.quiz || [],
-    aiFlashcards: item.generated.flashcards || [],
+    aiFlashcards: (item.generated.flashcards || []).map(c => Object.assign({}, c, {chapterId})),
     aiReviewQuestions: item.generated.reviewQuestions || [],
     keyNotions: d.notions || [],
     sourceFileName: item.name || "",
@@ -7581,6 +7630,197 @@ function attachFichesEvents(){
 }
 
 /* ============================================================
+   9bis. FLASHCARDS — liaison "Dans ton cours"
+   ------------------------------------------------------------
+   Fonctionnalité additive : une flashcard PEUT porter chapterId +
+   sourceQuote (+ exampleQuote optionnel) — une courte citation à
+   retrouver dans le texte déjà stocké du chapitre (jamais une copie du
+   cours entier dans la carte, voir flashcardSourceText plus haut). Les
+   flashcards sans ces champs (anciennes, ou ajoutées manuellement)
+   continuent de s'afficher exactement comme avant : resolveFlashcard
+   CourseRef() leur renvoie simplement un statut "none".
+   Recherche : correspondance exacte d'abord, puis tolérante aux espaces/
+   majuscules (jamais une recherche floue par mots-clés) — si la citation
+   n'existe pas dans le texte, on ne fabrique jamais de passage. Résultat
+   mis en cache par carte (WeakMap) : le calcul ne tourne qu'une fois,
+   jamais à chaque clic sur "Voir dans le cours".
+   ============================================================ */
+const flashSourceCache = new WeakMap();
+
+function normalizeForMatch(s){ return String(s||"").replace(/\s+/g, " ").trim(); }
+
+/* Construit une version du texte à espaces normalisés (espaces/retours à
+   la ligne multiples réduits à un seul), avec une table de correspondance
+   vers les index du texte ORIGINAL — pour retrouver une citation même si
+   son découpage en lignes diffère légèrement (fréquent après extraction
+   PDF), sans jamais perdre la position exacte dans le texte réel. */
+function buildNormalizedIndexMap(original){
+  let normalized = "";
+  const map = [];
+  let lastWasSpace = true;
+  for(let i=0;i<original.length;i++){
+    const ch = original[i];
+    if(/\s/.test(ch)){
+      if(!lastWasSpace){ normalized += " "; map.push(i); lastWasSpace = true; }
+    } else {
+      normalized += ch; map.push(i); lastWasSpace = false;
+    }
+  }
+  if(normalized.endsWith(" ")){ normalized = normalized.slice(0, -1); map.pop(); }
+  return { normalized, map };
+}
+
+/* Retourne {start,end} (index dans le texte ORIGINAL) si la citation est
+   retrouvée, sinon null. Ne renvoie jamais une position approximative :
+   soit la citation correspond réellement à ce passage du texte, soit rien. */
+function locateQuoteInText(original, quote){
+  const text = String(original || "");
+  const q = String(quote || "").trim();
+  if(!text || !q) return null;
+  const idx = text.indexOf(q);
+  if(idx !== -1) return { start: idx, end: idx + q.length };
+  const { normalized, map } = buildNormalizedIndexMap(text);
+  const normQuote = normalizeForMatch(q);
+  if(!normQuote || !map.length) return null;
+  const nIdx = normalized.toLowerCase().indexOf(normQuote.toLowerCase());
+  if(nIdx === -1) return null;
+  const nEnd = Math.min(nIdx + normQuote.length - 1, map.length - 1);
+  return { start: map[nIdx], end: map[nEnd] + 1 };
+}
+
+const FLASH_SOURCE_WINDOW = 260; // caractères de contexte si aucun paragraphe net n'est détecté
+
+/* Élargit [start,end] au paragraphe qui le contient (séparateur : ligne
+   vide) pour donner du contexte — cf. consigne "pas juste une phrase
+   isolée". Si le texte n'a pas de mise en forme en paragraphes (fréquent
+   sur un texte extrait), retombe sur une fenêtre de caractères calée sur
+   des limites de mots. Ne modifie jamais [start,end] lui-même : le
+   surlignage reste toujours exact. */
+function extractParagraphAround(text, start, end){
+  let pStart = text.lastIndexOf("\n\n", start);
+  pStart = pStart === -1 ? 0 : pStart + 2;
+  let pEnd = text.indexOf("\n\n", end);
+  pEnd = pEnd === -1 ? text.length : pEnd;
+
+  if(pEnd - pStart > 1400 || pEnd < end || pStart > start){
+    pStart = Math.max(0, start - FLASH_SOURCE_WINDOW);
+    pEnd = Math.min(text.length, end + FLASH_SOURCE_WINDOW);
+    const spBefore = text.indexOf(" ", pStart);
+    if(spBefore !== -1 && spBefore < start) pStart = spBefore + 1;
+    const spAfter = text.lastIndexOf(" ", pEnd);
+    if(spAfter !== -1 && spAfter > end) pEnd = spAfter;
+  }
+  while(pStart < start && /\s/.test(text[pStart])) pStart++;
+  while(pEnd > end && /\s/.test(text[pEnd-1])) pEnd--;
+  return { pStart, pEnd };
+}
+
+function buildHighlightedExcerptHtml(text, start, end){
+  const { pStart, pEnd } = extractParagraphAround(text, start, end);
+  const before = escapeHtml(text.slice(pStart, start));
+  const mid = escapeHtml(text.slice(start, end));
+  const after = escapeHtml(text.slice(end, pEnd));
+  const prefix = pStart > 0 ? "… " : "";
+  const suffix = pEnd < text.length ? " …" : "";
+  return prefix + before + (mid ? `<mark class="flash-source-mark">${mid}</mark>` : "") + after + suffix;
+}
+
+/* Fenêtre plus courte que extractParagraphAround, calée sur les phrases
+   voisines (. ! ? ou saut de ligne) plutôt que sur tout le paragraphe —
+   utilisée pour l'exemple, afin de ne pas répéter le passage principal déjà
+   affiché juste au-dessus quand définition et exemple sont proches dans le
+   texte source. */
+function lastSentenceBreakEnd(str){
+  const re = /[.!?]\s|\n/g;
+  let m, lastEnd = -1;
+  while((m = re.exec(str))) lastEnd = m.index + m[0].length;
+  return lastEnd;
+}
+function firstSentenceBreakEnd(str){
+  const m = /[.!?]\s|\n/.exec(str);
+  return m ? m.index + m[0].length : -1;
+}
+function extractSentenceWindowAround(text, start, end){
+  const MAX_BACK = 220, MAX_FWD = 220;
+  let pStart = Math.max(0, start - MAX_BACK);
+  let pEnd = Math.min(text.length, end + MAX_FWD);
+
+  // longueur du séparateur variable (1 caractère pour "\n", 2 pour ". "/"! "/"? ") :
+  // on avance/recule exactement de la longueur réelle trouvée par le regex,
+  // jamais d'un décalage fixe qui couperait le premier caractère du texte gardé.
+  const backCut = lastSentenceBreakEnd(text.slice(pStart, start));
+  if(backCut !== -1) pStart = pStart + backCut;
+
+  const fwdCut = firstSentenceBreakEnd(text.slice(end, pEnd));
+  if(fwdCut !== -1) pEnd = end + fwdCut;
+
+  while(pStart < start && /\s/.test(text[pStart])) pStart++;
+  while(pEnd > end && /\s/.test(text[pEnd-1])) pEnd--;
+  return { pStart, pEnd };
+}
+
+function buildPlainExcerptHtml(text, start, end){
+  const { pStart, pEnd } = extractSentenceWindowAround(text, start, end);
+  const prefix = pStart > 0 ? "… " : "";
+  const suffix = pEnd < text.length ? " …" : "";
+  return prefix + escapeHtml(text.slice(pStart, pEnd)) + suffix;
+}
+
+/* Résout la référence "Dans ton cours" d'une flashcard. Jamais d'erreur :
+   toute absence de donnée (carte, chapitre, texte, citation introuvable)
+   retombe proprement sur un statut, sans lever d'exception. */
+function resolveFlashcardCourseRef(card){
+  if(!card) return { status: "none" };
+  if(flashSourceCache.has(card)) return flashSourceCache.get(card);
+
+  let result;
+  if(!card.chapterId || !card.sourceQuote){
+    result = { status: "none" };
+  } else {
+    const text = flashcardSourceText(card.chapterId);
+    const loc = text ? locateQuoteInText(text, card.sourceQuote) : null;
+    const fallbackLoc = (!loc && text && card.back) ? locateQuoteInText(text, card.back) : null;
+    const finalLoc = loc || fallbackLoc;
+    if(!text || !finalLoc){
+      result = { status: "unavailable" };
+    } else {
+      const excerptHtml = buildHighlightedExcerptHtml(text, finalLoc.start, finalLoc.end);
+      let exampleHtml = null;
+      if(card.exampleQuote){
+        const exLoc = locateQuoteInText(text, card.exampleQuote);
+        if(exLoc) exampleHtml = buildPlainExcerptHtml(text, exLoc.start, exLoc.end);
+      }
+      result = { status: "found", excerptHtml, exampleHtml };
+    }
+  }
+  flashSourceCache.set(card, result);
+  return result;
+}
+
+function renderFlashSourcePanel(card, open){
+  const ref = resolveFlashcardCourseRef(card);
+  let body;
+  if(ref.status === "none"){
+    body = `<p class="flash-source-empty">📖 Passage du cours indisponible pour cette ancienne flashcard.</p>`;
+  } else if(ref.status === "unavailable"){
+    body = `<p class="flash-source-empty">📖 Passage introuvable dans le cours pour cette flashcard.</p>`;
+  } else {
+    body = `<div class="flash-source-excerpt">${ref.excerptHtml}</div>` +
+      (ref.exampleHtml ? `<p class="flash-source-example"><b>Exemple</b> — ${ref.exampleHtml}</p>` : "");
+  }
+  return `<div class="flash-source${open ? " open" : ""}">
+    <div class="flash-source-head"><span class="ico" aria-hidden="true">📖</span><span class="lbl">Dans ton cours</span></div>
+    <button type="button" class="flash-source-toggle" id="flash-source-toggle" aria-expanded="${open ? "true" : "false"}">${open ? "↑ Réduire" : "Voir dans le cours ↓"}</button>
+    <div class="flash-source-collapse"><div class="flash-source-body">${body}</div></div>
+  </div>`;
+}
+
+function toggleFlashSource(){
+  state.flashDeck.sourceOpen = !state.flashDeck.sourceOpen;
+  render();
+}
+
+/* ============================================================
    10. FLASHCARDS — LOGIQUE
    ============================================================ */
 function startFlashDeck(scope, label, cards){
@@ -7590,6 +7830,7 @@ function startFlashDeck(scope, label, cards){
     cards: shuffle(cards),
     idx: 0,
     flipped: false,
+    sourceOpen: false,
     known: [],
     unknown: [],
   };
@@ -7602,7 +7843,9 @@ function startFlashDeck(scope, label, cards){
 }
 
 function flipCurrentCard(){
-  state.flashDeck.flipped = !state.flashDeck.flipped;
+  const d = state.flashDeck;
+  d.flipped = !d.flipped;
+  d.sourceOpen = false;
   render();
 }
 
@@ -7615,6 +7858,7 @@ function judgeCard(knewIt){
   if(d.idx < d.cards.length - 1){
     d.idx++;
     d.flipped = false;
+    d.sourceOpen = false;
     render();
   } else {
     const pct = Math.round((d.known.length / d.cards.length) * 100);
@@ -7789,12 +8033,12 @@ function renderFlashPlay(){
         </div>
       </div>
 
-      ${!d.flipped
-        ? `<div class="flash-hintline">Retourne la carte pour voir la réponse</div>`
-        : `<div class="flash-judge">
+      ${!d.flipped ? `<div class="flash-hintline">Retourne la carte pour voir la réponse</div>` : renderFlashSourcePanel(card, !!d.sourceOpen)}
+
+      ${d.flipped ? `<div class="flash-judge">
             <button class="unknown" id="flash-unknown-btn"><span class="emoji">🔁</span>À revoir</button>
             <button class="known" id="flash-known-btn"><span class="emoji">✅</span>Je savais</button>
-          </div>`
+          </div>` : ""
       }
     </div>
   `;
@@ -7811,6 +8055,8 @@ function attachFlashPlayEvents(){
   const knownBtn = document.getElementById("flash-known-btn");
   if(unknownBtn) unknownBtn.addEventListener("click", (e)=>{ e.stopPropagation(); judgeCard(false); });
   if(knownBtn) knownBtn.addEventListener("click", (e)=>{ e.stopPropagation(); judgeCard(true); });
+  const sourceToggle = document.getElementById("flash-source-toggle");
+  if(sourceToggle) sourceToggle.addEventListener("click", (e)=>{ e.stopPropagation(); toggleFlashSource(); });
 }
 
 function renderFlashSummary(){
@@ -8711,7 +8957,7 @@ function buildPrompt(action, extra){
   }
   if(action === "cards"){
     return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
-      "\n\nTÂCHE : génère 8 flashcards de révision sur ce chapitre, différentes des questions déjà listées ci-dessus. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"front\":\"notion ou question courte\",\"back\":\"réponse en une ou deux phrases\"}]";
+      "\n\nTÂCHE : génère 8 flashcards de révision sur ce chapitre, différentes des questions déjà listées ci-dessus. Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis la FICHE DE COURS ci-dessus, qui justifie la réponse. Si un exemple lié y apparaît, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"front\":\"notion ou question courte\",\"back\":\"réponse en une ou deux phrases\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   }
   if(action === "quiz"){
     return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
@@ -8787,7 +9033,7 @@ function aiRunHeuristicChapterAction(action){
   }
   if(action === "cards"){
     if(!h.flashcards.length) return false;
-    state.aiCardsDraft = h.flashcards;
+    state.aiCardsDraft = h.flashcards.map(c => Object.assign({}, c, {chapterId: ch.id}));
     state.aiThread = [{role:"user", content:"", display}];
     render();
     return true;
@@ -8850,7 +9096,11 @@ async function aiSend(){
       if(state.aiMode === "cards"){
         state.aiCardsDraft = arr
           .filter(c => c && c.front && c.back)
-          .map(c => ({front:String(c.front), back:String(c.back), ai:true}));
+          .map(c => ({
+            front:String(c.front), back:String(c.back), ai:true, chapterId: state.aiChapter,
+            sourceQuote: c.sourceQuote ? String(c.sourceQuote) : "",
+            exampleQuote: c.exampleQuote ? String(c.exampleQuote) : "",
+          }));
       } else {
         state.aiQuizDraft = arr
           .filter(q => q && q.q && Array.isArray(q.opts) && q.opts.length >= 2 && typeof q.correct === "number")
