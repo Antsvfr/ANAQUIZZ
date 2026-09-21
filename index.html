@@ -1709,6 +1709,58 @@
   .ai-followrow{ display:flex; gap:9px; margin-top:16px; }
   .ai-followrow input{ flex:1; }
 
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* ---------- Assistant IA personnel (§25 : doit être une des interfaces
+     les plus soignées du produit) ---------- */
+  .ai-hero{ margin-bottom:8px; }
+  .ai-modechips{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+  .ai-modechip{
+    display:flex; align-items:center; gap:7px; padding:9px 14px; min-height:44px;
+    background: var(--surface); border:1px solid var(--border); border-radius: 999px;
+    font-family:"Inter",sans-serif; font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer;
+    transition: border-color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);
+  }
+  .ai-modechip:hover:not(:disabled){ border-color: var(--red); transform: translateY(-1px); }
+  .ai-modechip:disabled{ opacity:.4; cursor:not-allowed; }
+  .ai-modechip .ico{ font-size:15px; }
+  .ai-modechip:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+
+  .ai-queryrow{ display:flex; gap:9px; margin-top:4px; }
+  .ai-queryrow input{ flex:1; min-height:46px; }
+  .ai-queryrow .btn{ min-height:46px; white-space:nowrap; }
+
+  .ai-suggestions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .ai-suggestion-chip{
+    background: var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-sm);
+    padding:8px 12px; font-family:"Inter",sans-serif; font-size:12px; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; text-align:left; transition: border-color .15s var(--ease), color .15s var(--ease);
+    min-height:44px; display:flex; align-items:center;
+  }
+  .ai-suggestion-chip:hover:not(:disabled){ border-color: var(--red); color:var(--red-dark); }
+  .ai-suggestion-chip:disabled{ opacity:.4; cursor:not-allowed; }
+  .ai-suggestion-chip:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+
+  .ai-noai-fallback{ margin-top:16px; padding:14px 16px; background: var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-md); }
+  .ai-noai-fallback .t{ font-size:13px; font-weight:800; color:var(--ink); }
+  .ai-noai-fallback .s{ font-size:12.5px; color: var(--ink-soft); line-height:1.6; margin:4px 0 10px; }
+  .ai-noai-actions{ display:flex; flex-wrap:wrap; gap:14px; }
+  .ai-noai-actions .btn-text{ min-height:32px; }
+
+  .ai-msg-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:2px; }
+  .ai-quickrow{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .ai-quickrow .btn-text{ min-height:36px; padding:4px 8px; }
+
+  @media (max-width:680px){
+    .ai-queryrow{ flex-direction:column; }
+    .ai-queryrow .btn{ width:100%; }
+    .ai-modechip .t{ font-size:12px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ai-modechip, .ai-suggestion-chip{ transition:none; }
+    .ai-modechip:hover:not(:disabled){ transform:none; }
+  }
+
   .ai-draft{ margin-top:20px; border-top:1px solid var(--border); padding-top:16px; }
   .ai-draft-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; font-size:13.5px; }
   .ai-draftcard{ border:1px solid var(--border); border-radius: var(--radius-sm); padding:11px 13px; margin-bottom:8px; background: var(--surface-2); }
@@ -5496,7 +5548,7 @@ async function libRunUserChapterAI(ch, mode){
   const task = mode === "summary"
     ? "TÂCHE : rédige une synthèse de révision de ce chapitre (définitions clés, points essentiels en listes, puis 3 pièges classiques)."
     : "TÂCHE : fais réviser l'étudiant à l'oral sur ce chapitre. Pose UNE SEULE question ouverte à la fois, attends sa réponse, puis corrige brièvement avant d'enchaîner. Commence directement par la première question.";
-  state.aiThread = [{role:"user", content: AI_SYSTEM + "\n\n" + ctx + "\n\n" + task, display: (mode==="summary"?"📖 Résumer — ":"🎤 Réviser — ") + ch.title}];
+  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: (mode==="summary"?"📖 Résumer — ":"🎤 Réviser — ") + ch.title}];
   state.aiContextLabel = "Contexte : chapitre « " + ch.title + "» (Ma bibliothèque)";
   state.tab = "ai";
   window.scrollTo(0,0);
@@ -5513,7 +5565,7 @@ async function libRunUserChapterFree(ch){
   state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
   const ctx = libChapterContext(ch);
   const task = "TÂCHE : présente-toi en une phrase comme prêt à répondre aux questions de l'élève sur ce chapitre, sans reformuler le cours pour l'instant. Termine par : « Pose-moi ta question ci-dessous. »";
-  state.aiThread = [{role:"user", content: AI_SYSTEM + "\n\n" + ctx + "\n\n" + task, display: "🤖 Poser une question — " + ch.title}];
+  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: "🤖 Poser une question — " + ch.title}];
   state.aiContextLabel = "Contexte : chapitre « " + ch.title + " » (Ma bibliothèque)";
   state.tab = "ai";
   window.scrollTo(0,0);
@@ -5561,7 +5613,7 @@ async function libGenerateUserChapterQuiz(ch){
   }
   state.libToolsBusy = "quiz";
   render();
-  const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
+  const prompt = aiSystemPrompt() + "\n\n" + libChapterContext(ch) +
     "\n\nTÂCHE : génère 6 questions à choix multiples inédites sur ce contenu, 4 options chacune, une seule bonne réponse. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la bonne réponse. Si un exemple lié apparaît juste à côté dans le cours, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   try{
     const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
@@ -5599,7 +5651,7 @@ async function libGenerateUserChapterCards(ch){
   }
   state.libToolsBusy = "flashcards";
   render();
-  const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
+  const prompt = aiSystemPrompt() + "\n\n" + libChapterContext(ch) +
     "\n\nTÂCHE : génère 10 flashcards de révision sur ce contenu. Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu du cours ci-dessus, qui justifie la réponse. Si un exemple lié à la notion apparaît juste à côté dans le cours, ajoute \"exampleQuote\" (citation exacte de cet exemple) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON : [{\"front\":\"...\",\"back\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   try{
     const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
@@ -5980,7 +6032,7 @@ function classifyGenerationError(e){
 }
 
 async function condenseCourseChunk(chunkText, index, total, signal){
-  const prompt = AI_SYSTEM + "\n\nEXTRAIT " + (index+1) + "/" + total + " D'UN COURS :\n" + chunkText +
+  const prompt = aiSystemPrompt() + "\n\nEXTRAIT " + (index+1) + "/" + total + " D'UN COURS :\n" + chunkText +
     "\n\nTÂCHE : condense cet extrait en une liste dense de points (définitions, faits, formules, exemples, dates, auteurs), sans rien inventer ni interpréter. Conserve le vocabulaire exact du cours. Réponds uniquement par la liste condensée, sans commentaire autour, sans introduction ni conclusion.";
   const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 60000, "condensation");
   return (res && res.text) ? res.text.trim() : "";
@@ -6028,7 +6080,7 @@ function extractJsonObject(text){
 
 async function detectCourseMeta(workingText, fileName, signal){
   const existingSubjects = allSubjects().map(s=>s.name).join(", ");
-  const prompt = AI_SYSTEM + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
+  const prompt = aiSystemPrompt() + "\n\nDébut du cours (extrait) :\n" + clip(workingText, 3000) +
     "\n\nMatières déjà existantes sur ce site : " + (existingSubjects || "(aucune)") +
     "\n\nTÂCHE : à partir de cet extrait, déduis un titre court, la matière scolaire la plus probable (réutilise une matière existante ci-dessus si elle correspond, sinon choisis parmi : Mathématiques, SES, Physique-Chimie, Histoire-Géographie, Philosophie, Anglais, Français, Enseignement scientifique, Management, Économie, Autre), un titre de chapitre, un niveau probable (L1, L2 ou L3 — ou une chaîne vide si tu ne peux pas le déterminer), et une liste de 4 à 10 notions importantes réellement présentes dans le texte. Réponds UNIQUEMENT par un objet JSON (pas de tableau), sans texte autour, au format : {\"title\":\"...\",\"subject\":\"...\",\"chapter\":\"...\",\"level\":\"...\",\"notions\":[\"...\"]}";
   const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 45000, "détection du cours");
@@ -6122,7 +6174,7 @@ function sanitizeFicheData(parsed){
 }
 
 async function generateCourseFiche(workingText, meta, signal){
-  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+  const prompt = aiSystemPrompt() + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : à partir UNIQUEMENT de ce contenu, sans rien inventer, produis une fiche de révision structurée au format JSON strict, sans aucun texte ni Markdown autour :\n" +
     "{\"introduction\":\"2-3 phrases max pour situer le sujet\",\"sections\":[{\"type\":\"notions\",\"title\":\"...\",\"items\":[{\"title\":\"terme\",\"content\":\"définition courte et claire\",\"example\":\"exemple concret, optionnel\"}]},{\"type\":\"steps\",\"title\":\"...\",\"items\":[{\"content\":\"étape\"}]},{\"type\":\"data\",\"title\":\"...\",\"items\":[{\"label\":\"...\",\"value\":\"...\"}]},{\"type\":\"examples\",\"title\":\"...\",\"items\":[{\"content\":\"...\"}]}],\"keyPoints\":[\"point essentiel court\"]}\n" +
     "RÈGLES STRICTES : n'inclus une section \"steps\", \"data\" ou \"examples\" QUE si le cours contient réellement des étapes/mécanismes, des chiffres/formules/dates, ou des exemples — sinon ne l'écris pas du tout. N'écris jamais \"information manquante\", \"non précisé\", \"si applicable\" ou une phrase équivalente : si une information n'existe pas, ne l'écris pas. 4 à 8 sections maximum, 5 à 8 \"keyPoints\" maximum (une phrase courte chacun). Contenu concis et reformulé, sans répéter le cours mot pour mot.";
@@ -6134,7 +6186,7 @@ async function generateCourseFiche(workingText, meta, signal){
 }
 
 async function generateCourseSummary(workingText, meta, signal){
-  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+  const prompt = aiSystemPrompt() + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : rédige, sans rien inventer, un résumé très court (3 à 5 phrases maximum) puis une liste des idées essentielles (une ligne chacune, 5 à 8 lignes). Commence directement par « Résumé court » puis « Idées essentielles », sans aucune autre introduction.";
   const res = await withGenTimeout(webllmChat([{role:"user", content: prompt}], { signal }), 60000, "résumé");
   const text = (res && res.text) ? res.text.trim() : "";
@@ -6144,7 +6196,7 @@ async function generateCourseSummary(workingText, meta, signal){
 
 async function generateCourseQuizFromText(workingText, meta, signal){
   const n = courseItemCounts(meta.sourceCharCount || workingText.length).quiz;
-  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+  const prompt = aiSystemPrompt() + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère " + n + " questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse, explication en une phrase courte. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la bonne réponse. Si un exemple lié apparaît juste à côté dans le texte, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "quiz");
   const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
@@ -6160,7 +6212,7 @@ async function generateCourseQuizFromText(workingText, meta, signal){
 
 async function generateCourseFlashcardsFromText(workingText, meta, signal){
   const n = courseItemCounts(meta.sourceCharCount || workingText.length).flashcards;
-  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+  const prompt = aiSystemPrompt() + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère " + n + " flashcards de révision (définitions, notions, formules, dates, mécanismes, distinctions importantes) à partir UNIQUEMENT de ce contenu. Recto court (question/notion), verso court (réponse en une phrase). Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la réponse. Si un exemple lié à la notion apparaît juste à côté dans le texte, ajoute \"exampleQuote\" (citation exacte de cet exemple) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"front\":\"...\",\"back\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "flashcards");
   const cards = (arr||[]).filter(c=>c&&c.front&&c.back).map(c=>({
@@ -6174,7 +6226,7 @@ async function generateCourseFlashcardsFromText(workingText, meta, signal){
 
 async function generateCourseReviewQuestions(workingText, meta, signal){
   const n = courseItemCounts(meta.sourceCharCount || workingText.length).reviewQ;
-  const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
+  const prompt = aiSystemPrompt() + "\n\n" + courseGenContext(workingText, meta) +
     "\n\nTÂCHE : génère " + n + " questions de révision variées sur ce contenu (définition, compréhension, application), avec leur réponse courte. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"a\":\"...\"}]";
   const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 60000, "questions de révision");
   const qs = (arr||[]).filter(q=>q&&q.q&&q.a).map(q=>({q:String(q.q), a:String(q.a)}));
@@ -9784,6 +9836,9 @@ Object.assign(state, {
   aiFullTestResult: "",
   aiFullTestBusy: false,
   aiFullTestSteps: [],
+  // --- assistant personnel (§1-§35 du cahier des charges "ASSISTANT IA PERSONNEL") ---
+  aiPersonalQuery: "",
+  aiPersonalIntent: null,
   // --- état d'interface du formulaire de compte ("Mon espace") ---
   accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null },
 });
@@ -9907,7 +9962,144 @@ function profileContext(){
     (hist ? "\n\nDerniers examens :\n" + hist : "");
 }
 
-const AI_SYSTEM = "Tu es un assistant de révision pour un étudiant en école de commerce. Tu réponds en français, de façon concise, structurée et pédagogique : titres courts, listes à puces, exemples concrets d'entreprise. Tu t'appuies en priorité sur le contenu du cours fourni ci-dessous et tu signales clairement quand tu ajoutes un élément qui n'y figure pas. Pas de flatterie, pas de préambule.";
+/* ============================================================
+   12ter. ASSISTANT IA PERSONNEL — contexte construit à la demande
+   ------------------------------------------------------------
+   Aucune de ces fonctions ne recalcule une donnée déjà produite ailleurs
+   (mastery/priorité/planning) : chacune se contente d'assembler, dans un
+   texte court destiné au modèle, des résultats déjà obtenus via les ponts
+   existants (buildChapterFacts, getSmartRevisionRecommendations,
+   getStatistics, state.studyPlan, upcomingPlanningEvents). Voir §3/§4 du
+   cahier des charges : le contexte est construit UNIQUEMENT pour
+   l'intention détectée, jamais tout le profil pédagogique à chaque
+   question.
+   ============================================================ */
+
+/* Prénom si disponible (Supabase) + langue actuelle — jamais plus, jamais
+   de donnée personnelle non pertinente pour l'assistant. */
+function assistantUserContext(){
+  const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in" && LyonAuth.state.user;
+  const profile = authed ? LyonAuth.state.profile : null;
+  const firstName = profile && (profile.first_name || profile.display_name) ? (profile.first_name || profile.display_name) : null;
+  const lang = (window.LyonI18n && LyonI18n.getLang) ? LyonI18n.getLang() : "fr";
+  return "ÉLÈVE" + (firstName ? " : " + firstName : " : (prénom non renseigné)") + " · langue d'interface actuelle : " + lang;
+}
+
+/* Niveau réel de l'étudiant, matières intégrées ET bibliothèque comprises
+   (contrairement à profileContext(), qui ne couvre que le programme
+   intégré et reste utilisée telle quelle par l'action "examprep"
+   existante — voir §16, ne jamais changer un contrat déjà utilisé
+   ailleurs). Réutilise getStatistics() (maîtrise globale honnête,
+   jamais 0% par défaut) et buildChapterFacts() (mastery par chapitre,
+   toutes matières). */
+function assistantPerformanceContext(){
+  const stats = getStatistics();
+  const facts = buildChapterFacts();
+  const lines = facts.map(f=>{
+    const subj = findSubject(f.subjectId);
+    const masteryTxt = f.mastery === null ? "jamais travaillé" : f.mastery + "% de maîtrise";
+    return "- " + (subj ? subj.name + " — " : "") + f.title + " : " + masteryTxt +
+      (f.hasErrorData && f.recentErrorCount > 0 ? ", " + f.recentErrorCount + " erreur(s) récente(s)" : "");
+  }).join("\n");
+  const globalTxt = stats.globalMastery.value === null
+    ? "pas encore assez de données pour une maîtrise globale fiable"
+    : stats.globalMastery.value + "% (confiance : " + stats.globalMastery.confidence + ")";
+  return clip("NIVEAU RÉEL DE L'ÉTUDIANT (toutes matières, intégrées et importées)\n" +
+    "Maîtrise globale : " + globalTxt + " · " + stats.questionsAnswered + "/" + stats.questionsTotal + " questions du programme travaillées.\n\n" +
+    "Par chapitre :\n" + (lines || "(aucun chapitre avec du contenu jouable pour l'instant)"));
+}
+
+/* Contexte "aujourd'hui" (§4, exemple "Qu'est-ce que je dois réviser
+   aujourd'hui ?") : combine — sans les recalculer — les tâches du jour du
+   planning intelligent (s'il existe) et les priorités de Révision
+   intelligente. Jamais les deux moteurs recalculés ici : uniquement lus. */
+function assistantTodayContext(){
+  const parts = [];
+  const plan = state.studyPlan;
+  if(plan){
+    const today = todayKey();
+    const day = plan.days.find(d => d.dateKey === today);
+    if(day && day.tasks.length){
+      const lines = day.tasks.map(tk => "- " + tk.subjectName + " — " + tk.title + " (" + tk.mode + ", " + tk.duration + " min, statut : " + tk.status + ") : " + t(tk.reasonKey, tk.reasonVars || {}));
+      parts.push("SÉANCES PRÉVUES AUJOURD'HUI DANS LE PLANNING DE L'ÉTUDIANT :\n" + lines.join("\n"));
+    } else {
+      parts.push("Le planning de l'étudiant n'a aucune séance prévue aujourd'hui.");
+    }
+  } else {
+    parts.push("L'étudiant n'a pas encore de planning de révision créé.");
+  }
+  const recos = getSmartRevisionRecommendations().slice(0, 5);
+  if(recos.length){
+    const lines = recos.map(r => "- " + r.title + " (priorité, confiance : " + r.confidence + ") : " + t(r.reasonKey, r.reasonVars || {}));
+    parts.push("PRIORITÉS ACTUELLES DE RÉVISION INTELLIGENTE (déjà calculées, classées) :\n" + lines.join("\n"));
+  } else {
+    parts.push("Révision intelligente n'a actuellement aucune recommandation (pas assez de contenu jouable, ou tout est bien maîtrisé).");
+  }
+  return clip(parts.join("\n\n"));
+}
+
+/* Contexte planning/échéances (§13/§14) : lit uniquement le planning
+   intelligent déjà existant et les événements .ics déjà importés — ne
+   recrée aucune notion d'échéance. */
+function assistantPlanningContext(){
+  const parts = [];
+  const plan = state.studyPlan;
+  if(plan){
+    const coverage = computeStudyPlanCoverage(plan);
+    const deadlineTxt = plan.deadlineAt
+      ? (plan.deadlineLabel || "Échéance") + " dans " + daysUntil(plan.deadlineAt) + " jour(s)"
+      : "pas d'échéance précise (planning hebdomadaire)";
+    parts.push("PLANNING DE RÉVISION DE L'ÉTUDIANT\nÉchéance : " + deadlineTxt +
+      "\nSéances réalisées : " + coverage.done + "/" + coverage.total + " (" + coverage.pct + "%).");
+  } else {
+    parts.push("L'étudiant n'a pas encore de planning de révision créé.");
+  }
+  const events = upcomingPlanningEvents(5);
+  if(events.length){
+    const lines = events.map(e => "- " + e.summary + " — " + new Date(e.start).toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long"}));
+    parts.push("PROCHAINS ÉVÉNEMENTS DE SON EMPLOI DU TEMPS IMPORTÉ :\n" + lines.join("\n"));
+  }
+  return clip(parts.join("\n\n"));
+}
+
+/* Détection d'intention (§4) : heuristique locale par mots-clés, jamais un
+   second appel au modèle pour classifier (coût/latence inutiles — voir
+   §21, performance). Volontairement simple et explicable : chaque mot-clé
+   déclenche une intention précise plutôt qu'un score opaque. Repli sur
+   "chapter" (contexte du chapitre actuellement sélectionné), le
+   comportement déjà existant pour une question libre. */
+function detectAssistantIntent(text){
+  const s = (text || "").toLowerCase();
+  const has = (...words) => words.some(w => s.includes(w));
+  if(has("aujourd'hui", "aujourd’hui", "today", "hoy", "heute", "oggi")) return "today";
+  if(has("planning", "échéance", "echeance", "contrôle", "controle", "examen", "devoir", "deadline", "cette semaine", "semana", "settimana", "woche")) return "planning";
+  if(has("erreur", "trompe", "rate", "error", "mistake", "errore", "fehler", "wrong")) return "errors";
+  if(has("réviser", "reviser", "révise-moi", "interroge", "fais-moi réviser", "revise me", "quiz me", "test me")) return "revise";
+  return "chapter";
+}
+
+/* Point d'entrée unique du contexte "assistant personnel" (§3) : construit
+   UNIQUEMENT le bloc nécessaire à l'intention détectée — jamais tout le
+   profil pédagogique d'un coup. */
+function buildAssistantContext(intent){
+  if(intent === "today") return assistantTodayContext();
+  if(intent === "planning") return assistantPlanningContext();
+  if(intent === "errors") return errorsContext();
+  if(intent === "revise") return assistantTodayContext();
+  return assistantPerformanceContext();
+}
+
+const AI_SYSTEM_BASE = "Tu es un assistant de révision pour un étudiant en école de commerce. Tu réponds de façon concise, structurée et pédagogique : titres courts, listes à puces, exemples concrets d'entreprise. Tu t'appuies en priorité sur le contenu du cours fourni ci-dessous et tu signales clairement quand tu ajoutes un élément qui n'y figure pas. Pas de flatterie, pas de préambule.";
+/* Instruction de langue ajoutée dynamiquement (voir §27/§28 du cahier des charges) :
+   la langue de réponse suit la langue d'interface actuelle (LyonI18n.getLang()),
+   jamais figée au chargement de la page — un changement de langue en cours de
+   session est donc pris en compte au prochain message. */
+function aiLanguageClause(){
+  const names = { fr: "French", en: "English", es: "Spanish", de: "German", it: "Italian" };
+  const lang = (window.LyonI18n && LyonI18n.getLang) ? LyonI18n.getLang() : "fr";
+  return "Respond in " + (names[lang] || names.fr) + ", unless the student's own message is written in a clearly different language — in that case, respond in the student's language instead.";
+}
+function aiSystemPrompt(){ return AI_SYSTEM_BASE + "\n" + aiLanguageClause(); }
 
 function buildPrompt(action, extra){
   const a = AI_ACTIONS[action];
@@ -9916,39 +10108,39 @@ function buildPrompt(action, extra){
 
   if(action === "explain"){
     const ctx = extra && extra.questionCtx ? extra.questionCtx : chapterContext(state.aiChapter);
-    return AI_SYSTEM + "\n\n" + ctx + fileBlock +
+    return aiSystemPrompt() + "\n\n" + ctx + fileBlock +
       "\n\nTÂCHE : explique « " + (extra && extra.topic ? extra.topic : state.aiTopic) + " ». Structure : 1) définition en une phrase, 2) explication développée, 3) un exemple concret, 4) le piège classique en examen. Maximum 250 mots.";
   }
   if(action === "summary"){
-    return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
+    return aiSystemPrompt() + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
       "\n\nTÂCHE : rédige une synthèse de révision de ce chapitre. Définitions clés d'abord, puis les points essentiels en listes, puis un tableau comparatif si pertinent, puis 3 points sur lesquels les étudiants se trompent le plus. Va à l'essentiel.";
   }
   if(action === "drill"){
-    return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
+    return aiSystemPrompt() + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
       "\n\nTÂCHE : fais réviser l'étudiant à l'oral sur ce chapitre. Pose UNE SEULE question ouverte à la fois, attends sa réponse, puis corrige-la brièvement (ce qui est juste, ce qui manque) avant d'enchaîner sur la question suivante. Commence directement par la première question, sans introduction. Ne donne jamais la réponse avant que l'étudiant ait répondu.";
   }
   if(action === "errors"){
     const ctx = (extra && extra.errorsCtx) ? extra.errorsCtx : errorsContext();
-    return AI_SYSTEM + "\n\nQUESTIONS RATÉES OU MAL MAÎTRISÉES PAR L'ÉTUDIANT :\n" + ctx + fileBlock +
+    return aiSystemPrompt() + "\n\nQUESTIONS RATÉES OU MAL MAÎTRISÉES PAR L'ÉTUDIANT :\n" + ctx + fileBlock +
       "\n\nTÂCHE : analyse ces erreurs. 1) regroupe-les en 2 à 4 confusions de fond (pas une liste question par question), 2) pour chacune, explique la distinction à retenir, 3) termine par 3 conseils de révision concrets et priorisés.";
   }
   if(action === "examprep"){
-    return AI_SYSTEM + "\n\n" + profileContext() + fileBlock +
+    return aiSystemPrompt() + "\n\n" + profileContext() + fileBlock +
       "\n\nTÂCHE : construis un plan de préparation à l'examen adapté à ce niveau réel. 1) diagnostic en 3 lignes, 2) priorités classées (chapitres les plus fragiles d'abord, avec ce qu'il faut revoir dedans), 3) un programme sur 5 séances de 30 minutes, 4) les notions à connaître par cœur le jour J.";
   }
   if(action === "free"){
-    return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
+    return aiSystemPrompt() + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
       "\n\nQUESTION DE L'ÉTUDIANT : " + state.aiTopic;
   }
   if(action === "cards"){
-    return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
+    return aiSystemPrompt() + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
       "\n\nTÂCHE : génère 8 flashcards de révision sur ce chapitre, différentes des questions déjà listées ci-dessus. Pour chaque carte, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis la FICHE DE COURS ci-dessus, qui justifie la réponse. Si un exemple lié y apparaît, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"front\":\"notion ou question courte\",\"back\":\"réponse en une ou deux phrases\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   }
   if(action === "quiz"){
-    return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
+    return aiSystemPrompt() + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
       "\n\nTÂCHE : génère 5 questions à choix multiples inédites sur ce chapitre, avec exactement 4 options chacune et une seule bonne réponse. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis la FICHE DE COURS ci-dessus, qui justifie la bonne réponse. Si un exemple lié y apparaît, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"q\":\"énoncé\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"explication courte\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}] où correct est l'index (0-3) de la bonne option.";
   }
-  return AI_SYSTEM + fileBlock + "\n\n" + state.aiTopic;
+  return aiSystemPrompt() + fileBlock + "\n\n" + state.aiTopic;
 }
 
 /* ============================================================
@@ -10152,6 +10344,7 @@ function aiClearThread(){
   state.aiQuizDraft = null;
   state.aiError = null;
   state.aiContextLabel = "";
+  state.aiPersonalIntent = null;
   render();
 }
 
@@ -10471,15 +10664,328 @@ function aiModelPickerHtml(){
   </div>`;
 }
 
+/* ============================================================
+   14bis. ASSISTANT IA PERSONNEL — modes, suggestions, actions directes
+   ------------------------------------------------------------
+   Aucune de ces fonctions ne recrée un moteur de quiz/flashcards/planning :
+   chacune orchestre les points d'entrée déjà existants (aiRun/AI_ACTIONS,
+   startSmartSession, startModeQuiz, switchTab) — voir §5/§9/§24 du cahier
+   des charges. "Discuter/Comprendre/S'entraîner/Analyser" réutilisent
+   entièrement la grille d'actions existante ; seuls "Réviser" (aperçu du
+   jour, sans re-décider les priorités) et "Organiser" (résumé du planning
+   déjà existant) sont de nouveaux flux, tous deux strictement des résumés
+   en langage naturel de données déjà calculées ailleurs (jamais un calcul
+   dupliqué).
+   ============================================================ */
+
+/* Extrait de l'ancien handler [data-aiaction], pour être réutilisable
+   aussi bien par un clic sur la grille d'actions que par un "mode" de
+   l'assistant personnel (§5 : "Comprendre"→explain, "S'entraîner"→quiz,
+   "Analyser"→errors) — jamais une seconde copie de cette logique. */
+function aiSelectAction(k){
+  if(!AI_ACTIONS[k]) return;
+  // Un chapitre de bibliothèque récemment consulté (libRunUserChapterAI/
+  // libRunUserChapterFree) met volontairement state.aiChapter à null (ce
+  // n'est pas un chapitre du programme intégré) — sans repli, une action
+  // du programme intégré sélectionnée juste après (ex. depuis le mode
+  // "S'entraîner") n'aurait plus aucun chapitre valide alors que le menu
+  // déroulant affiche visuellement le premier de la liste : jamais un
+  // décalage silencieux entre ce que l'utilisateur voit et l'état réel.
+  if(AI_ACTIONS[k].needs === "chapter" && !CHAPTERS.some(c => c.id === state.aiChapter)) state.aiChapter = CHAPTERS[0].id;
+  state.aiAction = k;
+  state.aiMode = AI_ACTIONS[k].mode || "text";
+  state.aiThread = [];
+  state.aiCardsDraft = null;
+  state.aiQuizDraft = null;
+  state.aiError = null;
+  state.aiContextLabel = "";
+  state.aiPersonalIntent = null;
+  render();
+  const focusEl = document.getElementById("ai-topic-input");
+  if(focusEl) focusEl.focus();
+  else {
+    const run = document.getElementById("ai-run-btn");
+    if(run && !run.disabled && AI_ACTIONS[k].needs !== "topic") run.click();
+  }
+}
+
+/* Lance l'interrogation orale existante (action "drill") sur un chapitre
+   précis, qu'il soit du programme intégré ou de la bibliothèque — mêmes
+   deux points d'entrée déjà utilisés ailleurs dans le site (aiOpenFromChapter
+   / libRunUserChapterAI), jamais un troisième mécanisme de "faire réviser". */
+function aiDrillChapter(chapterId){
+  const ch = findAnyChapter(chapterId);
+  if(!ch) return;
+  if(isUserChapter(chapterId)) libRunUserChapterAI(ch, "drill");
+  else aiOpenFromChapter("drill", chapterId);
+}
+
+/* Suggestions dynamiques (§6) : toujours dérivées de données réelles déjà
+   disponibles (planning, Révision intelligente, erreurs) — jamais un texte
+   générique inventé indépendamment de l'état réel de l'étudiant. Au plus
+   4 pour ne jamais surcharger l'écran d'accueil (§25). */
+function assistantSuggestedPrompts(){
+  const list = [];
+  list.push({ kind: "today", label: t("assistant.suggestion_today") });
+  const plan = state.studyPlan;
+  if(plan && plan.deadlineAt){
+    list.push({ kind: "planning", label: t("assistant.suggestion_exam_prep", { label: plan.deadlineLabel || t("planning.deadline_default_label") }) });
+  } else {
+    list.push({ kind: "planning", label: t("assistant.suggestion_organize") });
+  }
+  const recos = getSmartRevisionRecommendations();
+  if(recos.length){
+    list.push({ kind: "drill", chapterId: recos[0].chapterId, label: t("assistant.suggestion_drill_chapter", { chapter: recos[0].title }) });
+  }
+  if(Object.keys(state.dash.wrongQuestions).length > 0){
+    list.push({ kind: "errors", label: t("assistant.suggestion_errors") });
+  }
+  return list.slice(0, 4);
+}
+
+/* Flux "assistant personnel" à une intention fixe, déclenché par un mode
+   ("Réviser"/"Organiser") ou une suggestion — construit le contexte via
+   buildAssistantContext() (§3/§4), jamais un contexte ad hoc. */
+function aiRunPersonalMode(intent, displayLabel){
+  if(aiEngineBusy()) return;
+  state.aiAction = "personal";
+  state.aiPersonalIntent = intent;
+  if(state.aiStatus !== "ready"){
+    state.aiError = aiErrorMessage({message:"not_ready"});
+    render();
+    return;
+  }
+  const ctx = buildAssistantContext(intent);
+  const taskByIntent = {
+    today: "TÂCHE : dis à l'étudiant, en langage naturel et en 5 phrases maximum, ce qu'il devrait réviser en priorité à partir des informations ci-dessus (jamais une donnée inventée). Termine par une phrase d'encouragement neutre, sans pression ni promesse de réussite.",
+    revise: "TÂCHE : dis à l'étudiant, en langage naturel et en 5 phrases maximum, ce qu'il devrait réviser en priorité à partir des informations ci-dessus (jamais une donnée inventée). Termine par une phrase d'encouragement neutre, sans pression ni promesse de réussite.",
+    planning: "TÂCHE : résume à l'étudiant sa situation de planning et d'échéances en 4 phrases maximum, en langage naturel, à partir des informations ci-dessus. Ne présente jamais un taux d'avancement comme une prédiction de réussite.",
+  };
+  state.aiMode = "text";
+  state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
+  state.aiContextLabel = t("assistant.context_" + intent);
+  state.aiThread = [{ role: "user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + (taskByIntent[intent] || taskByIntent.today), display: displayLabel }];
+  aiSend();
+}
+
+/* Question libre tapée dans la barre de l'assistant personnel (§4) :
+   détecte l'intention par mots-clés, construit uniquement le contexte
+   nécessaire, puis réutilise exactement le même pipeline d'envoi
+   (aiSend) que le reste de l'assistant. */
+function aiRunPersonalQuery(text){
+  if(aiEngineBusy()) return;
+  const q = (text || "").trim();
+  if(!q) return;
+  state.aiAction = "personal";
+  if(state.aiStatus !== "ready"){
+    state.aiError = aiErrorMessage({message:"not_ready"});
+    render();
+    return;
+  }
+  const intent = detectAssistantIntent(q);
+  const ctx = buildAssistantContext(intent);
+  state.aiPersonalIntent = intent;
+  state.aiMode = "text";
+  state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
+  state.aiPersonalQuery = "";
+  state.aiContextLabel = t("assistant.context_" + intent);
+  state.aiThread = [{ role: "user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\nQUESTION OU DEMANDE DE L'ÉTUDIANT : " + q, display: q }];
+  aiSend();
+}
+
+/* Action directe "Réviser maintenant" (§24) : réutilise EXACTEMENT le
+   moteur de Révision intelligente (buildSmartSessionPlan/startSmartSession,
+   déjà utilisés par la page "Révision intelligente" elle-même) — jamais un
+   second moteur de session dans le chat. */
+function aiActionReviseNow(){
+  const plan = buildSmartSessionPlan(state.smartSessionLength || 20);
+  switchTab("smart");
+  if(plan.items && plan.items.length) startSmartSession(plan.items);
+}
+
+/* Boutons d'action sous la dernière réponse de l'assistant (§24), dérivés
+   de l'INTENTION réellement utilisée pour construire le contexte — jamais
+   d'une lecture devinée du texte généré par le modèle. */
+function assistantMessageActionsHtml(){
+  const intent = state.aiPersonalIntent;
+  if(!intent || state.aiBusy) return "";
+  if(!state.aiThread.length || state.aiThread[state.aiThread.length-1].role !== "assistant") return "";
+  if(intent === "today" || intent === "revise"){
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-revise-now">🧠 ${t("assistant.action_revise_now")}</button></div>`;
+  }
+  if(intent === "planning"){
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-open-planning">📅 ${t("assistant.action_open_planning")}</button></div>`;
+  }
+  if(intent === "errors"){
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-review-errors">🔁 ${t("assistant.action_review_errors")}</button></div>`;
+  }
+  return "";
+}
+
+/* Actions rapides de niveau d'explication (§10) : renvoient un simple
+   message de suivi via aiFollowUp(), déjà existant — jamais une nouvelle
+   mécanique de conversation. Affichées après une réponse texte issue de
+   "Comprendre" ou d'une question libre de l'assistant personnel. */
+function assistantExplainQuickActionsHtml(){
+  return `<div class="ai-quickrow">
+    <button type="button" class="btn-text" data-ai-quick="simpler">${t("assistant.explain_simpler")}</button>
+    <button type="button" class="btn-text" data-ai-quick="detailed">${t("assistant.explain_detailed")}</button>
+    <button type="button" class="btn-text" data-ai-quick="example">${t("assistant.explain_example")}</button>
+    <button type="button" class="btn-text" data-ai-quick="check">${t("assistant.explain_check")}</button>
+  </div>`;
+}
+
+function renderAssistantModeChipsHtml(){
+  const ready = state.aiStatus === "ready";
+  const modes = [
+    { key:"discuss", icon:"💬", labelKey:"assistant.mode_discuss", enabled: ready },
+    { key:"understand", icon:"📚", labelKey:"assistant.mode_understand", enabled: ready },
+    { key:"revise", icon:"🧠", labelKey:"assistant.mode_revise", enabled: ready },
+    { key:"practice", icon:"✍️", labelKey:"assistant.mode_practice", enabled: true },
+    { key:"analyze", icon:"📊", labelKey:"assistant.mode_analyze", enabled: ready },
+    { key:"organize", icon:"📅", labelKey:"assistant.mode_organize", enabled: ready },
+  ];
+  return `<div class="ai-modechips" role="group" aria-label="${t("assistant.panel_title")}">
+    ${modes.map(m=>`<button type="button" class="ai-modechip" data-assistant-mode="${m.key}" ${m.enabled?"":"disabled"}>
+      <span class="ico" aria-hidden="true">${m.icon}</span><span class="t">${t(m.labelKey)}</span>
+    </button>`).join("")}
+  </div>`;
+}
+
+/* Repli honnête quand l'IA locale n'est pas disponible (§20/§29) : jamais
+   un blocage total de l'application — liste de navigation directe vers ce
+   qui reste pleinement utilisable, chaque lien réutilisant switchTab(). */
+function assistantNoAiFallbackHtml(){
+  return `<div class="ai-noai-fallback">
+    <div class="t">${t("assistant.noai_title")}</div>
+    <p class="s">${t("assistant.noai_body")}</p>
+    <div class="ai-noai-actions">
+      <button type="button" class="btn-text" data-assistant-goto="smart">${t("nav.smart_revision")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="quiz">📝 ${t("nav.activities_quiz")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="flash">🃏 ${t("nav.activities_flash")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="stats">📊 ${t("stats.title")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="planning">📅 ${t("planning.title")}</button>
+    </div>
+  </div>`;
+}
+
+/* Le bandeau "assistant personnel" (modes + question libre) reste toujours
+   visible et actif, même quand un panneau/une conversation est déjà ouvert
+   — exactement comme la grille d'actions existante, qui permet déjà de
+   changer d'action en un clic sans devoir "Fermer" d'abord (voir le handler
+   [data-aiaction]). Seuls l'accroche complète, les suggestions et le repli
+   "sans IA" (qui n'ont de sens qu'à l'écran d'accueil) sont masqués une fois
+   qu'une conversation est en cours, pour ne jamais surcharger (§25). */
+function renderAssistantHeroHtml(){
+  const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in" && LyonAuth.state.user;
+  const profile = authed ? LyonAuth.state.profile : null;
+  const firstName = profile && (profile.first_name || profile.display_name) ? (profile.first_name || profile.display_name) : null;
+  const suggestions = assistantSuggestedPrompts();
+  const ready = state.aiStatus === "ready";
+  const showFull = !state.aiAction;
+  return `<div class="dash-section ai-hero">
+    <div class="section-title">${t("assistant.panel_title")}</div>
+    ${showFull ? `<p class="ai-intro">${firstName ? t("greeting.hello_name_plain", {name: firstName}) + " — " : ""}${t("assistant.intro")}</p>` : ""}
+    ${renderAssistantModeChipsHtml()}
+    <div class="ai-queryrow">
+      <label class="sr-only" for="assistant-query-input">${t("assistant.query_placeholder")}</label>
+      <input type="text" class="ai-select" id="assistant-query-input" placeholder="${t("assistant.query_placeholder")}" value="${escapeHtml(state.aiPersonalQuery)}" ${ready?"":"disabled"}>
+      <button type="button" class="btn red" id="assistant-query-btn" ${ready && !aiEngineBusy() ? "" : "disabled"}>${t("assistant.query_btn")}</button>
+    </div>
+    ${showFull && suggestions.length ? `<div class="ai-suggestions">
+      ${suggestions.map(s=>`<button type="button" class="ai-suggestion-chip" data-assistant-suggestion-kind="${s.kind}" ${s.chapterId?`data-assistant-suggestion-chapter="${escapeHtml(s.chapterId)}"`:""} ${ready?"":"disabled"}>${escapeHtml(s.label)}</button>`).join("")}
+    </div>` : ""}
+    ${showFull && !ready ? assistantNoAiFallbackHtml() : ""}
+  </div>`;
+}
+
+function attachAssistantHeroEvents(){
+  document.querySelectorAll("[data-assistant-mode]").forEach(btn=>{
+    if(btn.disabled) return;
+    btn.addEventListener("click", ()=>{
+      const mode = btn.dataset.assistantMode;
+      if(mode === "discuss"){
+        state.aiAction = "personal";
+        state.aiPersonalIntent = null;
+        state.aiThread = [];
+        state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
+        state.aiContextLabel = "";
+        render();
+        const input = document.getElementById("assistant-query-input");
+        if(input) input.focus();
+        return;
+      }
+      if(mode === "understand"){ aiSelectAction("explain"); return; }
+      if(mode === "practice"){ aiSelectAction("quiz"); return; }
+      if(mode === "analyze"){ aiSelectAction("errors"); return; }
+      if(mode === "revise"){ aiRunPersonalMode("today", t("assistant.mode_revise")); return; }
+      if(mode === "organize"){ aiRunPersonalMode("planning", t("assistant.mode_organize")); return; }
+    });
+  });
+
+  document.querySelectorAll("[data-assistant-suggestion-kind]").forEach(btn=>{
+    if(btn.disabled) return;
+    btn.addEventListener("click", ()=>{
+      const kind = btn.dataset.assistantSuggestionKind;
+      if(kind === "drill"){ aiDrillChapter(btn.dataset.assistantSuggestionChapter); return; }
+      if(kind === "errors"){ aiSelectAction("errors"); return; }
+      if(kind === "today") { aiRunPersonalMode("today", btn.textContent.trim()); return; }
+      if(kind === "planning") { aiRunPersonalMode("planning", btn.textContent.trim()); return; }
+    });
+  });
+
+  document.querySelectorAll("[data-assistant-goto]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const tab = btn.dataset.assistantGoto;
+      if(tab === "planning") state.planning.view = "study";
+      switchTab(tab);
+    });
+  });
+
+  const queryInput = document.getElementById("assistant-query-input");
+  const queryBtn = document.getElementById("assistant-query-btn");
+  if(queryInput){
+    queryInput.addEventListener("input", ()=>{ state.aiPersonalQuery = queryInput.value; });
+    queryInput.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" && !queryBtn.disabled){ e.preventDefault(); aiRunPersonalQuery(queryInput.value); }
+    });
+  }
+  if(queryBtn && !queryBtn.disabled) queryBtn.addEventListener("click", ()=> aiRunPersonalQuery(queryInput ? queryInput.value : state.aiPersonalQuery));
+
+  const reviseNowBtn = document.getElementById("ai-action-revise-now");
+  if(reviseNowBtn) reviseNowBtn.addEventListener("click", aiActionReviseNow);
+  const openPlanningBtn = document.getElementById("ai-action-open-planning");
+  if(openPlanningBtn) openPlanningBtn.addEventListener("click", ()=>{ state.planning.view = "study"; switchTab("planning"); });
+  const reviewErrorsBtn = document.getElementById("ai-action-review-errors");
+  if(reviewErrorsBtn) reviewErrorsBtn.addEventListener("click", ()=> startModeQuiz("wrong"));
+
+  document.querySelectorAll("[data-ai-quick]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const map = {
+        simpler: t("assistant.explain_simpler_prompt"),
+        detailed: t("assistant.explain_detailed_prompt"),
+        example: t("assistant.explain_example_prompt"),
+        check: t("assistant.explain_check_prompt"),
+      };
+      const msg = map[btn.dataset.aiQuick];
+      if(msg) aiFollowUp(msg);
+    });
+  });
+}
+
 function renderAI(){
   const ready = state.aiStatus === "ready";
-  const action = state.aiAction ? AI_ACTIONS[state.aiAction] : null;
+  const action = state.aiAction === "personal"
+    ? { icon: "🤖", label: t("assistant.panel_title"), needs: "none", heuristic: false }
+    : (state.aiAction ? AI_ACTIONS[state.aiAction] : null);
 
   let html = `
     <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Assistant de révision</h1>
     <p class="ai-intro">Choisis une action : l'assistant reçoit automatiquement le contexte utile — la fiche du chapitre, les questions du cours, tes erreurs ou ton niveau de maîtrise réel. Il tourne localement dans ton navigateur, sans serveur ni clé API.</p>
     ${aiStatusHtml()}
     ${aiDiagnosticPanelHtml()}
+    ${renderAssistantHeroHtml()}
+    <div class="section-title" style="margin-top:22px;">${t("assistant.more_actions")}</div>
     <div class="ai-actiongrid">
       ${Object.entries(AI_ACTIONS).map(([k,a])=>{
         const usable = ready || a.heuristic;
@@ -10518,26 +11024,32 @@ function renderAI(){
       </div>`;
     }
 
-    html += `<details class="ai-extra">
-      <summary>Joindre un document (optionnel)</summary>
-      <div class="ai-filezone" id="ai-filezone" role="button" tabindex="0" aria-label="Ajouter un fichier texte">
-        <div class="txt">📎 Ajouter un fichier texte</div>
-        <div class="sub">.txt, .md, .csv, .json — pour un PDF ou un Word, colle le texte dans le champ ci-dessus</div>
-      </div>
-      <input type="file" id="ai-file-input" multiple accept=".txt,.md,.csv,.json,.markdown" style="display:none;">
-      ${state.aiFiles.length > 0 ? `<div class="ai-filelist">${state.aiFiles.map((f,i)=>`
-        <div class="ai-fileitem"><span class="fname">📄 ${escapeHtml(f.name)}</span><button data-removefile="${i}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button></div>`).join("")}</div>` : ""}
-    </details>`;
+    const isPersonal = state.aiAction === "personal";
 
-    html += `<div class="ai-generate-row">
-      <span class="ai-charcount">${state.aiContextLabel ? escapeHtml(state.aiContextLabel) : defaultContextLabel(state.aiAction)}</span>
-      <span style="display:flex; gap:10px;">
-        ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">✕ Annuler</button>` : ""}
-        <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !(ready || (action && action.heuristic)) ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
-      </span>
-    </div>`;
-    if(!ready && action && action.heuristic){
-      html += `<p class="ai-hint" style="margin-top:6px;">⚙️ IA locale indisponible : ce bouton utilisera le <b>mode simplifié</b> (règles locales, sans modèle), à partir de la fiche de ce chapitre. Si le chapitre n'a pas assez de définitions repérables, un message clair te le dira plutôt qu'un faux résultat.</p>`;
+    if(!isPersonal){
+      html += `<details class="ai-extra">
+        <summary>Joindre un document (optionnel)</summary>
+        <div class="ai-filezone" id="ai-filezone" role="button" tabindex="0" aria-label="Ajouter un fichier texte">
+          <div class="txt">📎 Ajouter un fichier texte</div>
+          <div class="sub">.txt, .md, .csv, .json — pour un PDF ou un Word, colle le texte dans le champ ci-dessus</div>
+        </div>
+        <input type="file" id="ai-file-input" multiple accept=".txt,.md,.csv,.json,.markdown" style="display:none;">
+        ${state.aiFiles.length > 0 ? `<div class="ai-filelist">${state.aiFiles.map((f,i)=>`
+          <div class="ai-fileitem"><span class="fname">📄 ${escapeHtml(f.name)}</span><button data-removefile="${i}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button></div>`).join("")}</div>` : ""}
+      </details>`;
+
+      html += `<div class="ai-generate-row">
+        <span class="ai-charcount">${state.aiContextLabel ? escapeHtml(state.aiContextLabel) : defaultContextLabel(state.aiAction)}</span>
+        <span style="display:flex; gap:10px;">
+          ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">✕ Annuler</button>` : ""}
+          <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !(ready || (action && action.heuristic)) ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
+        </span>
+      </div>`;
+      if(!ready && action && action.heuristic){
+        html += `<p class="ai-hint" style="margin-top:6px;">⚙️ IA locale indisponible : ce bouton utilisera le <b>mode simplifié</b> (règles locales, sans modèle), à partir de la fiche de ce chapitre. Si le chapitre n'a pas assez de définitions repérables, un message clair te le dira plutôt qu'un faux résultat.</p>`;
+      }
+    } else if(state.aiContextLabel){
+      html += `<div class="ai-generate-row"><span class="ai-charcount">${escapeHtml(state.aiContextLabel)}</span></div>`;
     }
 
     if(state.aiError) html += `<div class="ai-error">${state.aiError}</div>`;
@@ -10556,6 +11068,10 @@ function renderAI(){
         html += `<div class="ai-bubble assistant"><div class="ai-result-body" id="ai-stream"><span class="ai-loading" style="padding:0;"><span class="ai-spinner"></span>Réflexion…</span></div></div>`;
       }
       html += `</div>`;
+      html += assistantMessageActionsHtml();
+      if((state.aiAction === "explain" || (isPersonal && (state.aiPersonalIntent === "chapter" || state.aiPersonalIntent === null))) && state.aiMode === "text" && !state.aiBusy && state.aiThread.length >= 2){
+        html += assistantExplainQuickActionsHtml();
+      }
     }
 
     if(state.aiCardsDraft && state.aiCardsDraft.length){
@@ -10610,31 +11126,17 @@ function renderAI(){
 function attachAIEvents(){
   if(state.aiStatus === "checking") checkAIStatus();
 
+  attachAssistantHeroEvents();
+
   document.querySelectorAll("[data-aiaction]").forEach(btn=>{
     if(btn.disabled) return;
-    btn.addEventListener("click", ()=>{
-      const k = btn.dataset.aiaction;
-      state.aiAction = k;
-      state.aiMode = AI_ACTIONS[k].mode || "text";
-      state.aiThread = [];
-      state.aiCardsDraft = null;
-      state.aiQuizDraft = null;
-      state.aiError = null;
-      state.aiContextLabel = "";
-      render();
-      const focusEl = document.getElementById("ai-topic-input");
-      if(focusEl) focusEl.focus();
-      else {
-        const run = document.getElementById("ai-run-btn");
-        if(run && !run.disabled && AI_ACTIONS[k].needs !== "topic") run.click();
-      }
-    });
+    btn.addEventListener("click", ()=> aiSelectAction(btn.dataset.aiaction));
   });
 
   const close = document.getElementById("ai-close");
   if(close) close.addEventListener("click", ()=>{
     if(state.aiBusy) aiCancelGeneration();
-    state.aiAction = null; state.aiThread = []; state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
+    state.aiAction = null; state.aiThread = []; state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null; state.aiPersonalIntent = null;
     render();
   });
 
@@ -13708,7 +14210,8 @@ function renderCalendarMonth(){
 /* Verrou partagé avec l'onglet Assistant IA : un seul modèle, une seule génération à la fois. */
 function aiEngineBusy(){ return state.aiBusy || state.courseAIUI.busy || state.courseImport.busy || !!state.libGenerateBusy || !!state.libToolsBusy; }
 
-const COURSE_AI_SYSTEM = "Tu aides un élève de terminale à comprendre son cours. Réponds en français, de façon claire, structurée et pédagogique, adaptée au niveau lycée : phrases courtes, vocabulaire compliqué expliqué, exemples concrets, une analogie si utile. Pas de jargon inutile, pas de préambule ni de flatterie. Appuie-toi en priorité sur les informations du cours fournies ci-dessous (notes, résumé, description de l'événement). Si elles ne suffisent pas pour répondre précisément, dis-le clairement et, si besoin, demande une précision à l'élève plutôt que d'inventer un contenu de cours qui n'y figure pas.";
+const COURSE_AI_SYSTEM_BASE = "Tu aides un élève de terminale à comprendre son cours. Réponds de façon claire, structurée et pédagogique, adaptée au niveau lycée : phrases courtes, vocabulaire compliqué expliqué, exemples concrets, une analogie si utile. Pas de jargon inutile, pas de préambule ni de flatterie. Appuie-toi en priorité sur les informations du cours fournies ci-dessous (notes, résumé, description de l'événement). Si elles ne suffisent pas pour répondre précisément, dis-le clairement et, si besoin, demande une précision à l'élève plutôt que d'inventer un contenu de cours qui n'y figure pas.";
+function courseAiSystemPrompt(){ return COURSE_AI_SYSTEM_BASE + "\n" + aiLanguageClause(); }
 
 function courseAiContextBlock(e, cd){
   const subj = matchEventSubject(e.summary);
@@ -13821,7 +14324,7 @@ async function courseAiSend(eventId, userContent, display, kind, meta){
   }
   const cd = getCourseData(eventId);
   const thread = cd.aiThread.slice();
-  const sysContent = COURSE_AI_SYSTEM + "\n\n" + courseAiContextBlock(ev, cd);
+  const sysContent = courseAiSystemPrompt() + "\n\n" + courseAiContextBlock(ev, cd);
   if(thread.length && thread[0].role === "system") thread[0] = {role:"system", content:sysContent, hidden:true};
   else thread.unshift({role:"system", content:sysContent, hidden:true});
   thread.push({role:"user", content:userContent, display, kind, meta: meta || null});
