@@ -7688,6 +7688,95 @@ function locateQuoteInText(original, quote){
   return { start: map[nIdx], end: map[nEnd] + 1 };
 }
 
+/* ---------- Retrouver le passage d'une ANCIENNE flashcard (sans sourceQuote) ----------
+   Compatibilité rétroactive : une flashcard enregistrée avant cette
+   fonctionnalité n'a ni chapterId ni sourceQuote. Le chapitre est retrouvé
+   par le contexte d'affichage (deck à chapitre unique — voir
+   renderFlashPlay), puis le passage est cherché par recouvrement de
+   mots-clés (question + réponse) dans le texte déjà stocké du chapitre —
+   jamais une copie du cours, jamais un passage inventé : uniquement de
+   vraies phrases du texte source, retenues seulement au-dessus d'un seuil
+   minimal de correspondance. */
+const FLASH_STOPWORDS = new Set([
+  "les","des","une","un","le","la","de","du","et","est","que","qui","quoi","dans","pour","avec","sur","ce","cette","ces","cet",
+  "son","sa","ses","il","elle","ils","elles","ne","pas","plus","au","aux","en","par","se","leur","leurs","etre","avoir",
+  "comme","mais","ou","donc","or","ni","car","tout","tous","toute","toutes","fait","sont","etait","ete","sans","entre",
+  "vers","chez","depuis","apres","avant","aussi","alors","ainsi","ainsi","lorsque","lorsqu","quand","dont","meme","memes",
+]);
+
+function stripDiacritics(s){
+  return s && s.normalize ? s.normalize("NFD").replace(/[̀-ͯ]/g, "") : s;
+}
+/* Insensible aux accents/majuscules/ponctuation/apostrophes — utilisé pour
+   l'extraction de mots-clés et le score de correspondance par phrase. */
+function normalizeLoose(s){
+  return stripDiacritics(String(s || "").toLowerCase())
+    .replace(/[’']/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function extractKeywords(s){
+  const norm = normalizeLoose(s);
+  if(!norm) return [];
+  const seen = new Set();
+  const out = [];
+  norm.split(" ").forEach(w=>{
+    if(w.length >= 4 && !FLASH_STOPWORDS.has(w) && !seen.has(w)){ seen.add(w); out.push(w); }
+  });
+  return out.slice(0, 10);
+}
+
+/* Découpe le texte en "phrases" contiguës (limites : . ! ? ou saut de ligne),
+   en conservant les index EXACTS du texte original — jamais de zone
+   chevauchante, tout le texte est couvert. Les fragments trop courts
+   (titres vides, lignes blanches) sont ignorés. */
+function splitIntoSentenceSpans(text){
+  const spans = [];
+  let start = 0;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(c === "." || c === "!" || c === "?" || c === "\n"){
+      const end = i + 1;
+      if(text.slice(start, end).trim().length >= 8) spans.push({ start, end });
+      start = end;
+    }
+  }
+  if(text.length - start >= 8) spans.push({ start, end: text.length });
+  return spans;
+}
+
+/* Cherche la phrase du texte source qui recouvre le mieux les mots-clés
+   donnés (question + réponse combinées). Retourne null si rien ne dépasse
+   un seuil minimal — jamais une correspondance approximative isolée. */
+function findBestKeywordMatch(text, keywords){
+  if(!keywords.length) return null;
+  const spans = splitIntoSentenceSpans(text);
+  let best = null, bestScore = 0;
+  for(const sp of spans){
+    const norm = normalizeLoose(text.slice(sp.start, sp.end));
+    let score = 0;
+    for(const kw of keywords) if(norm.indexOf(kw) !== -1) score++;
+    if(score > bestScore){ bestScore = score; best = sp; }
+  }
+  const minScore = keywords.length <= 1 ? 1 : 2;
+  if(!best || bestScore < minScore) return null;
+  return { start: best.start, end: best.end };
+}
+
+/* Cherche une phrase "Exemple…" juste après le passage trouvé (fenêtre
+   courte), jamais ailleurs dans le cours — pour ne jamais associer un
+   exemple sans rapport avec la notion affichée. */
+function findNearbyExampleSpan(text, afterIndex, maxDistance){
+  const spans = splitIntoSentenceSpans(text);
+  for(const sp of spans){
+    if(sp.end <= afterIndex) continue;
+    if(sp.start > afterIndex + maxDistance) break;
+    if(/^exemple\s*:?/i.test(text.slice(sp.start, sp.end).trim())) return sp;
+  }
+  return null;
+}
+
 const FLASH_SOURCE_WINDOW = 260; // caractères de contexte si aucun paragraphe net n'est détecté
 
 /* Élargit [start,end] au paragraphe qui le contient (séparateur : ligne
@@ -7767,28 +7856,54 @@ function buildPlainExcerptHtml(text, start, end){
 }
 
 /* Résout la référence "Dans ton cours" d'une flashcard. Jamais d'erreur :
-   toute absence de donnée (carte, chapitre, texte, citation introuvable)
-   retombe proprement sur un statut, sans lever d'exception. */
-function resolveFlashcardCourseRef(card){
-  if(!card) return { status: "none" };
+   toute absence de donnée (carte, chapitre, texte, passage introuvable)
+   retombe proprement sur un statut, sans lever d'exception.
+
+   fallbackChapterId : chapitre du deck en cours de révision (voir
+   renderFlashPlay), utilisé quand la carte elle-même n'a pas de chapterId
+   (flashcard enregistrée avant cette fonctionnalité) — mais UNIQUEMENT
+   quand le deck ne mélange pas plusieurs chapitres (jamais deviné pour
+   "Tout mélanger" / "Réviser ce niveau", pour ne jamais associer une
+   carte au mauvais cours).
+
+   Ordre de résolution (compatibilité rétroactive) :
+     A. sourceQuote déjà enregistrée (citation exacte, carte récente) ;
+     C. la réponse elle-même, si elle apparaît telle quelle dans le cours ;
+     B+D. recouvrement de mots-clés question+réponse dans les phrases du
+          cours (tolérant accents/majuscules/ponctuation/apostrophes).
+   Statuts distincts : "no_chapter" (chapitre/texte introuvable — rare,
+   plus le cas par défaut d'avant) vs "not_found" (chapitre et cours bien
+   là, mais aucun passage assez fiable trouvé) — jamais confondus, pour ne
+   plus jamais afficher "indisponible" quand le cours existe réellement. */
+function resolveFlashcardCourseRef(card, fallbackChapterId){
+  if(!card) return { status: "no_chapter" };
   if(flashSourceCache.has(card)) return flashSourceCache.get(card);
 
+  const chapterId = card.chapterId || fallbackChapterId || null;
+  const text = chapterId ? flashcardSourceText(chapterId) : "";
+
   let result;
-  if(!card.chapterId || !card.sourceQuote){
-    result = { status: "none" };
+  if(!text){
+    result = { status: "no_chapter" };
   } else {
-    const text = flashcardSourceText(card.chapterId);
-    const loc = text ? locateQuoteInText(text, card.sourceQuote) : null;
-    const fallbackLoc = (!loc && text && card.back) ? locateQuoteInText(text, card.back) : null;
-    const finalLoc = loc || fallbackLoc;
-    if(!text || !finalLoc){
-      result = { status: "unavailable" };
+    let loc = card.sourceQuote ? locateQuoteInText(text, card.sourceQuote) : null;
+    if(!loc && card.back) loc = locateQuoteInText(text, card.back);
+    if(!loc){
+      const keywords = extractKeywords((card.front || "") + " " + (card.back || ""));
+      loc = findBestKeywordMatch(text, keywords);
+    }
+    if(!loc){
+      result = { status: "not_found" };
     } else {
-      const excerptHtml = buildHighlightedExcerptHtml(text, finalLoc.start, finalLoc.end);
+      const excerptHtml = buildHighlightedExcerptHtml(text, loc.start, loc.end);
       let exampleHtml = null;
       if(card.exampleQuote){
         const exLoc = locateQuoteInText(text, card.exampleQuote);
         if(exLoc) exampleHtml = buildPlainExcerptHtml(text, exLoc.start, exLoc.end);
+      }
+      if(!exampleHtml){
+        const nearby = findNearbyExampleSpan(text, loc.end, 400);
+        if(nearby) exampleHtml = buildPlainExcerptHtml(text, nearby.start, nearby.end);
       }
       result = { status: "found", excerptHtml, exampleHtml };
     }
@@ -7797,16 +7912,16 @@ function resolveFlashcardCourseRef(card){
   return result;
 }
 
-function renderFlashSourcePanel(card, open){
-  const ref = resolveFlashcardCourseRef(card);
+function renderFlashSourcePanel(card, open, fallbackChapterId){
+  const ref = resolveFlashcardCourseRef(card, fallbackChapterId);
   let body;
-  if(ref.status === "none"){
-    body = `<p class="flash-source-empty">📖 Passage du cours indisponible pour cette ancienne flashcard.</p>`;
-  } else if(ref.status === "unavailable"){
-    body = `<p class="flash-source-empty">📖 Passage introuvable dans le cours pour cette flashcard.</p>`;
+  if(ref.status === "no_chapter"){
+    body = `<p class="flash-source-empty">📖 Passage du cours indisponible pour cette flashcard.</p>`;
+  } else if(ref.status === "not_found"){
+    body = `<p class="flash-source-empty">📖 Le passage exact n'a pas pu être retrouvé dans ce cours.</p>`;
   } else {
     body = `<div class="flash-source-excerpt">${ref.excerptHtml}</div>` +
-      (ref.exampleHtml ? `<p class="flash-source-example"><b>Exemple</b> — ${ref.exampleHtml}</p>` : "");
+      (ref.exampleHtml ? `<p class="flash-source-example"><b>💡 Exemple</b><br>${ref.exampleHtml}</p>` : "");
   }
   return `<div class="flash-source${open ? " open" : ""}">
     <div class="flash-source-head"><span class="ico" aria-hidden="true">📖</span><span class="lbl">Dans ton cours</span></div>
@@ -8007,6 +8122,11 @@ function renderFlashPlay(){
   const d = state.flashDeck;
   const card = d.cards[d.idx];
   const pct = Math.round((d.idx / d.cards.length) * 100);
+  // Chapitre du deck en cours, pour retrouver le cours des anciennes cartes
+  // sans chapterId propre — jamais deviné pour un deck qui mélange plusieurs
+  // chapitres ("all" / "level:xxx"), où on ne peut pas savoir laquelle vient
+  // d'où (voir resolveFlashcardCourseRef).
+  const fallbackChapterId = (d.scope && d.scope !== "all" && !/^level:/.test(d.scope) && findAnyChapter(d.scope)) ? d.scope : null;
 
   return `
     <button class="btn-text" id="flash-back-btn">← Quitter le paquet</button>
@@ -8033,7 +8153,7 @@ function renderFlashPlay(){
         </div>
       </div>
 
-      ${!d.flipped ? `<div class="flash-hintline">Retourne la carte pour voir la réponse</div>` : renderFlashSourcePanel(card, !!d.sourceOpen)}
+      ${!d.flipped ? `<div class="flash-hintline">Retourne la carte pour voir la réponse</div>` : renderFlashSourcePanel(card, !!d.sourceOpen, fallbackChapterId)}
 
       ${d.flipped ? `<div class="flash-judge">
             <button class="unknown" id="flash-unknown-btn"><span class="emoji">🔁</span>À revoir</button>
