@@ -1679,7 +1679,7 @@
 
         <div class="mainnav-item" data-nav="lang">
           <button class="mainnav-link" data-menu-toggle="lang" id="lang-trigger-btn" aria-label="Langue de l'interface" data-i18n-attr="aria-label:lang.selector_label">
-            <span id="lang-trigger-flag" aria-hidden="true">🌐</span><span id="lang-trigger-code">FR</span> <span class="caret">▾</span>
+            <span id="lang-trigger-code">FR</span> <span class="caret">▾</span>
           </button>
           <div class="dropdown-menu" id="menu-lang" role="menu">
             <button type="button" data-set-lang="fr" role="menuitemradio"><span aria-hidden="true">🇫🇷</span> <span data-i18n="lang.fr">Français</span></button>
@@ -11990,9 +11990,7 @@ function applyStaticTranslations(){
 function updateLangSwitcherUi(){
   if(!window.LyonI18n) return;
   const lang = LyonI18n.getLang();
-  const flagEl = document.getElementById("lang-trigger-flag");
   const codeEl = document.getElementById("lang-trigger-code");
-  if(flagEl) flagEl.textContent = LyonI18n.flag(lang);
   if(codeEl) codeEl.textContent = lang.toUpperCase();
   document.querySelectorAll("#menu-lang [data-set-lang]").forEach(btn=>{
     const isActive = btn.dataset.setLang === lang;
