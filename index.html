@@ -1074,6 +1074,70 @@
     .pg-mastery-section{ padding:18px 18px; }
   }
 
+  /* ============================================================
+     RÉVISION INTELLIGENTE — namespace sr- (distinct de pg-/qz-/exam/
+     flashcards, mêmes tokens de design que le reste de l'app — voir
+     variables --red/--border/--surface/--radius-lg déjà définies plus haut).
+     ============================================================ */
+  .sr-empty-hero{ text-align:center; padding:32px 20px; }
+  .sr-empty-hero p{ color:var(--ink-soft); font-size:15px; max-width:420px; margin:0 auto 18px; line-height:1.5; }
+  .sr-empty-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  .sr-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+  .sr-card{
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:16px 17px; display:flex; flex-direction:column; gap:8px;
+    transition: box-shadow 0.16s var(--ease), transform 0.16s var(--ease);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .sr-card:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  }
+  .sr-card-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .sr-card-subject{ font-size:12px; font-weight:700; color:var(--muted); }
+  .sr-confidence{ font-size:10.5px; font-weight:700; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:2px 8px; white-space:nowrap; }
+  .sr-card-title{ font-size:15.5px; font-weight:800; color:var(--ink); margin:0; line-height:1.3; }
+  .sr-card-mastery{ display:flex; }
+  .sr-reason{ font-size:13px; color:var(--ink-soft); line-height:1.4; }
+  .sr-card-meta{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--muted); font-weight:700; margin-top:2px; }
+  .sr-card button[data-smart-start-one]{ margin-top:4px; width:100%; }
+
+  .sr-length-chips{ display:flex; gap:8px; margin:4px 0 14px; flex-wrap:wrap; }
+  .sr-length-chips button{
+    border:1px solid var(--border); background:var(--surface); color:var(--ink-soft);
+    font-weight:700; font-size:13px; padding:7px 16px; border-radius:999px; cursor:pointer;
+    transition: background 0.14s var(--ease), color 0.14s var(--ease), border-color 0.14s var(--ease);
+  }
+  .sr-length-chips button:hover{ border-color: var(--red); color: var(--red); }
+  .sr-length-chips button.active{ background: var(--red); border-color: var(--red); color:#fff; }
+  .sr-length-chips button:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+
+  .sr-session-preview{ display:flex; flex-direction:column; gap:2px; margin-bottom:12px; }
+  .sr-session-row{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--bg); }
+  .sr-session-row:last-child{ border-bottom:none; }
+  .sr-session-num{
+    flex-shrink:0; width:24px; height:24px; border-radius:50%; background:var(--red-tint); color:var(--red-dark);
+    font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .sr-session-body{ display:flex; flex-direction:column; gap:1px; }
+  .sr-session-title{ font-size:13.5px; font-weight:700; color:var(--ink); }
+  .sr-session-mode{ font-size:12px; color:var(--muted); }
+  .sr-session-total{ font-size:13px; font-weight:800; color:var(--ink-soft); margin-bottom:12px; }
+
+  .sr-step-badge{
+    display:inline-block; font-size:11px; font-weight:800; color:var(--red);
+    background:var(--red-tint); border-radius:999px; padding:2px 10px; margin-bottom:3px;
+  }
+
+  .sr-progressed-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .sr-progressed-list li{ font-size:13.5px; color:var(--ink-soft); display:flex; justify-content:space-between; gap:10px; }
+  .sr-progressed-list li b{ color: var(--green); font-variant-numeric: tabular-nums; white-space:nowrap; }
+
+  @media (max-width:680px){
+    .sr-grid{ grid-template-columns: 1fr; }
+    .sr-empty-actions{ flex-direction:column; }
+    .sr-empty-actions .btn{ width:100%; }
+  }
+
   .dash-section{
     background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
     padding:20px 21px; margin-bottom:18px; box-shadow: var(--shadow-sm);
@@ -1897,6 +1961,7 @@
             <button data-goto="progress" data-i18n="nav.progress_global">Vue globale</button>
             <button data-goto="progress" data-i18n="nav.progress_bysubject">Progression par matière</button>
             <button data-goto="library" data-i18n="nav.progress_bychapter">Progression par chapitre</button>
+            <button data-goto="smart" data-i18n="nav.smart_revision">🧠 Révision intelligente</button>
           </div>
         </div>
 
@@ -1953,6 +2018,11 @@
      script principal pour que window.LyonI18n existe dès le premier rendu
      (même principe que auth.js). Voir translations.js. -->
 <script src="translations.js"></script>
+<!-- Moteur de révision intelligente : module autonome et pur (aucune
+     dépendance au DOM/state/Supabase/WebLLM), voir smart-revision.js. Chargé
+     avant le script principal comme auth.js/translations.js pour que
+     window.LyonSmartRevision existe dès le premier rendu. -->
+<script src="smart-revision.js"></script>
 
 <script>
 /* ============================================================
@@ -2968,6 +3038,13 @@ let state = {
   flashDeck: null,
   flashProgress: {},
 
+  // --- révision intelligente (session en cours, jamais persisté : comme
+  // flashDeck/playing, reconstruit à chaque lancement, jamais lu par
+  // loadAllData) ---
+  smartScreen: "home",  // home | recap
+  smartSession: null,   // {items, stepIndex, results, startedAt, beforeMastery}
+  smartSessionLength: 20, // 10 | 20 | 30 (minutes), choix de durée sur l'accueil
+
   // --- mode examen ---
   exam: {
     screen: "setup",      // setup | running | results
@@ -3761,12 +3838,19 @@ function nextQuestion(){
     saveProgress(state.playing.scope, pct);
     logActivity("quiz", state.playing.scope, state.playing.label, state.score, state.pool.length, timeUsed);
     state.playing.timeUsed = timeUsed;
+    if(state.smartSession){
+      const item = state.smartSession.items[state.smartSession.stepIndex];
+      recordSmartSessionStep({ mode: "quiz", chapterId: item ? item.chapterId : null, title: state.playing.label, score: state.score, total: state.pool.length, pct, timeUsed });
+      advanceSmartSession();
+      return;
+    }
     state.screen = "results";
     render();
   }
 }
 
 function backToPicker(){
+  if(state.smartSession){ abortSmartSession(); return; }
   state.screen = "picker";
   render();
 }
@@ -3875,6 +3959,13 @@ function render(){
     content.className = "wrap";
     content.innerHTML = renderProgress();
     attachProgressEvents();
+    return;
+  }
+
+  if(state.tab === "smart"){
+    content.className = "wrap";
+    content.innerHTML = renderSmartRevision();
+    attachSmartRevisionEvents();
     return;
   }
 
@@ -4086,6 +4177,11 @@ function renderDashboard(){
     <button class="btn-text" id="dash-progress-link">${t("dashboard.view_detail")}</button>
   </div>`;
 
+  /* ---------- Bloc 2bis : révision intelligente (discret, une recommandation
+     principale + un compte réel — jamais de liste, voir §12/§13 : ne doit
+     pas prendre toute la place, pas de sur-gamification). ---------- */
+  html += renderDashboardSmartBlock();
+
   /* ---------- Bloc 3 : mes matières ---------- */
   html += `<div class="dash-card">
     <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.my_subjects")}</span></div>`;
@@ -4140,6 +4236,35 @@ function renderDashboard(){
   html += `<footer class="hint">${t("dashboard.storage_hint")}${storageAvailable ? "" : t("dashboard.storage_warning")}</footer>`;
 
   return html;
+}
+
+/* Bloc discret "Révision intelligente" du dashboard (§12) : une seule
+   recommandation principale (la plus prioritaire) + un compte réel du
+   nombre de notions qui méritent l'attention — jamais une liste complète
+   (ça, c'est le rôle de la page dédiée). Recalculé à chaque rendu du
+   dashboard comme le reste des blocs, via le même moteur que la page
+   "Révision intelligente" (getSmartRevisionRecommendations) — aucune
+   deuxième logique de recommandation. */
+function renderDashboardSmartBlock(){
+  // Même règle que renderSmartHome() : un utilisateur sans aucune donnée ne
+  // doit jamais voir "N notions à réviser" (tous les chapitres jamais faits
+  // qualifieraient), seulement le message neutre d'invitation.
+  const hasAnyData = state.dash.recentActivity.length > 0
+    || QUESTIONS.some(q => qstat(q))
+    || state.userChapters.some(ch => userChapterProgress(ch) !== null);
+  const recos = hasAnyData ? getSmartRevisionRecommendations() : [];
+  const top = recos[0] || null;
+  return `<div class="dash-card">
+    <div class="dash-card-eyebrow">🧠 ${t("smart.title")}</div>
+    ${top ? `
+      <p class="dash-card-meta">${t("smart.dashboard_count", {n: recos.length})}</p>
+      <h2 class="dash-card-title" style="font-size:16px;">${escapeHtml(top.title)}</h2>
+      ${smartReasonHtml(top)}
+      <button class="btn red small" id="dash-smart-btn" style="margin-top:10px;">${t("smart.dashboard_cta")} →</button>
+    ` : `
+      <p class="dash-card-meta">${t("smart.dashboard_empty")}</p>
+    `}
+  </div>`;
 }
 
 /* "Mes révisions" — cours récemment importés/créés, avec indicateurs de ce qui est
@@ -4341,6 +4466,8 @@ function attachDashboardEvents(){
   if(viewAllRevisions) viewAllRevisions.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   const proglink = document.getElementById("dash-progress-link");
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
+  const smartBtn = document.getElementById("dash-smart-btn");
+  if(smartBtn) smartBtn.addEventListener("click", ()=>{ state.smartScreen = "home"; switchTab("smart"); });
   const activitiesBtn = document.getElementById("dash-activities-btn");
   if(activitiesBtn) activitiesBtn.addEventListener("click", ()=> switchTab("activities"));
   const examsBtn = document.getElementById("dash-exams-btn");
@@ -7630,6 +7757,7 @@ function renderQuiz(){
       <div class="qz-header">
         <button type="button" class="qz-quit" id="back-btn">${t("quiz.quit")}</button>
         <div class="qz-header-info">
+          ${state.smartSession ? `<span class="sr-step-badge">${t("smart.session_step", {n: state.smartSession.stepIndex+1, total: state.smartSession.items.length})}</span>` : ""}
           <span class="qz-chapter">${escapeHtml(state.playing.label)}</span>
           <span class="qz-counter">${t("quiz.question_of", {n: state.index+1, total})}</span>
         </div>
@@ -8398,6 +8526,12 @@ function judgeCard(knewIt){
     const pct = Math.round((d.known.length / d.cards.length) * 100);
     saveFlashProgress(d.scope, pct);
     logActivity("flash", d.scope, d.label, d.known.length, d.cards.length);
+    if(state.smartSession){
+      const item = state.smartSession.items[state.smartSession.stepIndex];
+      recordSmartSessionStep({ mode: "flash", chapterId: item ? item.chapterId : null, title: d.label, score: d.known.length, total: d.cards.length, pct, timeUsed: null });
+      advanceSmartSession();
+      return;
+    }
     state.flashScreen = "summary";
     render();
   }
@@ -8410,6 +8544,7 @@ function replayUnknown(){
 }
 
 function backToFlashPicker(){
+  if(state.smartSession){ abortSmartSession(); return; }
   state.flashScreen = "picker";
   render();
 }
@@ -8550,6 +8685,7 @@ function renderFlashPlay(){
   return `
     <button class="btn-text" id="flash-back-btn">← Quitter le paquet</button>
     <div class="flash-play-top">
+      ${state.smartSession ? `<span class="sr-step-badge">${t("smart.session_step", {n: state.smartSession.stepIndex+1, total: state.smartSession.items.length})}</span>` : ""}
       <span class="lbl">${d.label} — Carte ${d.idx+1} / ${d.cards.length}</span>
       <div class="flash-counters">
         <span class="c-known">✅ ${d.known.length}</span>
@@ -10473,13 +10609,461 @@ function buildRevisionRecommendation(){
   return items.length ? items[0] : null;
 }
 
-/* Point d'extension pour une future "Révision intelligente" (répétition
-   espacée, sélection automatique de flashcards/questions difficiles). Non
-   câblée à l'interface pour cette étape — voir §13 de la demande : préparer
-   l'architecture sans construire l'algorithme. Retourne toujours null pour
-   l'instant ; une future étape lui donnera un vrai corps et un bouton dédié. */
-function buildSmartRevisionQueue(){
-  return null;
+/* ============================================================
+   RÉVISION INTELLIGENTE — pont entre l'état réel de l'app et le moteur
+   pur window.LyonSmartRevision (voir smart-revision.js).
+   ------------------------------------------------------------
+   Toute la logique de priorisation vit dans smart-revision.js (testable
+   isolément, sans DOM). Ici, on se contente de LIRE l'état déjà existant
+   (qstats, state.progress, state.flashProgress, state.dash.*) pour
+   construire des "faits" par chapitre, sans jamais dupliquer une source de
+   vérité : mêmes fonctions que "Ma progression" (chapterMetrics,
+   userChapterProgress, chaptersOfSubject...), voir aussi §17 de la demande
+   (aucune donnée d'un utilisateur ne doit apparaître pour un autre — ces
+   fonctions lisent exclusivement l'état local déjà en mémoire, jamais un
+   identifiant de compte).
+   ============================================================ */
+
+/* Maîtrise honnête d'un chapitre : null si aucune interaction (jamais 0%
+   par défaut). chapterMetrics() renvoie 0 même pour un chapitre jamais
+   répondu (voir sa définition) — on corrige ça ici pour ne jamais laisser
+   croire à une maîtrise nulle mesurée. Réutilisé par "Ma progression"
+   indirectement via les mêmes fonctions sources, sans les modifier. */
+function honestChapterMastery(ch){
+  if(isUserChapter(ch.id)) return userChapterProgress(ch);
+  const cm = chapterMetrics(ch);
+  return cm.answered > 0 ? cm.mastery : null;
+}
+
+/* Dernière révision connue d'un chapitre : le plus récent des deux seuls
+   historiques universels (quiz + IA) déjà enregistrés par l'app —
+   state.dash.recentChapters (visites, 8 dernières, quiz+flash) et
+   state.dash.recentActivity (sessions terminées, 20 dernières, quiz+
+   examen+flash). Ni l'un ni l'autre n'est un historique complet : si le
+   chapitre n'apparaît dans aucun des deux, on retourne null plutôt que de
+   deviner une date. */
+function lastRevisionTimestamp(chapterId){
+  let best = null;
+  (state.dash.recentChapters || []).forEach(rc=>{
+    if(rc.chapterId === chapterId && (best === null || rc.ts > best)) best = rc.ts;
+  });
+  (state.dash.recentActivity || []).forEach(a=>{
+    if(chapterIdFromQuizScope(a.scope) !== chapterId) return;
+    const ts = typeof a.ts === "number" ? a.ts : Date.parse(a.ts);
+    if(ts && !isNaN(ts) && (best === null || ts > best)) best = ts;
+  });
+  return best;
+}
+
+/* Tendance récente d'un chapitre : seulement si >=2 vraies sessions quiz/
+   examen avec score en %, comparant la dernière session à la moyenne des
+   précédentes (seuil de 8 points pour ignorer le bruit). null si moins de 2
+   points — jamais de tendance inventée sur une seule mesure. */
+function computeChapterTrend(chapterId){
+  const entries = (state.dash.recentActivity || [])
+    .filter(a => (a.type === "quiz" || a.type === "exam") && typeof a.pct === "number" && chapterIdFromQuizScope(a.scope) === chapterId)
+    .slice()
+    .reverse(); // recentActivity est du plus récent au plus ancien -> on remet dans l'ordre chronologique
+  if(entries.length < 2) return null;
+  const last = entries[entries.length - 1].pct;
+  const prevAvg = entries.slice(0, -1).reduce((a, e) => a + e.pct, 0) / (entries.length - 1);
+  const delta = last - prevAvg;
+  if(delta >= 8) return "up";
+  if(delta <= -8) return "down";
+  return "flat";
+}
+
+/* Construit les "faits" par chapitre consommés par LyonSmartRevision.
+   Aucun chapitre sans quiz NI flashcards disponibles n'est inclus (rien de
+   concret à proposer). Les deux sources de maîtrise (chapitres intégrés vs
+   utilisateur/IA) restent séparées exactement comme dans "Ma progression"
+   (voir son commentaire d'en-tête) : jamais de qstats pour une question IA
+   (trackQuizAnswer les exclut explicitement), donc hasErrorData=false pour
+   un chapitre utilisateur — jamais de "plusieurs erreurs récentes" inventé
+   là où on n'a tout simplement pas la donnée. */
+function buildChapterFacts(){
+  const facts = [];
+  allChaptersFlat().forEach(ch=>{
+    const isUser = isUserChapter(ch.id);
+    let mastery, masterySampleSize, hasErrorData, recentErrorCount;
+    let quizQuestionCount, flashcardCount, hasQuiz, hasFlashcards;
+
+    if(isUser){
+      quizQuestionCount = ch.aiQuiz ? ch.aiQuiz.length : 0;
+      hasQuiz = quizQuestionCount > 0;
+      // Un chapitre utilisateur stocke ses flashcards dans ch.aiFlashcards
+      // (voir la bibliothèque : startFlashDeck(ch.id, ..., ch.aiFlashcards)),
+      // jamais dans deckCards()/state.aiCards qui ne concernent que les
+      // cartes IA ajoutées à un chapitre INTÉGRÉ.
+      flashcardCount = ch.aiFlashcards ? ch.aiFlashcards.length : 0;
+      hasFlashcards = flashcardCount > 0;
+      mastery = userChapterProgress(ch);
+      const qp = state.progress["chapter:" + ch.id];
+      const fp = state.flashProgress[ch.id];
+      masterySampleSize = (qp ? qp.attempts : 0) + (fp ? fp.attempts : 0);
+      hasErrorData = false;
+      recentErrorCount = 0;
+    } else {
+      const cm = chapterMetrics(ch);
+      quizQuestionCount = cm.total;
+      hasQuiz = cm.total > 0;
+      mastery = cm.answered > 0 ? cm.mastery : null;
+      masterySampleSize = QUESTIONS.filter(q => (ch.themes || []).includes(q.theme)).filter(q => { const s = qstat(q); return s && s.seen > 0; }).length;
+      hasErrorData = true;
+      const wrongByTheme = {};
+      Object.values(state.dash.wrongQuestions).forEach(w => { wrongByTheme[w.theme] = (wrongByTheme[w.theme] || 0) + w.wrongCount; });
+      recentErrorCount = (ch.themes || []).reduce((sum, th) => sum + (wrongByTheme[th] || 0), 0);
+      flashcardCount = deckCards(ch.id).length;
+      hasFlashcards = flashcardCount > 0;
+    }
+
+    if(!hasQuiz && !hasFlashcards) return;
+
+    facts.push({
+      chapterId: ch.id, subjectId: ch.subjectId, title: ch.title,
+      mastery, masterySampleSize, hasErrorData, recentErrorCount,
+      lastRevisionAt: lastRevisionTimestamp(ch.id), trend: computeChapterTrend(ch.id),
+      hasQuiz, hasFlashcards, quizQuestionCount, flashcardCount,
+    });
+  });
+  return facts;
+}
+
+/* Point d'entrée public du moteur — indépendant de l'interface (voir §2 de
+   la demande) : ne fait aucune hypothèse sur qui l'appelle. Recalculé à
+   chaque appel plutôt que mis en cache, exactement comme globalMetrics()/
+   chapterMetrics() déjà recalculés à chaque rendu sans cache — même ordre
+   de grandeur de données (nombre de chapitres/questions du programme, pas
+   des milliers de lignes), donc pas de coût de calcul à amortir (voir le
+   rapport d'étape pour la mesure réelle). */
+function getSmartRevisionRecommendations(){
+  return LyonSmartRevision.computeRecommendations(buildChapterFacts(), { now: Date.now() });
+}
+
+/* Repli honnête quand l'utilisateur n'a pas (encore) assez de chapitres/
+   données pour remplir une session : réutilise tel quel le pool "révision
+   express" déjà existant (mélange pondéré erreurs/à revoir/jamais faites/
+   aléatoire, voir poolExpress) plutôt que d'inventer un nouveau mécanisme. */
+function buildFallbackSessionItem(targetMinutes){
+  const n = Math.max(6, Math.round(targetMinutes * 60 / 40));
+  const pool = poolExpress(n);
+  if(!pool.length) return null;
+  return {
+    chapterId: null, subjectId: null, title: t("smart.fallback_title"),
+    reasonKey: "smart.reason_fallback_review", reasonVars: null,
+    mastery: null, masterySampleSize: 0, confidence: "insufficient",
+    suggestedMode: "quiz", estimatedMinutes: Math.max(2, Math.min(15, Math.round(pool.length * 40 / 60))),
+    hasQuiz: true, hasFlashcards: false, isFallback: true,
+    execMode: "quiz", payload: pool,
+  };
+}
+
+/* Attache le contenu jouable (questions/cartes) à un item déjà retenu dans
+   une session — fait exprès APRÈS la sélection (pas pour chaque chapitre
+   candidat) pour rester léger : voir §18, pas de calcul inutile sur des
+   chapitres qui ne seront finalement pas proposés. Pour un chapitre intégré,
+   cible en priorité les questions jamais faites ou de faible maîtrise
+   (cohérent avec "quiz ciblé" du mock-up §5). */
+function attachSessionPayload(item){
+  if(item.isFallback) return item;
+  const ch = findAnyChapter(item.chapterId);
+  if(!ch) return Object.assign({}, item, { execMode: null, payload: [] });
+
+  const wantsFlash = item.suggestedMode === "flash" || (item.suggestedMode === "course_flash" && !item.hasQuiz);
+  if(wantsFlash){
+    const cards = isUserChapter(ch.id) ? (ch.aiFlashcards || []).slice() : deckCards(ch.id);
+    return Object.assign({}, item, { execMode: "flash", payload: cards });
+  }
+  if(isUserChapter(ch.id)){
+    return Object.assign({}, item, { execMode: "quiz", payload: (ch.aiQuiz || []).slice() });
+  }
+  const themed = QUESTIONS.filter(q => (ch.themes || []).includes(q.theme));
+  const weak = themed.filter(q => { const m = masteryOf(q); return m === null || m < 75; });
+  const targetCount = Math.max(4, Math.min(themed.length, Math.round(item.estimatedMinutes * 60 / 40)));
+  const pool = (weak.length ? shuffle(weak) : shuffle(themed)).slice(0, targetCount);
+  return Object.assign({}, item, { execMode: "quiz", payload: pool.length ? pool : themed });
+}
+
+/* Construit le plan de session complet (recommandations + repli + contenu
+   jouable) pour une durée cible donnée (10/20/30 min, voir §8). */
+function buildSmartSessionPlan(targetMinutes){
+  const recos = getSmartRevisionRecommendations();
+  const fallback = buildFallbackSessionItem(targetMinutes);
+  const plan = LyonSmartRevision.buildSession(recos, targetMinutes, fallback);
+  plan.items = plan.items.map(attachSessionPayload).filter(it => it.payload && it.payload.length);
+  return plan;
+}
+
+/* ---------- Session de révision intelligente : orchestration ----------
+   Réutilise entièrement startQuiz()/startFlashDeck() (mêmes écrans, mêmes
+   clés de sauvegarde — voir §7/§21 : "ne crée pas une nouvelle interface
+   parallèle"). Seuls nextQuestion()/judgeCard()/backToPicker()/
+   backToFlashPicker() reçoivent un petit hook conditionnel (actif
+   uniquement si state.smartSession existe) pour enchaîner les étapes au
+   lieu d'afficher l'écran de résultat autonome à chaque étape. */
+function startSmartSession(items){
+  if(!items || !items.length) return;
+  const beforeMastery = {};
+  items.forEach(it=>{
+    if(!it.chapterId) return;
+    const ch = findAnyChapter(it.chapterId);
+    if(ch) beforeMastery[it.chapterId] = honestChapterMastery(ch);
+  });
+  state.smartSession = { items, stepIndex: 0, results: [], startedAt: Date.now(), beforeMastery };
+  launchSmartSessionStep();
+}
+
+function launchSmartSessionStep(){
+  const s = state.smartSession;
+  if(!s) return;
+  const item = s.items[s.stepIndex];
+  if(!item || !item.payload || !item.payload.length){ advanceSmartSession(); return; }
+  if(item.execMode === "flash"){
+    startFlashDeck(item.chapterId, item.title, item.payload);
+  } else {
+    startQuiz(item.chapterId ? "chapter:" + item.chapterId : "smart-review", item.title, null, item.payload);
+  }
+}
+
+function recordSmartSessionStep(result){
+  if(!state.smartSession) return;
+  state.smartSession.results.push(result);
+}
+
+function advanceSmartSession(){
+  const s = state.smartSession;
+  if(!s) return;
+  s.stepIndex++;
+  if(s.stepIndex < s.items.length) launchSmartSessionStep();
+  else finishSmartSession();
+}
+
+function finishSmartSession(){
+  const s = state.smartSession;
+  if(!s) return;
+  const progressed = [], newlyAssessed = [];
+  Object.keys(s.beforeMastery).forEach(chId=>{
+    const ch = findAnyChapter(chId);
+    if(!ch) return;
+    const before = s.beforeMastery[chId];
+    const after = honestChapterMastery(ch);
+    if(before === null && after !== null) newlyAssessed.push({ chapterId: chId, title: ch.title, after });
+    else if(before !== null && after !== null && after > before) progressed.push({ chapterId: chId, title: ch.title, before, after });
+  });
+  s.progressed = progressed;
+  s.newlyAssessed = newlyAssessed;
+  s.finishedAt = Date.now();
+  state.tab = "smart";
+  state.smartScreen = "recap";
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* Abandon propre d'une session en cours (bouton quitter/changer de thème
+   pendant une étape) : pas de bilan partiel présenté comme un résultat
+   réel, on revient simplement à l'accueil de la révision intelligente. */
+function abortSmartSession(){
+  state.smartSession = null;
+  state.tab = "smart";
+  state.smartScreen = "home";
+  render();
+}
+
+/* ============================================================
+   RÉVISION INTELLIGENTE — rendu
+   ============================================================ */
+const SMART_ERROR_REASON_KEYS = ["smart.reason_recurring_errors", "smart.reason_errors_recent", "smart.reason_declining_trend"];
+
+function smartReasonHtml(item){
+  const icon = SMART_ERROR_REASON_KEYS.includes(item.reasonKey) ? "⚠️" : "💡";
+  return `<span class="sr-reason">${icon} ${t(item.reasonKey, item.reasonVars || {})}</span>`;
+}
+
+function smartModeInfo(mode){
+  switch(mode){
+    case "flash": return { icon: "🃏", label: t("smart.mode_flash") };
+    case "course_flash": return { icon: "📖", label: t("smart.mode_course_flash") };
+    case "course_quiz": return { icon: "📖", label: t("smart.mode_course_quiz") };
+    default: return { icon: "📝", label: t("smart.mode_quiz") };
+  }
+}
+
+function smartRecoCardHtml(item){
+  const subject = item.subjectId ? findSubject(item.subjectId) : null;
+  const modeInfo = smartModeInfo(item.suggestedMode);
+  const showConfidence = item.confidence === "insufficient" || item.confidence === "low";
+  const tier = item.mastery !== null ? masteryTier(item.mastery) : null;
+  return `<div class="sr-card">
+    <div class="sr-card-top">
+      <span class="sr-card-subject">${subject ? (subject.icon || "📘") + " " + escapeHtml(subject.name) : ""}</span>
+      ${showConfidence ? `<span class="sr-confidence">${t("smart.confidence_low")}</span>` : ""}
+    </div>
+    <h3 class="sr-card-title">${escapeHtml(item.title)}</h3>
+    ${item.mastery !== null ? `<div class="sr-card-mastery"><span class="m-chip ${tier.key}">${t("smart.mastery_label", {pct: item.mastery})}</span></div>` : ""}
+    ${smartReasonHtml(item)}
+    <div class="sr-card-meta">
+      <span class="sr-card-mode">${modeInfo.icon} ${modeInfo.label}</span>
+      <span class="sr-card-time">~${item.estimatedMinutes} min</span>
+    </div>
+    <button class="btn red small" data-smart-start-one="${item.chapterId}">${t("smart.review_now_btn")} →</button>
+  </div>`;
+}
+
+function renderSmartHome(){
+  // L'utilisateur qui n'a strictement RIEN fait ne doit jamais voir une
+  // liste de recommandations (même honnête, "jamais travaillé" qualifierait
+  // TOUS les chapitres du programme) : voir §11, l'état vide doit rester
+  // positif et court, jamais "voici tout ce que tu n'as pas fait".
+  const hasAnyData = state.dash.recentActivity.length > 0
+    || QUESTIONS.some(q => qstat(q))
+    || state.userChapters.some(ch => userChapterProgress(ch) !== null);
+  const hasChapters = allChaptersFlat().length > 0;
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">🧠 ${t("smart.title")}</h1>
+    <p class="ai-intro">${t("smart.subtitle")}</p>`;
+
+  if(!hasAnyData){
+    html += `<div class="dash-section sr-empty-hero">
+      <p>${t("smart.subtitle_empty")}</p>
+      <div class="sr-empty-actions">
+        ${hasChapters ? `<button class="btn red" id="smart-empty-quiz-btn">${t("smart.empty_cta_quiz")}</button>` : `<button class="btn red" id="smart-empty-import-btn">${t("smart.empty_cta_import")}</button>`}
+        <button class="btn outline" id="smart-empty-subjects-btn">${t("smart.empty_cta_subjects")}</button>
+      </div>
+    </div>`;
+    return html;
+  }
+
+  const recos = getSmartRevisionRecommendations();
+  const top = recos.slice(0, 5);
+
+  if(top.length === 0){
+    html += `<div class="dash-section"><p class="dash-empty">${t("smart.all_good")}</p></div>`;
+    return html;
+  }
+
+  html += `<div class="dash-section">
+    <div class="section-title">${t("smart.now_title")}</div>
+    <div class="sr-grid">${top.map(smartRecoCardHtml).join("")}</div>
+  </div>`;
+
+  const targetMinutes = state.smartSessionLength || 20;
+  const plan = buildSmartSessionPlan(targetMinutes);
+  html += `<div class="dash-section">
+    <div class="section-title">${t("smart.session_title")}</div>
+    <div class="sr-length-chips">
+      ${[10,20,30].map(n=>`<button type="button" data-smart-length="${n}" class="${targetMinutes===n?'active':''}">${n} min</button>`).join("")}
+    </div>`;
+  if(plan.items.length === 0){
+    html += `<p class="dash-empty">${t("smart.session_empty")}</p></div>`;
+  } else {
+    html += `<div class="sr-session-preview">${plan.items.map((it,i)=>`
+      <div class="sr-session-row">
+        <span class="sr-session-num">${i+1}</span>
+        <div class="sr-session-body">
+          <span class="sr-session-title">${escapeHtml(it.title)}</span>
+          <span class="sr-session-mode">${smartModeInfo(it.execMode === "flash" ? "flash" : "quiz").label} · ~${it.estimatedMinutes} min</span>
+        </div>
+      </div>`).join("")}</div>
+      <div class="sr-session-total">${t("smart.session_preview_total", {n: plan.totalMinutes})}</div>
+      <button class="btn red" id="smart-session-start-btn">${t("smart.session_start_btn")}</button>
+    </div>`;
+  }
+
+  return html;
+}
+
+function renderSmartRecap(){
+  const s = state.smartSession;
+  if(!s) return renderSmartHome();
+  const quizResults = s.results.filter(r => r.mode === "quiz");
+  const flashResults = s.results.filter(r => r.mode === "flash");
+  const totalQuestions = quizResults.reduce((a,r)=>a+r.total,0);
+  const totalCorrect = quizResults.reduce((a,r)=>a+r.score,0);
+  const totalCards = flashResults.reduce((a,r)=>a+r.total,0);
+  const totalKnown = flashResults.reduce((a,r)=>a+r.score,0);
+  const notionsCount = new Set(s.results.map(r=>r.chapterId).filter(Boolean)).size;
+  const elapsedSeconds = s.finishedAt ? Math.max(0, Math.round((s.finishedAt - s.startedAt)/1000)) : 0;
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("smart.recap_title")} 🎉</h1>`;
+
+  html += `<div class="dash-section"><div class="pg-overview">`;
+  if(totalQuestions > 0){
+    html += `<div class="pg-tile"><div class="pg-tile-num">${totalQuestions}</div><div class="pg-tile-lbl">${t("smart.recap_questions_lbl")}</div></div>
+      <div class="pg-tile"><div class="pg-tile-num">${totalCorrect}</div><div class="pg-tile-lbl">${t("smart.recap_correct_lbl")}</div></div>`;
+  }
+  if(totalCards > 0){
+    html += `<div class="pg-tile"><div class="pg-tile-num">${totalCards}</div><div class="pg-tile-lbl">${t("smart.recap_cards_lbl")}</div></div>
+      <div class="pg-tile"><div class="pg-tile-num">${totalKnown}</div><div class="pg-tile-lbl">${t("smart.recap_known_lbl")}</div></div>`;
+  }
+  html += `<div class="pg-tile"><div class="pg-tile-num">${notionsCount}</div><div class="pg-tile-lbl">${t("smart.recap_chapters_lbl")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${fmtDuration(elapsedSeconds)}</div><div class="pg-tile-lbl">${t("dashboard.revision_time")}</div></div>`;
+  html += `</div></div>`;
+
+  if(s.progressed.length > 0){
+    html += `<div class="dash-section">
+      <div class="section-title">${t("smart.recap_progressed_title")}</div>
+      <ul class="sr-progressed-list">${s.progressed.map(p=>`<li>${escapeHtml(p.title)} <b>${p.before}% → ${p.after}%</b></li>`).join("")}</ul>
+    </div>`;
+  } else if(s.newlyAssessed.length > 0){
+    html += `<div class="dash-section">
+      <div class="section-title">${t("smart.recap_newlyassessed_title")}</div>
+      <ul class="sr-progressed-list">${s.newlyAssessed.map(p=>`<li>${escapeHtml(p.title)} <b>${p.after}%</b></li>`).join("")}</ul>
+    </div>`;
+  } else {
+    html += `<div class="dash-section"><p class="dash-empty">${t("smart.recap_none_progressed")}</p></div>`;
+  }
+
+  const touchedIds = new Set(s.items.map(it=>it.chapterId).filter(Boolean));
+  const soon = getSmartRevisionRecommendations().filter(r => !touchedIds.has(r.chapterId)).slice(0, 2);
+  if(soon.length > 0){
+    html += `<div class="dash-section">
+      <div class="section-title">${t("smart.recap_soon_title")}</div>
+      <div class="pg-review-list">${soon.map(r=>`<div class="pg-review-item" style="cursor:default;">
+        <span class="pg-review-dot">🟠</span>
+        <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(r.title)}</span></span>
+      </div>`).join("")}</div>
+    </div>`;
+  }
+
+  html += `<button class="btn outline" id="smart-recap-back-btn" style="margin-top:8px;">${t("smart.recap_back_btn")}</button>`;
+  return html;
+}
+
+function renderSmartRevision(){
+  return state.smartScreen === "recap" ? renderSmartRecap() : renderSmartHome();
+}
+
+function attachSmartRevisionEvents(){
+  document.querySelectorAll("[data-smart-start-one]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const reco = getSmartRevisionRecommendations().find(r => r.chapterId === btn.dataset.smartStartOne);
+      if(!reco) return;
+      startSmartSession([attachSessionPayload(reco)].filter(it => it.payload && it.payload.length));
+    });
+  });
+  document.querySelectorAll("[data-smart-length]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.smartSessionLength = parseInt(btn.dataset.smartLength, 10);
+      render();
+    });
+  });
+  const startBtn = document.getElementById("smart-session-start-btn");
+  if(startBtn) startBtn.addEventListener("click", ()=>{
+    const plan = buildSmartSessionPlan(state.smartSessionLength || 20);
+    startSmartSession(plan.items);
+  });
+  const recapBack = document.getElementById("smart-recap-back-btn");
+  if(recapBack) recapBack.addEventListener("click", ()=>{
+    state.smartSession = null;
+    state.smartScreen = "home";
+    render();
+  });
+  const emptyQuiz = document.getElementById("smart-empty-quiz-btn");
+  if(emptyQuiz) emptyQuiz.addEventListener("click", ()=> switchTab("quiz"));
+  const emptyImport = document.getElementById("smart-empty-import-btn");
+  if(emptyImport) emptyImport.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  const emptySubjects = document.getElementById("smart-empty-subjects-btn");
+  if(emptySubjects) emptySubjects.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
 }
 
 function subjectQuestionCount(subjectId){
@@ -12967,7 +13551,7 @@ const NAV_GROUP = {
   fiches: "resources",
   exams: "exams", exam: "exams",
   planning: "planning",
-  progress: "progress",
+  progress: "progress", smart: "progress",
   ai: "myspace", settings: "myspace", myspace: "myspace",
 };
 
@@ -13089,6 +13673,7 @@ function handleNavGoto(ds){
   if(goto === "ai") return switchTab("ai");
   if(goto === "planning") return switchTab("planning");
   if(goto === "progress") return switchTab("progress");
+  if(goto === "smart"){ state.smartScreen = "home"; return switchTab("smart"); }
   if(goto === "settings") return switchTab("settings");
   if(goto === "myspace") return switchTab("myspace");
 }
