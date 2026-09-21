@@ -618,6 +618,122 @@
 
   .actions{ display:flex; justify-content: space-between; align-items:center; margin-top: 26px; gap:10px; flex-wrap:wrap; }
 
+  /* ============================================================
+     QUIZ PREMIUM — namespace "qz-" dédié, entièrement séparé de .opt/.card/
+     .feedback/.progress-row/.actions/.scoretag/.bigscore ci-dessus (réutilisés
+     par l'écran d'examen — voir renderExamRunning/renderExamResults) : aucune
+     règle existante n'est modifiée, ces classes ne sont utilisées que par
+     renderQuiz()/renderResults()/renderQuizErrorReview().
+     ============================================================ */
+  .qz-screen{ max-width:640px; margin:0 auto; padding: 18px 0 40px; }
+  .qz-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .qz-quit{ background:none; border:none; cursor:pointer; font-weight:700; font-size:13px; color:var(--muted); padding:8px 4px; font-family:var(--font-main); }
+  .qz-quit:hover{ color:var(--red-dark); }
+  .qz-quit:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; border-radius:4px; }
+  .qz-header-info{ text-align:right; }
+  .qz-chapter{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--red); }
+  .qz-counter{ display:block; font-size:13px; font-weight:700; color:var(--ink-soft); margin-top:2px; }
+  .qz-progress-track{ height:6px; border-radius:99px; background:var(--bg); overflow:hidden; margin-bottom:10px; }
+  .qz-progress-fill{ height:100%; background:var(--red); border-radius:99px; }
+  .qz-score-row{ font-size:12.5px; color:var(--ink-soft); font-weight:700; margin-bottom:18px; }
+  .qz-score-row b{ color:var(--ink); }
+
+  .qz-card{ background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-xl); padding:28px 26px; box-shadow:var(--shadow-sm); }
+  .qz-meta{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .qz-tag{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--red); }
+  .qz-question{ font-size:21px; font-weight:800; line-height:1.4; margin:0 0 22px; color:var(--ink); }
+
+  .qz-options{ display:flex; flex-direction:column; gap:11px; }
+  .qz-opt{
+    display:flex; align-items:center; gap:13px; width:100%; text-align:left; min-height:52px;
+    padding:14px 17px; border-radius:var(--radius-lg); border:1.5px solid var(--border-strong);
+    background:#fff; font-family:var(--font-main); font-size:15px; font-weight:600; color:var(--ink); cursor:pointer;
+  }
+  .qz-opt:hover:not(:disabled){ border-color:var(--red); background:var(--red-tint); }
+  .qz-opt:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+  .qz-opt:disabled{ cursor:default; }
+  .qz-opt-letter{ flex-shrink:0; width:28px; height:28px; border-radius:50%; background:var(--bg); color:var(--ink-soft); font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; }
+  .qz-opt-text{ flex:1; }
+  .qz-opt-correct{ border-color:var(--green); background:var(--green-tint); }
+  .qz-opt-correct .qz-opt-letter{ background:var(--green); color:#fff; }
+  .qz-opt-incorrect{ border-color:var(--red); background:var(--red-tint); }
+  .qz-opt-incorrect .qz-opt-letter{ background:var(--red); color:#fff; }
+  .qz-opt-dim{ opacity:.5; }
+  @media (prefers-reduced-motion: no-preference){
+    .qz-opt{ transition: transform .12s var(--ease), border-color .15s var(--ease), background .15s var(--ease); }
+    .qz-opt:active:not(:disabled){ transform:scale(0.98); }
+    .qz-progress-fill{ transition: width .4s var(--ease); }
+    .qz-feedback{ animation: qzFeedbackIn .25s var(--ease); }
+  }
+  @keyframes qzFeedbackIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+
+  .qz-feedback{ margin-top:20px; padding-top:18px; border-top:1.5px solid var(--border); }
+  .qz-verdict{ font-size:15px; font-weight:800; margin-bottom:10px; }
+  .qz-feedback.ok .qz-verdict{ color:var(--green); }
+  .qz-feedback.ko .qz-verdict{ color:var(--red-dark); }
+  .qz-why-label{ display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--muted); margin-bottom:4px; }
+  .qz-why p{ margin:0; font-size:14px; line-height:1.6; color:var(--ink-soft); }
+  .qz-mastery-line{ display:block; margin-top:10px; font-size:11.5px; color:var(--muted); font-weight:700; }
+
+  .qz-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; gap:12px; flex-wrap:wrap; }
+  .qz-actions-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .qz-next-btn{ min-width:170px; }
+
+  /* Panneau "Dans ton cours" du quiz : même langage visuel que celui des
+     flashcards (.flash-source-*), mais namespace propre "quiz-source-*" —
+     aucune règle des flashcards n'est modifiée ni réutilisée. */
+  .quiz-source{ margin-top:16px; padding:14px 18px; border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--surface-2); }
+  .quiz-source-head{ display:flex; align-items:center; gap:7px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--red-dark); }
+  .quiz-source-toggle{ display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:6px 0 0; font-size:13px; font-weight:700; color:var(--red); font-family:var(--font-main); }
+  .quiz-source-toggle:hover{ color:var(--red-dark); text-decoration:underline; }
+  .quiz-source-toggle:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+  .quiz-source-collapse{ display:grid; grid-template-rows:0fr; opacity:0; }
+  @media (prefers-reduced-motion: no-preference){
+    .quiz-source-collapse{ transition: grid-template-rows .28s var(--ease), opacity .22s var(--ease); }
+  }
+  .quiz-source.open .quiz-source-collapse{ grid-template-rows:1fr; opacity:1; margin-top:10px; }
+  .quiz-source-body{ overflow:hidden; min-height:0; }
+  .quiz-source-excerpt{ font-size:13.5px; line-height:1.65; color:var(--ink-soft); white-space:pre-line; }
+  .quiz-source-excerpt mark{ background:var(--red-tint); color:var(--red-dark); font-weight:700; border-radius:3px; padding:0 2px; }
+  .quiz-source-example{ margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--border); font-size:13px; line-height:1.6; color:var(--ink-soft); white-space:pre-line; }
+  .quiz-source-empty{ margin:0; font-size:13px; color:var(--muted); font-style:italic; }
+
+  /* Résultats */
+  .qz-results{ max-width:560px; margin:0 auto; padding:18px 0 40px; text-align:center; }
+  .qz-results-emoji{ font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px; }
+  .qz-results-pct{ font-size:56px; font-weight:800; color:var(--red); line-height:1; margin-bottom:6px; }
+  .qz-results-frac{ font-size:16px; font-weight:700; color:var(--ink-soft); margin-bottom:16px; }
+  .qz-results-msg{ font-size:14.5px; color:var(--ink); margin-bottom:22px; line-height:1.5; }
+  .qz-results-stats{ display:flex; justify-content:center; gap:28px; padding:16px 0; border-top:1.5px solid var(--border); border-bottom:1.5px solid var(--border); margin-bottom:16px; flex-wrap:wrap; }
+  .qz-results-stat{ font-size:14px; font-weight:700; }
+  .qz-results-stat.ok{ color:var(--green); }
+  .qz-results-stat.ko{ color:var(--red-dark); }
+  .qz-results-time{ font-size:13px; color:var(--muted); font-weight:700; margin-bottom:18px; }
+  .qz-review-block{ text-align:left; background:var(--surface-2); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:22px; }
+  .qz-review-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--red-dark); margin-bottom:10px; }
+  .qz-review-item{ font-size:13.5px; color:var(--ink-soft); padding:4px 0; line-height:1.5; }
+  .qz-review-item.muted{ color:var(--muted); }
+  .qz-results-actions{ display:flex; flex-direction:column; gap:10px; }
+
+  /* Revoir mes erreurs (session en cours) */
+  .qz-errlist{ display:flex; flex-direction:column; gap:16px; }
+  .qz-erritem{ background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:20px 22px; text-align:left; }
+  .qz-erritem .q{ font-size:16px; font-weight:800; margin:0 0 14px; color:var(--ink); }
+  .qz-erritem .row{ font-size:13.5px; margin-bottom:8px; line-height:1.5; }
+  .qz-erritem .row .lbl{ font-weight:800; text-transform:uppercase; font-size:10.5px; letter-spacing:.05em; color:var(--muted); display:block; margin-bottom:2px; }
+  .qz-erritem .row .val{ color:var(--ink-soft); }
+  .qz-erritem .row.given .val{ color:var(--red-dark); font-weight:600; }
+  .qz-erritem .row.correct .val{ color:var(--green); font-weight:600; }
+  .qz-erritem-actions{ margin-top:14px; }
+
+  @media (max-width:560px){
+    .qz-card{ padding:20px 18px; }
+    .qz-question{ font-size:18px; margin-bottom:18px; }
+    .qz-opt{ font-size:14px; padding:13px 14px; }
+    .qz-results-pct{ font-size:44px; }
+    .qz-erritem{ padding:16px 17px; }
+  }
+
   /* En-tête compact de page « Mes matières » : titre + actions secondaires discrètes,
      à la place des gros bandeaux colorés qui occupaient tout le haut de la page. */
   .lib-pagehead{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin:28px 0 22px; flex-wrap:wrap; }
@@ -3483,13 +3599,13 @@ function trackChapterVisit(chapterId, type){
   saveDashboardStats();
 }
 
-function logActivity(type, scope, label, score, total){
+function logActivity(type, scope, label, score, total, timeUsed){
   const d = state.dash;
   const now = new Date();
   const pct = total ? Math.round((score/total)*100) : 0;
   d.recentActivity.unshift({
     ts: now.toISOString(), date: dateKey(now), type, scope, label,
-    score, total, pct,
+    score, total, pct, timeUsed: (typeof timeUsed === "number" ? timeUsed : null),
   });
   if(d.recentActivity.length > 20) d.recentActivity.length = 20;
   if(type === "quiz" || type === "exam") d.quizzesCompleted = (d.quizzesCompleted || 0) + 1;
@@ -3504,13 +3620,14 @@ function logActivity(type, scope, label, score, total){
 function startQuiz(scope, label, themeKeys, customPool){
   const source = customPool ? customPool : (themeKeys === "all" ? QUESTIONS : QUESTIONS.filter(q => themeKeys.includes(q.theme)));
   if(!source || source.length === 0) return;
-  state.playing = { scope, label, themeKeys, custom: !!customPool };
+  state.playing = { scope, label, themeKeys, custom: !!customPool, startedAt: Date.now() };
   state.pool = shuffle(source);
   state.index = 0;
   state.score = 0;
   state.answered = false;
   state.selectedOpt = null;
   state.recap = [];
+  state.quizSourceOpen = false;
   state.screen = "quiz";
   state.tab = "quiz";
   const chId = chapterIdFromQuizScope(scope);
@@ -3526,8 +3643,15 @@ function selectOption(i){
   const q = state.pool[state.index];
   const isCorrect = i === q.correct;
   if(isCorrect) state.score++;
-  state.recap.push({q: q.q, ok: isCorrect});
+  // Carte complète (pas juste le texte) : nécessaire pour l'écran "Revoir mes
+  // erreurs" (réponse donnée, bonne réponse, explication, extrait du cours).
+  state.recap.push({q, selectedOpt: i, ok: isCorrect});
   trackQuizAnswer(q, isCorrect);
+  render();
+}
+
+function toggleQuizSource(){
+  state.quizSourceOpen = !state.quizSourceOpen;
   render();
 }
 
@@ -3536,11 +3660,14 @@ function nextQuestion(){
     state.index++;
     state.answered = false;
     state.selectedOpt = null;
+    state.quizSourceOpen = false;
     render();
   } else {
     const pct = Math.round((state.score / state.pool.length) * 100);
+    const timeUsed = state.playing.startedAt ? Math.round((Date.now() - state.playing.startedAt) / 1000) : null;
     saveProgress(state.playing.scope, pct);
-    logActivity("quiz", state.playing.scope, state.playing.label, state.score, state.pool.length);
+    logActivity("quiz", state.playing.scope, state.playing.label, state.score, state.pool.length, timeUsed);
+    state.playing.timeUsed = timeUsed;
     state.screen = "results";
     render();
   }
@@ -3549,6 +3676,21 @@ function nextQuestion(){
 function backToPicker(){
   state.screen = "picker";
   render();
+}
+
+/* ---------- "Revoir mes erreurs" (session en cours) ----------
+   Distinct de startModeQuiz("wrong") (qui relance un quiz sur l'historique
+   global des erreurs, fonctionnalité conservée telle quelle) : ici, revue
+   détaillée des seules questions ratées PENDANT cette session, avec la
+   réponse donnée, la bonne réponse, l'explication et l'extrait du cours. */
+function showQuizErrorReview(){
+  state.screen = "quiz-errors";
+  render();
+  window.scrollTo(0,0);
+}
+
+function retakeQuizQuestion(q){
+  startQuiz("quiz-retry", (state.playing ? state.playing.label : "Question") + " — 1 question", null, [q]);
 }
 
 /* ============================================================
@@ -3708,6 +3850,10 @@ function render(){
     content.className = "quizwrap";
     content.innerHTML = renderResults();
     attachResultsEvents();
+  } else if(state.screen === "quiz-errors"){
+    content.className = "quizwrap";
+    content.innerHTML = renderQuizErrorReview();
+    attachQuizErrorReviewEvents();
   }
 }
 
@@ -4882,20 +5028,26 @@ async function libGenerateUserChapterQuiz(ch){
   if(state.aiStatus !== "ready"){
     const h = buildHeuristicCourseMaterials(chapterSourceText(ch));
     if(h.quiz.length === 0){ showToast("Pas assez de définitions claires pour générer un quiz fiable."); return; }
-    ch.aiQuiz = h.quiz;
+    const quizH = h.quiz.map(q => Object.assign({}, q, {chapterId: ch.id}));
+    ch.aiQuiz = quizH;
     saveUserChapters();
     render();
-    startQuiz("chapter:"+ch.id, ch.title, null, h.quiz);
+    startQuiz("chapter:"+ch.id, ch.title, null, quizH);
     return;
   }
   state.libToolsBusy = "quiz";
   render();
   const prompt = AI_SYSTEM + "\n\n" + libChapterContext(ch) +
-    "\n\nTÂCHE : génère 6 questions à choix multiples inédites sur ce contenu, 4 options chacune, une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
+    "\n\nTÂCHE : génère 6 questions à choix multiples inédites sur ce contenu, 4 options chacune, une seule bonne réponse. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la bonne réponse. Si un exemple lié apparaît juste à côté dans le cours, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   try{
     const arr = await webllmJsonChat([{role:"user", content: prompt}], {});
     const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
-      .map((q,i)=>({ uid:"lib-"+ch.id+"-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String), correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"" }));
+      .map((q,i)=>({
+        uid:"lib-"+ch.id+"-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String),
+        correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"", chapterId: ch.id,
+        sourceQuote: q.sourceQuote ? String(q.sourceQuote) : "",
+        exampleQuote: q.exampleQuote ? String(q.exampleQuote) : "",
+      }));
     if(quiz.length === 0) throw new Error("format inattendu");
     ch.aiQuiz = quiz;
     saveUserChapters();
@@ -5469,10 +5621,15 @@ async function generateCourseSummary(workingText, meta, signal){
 async function generateCourseQuizFromText(workingText, meta, signal){
   const n = courseItemCounts(meta.sourceCharCount || workingText.length).quiz;
   const prompt = AI_SYSTEM + "\n\n" + courseGenContext(workingText, meta) +
-    "\n\nTÂCHE : génère " + n + " questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse, explication en une phrase courte. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\"}]";
+    "\n\nTÂCHE : génère " + n + " questions à choix multiples sur ce contenu UNIQUEMENT (définition, compréhension, application), 4 options chacune, une seule bonne réponse, explication en une phrase courte. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis le contenu ci-dessus, qui justifie la bonne réponse. Si un exemple lié apparaît juste à côté dans le texte, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour : [{\"q\":\"...\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"...\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}]";
   const arr = await withGenTimeout(webllmJsonChat([{role:"user", content: prompt}], { signal }), 75000, "quiz");
   const quiz = (arr||[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length>=2&&typeof q.correct==="number")
-    .map((q,i)=>({ uid:"import-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String), correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"" }));
+    .map((q,i)=>({
+      uid:"import-"+Date.now()+"-"+i, ai:true, theme:"ai", q:String(q.q), opts:q.opts.slice(0,4).map(String),
+      correct:Math.max(0,Math.min(q.opts.length-1,q.correct)), exp:q.exp?String(q.exp):"",
+      sourceQuote: q.sourceQuote ? String(q.sourceQuote) : "",
+      exampleQuote: q.exampleQuote ? String(q.exampleQuote) : "",
+    }));
   if(quiz.length === 0) throw new Error("aucune question générée (format inattendu)");
   return quiz;
 }
@@ -5583,7 +5740,7 @@ function buildHeuristicCourseMaterials(rawText){
       const decoys = defs.filter((_, j) => j !== i).map(x => x.def);
       if(decoys.length < 3) return;
       const opts = shuffle([d.def].concat(shuffle(decoys).slice(0, 3)));
-      quiz.push({ q: "Quelle est la définition de « " + d.term + " » ?", opts, correct: opts.indexOf(d.def), exp: "", heuristic: true });
+      quiz.push({ q: "Quelle est la définition de « " + d.term + " » ?", opts, correct: opts.indexOf(d.def), exp: "", heuristic: true, sourceQuote: d.line });
     });
   }
   return { fiche, flashcards, quiz };
@@ -5998,7 +6155,7 @@ async function courseImportFinalize(index, opts){
     content: item.generated.fiche || item.extractedText.slice(0, 4000),
     originalText: clip(item.extractedText, 20000),
     summary: item.generated.summary || "",
-    aiQuiz: item.generated.quiz || [],
+    aiQuiz: (item.generated.quiz || []).map(q => Object.assign({}, q, {chapterId})),
     aiFlashcards: (item.generated.flashcards || []).map(c => Object.assign({}, c, {chapterId})),
     aiReviewQuestions: item.generated.reviewQuestions || [],
     keyNotions: d.notions || [],
@@ -7258,56 +7415,150 @@ function attachPickerEvents(){
 
 const LETTERS = ["A","B","C","D"];
 
+/* ============================================================
+   7bis. QUIZ — liaison "Dans ton cours" (cohérente avec les flashcards)
+   ------------------------------------------------------------
+   Réutilise TELLES QUELLES les fonctions génériques déjà construites pour
+   les flashcards (flashcardSourceText, locateQuoteInText, extractKeywords,
+   findBestKeywordMatch, findNearbyExampleSpan, buildHighlightedExcerptHtml,
+   buildPlainExcerptHtml) — aucune n'est modifiée ici, seulement appelée.
+   resolveFlashcardCourseRef()/renderFlashSourcePanel() (code propre aux
+   flashcards) ne sont ni touchées ni réutilisées directement : le quiz a
+   son propre cache et ses propres statuts, avec les mêmes règles de fond
+   (citation exacte > réponse littérale > mots-clés question+réponse+
+   explication, jamais de passage inventé). */
+const quizSourceCache = new WeakMap();
+
+/* Chapitre d'une question : la question elle-même si elle porte déjà
+   chapterId (nouvelles questions IA), sinon le chapitre intégré propriétaire
+   de son thème (question du programme, JAMAIS ambigu même dans un paquet
+   mélangé puisque chaque thème appartient à un seul chapitre), sinon —
+   seulement si le paquet en cours ne mélange pas plusieurs chapitres — le
+   chapitre du paquet. Ne devine jamais dans un paquet mélangé. */
+function resolveQuizQuestionChapterId(q, deckScope){
+  if(!q) return null;
+  if(q.chapterId) return q.chapterId;
+  if(q.theme && q.theme !== "ai"){
+    const ch = CHAPTERS.find(c => c.themes.includes(q.theme));
+    if(ch) return ch.id;
+  }
+  if(typeof deckScope === "string" && deckScope.indexOf("chapter:") === 0) return deckScope.slice(8);
+  return null;
+}
+
+function resolveQuizCourseRef(q, deckScope){
+  if(!q) return { status: "no_chapter" };
+  if(quizSourceCache.has(q)) return quizSourceCache.get(q);
+
+  const chapterId = resolveQuizQuestionChapterId(q, deckScope);
+  const text = chapterId ? flashcardSourceText(chapterId) : "";
+
+  let result;
+  if(!text){
+    result = { status: "no_chapter" };
+  } else {
+    const correctText = Array.isArray(q.opts) ? q.opts[q.correct] : "";
+    let loc = q.sourceQuote ? locateQuoteInText(text, q.sourceQuote) : null;
+    if(!loc && correctText) loc = locateQuoteInText(text, correctText);
+    if(!loc){
+      const keywords = extractKeywords((q.q || "") + " " + (correctText || "") + " " + (q.exp || ""));
+      loc = findBestKeywordMatch(text, keywords);
+    }
+    if(!loc){
+      result = { status: "not_found" };
+    } else {
+      const excerptHtml = buildHighlightedExcerptHtml(text, loc.start, loc.end);
+      let exampleHtml = null;
+      if(q.exampleQuote){
+        const exLoc = locateQuoteInText(text, q.exampleQuote);
+        if(exLoc) exampleHtml = buildPlainExcerptHtml(text, exLoc.start, exLoc.end);
+      }
+      if(!exampleHtml){
+        const nearby = findNearbyExampleSpan(text, loc.end, 400);
+        if(nearby) exampleHtml = buildPlainExcerptHtml(text, nearby.start, nearby.end);
+      }
+      result = { status: "found", excerptHtml, exampleHtml };
+    }
+  }
+  quizSourceCache.set(q, result);
+  return result;
+}
+
+function renderQuizCoursePanel(q, open, deckScope){
+  const ref = resolveQuizCourseRef(q, deckScope);
+  if(ref.status === "no_chapter") return "";
+  let body;
+  if(ref.status === "not_found"){
+    body = `<p class="quiz-source-empty">${t("quiz.source_not_found")}</p>`;
+  } else {
+    body = `<div class="quiz-source-excerpt">${ref.excerptHtml}</div>` +
+      (ref.exampleHtml ? `<p class="quiz-source-example"><b>${t("quiz.example_label")}</b><br>${ref.exampleHtml}</p>` : "");
+  }
+  return `<div class="quiz-source${open ? " open" : ""}">
+    <div class="quiz-source-head"><span class="ico" aria-hidden="true">📖</span><span class="lbl">${t("quiz.in_your_course")}</span></div>
+    <button type="button" class="quiz-source-toggle" id="quiz-source-toggle" aria-expanded="${open ? "true" : "false"}">${open ? t("quiz.source_collapse") : t("quiz.source_expand")}</button>
+    <div class="quiz-source-collapse"><div class="quiz-source-body">${body}</div></div>
+  </div>`;
+}
+
 function renderQuiz(){
   const q = state.pool[state.index];
   const total = state.pool.length;
   const pct = Math.round(((state.index) / total) * 100);
   let optsHtml = "";
   q.opts.forEach((opt,i)=>{
-    let cls = "opt";
+    let cls = "qz-opt";
     if(state.answered){
-      if(i === q.correct) cls += " correct";
-      else if(i === state.selectedOpt) cls += " incorrect";
-      else cls += " dim";
+      if(i === q.correct) cls += " qz-opt-correct";
+      else if(i === state.selectedOpt) cls += " qz-opt-incorrect";
+      else cls += " qz-opt-dim";
     }
-    optsHtml += `<button class="${cls}" data-i="${i}" ${state.answered ? "disabled":""}>
-      <span class="letter">${LETTERS[i]}</span><span>${opt}</span>
+    optsHtml += `<button type="button" class="${cls}" data-i="${i}" ${state.answered ? "disabled":""} aria-pressed="${i===state.selectedOpt}">
+      <span class="qz-opt-letter" aria-hidden="true">${LETTERS[i]}</span><span class="qz-opt-text">${opt}</span>
     </button>`;
   });
 
   const isCorrect = state.answered && state.selectedOpt === q.correct;
   const m = masteryOf(q);
-  const tier = masteryTier(m);
   const s = qstat(q);
-  const feedback = state.answered ? `
-    <div class="feedback ${isCorrect ? "" : "wrong"}">
-      <span class="verdict">${isCorrect ? "Exact." : "Pas tout à fait."}</span>
-      ${q.exp}
-      ${s ? `<span class="masteryline">Maîtrise de cette question : ${m}% · ${s.correct}/${s.seen} réussies</span>` : `<span class="masteryline">Question générée par l'IA — non comptée dans tes statistiques.</span>`}
-    </div>` : "";
-
   const preTier = !state.answered ? masteryTier(m) : null;
   const isLast = state.index === total - 1;
 
+  const feedback = state.answered ? `
+    <div class="qz-feedback ${isCorrect ? "ok" : "ko"}" aria-live="polite">
+      <div class="qz-verdict">${isCorrect ? t("quiz.correct_verdict") : t("quiz.incorrect_verdict")}</div>
+      <div class="qz-why"><span class="qz-why-label">${t("quiz.why_label")}</span><p>${q.exp}</p></div>
+      <span class="qz-mastery-line">${s ? t("quiz.mastery_line", {pct: m, correct: s.correct, seen: s.seen}) : t("quiz.ai_not_counted")}</span>
+      ${renderQuizCoursePanel(q, !!state.quizSourceOpen, state.playing.scope)}
+    </div>` : "";
+
   return `
-    <div class="card">
-      <div class="progress-row">
-        <span class="label">${escapeHtml(state.playing.label)} — Question ${state.index+1} / ${total}</span>
-        <span class="score">${state.score} bonne${state.score>1?"s":""}</span>
+    <div class="qz-screen">
+      <div class="qz-header">
+        <button type="button" class="qz-quit" id="back-btn">${t("quiz.quit")}</button>
+        <div class="qz-header-info">
+          <span class="qz-chapter">${escapeHtml(state.playing.label)}</span>
+          <span class="qz-counter">${t("quiz.question_of", {n: state.index+1, total})}</span>
+        </div>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-      <div class="qtheme">
-        <span>${q.ai ? "Question générée par l'IA" : (THEME_META[q.theme] ? THEME_META[q.theme].short : "")}</span>
-        ${(!q.ai && preTier) ? `<span class="m-chip ${preTier.key}">${preTier.label}${m===null?"":" · "+m+"%"}</span>` : ""}
+      <div class="qz-progress-track"><div class="qz-progress-fill" style="width:${pct}%"></div></div>
+      <div class="qz-score-row">${t("quiz.score_prefix")} <b>${state.score}</b> ${state.score===1 ? t("quiz.correct_answer_singular") : t("quiz.correct_answer_plural")}</div>
+
+      <div class="qz-card">
+        <div class="qz-meta">
+          <span class="qz-tag">${q.ai ? t("quiz.ai_generated") : (THEME_META[q.theme] ? THEME_META[q.theme].short : "")}</span>
+          ${(!q.ai && preTier) ? `<span class="m-chip ${preTier.key}">${preTier.label}${m===null?"":" · "+m+"%"}</span>` : ""}
+        </div>
+        <h2 class="qz-question">${q.q}</h2>
+        <div class="qz-options" role="group" aria-label="${t("quiz.options_aria")}">${optsHtml}</div>
+        ${feedback}
       </div>
-      <h2 class="question">${q.q}</h2>
-      <div class="options">${optsHtml}</div>
-      ${feedback}
-      <div class="actions">
-        <button class="btn-text" id="back-btn">Changer de thème</button>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          ${state.answered ? `<button class="ai-inline-btn" id="ai-help-btn">🤖 Expliquer autrement</button>` : ""}
-          <button class="btn red" id="next-btn" ${state.answered ? "" : "disabled"}>${isLast ? "Voir mes résultats" : "Question suivante"}</button>
+
+      <div class="qz-actions">
+        <button class="btn-text" id="change-theme-btn">${t("quiz.change_theme")}</button>
+        <div class="qz-actions-right">
+          ${state.answered ? `<button class="ai-inline-btn" id="ai-help-btn">${t("quiz.explain_otherwise")}</button>` : ""}
+          <button class="btn red qz-next-btn" id="next-btn" ${state.answered ? "" : "disabled"}>${isLast ? t("quiz.see_results") : t("quiz.next_question")}</button>
         </div>
       </div>
     </div>
@@ -7315,44 +7566,61 @@ function renderQuiz(){
 }
 
 function attachQuizEvents(){
-  document.querySelectorAll(".opt").forEach(btn=>{
+  document.querySelectorAll(".qz-opt").forEach(btn=>{
     btn.addEventListener("click", ()=> selectOption(parseInt(btn.dataset.i)));
   });
   document.getElementById("next-btn").addEventListener("click", nextQuestion);
   document.getElementById("back-btn").addEventListener("click", backToPicker);
+  document.getElementById("change-theme-btn").addEventListener("click", backToPicker);
   const aiHelp = document.getElementById("ai-help-btn");
   if(aiHelp) aiHelp.addEventListener("click", ()=> aiOpenFromQuestion(state.pool[state.index], state.selectedOpt));
+  const sourceToggle = document.getElementById("quiz-source-toggle");
+  if(sourceToggle) sourceToggle.addEventListener("click", (e)=>{ e.stopPropagation(); toggleQuizSource(); });
 }
 
 function renderResults(){
   const total = state.pool.length;
   const pct = Math.round((state.score/total)*100);
+  const wrongCount = total - state.score;
   const g = globalMetrics();
   let msg;
-  if(pct >= 90) msg = "Excellent — ce thème est maîtrisé.";
-  else if(pct >= 70) msg = "Bon niveau, encore quelques détails à consolider.";
-  else if(pct >= 50) msg = "Sur la bonne voie, relis la fiche sur les points ratés.";
-  else msg = "Ce thème mérite une nouvelle relecture avant de retenter.";
+  if(pct >= 90) msg = t("quiz.msg_excellent");
+  else if(pct >= 70) msg = t("quiz.msg_good");
+  else if(pct >= 50) msg = t("quiz.msg_ok");
+  else msg = t("quiz.msg_weak");
 
-  let recap = '<div class="recap">';
-  state.recap.forEach(r=>{
-    recap += `<div class="recap-item"><span class="recap-mark ${r.ok?"ok":"ko"}">${r.ok?"✓":"✕"}</span><span class="recap-q">${escapeHtml(r.q)}</span></div>`;
-  });
-  recap += '</div>';
+  const sessionErrors = state.recap.filter(r => !r.ok);
+  let reviewBlock = "";
+  if(sessionErrors.length){
+    const items = sessionErrors.slice(0, 6).map(r => {
+      const themeLbl = r.q.ai ? t("quiz.ai_generated") : (THEME_META[r.q.theme] ? THEME_META[r.q.theme].label : "");
+      return `<div class="qz-review-item">• ${escapeHtml(r.q.q)}${themeLbl ? ` <span class="muted">(${escapeHtml(themeLbl)})</span>` : ""}</div>`;
+    }).join("");
+    reviewBlock = `<div class="qz-review-block">
+      <div class="qz-review-title">${t("quiz.to_review_title")}</div>
+      ${items}
+      ${sessionErrors.length > 6 ? `<div class="qz-review-item muted">+ ${sessionErrors.length - 6}…</div>` : ""}
+    </div>`;
+  }
 
-  const wrongLeft = poolWrong().length;
+  const timeLine = (typeof state.playing.timeUsed === "number") ? `<div class="qz-results-time">${t("quiz.time_label")} : ${fmtClock(state.playing.timeUsed)}</div>` : "";
 
   return `
-    <div class="card results">
-      <h2>${escapeHtml(state.playing.label)}</h2>
-      <div class="scoretag">Résultat de la session</div>
-      <div class="bigscore">${pct}%<span>— ${state.score}/${total} bonnes réponses</span></div>
-      <p class="msg">${msg}<br><span style="font-size:12.5px;color:var(--muted);font-weight:700;">Maîtrise globale : ${g.mastery}% · ${g.answered}/${g.total} questions travaillées</span></p>
-      ${recap}
-      <div class="actions">
-        <button class="btn red" id="retry-btn">Rejouer</button>
-        ${wrongLeft ? `<button class="btn outline" id="fix-btn">Revoir mes erreurs (${wrongLeft})</button>` : ""}
-        <button class="btn-text" id="picker-btn">Choisir un autre thème</button>
+    <div class="qz-results">
+      <div class="qz-results-emoji">${t("quiz.finished_title")}</div>
+      <div class="qz-results-pct">${pct}%</div>
+      <div class="qz-results-frac">${state.score} / ${total}</div>
+      <p class="qz-results-msg">${msg}<br><span style="font-size:12px;color:var(--muted);font-weight:700;">${t("quiz.global_mastery", {pct: g.mastery, answered: g.answered, total: g.total})}</span></p>
+      <div class="qz-results-stats">
+        <span class="qz-results-stat ok">✓ ${t("quiz.correct_count", {n: state.score})}</span>
+        <span class="qz-results-stat ko">✕ ${t("quiz.wrong_count", {n: wrongCount})}</span>
+      </div>
+      ${timeLine}
+      ${reviewBlock}
+      <div class="qz-results-actions">
+        <button class="btn red" id="retry-btn">${t("quiz.restart")}</button>
+        ${sessionErrors.length ? `<button class="btn outline" id="review-errors-btn">${t("quiz.review_errors_count", {n: sessionErrors.length})}</button>` : ""}
+        <button class="btn-text" id="picker-btn">${t("quiz.continue_revising")}</button>
       </div>
     </div>
   `;
@@ -7366,9 +7634,67 @@ function attachResultsEvents(){
       startQuiz(state.playing.scope, state.playing.label, state.playing.themeKeys);
     }
   });
-  const fix = document.getElementById("fix-btn");
-  if(fix) fix.addEventListener("click", ()=> startModeQuiz("wrong"));
+  const reviewBtn = document.getElementById("review-errors-btn");
+  if(reviewBtn) reviewBtn.addEventListener("click", showQuizErrorReview);
   document.getElementById("picker-btn").addEventListener("click", backToPicker);
+}
+
+/* ---------- "Revoir mes erreurs" (session en cours) ---------- */
+function renderQuizErrorReview(){
+  const errors = state.recap.filter(r => !r.ok);
+  if(!errors.length){
+    return `<div class="qz-results">
+      <button class="btn-text" id="back-to-results-btn" style="margin-bottom:18px;">${t("quiz.back_to_results")}</button>
+      <p class="qz-results-msg">${t("quiz.no_errors")}</p>
+    </div>`;
+  }
+  const items = errors.map((r, idx) => {
+    const q = r.q;
+    const givenText = (Array.isArray(q.opts) && q.opts[r.selectedOpt] !== undefined) ? q.opts[r.selectedOpt] : "";
+    const correctText = Array.isArray(q.opts) ? q.opts[q.correct] : "";
+    return `<div class="qz-erritem">
+      <div class="q">${escapeHtml(q.q)}</div>
+      <div class="row given"><span class="lbl">${t("quiz.your_answer")}</span><span class="val">${escapeHtml(givenText)}</span></div>
+      <div class="row correct"><span class="lbl">${t("quiz.correct_answer")}</span><span class="val">${escapeHtml(correctText)}</span></div>
+      <div class="row"><span class="lbl">${t("quiz.explanation_label")}</span><span class="val">${q.exp || ""}</span></div>
+      ${renderQuizCoursePanel(q, false, state.playing ? state.playing.scope : null)}
+      <div class="qz-erritem-actions">
+        <button class="btn outline small" data-retake="${idx}">${t("quiz.retake_question")}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `
+    <div class="qz-screen">
+      <button class="btn-text" id="back-to-results-btn" style="margin-bottom:14px;">${t("quiz.back_to_results")}</button>
+      <h2 class="qz-question" style="margin-bottom:6px;">${t("quiz.errors_title")}</h2>
+      <p class="qz-results-time" style="text-align:left;margin-bottom:18px;">${t("quiz.errors_subtitle", {n: errors.length})}</p>
+      <div class="qz-errlist">${items}</div>
+    </div>
+  `;
+}
+
+function attachQuizErrorReviewEvents(){
+  const backBtn = document.getElementById("back-to-results-btn");
+  if(backBtn) backBtn.addEventListener("click", ()=>{ state.screen = "results"; render(); });
+  document.querySelectorAll("[data-retake]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const errors = state.recap.filter(r => !r.ok);
+      const r = errors[parseInt(btn.dataset.retake)];
+      if(r) retakeQuizQuestion(r.q);
+    });
+  });
+  document.querySelectorAll(".quiz-source-toggle").forEach((btn, i)=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const panel = btn.closest(".quiz-source");
+      const body = panel.querySelector(".quiz-source-collapse");
+      const nowOpen = !panel.classList.contains("open");
+      panel.classList.toggle("open", nowOpen);
+      btn.textContent = nowOpen ? t("quiz.source_collapse") : t("quiz.source_expand");
+      btn.setAttribute("aria-expanded", nowOpen ? "true" : "false");
+    });
+  });
 }
 
 /* ============================================================
@@ -9081,7 +9407,7 @@ function buildPrompt(action, extra){
   }
   if(action === "quiz"){
     return AI_SYSTEM + "\n\n" + chapterContext(state.aiChapter) + fileBlock +
-      "\n\nTÂCHE : génère 5 questions à choix multiples inédites sur ce chapitre, avec exactement 4 options chacune et une seule bonne réponse. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"q\":\"énoncé\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"explication courte\"}] où correct est l'index (0-3) de la bonne option.";
+      "\n\nTÂCHE : génère 5 questions à choix multiples inédites sur ce chapitre, avec exactement 4 options chacune et une seule bonne réponse. Pour chaque question, \"sourceQuote\" doit être une COURTE citation EXACTE (mot pour mot, sans reformulation) copiée depuis la FICHE DE COURS ci-dessus, qui justifie la bonne réponse. Si un exemple lié y apparaît, ajoute \"exampleQuote\" (citation exacte) ; sinon laisse-le vide. Réponds UNIQUEMENT par un tableau JSON, sans texte autour, au format : [{\"q\":\"énoncé\",\"opts\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"explication courte\",\"sourceQuote\":\"...\",\"exampleQuote\":\"...\"}] où correct est l'index (0-3) de la bonne option.";
   }
   return AI_SYSTEM + fileBlock + "\n\n" + state.aiTopic;
 }
@@ -9146,7 +9472,7 @@ function aiRunHeuristicChapterAction(action){
   const h = buildHeuristicCourseMaterials(raw);
   if(action === "quiz"){
     if(!h.quiz.length) return false;
-    state.aiQuizDraft = h.quiz;
+    state.aiQuizDraft = h.quiz.map(q => Object.assign({}, q, {chapterId: ch.id}));
     state.aiThread = [{role:"user", content:"", display}];
     render();
     return true;
@@ -9232,6 +9558,9 @@ async function aiSend(){
             opts: q.opts.slice(0,4).map(String),
             correct: Math.max(0, Math.min(q.opts.length-1, q.correct)),
             exp: q.exp ? String(q.exp) : "",
+            chapterId: state.aiChapter,
+            sourceQuote: q.sourceQuote ? String(q.sourceQuote) : "",
+            exampleQuote: q.exampleQuote ? String(q.exampleQuote) : "",
           }));
       }
       state.aiThread.push({role:"assistant", content: JSON.stringify(arr)});
