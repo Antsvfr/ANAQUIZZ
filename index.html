@@ -1138,6 +1138,47 @@
     .sr-empty-actions .btn{ width:100%; }
   }
 
+  .dash-card-links{ display:flex; gap:14px; flex-wrap:wrap; margin-top:2px; }
+
+  /* ============================================================
+     MES STATISTIQUES — namespace st- (distinct de pg-/sr-/qz-/exam ;
+     réutilise les mêmes tokens de design et les mêmes composants
+     génériques que le reste de l'app : .pg-overview/.pg-tile/.pg-review-*/
+     .dash-section/.m-chip/.deckbar-track, jamais redéfinis ici).
+     ============================================================ */
+  .st-compare-row{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .st-compare-col{ display:flex; flex-direction:column; gap:3px; }
+  .st-compare-col b{ font-size:20px; font-weight:800; color:var(--ink); font-variant-numeric: tabular-nums; }
+  .st-compare-col span{ font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .st-compare-delta{ font-size:14px; font-weight:800; padding:5px 12px; border-radius:999px; }
+  .st-compare-delta.up{ background:var(--green-tint); color:var(--green); }
+  .st-compare-delta.down{ background:var(--red-tint); color:var(--red-dark); }
+
+  .st-weekbars{ display:flex; gap:10px; margin-top:16px; align-items:flex-end; }
+  .st-weekbar-col{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
+  .st-weekbar-track{ width:100%; max-width:28px; height:70px; display:flex; align-items:flex-end; }
+  .st-weekbar-fill{
+    width:100%; background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
+    border-radius:5px 5px 2px 2px; min-height:0;
+    transition: height 0.4s var(--ease);
+  }
+  .st-weekbar-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; }
+
+  .st-insights-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .st-insights-list li{
+    font-size:13.5px; color:var(--ink-soft); line-height:1.5; padding-left:20px; position:relative;
+  }
+  .st-insights-list li::before{ content:"•"; position:absolute; left:4px; color:var(--red); font-weight:800; }
+
+  @media (prefers-reduced-motion: reduce){
+    .st-weekbar-fill{ transition:none; }
+  }
+
+  @media (max-width:680px){
+    .st-compare-row{ gap:14px; }
+    .st-weekbar-track{ height:52px; }
+  }
+
   .dash-section{
     background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
     padding:20px 21px; margin-bottom:18px; box-shadow: var(--shadow-sm);
@@ -1962,6 +2003,7 @@
             <button data-goto="progress" data-i18n="nav.progress_bysubject">Progression par matière</button>
             <button data-goto="library" data-i18n="nav.progress_bychapter">Progression par chapitre</button>
             <button data-goto="smart" data-i18n="nav.smart_revision">🧠 Révision intelligente</button>
+            <button data-goto="stats" data-i18n="nav.statistics">📊 Mes statistiques</button>
           </div>
         </div>
 
@@ -2023,6 +2065,10 @@
      avant le script principal comme auth.js/translations.js pour que
      window.LyonSmartRevision existe dès le premier rendu. -->
 <script src="smart-revision.js"></script>
+<!-- Couche de calcul statistique : module autonome et pur, réutilise
+     LyonSmartRevision.buildConfidence (voir statistics.js). Chargé après
+     smart-revision.js pour que window.LyonStatistics puisse s'appuyer dessus. -->
+<script src="statistics.js"></script>
 
 <script>
 /* ============================================================
@@ -3045,6 +3091,9 @@ let state = {
   smartSession: null,   // {items, stepIndex, results, startedAt, beforeMastery}
   smartSessionLength: 20, // 10 | 20 | 30 (minutes), choix de durée sur l'accueil
 
+  // --- mes statistiques (navigation interne, jamais persistée) ---
+  statsView: { view: "overview", subjectId: null, chapterId: null }, // overview | subject | chapter
+
   // --- mode examen ---
   exam: {
     screen: "setup",      // setup | running | results
@@ -3308,21 +3357,37 @@ const KEY_COURSE_DATA = "course-data";
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
 
+/* Espace de stockage local, scopé par compte Supabase connecté. Corrige une
+   limite pré-existante et déjà déclarée lors des étapes précédentes
+   (audit complet, "Ma progression", "Révision intelligente") : les données
+   locales de révision n'étaient scopées par AUCUN identifiant de compte,
+   donc visibles par n'importe quel compte connecté sur le même navigateur.
+   Invité (ou Supabase non configuré) -> namespace vide : comportement
+   strictement identique à avant ce correctif. Voir claimGuestDataForUser()
+   pour la migration unique et non destructive des données pré-existantes
+   vers le premier compte qui se connecte sur ce navigateur. */
+function currentStorageNamespace(){
+  const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in" && LyonAuth.state.user;
+  return authed ? ("u." + LyonAuth.state.user.id + ".") : "";
+}
+
 function lsGet(key){
+  const nsKey = currentStorageNamespace() + key;
   try{
-    const raw = localStorage.getItem(LS_PREFIX + key);
+    const raw = localStorage.getItem(LS_PREFIX + nsKey);
     if(raw === null) return null;
     return JSON.parse(raw);
   }catch(e){
     storageAvailable = false;
-    return memoryFallback[key] !== undefined ? memoryFallback[key] : null;
+    return memoryFallback[nsKey] !== undefined ? memoryFallback[nsKey] : null;
   }
 }
 
 function lsSet(key, value){
-  memoryFallback[key] = value;
+  const nsKey = currentStorageNamespace() + key;
+  memoryFallback[nsKey] = value;
   try{
-    localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
+    localStorage.setItem(LS_PREFIX + nsKey, JSON.stringify(value));
     return true;
   }catch(e){
     storageAvailable = false;
@@ -3356,42 +3421,50 @@ async function loadAllData(){
   state.progress      = await loadKey(KEY_QUIZ, {});
   state.flashProgress = await loadKey(KEY_FLASH, {});
   state.aiHistory     = await loadKey(KEY_AI, []);
-  const dash          = await loadKey(KEY_DASH, null);
-  if(dash){
-    state.dash.totalAnswered    = dash.totalAnswered || 0;
-    state.dash.totalCorrect     = dash.totalCorrect || 0;
-    state.dash.dailyStats       = dash.dailyStats || {};
-    state.dash.activityDates    = dash.activityDates || [];
-    state.dash.timeSpentSeconds = dash.timeSpentSeconds || 0;
-    state.dash.recentActivity   = dash.recentActivity || [];
-    state.dash.recentChapters   = dash.recentChapters || [];
-    state.dash.wrongQuestions   = dash.wrongQuestions || {};
-    state.dash.correctStreak     = dash.correctStreak || 0;
-    state.dash.bestCorrectStreak = dash.bestCorrectStreak || 0;
-    state.dash.quizzesCompleted = (dash.quizzesCompleted !== undefined)
-      ? dash.quizzesCompleted
-      : (dash.recentActivity || []).filter(a => a.type === "quiz" || a.type === "exam").length;
-    state.dash.best90Achieved = (dash.best90Achieved !== undefined)
-      ? dash.best90Achieved
-      : (dash.recentActivity || []).some(a => a.pct >= 90 && a.total >= 10);
-    state.dash.recentAdds = dash.recentAdds || [];
-    state.dash.dailyTimeSeconds = dash.dailyTimeSeconds || {};
-  }
+  // NB: pas de "if(dash){...}" — chaque champ doit être réinitialisé à sa
+  // valeur par défaut même quand `dash` est null (aucune donnée sauvegardée
+  // dans cet espace), sinon loadAllData() appelé une deuxième fois (voir
+  // handleAuthUserChange, changement de compte) laisserait les valeurs en
+  // mémoire du compte PRÉCÉDENT inchangées — un vrai risque de fuite de
+  // données entre comptes, pas seulement un défaut d'affichage.
+  const dash = await loadKey(KEY_DASH, null);
+  state.dash.totalAnswered    = (dash && dash.totalAnswered) || 0;
+  state.dash.totalCorrect     = (dash && dash.totalCorrect) || 0;
+  state.dash.dailyStats       = (dash && dash.dailyStats) || {};
+  state.dash.activityDates    = (dash && dash.activityDates) || [];
+  state.dash.timeSpentSeconds = (dash && dash.timeSpentSeconds) || 0;
+  state.dash.recentActivity   = (dash && dash.recentActivity) || [];
+  state.dash.recentChapters   = (dash && dash.recentChapters) || [];
+  state.dash.wrongQuestions   = (dash && dash.wrongQuestions) || {};
+  state.dash.correctStreak     = (dash && dash.correctStreak) || 0;
+  state.dash.bestCorrectStreak = (dash && dash.bestCorrectStreak) || 0;
+  state.dash.quizzesCompleted = (dash && dash.quizzesCompleted !== undefined)
+    ? dash.quizzesCompleted
+    : ((dash && dash.recentActivity) || []).filter(a => a.type === "quiz" || a.type === "exam").length;
+  state.dash.best90Achieved = (dash && dash.best90Achieved !== undefined)
+    ? dash.best90Achieved
+    : ((dash && dash.recentActivity) || []).some(a => a.pct >= 90 && a.total >= 10);
+  state.dash.recentAdds = (dash && dash.recentAdds) || [];
+  state.dash.dailyTimeSeconds = (dash && dash.dailyTimeSeconds) || {};
   state.qstats = await loadKey(KEY_QSTATS, {});
   state.exam.history = await loadKey(KEY_EXAM, []);
   state.aiCards = await loadKey(KEY_AICARDS, {});
   state.badges = await loadKey(KEY_BADGES, {});
   state.userSubjects = await loadKey(KEY_USER_SUBJECTS, []);
   state.userChapters = await loadKey(KEY_USER_CHAPTERS, []);
+  // Même raison que pour state.dash ci-dessus : toujours réinitialiser,
+  // jamais de "if(savedPlanning){...}" qui laisserait les événements de
+  // planning d'un compte précédent visibles pour le suivant.
   const savedPlanning = await loadKey(KEY_PLANNING, null);
-  if(savedPlanning){
-    state.planning.events = Array.isArray(savedPlanning.events) ? savedPlanning.events : [];
-    state.planning.officialUrl = savedPlanning.officialUrl || "";
-    state.planning.lastSyncAt = savedPlanning.lastSyncAt || null;
-  }
+  state.planning.events = Array.isArray(savedPlanning && savedPlanning.events) ? savedPlanning.events : [];
+  state.planning.officialUrl = (savedPlanning && savedPlanning.officialUrl) || "";
+  state.planning.lastSyncAt = (savedPlanning && savedPlanning.lastSyncAt) || null;
   state.documents = await loadKey(KEY_DOCUMENTS, []);
   state.courseData = await loadKey(KEY_COURSE_DATA, {});
   const savedBubble = lsGet(KEY_AIBUBBLE);
+  const defaultFabPos = defaultAIFabPos();
+  state.aiBubble.side = defaultFabPos.side;
+  state.aiBubble.y = defaultFabPos.y;
   if(savedBubble){
     if(savedBubble.side === "left" || savedBubble.side === "right"){
       state.aiBubble.side = savedBubble.side;
@@ -3403,9 +3476,47 @@ async function loadAllData(){
     if(typeof savedBubble.y === "number") state.aiBubble.y = savedBubble.y;
   }
   const savedModelChoice = lsGet(KEY_AIMODEL);
-  if(savedModelChoice === "small" || savedModelChoice === "large") state.aiModelChoice = savedModelChoice;
+  state.aiModelChoice = (savedModelChoice === "small" || savedModelChoice === "large") ? savedModelChoice : "auto";
   migrateLegacyWrongQuestions();
   evaluateBadges(); // rattrape les badges déjà mérités par l'historique existant
+}
+
+/* Toutes les clés de données locales concernées par le scoping par compte
+   (voir currentStorageNamespace) — fonction (pas une const) car certaines
+   clés (KEY_AIMODEL) sont déclarées plus bas dans le fichier ; évaluée
+   seulement au moment de l'appel, jamais au chargement du script. */
+function storageNamespacedKeys(){
+  return [
+    KEY_QUIZ, KEY_FLASH, KEY_AI, KEY_DASH, KEY_QSTATS, KEY_EXAM, KEY_AICARDS,
+    KEY_BADGES, KEY_USER_SUBJECTS, KEY_USER_CHAPTERS, KEY_PLANNING, KEY_DOCUMENTS,
+    KEY_COURSE_DATA, KEY_AIBUBBLE, KEY_AIMODEL,
+  ];
+}
+
+/* Migration unique et non destructive : la première fois qu'un compte se
+   connecte sur ce navigateur, ses données locales pré-existantes (invité,
+   ou d'avant ce correctif) sont copiées vers son propre espace nommé — rien
+   n'est perdu pour l'utilisateur déjà existant (voir §27, compatibilité).
+   Un marqueur global (jamais lui-même namespacé) garantit qu'un DEUXIÈME
+   compte différent ne pourra plus jamais hériter de cette même donnée :
+   il démarrera avec un espace strictement vide, garantissant l'isolation
+   entre comptes (voir §24). Idempotent et sûr si localStorage est
+   indisponible (no-op silencieux, voir storageAvailable). */
+function claimGuestDataForUser(userId){
+  let claimedBy = null;
+  try{ claimedBy = localStorage.getItem(LS_PREFIX + "storage-claimed-by"); }catch(e){ return; }
+  if(claimedBy !== null) return;
+  storageNamespacedKeys().forEach(key=>{
+    try{
+      const guestRaw = localStorage.getItem(LS_PREFIX + key);
+      if(guestRaw === null) return;
+      const nsFullKey = LS_PREFIX + "u." + userId + "." + key;
+      if(localStorage.getItem(nsFullKey) === null){
+        localStorage.setItem(nsFullKey, guestRaw);
+      }
+    }catch(e){ /* stockage indisponible : rien à migrer, non bloquant */ }
+  });
+  try{ localStorage.setItem(LS_PREFIX + "storage-claimed-by", userId); }catch(e){ /* non bloquant */ }
 }
 
 function saveBadges(){ lsSet(KEY_BADGES, state.badges); }
@@ -3969,6 +4080,13 @@ function render(){
     return;
   }
 
+  if(state.tab === "stats"){
+    content.className = "wrap";
+    content.innerHTML = renderStatistics();
+    attachStatisticsEvents();
+    return;
+  }
+
   if(state.tab === "settings"){
     content.className = "wrap";
     content.innerHTML = renderSettings();
@@ -4174,7 +4292,10 @@ function renderDashboard(){
       <li><span>${t("dashboard.questions_worked")}</span><b>${g.answered}/${g.total}</b></li>
       <li><span>${t("dashboard.revision_time")}</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
     </ul>
-    <button class="btn-text" id="dash-progress-link">${t("dashboard.view_detail")}</button>
+    <div class="dash-card-links">
+      <button class="btn-text" id="dash-progress-link">${t("dashboard.view_detail")}</button>
+      <button class="btn-text" id="dash-stats-link">${t("stats.dashboard_link")} →</button>
+    </div>
   </div>`;
 
   /* ---------- Bloc 2bis : révision intelligente (discret, une recommandation
@@ -4466,6 +4587,8 @@ function attachDashboardEvents(){
   if(viewAllRevisions) viewAllRevisions.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   const proglink = document.getElementById("dash-progress-link");
   if(proglink) proglink.addEventListener("click", ()=> switchTab("progress"));
+  const statslink = document.getElementById("dash-stats-link");
+  if(statslink) statslink.addEventListener("click", ()=>{ state.statsView = { view: "overview", subjectId: null, chapterId: null }; switchTab("stats"); });
   const smartBtn = document.getElementById("dash-smart-btn");
   if(smartBtn) smartBtn.addEventListener("click", ()=>{ state.smartScreen = "home"; switchTab("smart"); });
   const activitiesBtn = document.getElementById("dash-activities-btn");
@@ -10673,6 +10796,203 @@ function computeChapterTrend(chapterId){
   return "flat";
 }
 
+/* ============================================================
+   MES STATISTIQUES — pont entre l'état réel de l'app et le moteur pur
+   window.LyonStatistics (voir statistics.js).
+   ------------------------------------------------------------
+   Même principe que le pont "Révision intelligente" ci-dessus : toute la
+   logique de calcul (pondération, seuils, confiance) vit dans
+   statistics.js ; ici on se contente de LIRE l'état déjà existant via les
+   fonctions déjà en place (chapterMetrics, qstat, userChapterProgress,
+   buildScoreEvolution, buildChaptersToReview, lastRevisionTimestamp,
+   computeChapterTrend — ces deux dernières déjà écrites pour "Révision
+   intelligente", réutilisées ici sans modification).
+   ============================================================ */
+
+/* Somme réelle answered/correct sur une plage de jours glissante (0 =
+   aujourd'hui), à partir de state.dash.dailyStats — seule source à
+   granularité JOURNALIÈRE et NON plafonnée (contrairement à
+   recentActivity, limité à 20 entrées) : la bonne source pour une
+   comparaison hebdomadaire fiable. Quiz du programme intégré uniquement
+   (dailyStats ne compte pas les questions IA, voir trackQuizAnswer). */
+function sumDailyStatsRange(startOffsetDays, endOffsetDaysExclusive){
+  let correct = 0, total = 0;
+  for(let i = startOffsetDays; i < endOffsetDaysExclusive; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const rec = state.dash.dailyStats[dateKey(d)];
+    if(rec){ correct += rec.correct || 0; total += rec.answered || 0; }
+  }
+  return { correct, total };
+}
+
+/* Matière la plus active cette semaine, seulement si le signal est net
+   (au moins 2 activités, et strictement en tête — jamais un "focus"
+   affirmé sur une égalité ou une activité isolée). Basé sur
+   recentActivity (20 dernières entrées, même limite déjà connue et
+   acceptée ailleurs dans l'app) : peut manquer une activité plus ancienne
+   cette semaine si l'utilisateur a été très actif — limite réelle,
+   assumée, pas corrigée ici (voir le rapport d'étape). */
+function topSubjectThisWeek(){
+  const cutoff = Date.now() - 7 * 86400000;
+  const counts = {};
+  (state.dash.recentActivity || []).forEach(a=>{
+    const ts = typeof a.ts === "number" ? a.ts : Date.parse(a.ts);
+    if(!ts || isNaN(ts) || ts < cutoff) return;
+    const chId = chapterIdFromQuizScope(a.scope);
+    const ch = chId ? findAnyChapter(chId) : null;
+    const subj = ch ? findSubject(ch.subjectId) : null;
+    if(!subj) return;
+    counts[subj.name] = (counts[subj.name] || 0) + 1;
+  });
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if(entries.length === 0 || entries[0][1] < 2) return null;
+  if(entries.length > 1 && entries[0][1] === entries[1][1]) return null;
+  return entries[0][0];
+}
+
+/* Statistiques d'un chapitre — réutilise chapterMetrics/qstat pour les
+   chapitres intégrés, userChapterProgress/state.progress/flashProgress
+   pour les chapitres utilisateur/IA (jamais mélangés, même séparation que
+   "Ma progression"/"Révision intelligente"). */
+function getChapterStatistics(chapterId){
+  const ch = findAnyChapter(chapterId);
+  if(!ch) return null;
+  const isUser = isUserChapter(chapterId);
+  let mastery, questionsTotal, questionsAnswered, correctCount, seenCount,
+      hasErrorData, recentErrorCount, sessionsCount, flashcardCount;
+
+  if(isUser){
+    questionsTotal = ch.aiQuiz ? ch.aiQuiz.length : 0;
+    questionsAnswered = null; correctCount = null; seenCount = null;
+    flashcardCount = ch.aiFlashcards ? ch.aiFlashcards.length : 0;
+    mastery = userChapterProgress(ch);
+    hasErrorData = false;
+    recentErrorCount = 0;
+    const qp = state.progress["chapter:" + ch.id];
+    const fp = state.flashProgress[ch.id];
+    sessionsCount = (qp ? qp.attempts : 0) + (fp ? fp.attempts : 0);
+  } else {
+    const cm = chapterMetrics(ch);
+    questionsTotal = cm.total;
+    questionsAnswered = cm.answered;
+    flashcardCount = deckCards(ch.id).length;
+    mastery = cm.answered > 0 ? cm.mastery : null;
+    hasErrorData = true;
+    let correct = 0, seen = 0;
+    QUESTIONS.filter(q => (ch.themes || []).includes(q.theme)).forEach(q=>{
+      const s = qstat(q);
+      if(s){ correct += s.correct; seen += s.seen; }
+    });
+    correctCount = correct; seenCount = seen;
+    const wrongByTheme = {};
+    Object.values(state.dash.wrongQuestions).forEach(w => { wrongByTheme[w.theme] = (wrongByTheme[w.theme] || 0) + w.wrongCount; });
+    recentErrorCount = (ch.themes || []).reduce((sum, th) => sum + (wrongByTheme[th] || 0), 0);
+    const qp = state.progress["chapter:" + ch.id];
+    sessionsCount = qp ? qp.attempts : 0;
+  }
+
+  const successRate = (seenCount !== null && seenCount > 0) ? Math.round((correctCount / seenCount) * 100) : null;
+  return {
+    chapterId, title: ch.title, subjectId: ch.subjectId, isUser,
+    mastery, questionsTotal, questionsAnswered, flashcardCount,
+    successRate, correctCount, seenCount, hasErrorData, recentErrorCount, sessionsCount,
+    lastRevisionAt: lastRevisionTimestamp(ch.id),
+    trend: computeChapterTrend(ch.id),
+    confidence: LyonStatistics.confidenceOf(isUser ? sessionsCount : questionsAnswered),
+  };
+}
+
+/* Statistiques d'une matière : agrège les statistiques de chacun de ses
+   chapitres (getChapterStatistics ci-dessus), jamais recalculées
+   séparément — une seule source de vérité par chapitre. */
+function getSubjectStatistics(subjectId){
+  const subj = findSubject(subjectId);
+  if(!subj) return null;
+  const chs = chaptersOfSubject(subjectId);
+  const chapterStats = chs.map(ch => getChapterStatistics(ch.id)).filter(Boolean);
+  let questionsTotal = 0, questionsAnswered = 0, correctSum = 0, seenSum = 0;
+  chapterStats.forEach(cs=>{
+    questionsTotal += cs.questionsTotal || 0;
+    if(cs.questionsAnswered) questionsAnswered += cs.questionsAnswered;
+    if(cs.hasErrorData){ correctSum += cs.correctCount || 0; seenSum += cs.seenCount || 0; }
+  });
+  return {
+    subjectId, name: subj.name, icon: subj.icon, color: subj.color,
+    mastery: subjectProgress(subjectId),
+    chapterCount: chs.length, questionsTotal, questionsAnswered,
+    successRate: seenSum > 0 ? Math.round((correctSum / seenSum) * 100) : null,
+    chapters: chapterStats,
+  };
+}
+
+/* Évolution des scores : réutilise buildScoreEvolution() (déjà écrit pour
+   "Ma progression") tel quel comme source de sessions, LyonStatistics ne
+   fait que déterminer si le volume est suffisant et dans quel sens ça va. */
+function getPerformanceEvolution(){
+  return LyonStatistics.computeEvolution(buildScoreEvolution());
+}
+
+/* Temps de révision : aujourd'hui/semaine/mois/total + barres journalières
+   des 7 derniers jours (jours sans donnée = 0, jamais inventés). Même
+   source que "Ma progression" (state.dash.dailyTimeSeconds, universel
+   quiz+flashcards, intégré+IA, alimenté par accrueTime()). */
+function getRevisionStatistics(){
+  const bars = [];
+  let weekSecs = 0, monthSecs = 0;
+  for(let i = 0; i < 30; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const secs = state.dash.dailyTimeSeconds[dateKey(d)] || 0;
+    if(i < 7){ weekSecs += secs; bars.push({ dateKey: dateKey(d), seconds: secs }); }
+    monthSecs += secs;
+  }
+  bars.reverse();
+  return {
+    today: state.dash.dailyTimeSeconds[todayKey()] || 0,
+    week: weekSecs, month: monthSecs, total: state.dash.timeSpentSeconds,
+    weeklyBars: bars,
+  };
+}
+
+/* Point d'entrée principal — vue d'ensemble de "Mes statistiques".
+   Indépendant de l'interface comme getSmartRevisionRecommendations() :
+   réutilisable par le dashboard (aperçu), une future appli mobile, ou un
+   futur planning automatique. Recalculé à chaque appel (même volumétrie
+   que globalMetrics(), pas de cache nécessaire — voir le rapport d'étape
+   pour la mesure réelle). */
+function getStatistics(){
+  const g = globalMetrics();
+  const userChapterFacts = state.userChapters.map(ch => ({
+    mastery: userChapterProgress(ch),
+    weight: (ch.aiQuiz ? ch.aiQuiz.length : 0) + (ch.aiFlashcards ? ch.aiFlashcards.length : 0),
+  }));
+  // g.mastery vaut toujours un nombre (0 y compris pour un programme jamais
+  // touché, voir globalMetrics()) — on ne pondère le programme intégré dans
+  // le calcul QUE s'il a réellement été entamé, sinon son poids est nul et
+  // seuls les chapitres utilisateur (s'il y en a) décident du résultat :
+  // jamais un "0% de maîtrise" affiché pour un compte qui n'a encore rien fait.
+  const builtinWeight = g.answered > 0 ? QUESTIONS.length : 0;
+  const globalMastery = LyonStatistics.computeGlobalMastery(g.mastery, builtinWeight, userChapterFacts);
+  const evolution = getPerformanceEvolution();
+  const comparison = LyonStatistics.computeComparison(sumDailyStatsRange(0, 7), sumDailyStatsRange(7, 14));
+  const toReviewTop = buildChaptersToReview(1);
+  const topErrorChapter = (toReviewTop.length && toReviewTop[0].kind === "errors") ? toReviewTop[0].title : null;
+  const insights = LyonStatistics.computeInsights({
+    evolution, comparison, topWeeklySubject: topSubjectThisWeek(), topErrorChapter,
+  });
+  const chaptersEvaluated = CHAPTERS.filter(ch => chapterMetrics(ch).answered > 0).length
+    + state.userChapters.filter(ch => userChapterProgress(ch) !== null).length;
+
+  return {
+    globalMastery,
+    questionsAnswered: g.answered, questionsTotal: g.total, successRate: g.successRate,
+    chaptersEvaluated, chaptersTotal: allChaptersFlat().length,
+    quizzesCompleted: state.dash.quizzesCompleted,
+    wrongQuestionsCount: Object.values(state.dash.wrongQuestions).reduce((s, w) => s + w.wrongCount, 0),
+    time: getRevisionStatistics(),
+    evolution, comparison, insights,
+  };
+}
+
 /* Construit les "faits" par chapitre consommés par LyonSmartRevision.
    Aucun chapitre sans quiz NI flashcards disponibles n'est inclus (rien de
    concret à proposer). Les deux sources de maîtrise (chapitres intégrés vs
@@ -11063,6 +11383,354 @@ function attachSmartRevisionEvents(){
   const emptyImport = document.getElementById("smart-empty-import-btn");
   if(emptyImport) emptyImport.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
   const emptySubjects = document.getElementById("smart-empty-subjects-btn");
+  if(emptySubjects) emptySubjects.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
+}
+
+/* ============================================================
+   MES STATISTIQUES — rendu
+   ============================================================ */
+
+/* Lance la révision d'un chapitre en réutilisant EN PRIORITÉ le moteur de
+   "Révision intelligente" (même recommandation, mêmes clés de session —
+   voir §16 : ne jamais recréer une logique de recommandation). Si ce
+   chapitre n'est pas actuellement dans les priorités (déjà bien maîtrisé,
+   par exemple), repli sur les mêmes points d'entrée que la bibliothèque
+   (startQuiz/startFlashDeck), inchangés. */
+function statsReviseChapter(chapterId){
+  const reco = getSmartRevisionRecommendations().find(r => r.chapterId === chapterId);
+  if(reco){
+    const item = attachSessionPayload(reco);
+    if(item.payload && item.payload.length){
+      switchTab("smart");
+      startSmartSession([item]);
+      return;
+    }
+  }
+  const ch = findAnyChapter(chapterId);
+  if(!ch) return;
+  if(isUserChapter(chapterId)){
+    if(ch.aiQuiz && ch.aiQuiz.length){ startQuiz("chapter:" + ch.id, ch.title, null, ch.aiQuiz.slice()); return; }
+    if(ch.aiFlashcards && ch.aiFlashcards.length){ startFlashDeck(ch.id, ch.title, ch.aiFlashcards.slice()); return; }
+  } else {
+    startQuiz("chapter:" + ch.id, ch.title, ch.themes);
+  }
+}
+
+function statsGoTo(view, ids){
+  state.statsView = { view, subjectId: (ids && ids.subjectId) || null, chapterId: (ids && ids.chapterId) || null };
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* Regroupe une liste d'activités par jour, comme "Ma progression" — une
+   copie volontairement séparée (pas un refactor de renderProgress(), déjà
+   testé et en production) plutôt qu'une dépendance croisée entre deux
+   fonctions de rendu indépendantes ; les DONNÉES elles-mêmes (state.dash.
+   recentActivity) ne sont jamais dupliquées, seule cette petite fonction de
+   regroupement l'est. */
+function groupActivityByDay(items){
+  const groups = [];
+  let lastKey = null;
+  items.forEach(a=>{
+    if(a.date !== lastKey){ groups.push({ date: a.date, items: [] }); lastKey = a.date; }
+    groups[groups.length - 1].items.push(a);
+  });
+  return groups;
+}
+
+function renderWeeklyBars(bars){
+  const max = Math.max(1, ...bars.map(b => b.seconds));
+  const dayLabels = [t("date.mon"), t("date.tue"), t("date.wed"), t("date.thu"), t("date.fri"), t("date.sat"), t("date.sun")];
+  return `<div class="st-weekbars">` + bars.map((b, i)=>{
+    const d = new Date(b.dateKey + "T00:00:00");
+    const dow = (d.getDay() + 6) % 7; // 0 = lundi
+    const h = b.seconds > 0 ? Math.max(6, Math.round((b.seconds / max) * 64)) : 0;
+    return `<div class="st-weekbar-col">
+      <div class="st-weekbar-track"><div class="st-weekbar-fill" style="height:${h}px;" title="${fmtDuration(b.seconds)}"></div></div>
+      <span class="st-weekbar-lbl">${dayLabels[dow]}</span>
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+function renderStatsEmptyState(){
+  const hasChapters = allChaptersFlat().length > 0;
+  return `<div class="dash-section sr-empty-hero">
+    <p>${t("stats.subtitle_empty")}</p>
+    <div class="sr-empty-actions">
+      ${hasChapters ? `<button class="btn red" id="stats-empty-quiz-btn">${t("smart.empty_cta_quiz")}</button>` : `<button class="btn red" id="stats-empty-import-btn">${t("smart.empty_cta_import")}</button>`}
+      <button class="btn outline" id="stats-empty-subjects-btn">${t("smart.empty_cta_subjects")}</button>
+    </div>
+  </div>`;
+}
+
+function renderStatsOverview(){
+  const hasAnyData = state.dash.recentActivity.length > 0
+    || QUESTIONS.some(q => qstat(q))
+    || state.userChapters.some(ch => userChapterProgress(ch) !== null);
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">📊 ${t("stats.title")}</h1>
+    <p class="ai-intro">${t("stats.subtitle")}</p>`;
+
+  if(!hasAnyData){
+    html += renderStatsEmptyState();
+    return html;
+  }
+
+  const s = getStatistics();
+
+  /* ---------- Vue d'ensemble ---------- */
+  html += `<div class="pg-overview">
+    <div class="pg-tile"><div class="pg-tile-num">${s.globalMastery.value === null ? "—" : s.globalMastery.value + "%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${s.questionsAnswered}</div><div class="pg-tile-lbl">${t("progress.questions_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${fmtDuration(s.time.total)}</div><div class="pg-tile-lbl">${t("progress.time_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${s.chaptersEvaluated} / ${s.chaptersTotal}</div><div class="pg-tile-lbl">${t("progress.chapters_tile")}</div></div>
+  </div>`;
+
+  /* ---------- Maîtrise globale ---------- */
+  html += `<div class="dash-section pg-mastery-section">
+    <div class="section-title">${t("stats.mastery_title")}</div>
+    <div class="pg-mastery-row">
+      ${s.globalMastery.value === null ? `<div class="pg-ring"><div class="pg-ring-inner"><span class="pg-ring-pct">—</span></div></div>` : renderMasteryRing(s.globalMastery.value)}
+      <div class="pg-mastery-side">
+        ${(s.globalMastery.confidence === "insufficient" || s.globalMastery.confidence === "low") ? `<span class="sr-confidence">${t("smart.confidence_low")}</span>` : ""}
+        ${s.evolution.available ? `<div class="pg-mastery-stat"><b>${s.evolution.trend === "up" ? "↑" : (s.evolution.trend === "down" ? "↓" : "→")}</b><span>${t("stats.evolution_since_start")}</span></div>` : ""}
+        <p class="pg-mastery-note">${t("stats.mastery_methodology")}</p>
+      </div>
+    </div>
+  </div>`;
+
+  /* ---------- Évolution dans le temps ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.evolution_title")}</div>`;
+  if(!s.evolution.available){
+    html += `<p class="dash-empty">${t("stats.evolution_insufficient")}</p>`;
+  } else {
+    html += `<div class="pg-evolution">${renderEvolutionSvg(s.evolution.points)}</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Comparaison hebdomadaire ---------- */
+  if(s.comparison.available){
+    const delta = s.comparison.deltaPoints;
+    html += `<div class="dash-section">
+      <div class="section-title">${t("stats.comparison_title")}</div>
+      <div class="st-compare-row">
+        <div class="st-compare-col"><b>${s.comparison.currentRate}%</b><span>${t("stats.comparison_this_week")}</span></div>
+        <div class="st-compare-col"><b>${s.comparison.previousRate}%</b><span>${t("stats.comparison_last_week")}</span></div>
+        <div class="st-compare-delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "+" : ""}${delta} ${t("stats.comparison_points")}</div>
+      </div>
+    </div>`;
+  }
+
+  /* ---------- Performance des quiz ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.quiz_perf_title")}</div>
+    <div class="pg-overview">
+      <div class="pg-tile"><div class="pg-tile-num">${s.questionsAnswered}</div><div class="pg-tile-lbl">${t("smart.recap_questions_lbl")}</div></div>
+      <div class="pg-tile"><div class="pg-tile-num">${s.successRate === null ? "—" : s.successRate + "%"}</div><div class="pg-tile-lbl">${t("stats.success_rate")}</div></div>
+      <div class="pg-tile"><div class="pg-tile-num">${s.quizzesCompleted}</div><div class="pg-tile-lbl">${t("stats.quizzes_completed")}</div></div>
+      <div class="pg-tile"><div class="pg-tile-num">${s.wrongQuestionsCount}</div><div class="pg-tile-lbl">${t("stats.wrong_count")}</div></div>
+    </div>
+  </div>`;
+
+  /* ---------- Mes erreurs ---------- */
+  const errorItems = buildChaptersToReview(5).filter(it => it.kind === "errors");
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.errors_title")}</div>`;
+  if(errorItems.length === 0){
+    html += `<p class="dash-empty">${t("progress.review_empty")}</p>`;
+  } else {
+    html += `<div class="pg-review-list">` + errorItems.map(item=>{
+      const subj = findSubject(item.subjectId);
+      return `<button type="button" class="pg-review-item" data-stats-chapter="${item.chapterId}">
+        <span class="pg-review-dot">${item.value >= 6 ? "🔴" : "🟠"}</span>
+        <span class="pg-review-body"><span class="pg-review-title">${subj ? (subj.icon||"📘")+" " : ""}${escapeHtml(item.title)}</span><span class="pg-review-sub">${t("progress.review_errors_recent", {n: item.value})}</span></span>
+        <span class="pg-review-arrow" aria-hidden="true">→</span>
+      </button>`;
+    }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Mes matières ---------- */
+  const subjects = allSubjects();
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.subjects_title")}</div>`;
+  if(subjects.length === 0){
+    html += `<p class="dash-empty">${t("progress.subjects_empty")}</p>`;
+  } else {
+    html += `<div class="pg-subjects-grid">` + subjects.map(subj=>{
+      const ss = getSubjectStatistics(subj.id);
+      const tier = statusTier(ss.mastery === null ? null : { best: ss.mastery });
+      return `<div class="pg-subject-card" data-stats-subject="${subj.id}" role="button" tabindex="0">
+        <div class="pg-subject-head">
+          <span class="pg-subject-name">${subj.icon||"📘"} ${escapeHtml(subj.name)}</span>
+          <span class="mastery ${tier.key}">${ss.mastery===null?"—":ss.mastery+"%"}</span>
+        </div>
+        <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${subj.color};"></div></div>
+        <div class="pg-subject-meta">
+          <span>${ss.chapterCount} ${ss.chapterCount>1?t("progress.chapters_plural"):t("progress.chapters_singular")}</span>
+          ${ss.questionsTotal ? `<span>${ss.questionsAnswered}/${ss.questionsTotal} ${t("progress.questions_tile").toLowerCase()}</span>` : ""}
+          ${ss.successRate !== null ? `<span>${ss.successRate}% ${t("stats.success_rate").toLowerCase()}</span>` : ""}
+        </div>
+        <button class="btn-text" data-stats-subject-btn="${subj.id}">${t("stats.view_details")} →</button>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Mon temps de travail ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.time_title")}</div>
+    <div class="pg-time-row">
+      <div class="pg-time-stat"><b>${fmtDuration(s.time.today)}</b><span>${t("dashboard.today")}</span></div>
+      <div class="pg-time-stat"><b>${fmtDuration(s.time.week)}</b><span>${t("progress.time_week")}</span></div>
+      <div class="pg-time-stat"><b>${fmtDuration(s.time.month)}</b><span>${t("stats.this_month")}</span></div>
+      <div class="pg-time-stat"><b>${fmtDuration(s.time.total)}</b><span>${t("progress.time_total")}</span></div>
+    </div>
+    ${s.time.weeklyBars.some(b=>b.seconds>0) ? renderWeeklyBars(s.time.weeklyBars) : ""}
+  </div>`;
+
+  /* ---------- Dernières activités ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("dashboard.recent_activity")}</div>`;
+  if(state.dash.recentActivity.length === 0){
+    html += `<p class="dash-empty">${t("progress.activity_empty")}</p>`;
+  } else {
+    const groups = groupActivityByDay(state.dash.recentActivity.slice(0, 15));
+    html += `<div class="pg-timeline">` + groups.map(g=>{
+      const items = g.items.map(a=>{
+        const icon = a.type === "quiz" ? "📝" : (a.type === "exam" ? "🎓" : "🃏");
+        const typeLbl = a.type === "quiz" ? t("progress.activity_type_quiz") : (a.type === "exam" ? t("progress.activity_type_exam") : t("progress.activity_type_flash", {n: a.total}));
+        return `<div class="pg-timeline-item"><span class="ico">${icon}</span><span class="txt">${typeLbl} — ${escapeHtml(a.label)}</span><span class="pct">${a.pct}%</span></div>`;
+      }).join("");
+      return `<div class="pg-timeline-group"><div class="pg-timeline-date">${fmtRelativeDate(g.date)}</div>${items}</div>`;
+    }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Ce que tes données montrent ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.insights_title")}</div>
+    <ul class="st-insights-list">${s.insights.map(i => `<li>${t(i.key, i.vars || {})}</li>`).join("")}</ul>
+  </div>`;
+
+  return html;
+}
+
+function renderStatsSubjectDetail(subjectId){
+  const ss = getSubjectStatistics(subjectId);
+  if(!ss){ statsGoTo("overview"); return ""; }
+  const tier = statusTier(ss.mastery === null ? null : { best: ss.mastery });
+
+  let html = `<button class="btn-text" id="stats-back-overview">← ${t("stats.title")}</button>`;
+  html += `<h1 style="font-size:22px;font-weight:800;margin:14px 0 4px;">${ss.icon||"📘"} ${escapeHtml(ss.name)}</h1>`;
+
+  html += `<div class="pg-overview">
+    <div class="pg-tile"><div class="pg-tile-num">${ss.mastery===null?"—":ss.mastery+"%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${ss.chapterCount}</div><div class="pg-tile-lbl">${t("progress.chapters_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${ss.questionsAnswered}/${ss.questionsTotal}</div><div class="pg-tile-lbl">${t("progress.questions_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${ss.successRate===null?"—":ss.successRate+"%"}</div><div class="pg-tile-lbl">${t("stats.success_rate")}</div></div>
+  </div>`;
+  html += `<div class="deckbar-track" style="margin-bottom:20px;"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${ss.color};"></div></div>`;
+
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.chapters_title")}</div>
+    <div class="pg-review-list">` + ss.chapters.map(cs=>{
+      const chTier = cs.mastery === null ? null : masteryTier(cs.mastery);
+      const trendIcon = cs.trend === "up" ? "↑" : (cs.trend === "down" ? "↓" : "");
+      return `<button type="button" class="pg-review-item" data-stats-chapter="${cs.chapterId}">
+        <span class="pg-review-dot">${chTier ? (chTier.key==="critical"||chTier.key==="weak" ? "🟠" : "🟢") : "⚪"}</span>
+        <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(cs.title)}</span><span class="pg-review-sub">${cs.mastery===null ? t("stats.never_evaluated") : cs.mastery+"% " + trendIcon}</span></span>
+        <span class="pg-review-arrow" aria-hidden="true">→</span>
+      </button>`;
+    }).join("") + `</div>
+  </div>`;
+
+  return html;
+}
+
+function renderStatsChapterDetail(chapterId){
+  const cs = getChapterStatistics(chapterId);
+  if(!cs){ statsGoTo("overview"); return ""; }
+  const subj = findSubject(cs.subjectId);
+  const isRecommended = getSmartRevisionRecommendations().some(r => r.chapterId === chapterId);
+
+  let html = `<button class="btn-text" id="stats-back-subject" data-back-subject="${cs.subjectId}">← ${subj ? escapeHtml(subj.name) : t("stats.title")}</button>`;
+  html += `<h1 style="font-size:22px;font-weight:800;margin:14px 0 4px;">${escapeHtml(cs.title)}</h1>`;
+
+  html += `<div class="pg-overview">
+    <div class="pg-tile"><div class="pg-tile-num">${cs.mastery===null?"—":cs.mastery+"%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${cs.sessionsCount}</div><div class="pg-tile-lbl">${t("stats.sessions_count")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${cs.questionsAnswered===null?"—":cs.questionsAnswered}</div><div class="pg-tile-lbl">${t("progress.questions_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${cs.hasErrorData ? cs.recentErrorCount : "—"}</div><div class="pg-tile-lbl">${t("stats.errors_title")}</div></div>
+  </div>`;
+
+  if(cs.confidence === "insufficient" || cs.confidence === "low"){
+    html += `<span class="sr-confidence" style="margin-bottom:14px;display:inline-block;">${t("smart.confidence_low")}</span>`;
+  }
+
+  html += `<div class="dash-section">
+    <div class="section-title">${t("stats.your_performance_title")}</div>
+    <ul class="sr-progressed-list">
+      <li>${t("stats.success_rate")} <b>${cs.successRate===null?"—":cs.successRate+"%"}</b></li>
+      <li>${t("stats.last_revision")} <b>${cs.lastRevisionAt ? fmtRelativeDate(dateKey(new Date(cs.lastRevisionAt))) : t("stats.never_evaluated")}</b></li>
+      ${cs.trend ? `<li>${t("stats.trend")} <b>${cs.trend === "up" ? "↑ " + t("stats.trend_up") : (cs.trend === "down" ? "↓ " + t("stats.trend_down") : "→ " + t("stats.trend_flat"))}</b></li>` : ""}
+    </ul>
+  </div>`;
+
+  if(cs.hasErrorData && cs.recentErrorCount > 0){
+    html += `<div class="dash-section">
+      <div class="section-title">${t("stats.to_rework_title")}</div>
+      <p class="dash-empty" style="text-align:left;">${t("progress.review_errors_recent", {n: cs.recentErrorCount})}</p>
+    </div>`;
+  }
+
+  html += `<div class="dash-section">
+    ${isRecommended ? `<p class="pg-mastery-note" style="margin-bottom:10px;">${t("stats.chapter_is_priority")}</p>` : ""}
+    <button class="btn red" id="stats-revise-btn" data-stats-revise="${chapterId}">${t("smart.review_now_btn")} →</button>
+  </div>`;
+
+  return html;
+}
+
+function renderStatistics(){
+  const v = state.statsView.view;
+  if(v === "subject") return renderStatsSubjectDetail(state.statsView.subjectId);
+  if(v === "chapter") return renderStatsChapterDetail(state.statsView.chapterId);
+  return renderStatsOverview();
+}
+
+function attachStatisticsEvents(){
+  document.querySelectorAll("[data-stats-subject]").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest("[data-stats-subject-btn]")) return;
+      statsGoTo("subject", { subjectId: el.dataset.statsSubject });
+    });
+  });
+  document.querySelectorAll("[data-stats-subject-btn]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{ e.stopPropagation(); statsGoTo("subject", { subjectId: btn.dataset.statsSubjectBtn }); });
+  });
+  document.querySelectorAll("[data-stats-chapter]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ch = findAnyChapter(btn.dataset.statsChapter);
+      statsGoTo("chapter", { chapterId: btn.dataset.statsChapter, subjectId: ch ? ch.subjectId : null });
+    });
+  });
+  const backOverview = document.getElementById("stats-back-overview");
+  if(backOverview) backOverview.addEventListener("click", ()=> statsGoTo("overview"));
+  const backSubject = document.getElementById("stats-back-subject");
+  if(backSubject) backSubject.addEventListener("click", ()=>{
+    const sid = backSubject.dataset.backSubject;
+    if(sid && findSubject(sid)) statsGoTo("subject", { subjectId: sid });
+    else statsGoTo("overview");
+  });
+  const reviseBtn = document.getElementById("stats-revise-btn");
+  if(reviseBtn) reviseBtn.addEventListener("click", ()=> statsReviseChapter(reviseBtn.dataset.statsRevise));
+  const emptyQuiz = document.getElementById("stats-empty-quiz-btn");
+  if(emptyQuiz) emptyQuiz.addEventListener("click", ()=> switchTab("quiz"));
+  const emptyImport = document.getElementById("stats-empty-import-btn");
+  if(emptyImport) emptyImport.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  const emptySubjects = document.getElementById("stats-empty-subjects-btn");
   if(emptySubjects) emptySubjects.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
 }
 
@@ -13551,7 +14219,7 @@ const NAV_GROUP = {
   fiches: "resources",
   exams: "exams", exam: "exams",
   planning: "planning",
-  progress: "progress", smart: "progress",
+  progress: "progress", smart: "progress", stats: "progress",
   ai: "myspace", settings: "myspace", myspace: "myspace",
 };
 
@@ -13674,6 +14342,7 @@ function handleNavGoto(ds){
   if(goto === "planning") return switchTab("planning");
   if(goto === "progress") return switchTab("progress");
   if(goto === "smart"){ state.smartScreen = "home"; return switchTab("smart"); }
+  if(goto === "stats"){ state.statsView = { view: "overview", subjectId: null, chapterId: null }; return switchTab("stats"); }
   if(goto === "settings") return switchTab("settings");
   if(goto === "myspace") return switchTab("myspace");
 }
@@ -13916,15 +14585,7 @@ document.addEventListener("keydown", (e)=>{
 
 setInterval(updateCurrentTimeIndicator, 1000);
 
-// Compte utilisateur : re-rend l'UI à chaque changement d'état d'auth
-// (connexion/déconnexion/rafraîchissement de session) — un seul abonnement,
-// LyonAuth garantit lui-même une seule initialisation.
-if(window.LyonAuth){
-  LyonAuth.onChange(()=> render());
-  LyonAuth.init();
-}
-
-(async function init(){
+async function loadDataAndRefreshUi(){
   await loadAllData();
   if(state.aiBubble.side && typeof state.aiBubble.y === "number"){
     setAIFabSideY(state.aiBubble.side, state.aiBubble.y, false);
@@ -13934,7 +14595,53 @@ if(window.LyonAuth){
   }
   render();
   lastKnownCurrentCourseId = getCurrentCourse() ? getCurrentCourse().id : null;
-})();
+}
+
+// undefined = pas encore de premier événement d'auth reçu ; null = invité.
+let lastKnownAuthUserId;
+
+/* Recharge tout l'état local depuis le bon espace de stockage (voir
+   currentStorageNamespace) dès qu'un VRAI changement de compte survient —
+   connexion, déconnexion, ou changement de compte — jamais à un simple
+   rafraîchissement de session/profil pour le même utilisateur (ex: photo
+   de profil mise à jour), qui ne fait que re-rendre l'UI. Un changement
+   de compte réinitialise aussi l'onglet actif : rester sur une vue qui
+   référence une donnée du compte précédent (ex: détail d'un chapitre qui
+   n'existe pas chez ce compte) n'aurait pas de sens.
+   Le tout premier événement pour un INVITÉ (currentId===null) ne déclenche
+   rien : le chargement initial optimiste (voir plus bas, lancé sans
+   attendre l'auth pour un premier affichage rapide) a déjà chargé le bon
+   espace, par défaut invité — recharger serait un travail inutile. */
+async function handleAuthUserChange(){
+  const authed = window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in" && LyonAuth.state.user;
+  const currentId = authed ? LyonAuth.state.user.id : null;
+  const isFirstEvent = lastKnownAuthUserId === undefined;
+  const changed = !isFirstEvent && currentId !== lastKnownAuthUserId;
+  lastKnownAuthUserId = currentId;
+
+  if(isFirstEvent && currentId === null) return;
+  if(!isFirstEvent && !changed){ render(); return; }
+  if(currentId) claimGuestDataForUser(currentId);
+  state.tab = "dashboard";
+  await loadDataAndRefreshUi();
+}
+
+// Compte utilisateur : recharge les données du bon espace et re-rend l'UI à
+// chaque changement d'état d'auth (connexion/déconnexion/changement de
+// compte/rafraîchissement de session) — un seul abonnement, LyonAuth
+// garantit lui-même une seule initialisation.
+if(window.LyonAuth){
+  LyonAuth.onChange(handleAuthUserChange);
+  LyonAuth.init();
+}
+
+// Premier affichage : lancé immédiatement (espace invité par défaut) sans
+// attendre la résolution de l'authentification (round-trip réseau Supabase),
+// pour ne jamais faire attendre l'utilisateur devant une page vide. Si un
+// compte déjà connecté est ensuite détecté, handleAuthUserChange() bascule
+// aussitôt vers son espace — un bref effet de transition possible, jamais
+// de mélange de données entre comptes.
+loadDataAndRefreshUi();
 </script>
 </body>
 </html>
