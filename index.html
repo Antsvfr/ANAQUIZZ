@@ -992,6 +992,88 @@
   .dash-stat-num{ font-size:21px; font-weight:800; letter-spacing:-0.01em; font-variant-numeric: tabular-nums; }
   .dash-stat-lbl{ font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-top:4px; line-height:1.4; }
 
+  /* ============================================================
+     MA PROGRESSION — namespace "pg-" dédié. Réutilise volontairement
+     .dash-section/.section-title/.dash-empty/.deckbar-track/.mastery/.btn
+     (déjà partagés dans toute l'app) pour rester cohérent ; les classes
+     ci-dessous ne couvrent que les éléments réellement nouveaux.
+     ============================================================ */
+  .pg-overview{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:24px; }
+  .pg-tile{
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:18px 14px; text-align:center; box-shadow: var(--shadow-sm);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .pg-tile{ transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease); }
+    .pg-tile:hover{ box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  }
+  .pg-tile-num{ font-size:22px; font-weight:800; letter-spacing:-0.01em; font-variant-numeric: tabular-nums; color:var(--ink); }
+  .pg-tile-lbl{ font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-top:4px; }
+
+  .pg-mastery-section{ background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-xl); padding:24px 26px; }
+  .pg-mastery-row{ display:flex; align-items:center; gap:32px; flex-wrap:wrap; margin-top:6px; }
+  .pg-ring{
+    width:120px; height:120px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow-sm);
+  }
+  .pg-ring-inner{ width:96px; height:96px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; }
+  .pg-ring-pct{ font-size:24px; font-weight:800; color:var(--ink); font-variant-numeric: tabular-nums; }
+  .pg-mastery-side{ display:flex; flex-direction:column; gap:10px; flex:1; min-width:200px; }
+  .pg-mastery-stat{ display:flex; align-items:baseline; gap:8px; font-size:13px; color:var(--ink-soft); font-weight:700; }
+  .pg-mastery-stat b{ font-size:16px; color:var(--ink); }
+  .pg-mastery-note{ margin:4px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; }
+
+  .pg-subjects-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+  .pg-subject-card{ background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:18px 19px; }
+  .pg-subject-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+  .pg-subject-name{ font-weight:700; font-size:14.5px; color:var(--ink); }
+  .pg-subject-meta{ display:flex; flex-wrap:wrap; gap:5px 12px; font-size:11.5px; color:var(--muted); font-weight:600; margin:8px 0 4px; }
+
+  .pg-review-list{ display:flex; flex-direction:column; gap:8px; }
+  .pg-review-item{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1.5px solid var(--border);
+    background:var(--surface); border-radius:var(--radius-md); padding:13px 15px; cursor:pointer; font-family:var(--font-main);
+  }
+  .pg-review-item:hover{ border-color:var(--red); background:var(--red-tint); }
+  .pg-review-item:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+  .pg-review-dot{ font-size:15px; flex-shrink:0; }
+  .pg-review-body{ display:flex; flex-direction:column; flex:1; gap:2px; }
+  .pg-review-title{ font-weight:700; font-size:13.5px; color:var(--ink); }
+  .pg-review-sub{ font-size:11.5px; color:var(--muted); font-weight:600; }
+  .pg-review-arrow{ color:var(--muted); font-weight:700; }
+
+  .pg-recommend-card{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:var(--red-tint); border-radius:var(--radius-lg); padding:18px 20px; }
+  .pg-recommend-body{ display:flex; align-items:flex-start; gap:12px; }
+  .pg-recommend-ico{ font-size:22px; flex-shrink:0; }
+  .pg-recommend-title{ font-weight:800; font-size:15px; color:var(--ink); margin-bottom:3px; }
+  .pg-recommend-reason{ margin:0; font-size:12.5px; color:var(--ink-soft); line-height:1.5; max-width:38ch; }
+
+  .pg-evolution{ background:var(--surface-2); border-radius:var(--radius-lg); padding:14px 10px; }
+  .pg-evolution-svg{ width:100%; height:110px; display:block; }
+
+  .pg-timeline{ display:flex; flex-direction:column; gap:16px; }
+  .pg-timeline-date{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--red-dark); margin-bottom:8px; }
+  .pg-timeline-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--ink-soft); padding:6px 0; border-bottom:1px solid var(--bg); }
+  .pg-timeline-item:last-child{ border-bottom:none; }
+  .pg-timeline-item .ico{ flex-shrink:0; }
+  .pg-timeline-item .txt{ flex:1; }
+  .pg-timeline-item .pct{ font-weight:800; color:var(--ink); font-variant-numeric: tabular-nums; }
+
+  .pg-time-row{ display:flex; gap:28px; flex-wrap:wrap; }
+  .pg-time-stat{ display:flex; flex-direction:column; gap:3px; }
+  .pg-time-stat b{ font-size:19px; font-weight:800; color:var(--ink); font-variant-numeric: tabular-nums; }
+  .pg-time-stat span{ font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+
+  @media (max-width:680px){
+    .pg-overview{ grid-template-columns: repeat(2, 1fr); }
+    .pg-mastery-row{ gap:20px; }
+    .pg-ring{ width:96px; height:96px; }
+    .pg-ring-inner{ width:76px; height:76px; }
+    .pg-ring-pct{ font-size:19px; }
+    .pg-subjects-grid{ grid-template-columns: 1fr; }
+    .pg-mastery-section{ padding:18px 18px; }
+  }
+
   .dash-section{
     background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
     padding:20px 21px; margin-bottom:18px; box-shadow: var(--shadow-sm);
@@ -2939,6 +3021,13 @@ let state = {
     quizzesCompleted: 0,
     best90Achieved: false,
     recentAdds: [],   // [{ts, label}] — matières/chapitres ajoutés récemment, pour le fil d'activité
+    // Temps de révision PAR JOUR (clé = dateKey), alimenté par accrueTime() —
+    // universel (quiz intégré, quiz/flashcards IA), contrairement à dailyStats
+    // (answered/correct) qui ne compte que les questions du programme intégré.
+    // Ajouté avec "Ma progression" : les jours antérieurs à cet ajout n'ont
+    // simplement pas d'entrée ici (jamais de temps reconstitué a posteriori) —
+    // seul state.dash.timeSpentSeconds (total, déjà fiable) couvre tout l'historique.
+    dailyTimeSeconds: {},
   },
 };
 
@@ -3209,6 +3298,7 @@ async function loadAllData(){
       ? dash.best90Achieved
       : (dash.recentActivity || []).some(a => a.pct >= 90 && a.total >= 10);
     state.dash.recentAdds = dash.recentAdds || [];
+    state.dash.dailyTimeSeconds = dash.dailyTimeSeconds || {};
   }
   state.qstats = await loadKey(KEY_QSTATS, {});
   state.exam.history = await loadKey(KEY_EXAM, []);
@@ -3536,7 +3626,10 @@ function accrueTime(){
   if(lastActionTs){
     const delta = now - lastActionTs;
     if(delta > 0 && delta < 3*60*1000){
-      state.dash.timeSpentSeconds += Math.round(delta/1000);
+      const secs = Math.round(delta/1000);
+      state.dash.timeSpentSeconds += secs;
+      const today = todayKey();
+      state.dash.dailyTimeSeconds[today] = (state.dash.dailyTimeSeconds[today] || 0) + secs;
     }
   }
   lastActionTs = now;
@@ -10315,49 +10408,306 @@ function attachOralEvents(){
 /* ============================================================
    15ter. PROGRESSION — vue d'ensemble globale
    ============================================================ */
+/* ============================================================
+   MA PROGRESSION — centre de pilotage des révisions
+   ------------------------------------------------------------
+   Chaque chiffre affiché provient d'une donnée déjà enregistrée par
+   l'app (voir commentaires) : jamais de statistique fabriquée. Deux
+   sources de maîtrise coexistent et ne sont jamais confondues :
+     - chapitres intégrés (CHAPTERS/QUESTIONS) : maîtrise par question
+       (masteryOf/qstat), erreurs récentes réelles (d.wrongQuestions) ;
+     - chapitres utilisateur/IA (state.userChapters) : les questions IA
+       ne sont jamais comptées dans qstats (voir trackQuizAnswer), donc
+       seul un signal agrégé existe : meilleur score de quiz/flashcards
+       (state.progress/state.flashProgress, via userChapterProgress) —
+       jamais présenté comme un compte d'erreurs qui n'existe pas.
+   ============================================================ */
+
+/* Chapitres les plus utiles à revoir, toutes sources confondues, sans
+   jamais mélanger les deux signaux ci-dessus dans un même nombre. */
+function buildChaptersToReview(limit){
+  limit = limit || 5;
+  const items = [];
+  const wrongByTheme = {};
+  Object.values(state.dash.wrongQuestions).forEach(w=>{
+    wrongByTheme[w.theme] = (wrongByTheme[w.theme] || 0) + w.wrongCount;
+  });
+  CHAPTERS.forEach(ch=>{
+    let count = 0;
+    (ch.themes||[]).forEach(th=>{ count += wrongByTheme[th] || 0; });
+    if(count > 0) items.push({ chapterId: ch.id, subjectId: ch.subjectId, title: ch.title, kind: "errors", value: count });
+  });
+  state.userChapters.forEach(ch=>{
+    const p = userChapterProgress(ch);
+    if(p !== null && p < 70) items.push({ chapterId: ch.id, subjectId: ch.subjectId, title: ch.title, kind: "score", value: p });
+  });
+  items.sort((a,b)=>{
+    if(a.kind !== b.kind) return a.kind === "errors" ? -1 : 1;
+    return a.kind === "errors" ? (b.value - a.value) : (a.value - b.value);
+  });
+  return items.slice(0, limit);
+}
+
+/* Sévérité purement dérivée des valeurs déjà calculées ci-dessus — pas un
+   nouvel indicateur, juste un code couleur sur une donnée réelle. */
+function reviewItemSeverity(item){
+  if(item.kind === "errors") return item.value >= 6 ? "high" : "mid";
+  return item.value < 40 ? "high" : "mid";
+}
+
+/* Historique de scores exploitable pour un graphique d'évolution : quiz et
+   examens seulement (les seuls types d'activité avec un pourcentage de
+   réussite comparable dans le temps), le plus ancien en premier. */
+function buildScoreEvolution(){
+  return state.dash.recentActivity
+    .filter(a => (a.type === "quiz" || a.type === "exam") && typeof a.pct === "number")
+    .slice(0, 12)
+    .slice()
+    .reverse();
+}
+
+/* Recommandation "Continue tes révisions" : réutilise tel quel le chapitre
+   le plus prioritaire de buildChaptersToReview — aucune nouvelle logique. */
+function buildRevisionRecommendation(){
+  const items = buildChaptersToReview(1);
+  return items.length ? items[0] : null;
+}
+
+/* Point d'extension pour une future "Révision intelligente" (répétition
+   espacée, sélection automatique de flashcards/questions difficiles). Non
+   câblée à l'interface pour cette étape — voir §13 de la demande : préparer
+   l'architecture sans construire l'algorithme. Retourne toujours null pour
+   l'instant ; une future étape lui donnera un vrai corps et un bouton dédié. */
+function buildSmartRevisionQueue(){
+  return null;
+}
+
+function subjectQuestionCount(subjectId){
+  const chs = chaptersOfSubject(subjectId);
+  let n = 0;
+  chs.forEach(ch=>{
+    n += isUserChapter(ch.id) ? (ch.aiQuiz ? ch.aiQuiz.length : 0) : QUESTIONS.filter(q => (ch.themes||[]).includes(q.theme)).length;
+  });
+  return n;
+}
+
+/* "Notions à revoir" par matière : uniquement calculable pour les chapitres
+   intégrés (mastery par question réelle) — jamais affiché pour une matière
+   composée uniquement de chapitres importés (pas de donnée fiable). */
+function subjectWeakNotionsCount(subjectId){
+  const chs = chaptersOfSubject(subjectId).filter(ch => !isUserChapter(ch.id));
+  if(!chs.length) return null;
+  let n = 0;
+  chs.forEach(ch=>{
+    QUESTIONS.filter(q => (ch.themes||[]).includes(q.theme)).forEach(q=>{
+      if(masteryTier(masteryOf(q)).key === "weak") n++;
+    });
+  });
+  return n;
+}
+
+function renderMasteryRing(pct){
+  return `<div class="pg-ring" style="background:conic-gradient(var(--red) ${pct}%, var(--border) 0);" role="img" aria-label="${t("progress.mastery_tile")} ${pct}%">
+    <div class="pg-ring-inner"><span class="pg-ring-pct">${pct}%</span></div>
+  </div>`;
+}
+
+/* Mini-graphique d'évolution : polyline SVG légère, pas de librairie, pas de
+   recalcul au scroll — dessinée une fois par rendu à partir de données déjà
+   en mémoire (voir buildScoreEvolution). */
+function renderEvolutionSvg(sessions){
+  const w = 560, h = 120, pad = 12;
+  const stepX = sessions.length > 1 ? (w - pad*2) / (sessions.length - 1) : 0;
+  const pts = sessions.map((s,i)=>{
+    const x = pad + i*stepX;
+    const y = pad + (1 - s.pct/100) * (h - pad*2);
+    return { x, y, pct: s.pct };
+  });
+  const line = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const dots = pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="var(--red)"></circle>`).join("");
+  return `<svg class="pg-evolution-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${t("progress.evolution_title")}">
+    <polyline points="${line}" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${dots}
+  </svg>`;
+}
+
 function renderProgress(){
   const g = globalMetrics();
   const streaks = computeStreaks(state.dash.activityDates);
   const subjects = allSubjects();
+  const hasAnyActivity = state.dash.recentActivity.length > 0 || g.answered > 0 || state.userChapters.some(ch => userChapterProgress(ch) !== null);
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ta progression</h1>
-  <p class="ai-intro">Vue d'ensemble de ta maîtrise, matière par matière et chapitre par chapitre.</p>`;
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("progress.title")}</h1>
+    <p class="ai-intro">${hasAnyActivity ? t("progress.subtitle") : t("progress.subtitle_empty")}</p>`;
 
-  html += `<div class="dash-statgrid">
-    <div class="dash-stat"><div class="dash-stat-icon">📈</div><div class="dash-stat-num">${g.mastery}%</div><div class="dash-stat-lbl">Maîtrise globale</div></div>
-    <div class="dash-stat"><div class="dash-stat-icon">✅</div><div class="dash-stat-num">${g.successRate===null?"—":g.successRate+"%"}</div><div class="dash-stat-lbl">Taux de réussite</div></div>
-    <div class="dash-stat"><div class="dash-stat-icon">📝</div><div class="dash-stat-num">${g.answered}/${g.total}</div><div class="dash-stat-lbl">Questions travaillées</div></div>
-    <div class="dash-stat"><div class="dash-stat-icon">📚</div><div class="dash-stat-num">${masteredChaptersCount()}/${CHAPTERS.length}</div><div class="dash-stat-lbl">Chapitres maîtrisés (intégré)</div></div>
-    <div class="dash-stat"><div class="dash-stat-icon">🔥</div><div class="dash-stat-num">${streaks.current}</div><div class="dash-stat-lbl">Série actuelle (jours)</div></div>
-    <div class="dash-stat"><div class="dash-stat-icon">⏱️</div><div class="dash-stat-num">${fmtDuration(state.dash.timeSpentSeconds)}</div><div class="dash-stat-lbl">Temps de révision</div></div>
+  /* ---------- Vue d'ensemble ---------- */
+  html += `<div class="pg-overview">
+    <div class="pg-tile"><div class="pg-tile-num">${g.mastery}%</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${allChaptersFlat().length}</div><div class="pg-tile-lbl">${t("progress.chapters_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${g.answered}</div><div class="pg-tile-lbl">${t("progress.questions_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${fmtDuration(state.dash.timeSpentSeconds)}</div><div class="pg-tile-lbl">${t("progress.time_tile")}</div></div>
   </div>`;
 
-  html += `<div class="dash-section"><div class="section-title">Progression par matière</div>`;
+  /* ---------- Ta maîtrise ---------- */
+  html += `<div class="dash-section pg-mastery-section">
+    <div class="section-title">${t("progress.mastery_title")}</div>
+    <div class="pg-mastery-row">
+      ${renderMasteryRing(g.mastery)}
+      <div class="pg-mastery-side">
+        <div class="pg-mastery-stat"><b>${g.successRate===null?"—":g.successRate+"%"}</b><span>${t("dashboard.questions_worked")}: ${g.answered}/${g.total}</span></div>
+        <div class="pg-mastery-stat"><b>🔥 ${streaks.current}</b><span>${t("progress.streak_label")}</span></div>
+        <p class="pg-mastery-note">${t("progress.mastery_note")}</p>
+      </div>
+    </div>
+  </div>`;
+
+  /* ---------- Matières ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.subjects_title")}</div>`;
   if(subjects.length === 0){
-    html += `<p class="dash-empty">Aucune matière pour l'instant.</p>`;
+    html += `<p class="dash-empty">${t("progress.subjects_empty")}</p>`;
   } else {
+    html += `<div class="pg-subjects-grid">`;
     subjects.forEach(s=>{
       const chs = chaptersOfSubject(s.id);
       const prog = subjectProgress(s.id);
       const tier = statusTier(prog === null ? null : {best:prog});
-      html += `<div style="margin-bottom:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <span style="font-weight:700;">${s.icon||"📘"} ${escapeHtml(s.name)}</span>
-          <span class="mastery ${tier.key}">${prog===null?"Pas encore commencé":prog+"%"}</span>
+      const qCount = subjectQuestionCount(s.id);
+      const weak = subjectWeakNotionsCount(s.id);
+      html += `<div class="pg-subject-card">
+        <div class="pg-subject-head">
+          <span class="pg-subject-name">${s.icon||"📘"} ${escapeHtml(s.name)}</span>
+          <span class="mastery ${tier.key}">${prog===null?"—":prog+"%"}</span>
         </div>
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${s.color};"></div></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${chs.length} chapitre${chs.length>1?"s":""}</div>
+        <div class="pg-subject-meta">
+          <span>${chs.length} ${chs.length>1?t("progress.chapters_plural"):t("progress.chapters_singular")}</span>
+          ${qCount ? `<span>${qCount} ${t("progress.questions_tile").toLowerCase()}</span>` : ""}
+          ${weak !== null && weak > 0 ? `<span>${t("progress.weak_notions", {n: weak})}</span>` : ""}
+        </div>
+        <button class="btn-text" data-subject-continue="${s.id}">${t("progress.continue_btn")} →</button>
       </div>`;
     });
+    html += `</div>`;
   }
   html += `</div>`;
+
+  /* ---------- À revoir ---------- */
+  const toReview = buildChaptersToReview(5);
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.review_title")}</div>`;
+  if(toReview.length === 0){
+    html += `<p class="dash-empty">${t("progress.review_empty")}</p>`;
+  } else {
+    html += `<div class="pg-review-list">` + toReview.map(item=>{
+      const sev = reviewItemSeverity(item);
+      const dot = sev === "high" ? "🔴" : "🟠";
+      const label = item.kind === "errors" ? t("progress.review_errors_recent", {n: item.value}) : t("progress.review_low_score", {pct: item.value});
+      return `<button type="button" class="pg-review-item" data-review-chapter="${item.chapterId}" data-review-subject="${item.subjectId}">
+        <span class="pg-review-dot">${dot}</span>
+        <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(item.title)}</span><span class="pg-review-sub">${label}</span></span>
+        <span class="pg-review-arrow" aria-hidden="true">→</span>
+      </button>`;
+    }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Continuer à réviser (recommandation) ---------- */
+  const reco = buildRevisionRecommendation();
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.recommend_title")}</div>`;
+  if(!reco){
+    html += `<p class="dash-empty">${t("progress.recommend_empty")}</p>`;
+  } else {
+    html += `<div class="pg-recommend-card">
+      <div class="pg-recommend-body">
+        <span class="pg-recommend-ico">📚</span>
+        <div>
+          <div class="pg-recommend-title">${escapeHtml(reco.title)}</div>
+          <p class="pg-recommend-reason">${reco.kind === "errors" ? t("progress.recommend_reason_errors") : t("progress.recommend_reason_score")}</p>
+        </div>
+      </div>
+      <button class="btn red small" data-review-chapter="${reco.chapterId}" data-review-subject="${reco.subjectId}">${t("progress.recommend_btn")}</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Évolution dans le temps ---------- */
+  const evolution = buildScoreEvolution();
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.evolution_title")}</div>`;
+  if(evolution.length < 3){
+    html += `<p class="dash-empty">${t("progress.evolution_empty")}</p>`;
+  } else {
+    html += `<div class="pg-evolution">${renderEvolutionSvg(evolution)}</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Dernières activités ---------- */
+  html += `<div class="dash-section">
+    <div class="section-title">${t("dashboard.recent_activity")}</div>`;
+  if(state.dash.recentActivity.length === 0){
+    html += `<p class="dash-empty">${t("progress.activity_empty")}</p>`;
+  } else {
+    const groups = [];
+    let lastKey = null;
+    state.dash.recentActivity.slice(0, 15).forEach(a=>{
+      if(a.date !== lastKey){ groups.push({ date: a.date, items: [] }); lastKey = a.date; }
+      groups[groups.length-1].items.push(a);
+    });
+    html += `<div class="pg-timeline">` + groups.map(g2=>{
+      const items = g2.items.map(a=>{
+        const icon = a.type === "quiz" ? "📝" : (a.type === "exam" ? "🎓" : "🃏");
+        const typeLbl = a.type === "quiz" ? t("progress.activity_type_quiz") : (a.type === "exam" ? t("progress.activity_type_exam") : t("progress.activity_type_flash", {n: a.total}));
+        return `<div class="pg-timeline-item"><span class="ico">${icon}</span><span class="txt">${typeLbl} — ${escapeHtml(a.label)}</span><span class="pct">${a.pct}%</span></div>`;
+      }).join("");
+      return `<div class="pg-timeline-group"><div class="pg-timeline-date">${fmtRelativeDate(g2.date)}</div>${items}</div>`;
+    }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  /* ---------- Temps de révision ---------- */
+  const todaySecs = state.dash.dailyTimeSeconds[todayKey()] || 0;
+  const weekSecs = (function(){
+    let sum = 0;
+    for(let i=0;i<7;i++){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      sum += state.dash.dailyTimeSeconds[dateKey(d)] || 0;
+    }
+    return sum;
+  })();
+  html += `<div class="dash-section">
+    <div class="section-title">${t("progress.time_title")}</div>
+    <div class="pg-time-row">
+      <div class="pg-time-stat"><b>${fmtDuration(todaySecs)}</b><span>${t("dashboard.today")}</span></div>
+      <div class="pg-time-stat"><b>${fmtDuration(weekSecs)}</b><span>${t("progress.time_week")}</span></div>
+      <div class="pg-time-stat"><b>${fmtDuration(state.dash.timeSpentSeconds)}</b><span>${t("progress.time_total")}</span></div>
+    </div>
+  </div>`;
 
   html += renderBadgesSection();
 
   return html;
 }
 
-function attachProgressEvents(){}
+function progressGoToChapter(chapterId, subjectId){
+  const ch = findAnyChapter(chapterId);
+  if(!ch) return;
+  libGoto("chapterDetail", {subjectId: subjectId || ch.subjectId, chapterId});
+  switchTab("library");
+}
+
+function attachProgressEvents(){
+  document.querySelectorAll("[data-subject-continue]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      libGoto("subjectDetail", {subjectId: btn.dataset.subjectContinue});
+      switchTab("library");
+    });
+  });
+  document.querySelectorAll("[data-review-chapter]").forEach(btn=>{
+    btn.addEventListener("click", ()=> progressGoToChapter(btn.dataset.reviewChapter, btn.dataset.reviewSubject));
+  });
+}
 
 /* ============================================================
    15quater. PARAMÈTRES — export / import / réinitialisation
