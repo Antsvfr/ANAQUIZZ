@@ -1179,6 +1179,151 @@
     .st-weekbar-track{ height:52px; }
   }
 
+  /* ============================================================
+     MON PLANNING INTELLIGENT — namespace pln- (distinct de pg-/sr-/st-/qz-/
+     exam ; réutilise les mêmes tokens et composants génériques que le reste
+     de l'app : .dash-section/.pg-overview/.pg-tile/.deckbar-track/.btn,
+     jamais redéfinis ici).
+     ============================================================ */
+  .pln-mode-toggle{ display:inline-flex; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px; margin:24px 0 4px; }
+  .pln-mode-toggle button{
+    border:none; background:none; padding:7px 16px; border-radius:999px; font-weight:700; font-size:13px;
+    color:var(--muted); cursor:pointer; transition: background 0.14s var(--ease), color 0.14s var(--ease);
+  }
+  .pln-mode-toggle button.active{ background:var(--surface); color:var(--ink); box-shadow: var(--shadow-xs); }
+  .pln-mode-toggle button:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+
+  .pln-empty-hero{ text-align:center; padding:40px 20px; }
+  .pln-empty-ico{ font-size:38px; margin-bottom:10px; }
+  .pln-empty-hero h2{ font-size:19px; font-weight:800; margin:0 0 8px; }
+  .pln-empty-hero p{ color:var(--ink-soft); max-width:420px; margin:0 auto 18px; line-height:1.5; }
+  .pln-empty-hint{ font-size:12.5px; color:var(--muted); margin-top:12px !important; }
+
+  .pln-wizard{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px 22px 24px; box-shadow:var(--shadow-sm); max-width:640px; margin:0 auto; }
+  .pln-wizard-steps{ display:flex; gap:6px; justify-content:center; margin-bottom:20px; }
+  .pln-wizard-step{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; background:var(--bg); color:var(--muted); border:1px solid var(--border);
+  }
+  .pln-wizard-step.active{ background:var(--red); color:#fff; border-color:var(--red); }
+  .pln-wizard-step.done{ background:var(--green-tint); color:var(--green); border-color:var(--green-strong); }
+  .pln-step-title{ font-size:17px; font-weight:800; margin:0 0 16px; text-align:center; }
+
+  .pln-goal-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .pln-goal-card{
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px 12px;
+    border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--surface); cursor:pointer;
+    transition: border-color 0.14s var(--ease), background 0.14s var(--ease);
+  }
+  .pln-goal-card .ico{ font-size:24px; }
+  .pln-goal-card .lbl{ font-size:13px; font-weight:700; text-align:center; color:var(--ink); }
+  .pln-goal-card.active{ border-color:var(--red); background:var(--red-tint); }
+  .pln-goal-card:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
+
+  .pln-deadline-list{ display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; }
+  .pln-deadline-card, .pln-deadline-custom .pln-deadline-card{
+    display:flex; flex-direction:column; gap:2px; text-align:left; padding:10px 14px;
+    border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--surface); cursor:pointer; width:100%;
+    transition: border-color 0.14s var(--ease), background 0.14s var(--ease);
+  }
+  .pln-deadline-card .d{ font-size:13px; font-weight:800; color:var(--ink); text-transform:capitalize; }
+  .pln-deadline-card .s{ font-size:12.5px; color:var(--ink-soft); }
+  .pln-deadline-card.active{ border-color:var(--red); background:var(--red-tint); }
+  .pln-deadline-custom{ margin-top:10px; }
+
+  .pln-time-mode-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .pln-time-mode-toggle button{
+    flex:1; padding:9px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--surface);
+    font-weight:700; font-size:12.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .pln-time-mode-toggle button.active{ border-color:var(--red); color:var(--red); background:var(--red-tint); }
+  .pln-daily-input{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 0 4px; }
+  .pln-daily-input input[type="range"]{ width:100%; accent-color:var(--red); }
+  .pln-daily-input .v{ font-size:15px; font-weight:800; color:var(--ink); }
+  .pln-perday-grid{ display:flex; flex-direction:column; gap:8px; }
+  .pln-perday-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .pln-perday-row .lbl{ font-size:13px; font-weight:700; width:70px; }
+  .pln-perday-row input{ width:80px; text-align:right; }
+
+  .pln-subjects-grid{ display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto; }
+  .pln-subject-chip{
+    display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:var(--radius-md);
+    border:1.5px solid var(--border); background:var(--surface); font-weight:700; font-size:13.5px; cursor:pointer; width:100%; text-align:left;
+  }
+  .pln-subject-chip.active{ border-color:var(--red); background:var(--red-tint); }
+  .pln-chapter-list{ display:flex; flex-direction:column; gap:6px; padding:8px 4px 4px 22px; }
+  .pln-chapter-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); }
+  .pln-chapter-check input{ accent-color:var(--red); width:16px; height:16px; }
+
+  .pln-wizard-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; }
+  .pln-wizard-error{ color:var(--red-dark); font-size:12.5px; margin-top:10px; text-align:center; }
+
+  .pln-replan-banner{
+    background:var(--amber-tint); color:var(--amber); border-radius:var(--radius-md); padding:11px 16px;
+    font-size:13px; font-weight:600; margin-bottom:16px;
+  }
+
+  .pln-deadline-hero-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+  .pln-deadline-hero-top .lbl{ font-size:15px; font-weight:800; color:var(--ink); }
+  .pln-deadline-hero-top .days{ font-size:12.5px; font-weight:800; color:var(--red); background:var(--red-tint); padding:4px 11px; border-radius:999px; }
+  .pln-deadline-note{ font-size:12px; color:var(--muted); margin:8px 0 0; }
+
+  .pln-today-card .pln-task-list{ margin-bottom:12px; }
+
+  .pln-view-toggle{ display:flex; gap:8px; margin:6px 0 14px; }
+  .pln-view-toggle button{
+    padding:7px 16px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface);
+    font-weight:700; font-size:12.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .pln-view-toggle button.active{ border-color:var(--red); color:var(--red); background:var(--red-tint); }
+
+  .pln-week-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+  .pln-day-col{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 8px; min-height:100px; }
+  .pln-day-col.is-today{ border-color:var(--red); box-shadow:0 0 0 1px var(--red); }
+  .pln-day-col.is-past{ opacity:0.55; }
+  .pln-day-head{ display:flex; flex-direction:column; align-items:center; margin-bottom:8px; }
+  .pln-day-head .dow{ font-size:10.5px; font-weight:800; color:var(--muted); text-transform:uppercase; }
+  .pln-day-head .num{ font-size:15px; font-weight:800; color:var(--ink); }
+  .pln-day-empty{ text-align:center; color:var(--border-strong); font-size:14px; padding:14px 0; }
+  .pln-week-grid .pln-task-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:7px 8px; }
+  .pln-week-grid .pln-task-btn{ align-self:stretch; text-align:center; }
+
+  .pln-list{ display:flex; flex-direction:column; gap:14px; }
+  .pln-list-day{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; }
+  .pln-list-day.is-today{ border-color:var(--red); }
+  .pln-list-day-head{ font-size:13px; font-weight:800; color:var(--ink); margin-bottom:10px; text-transform:capitalize; }
+
+  .pln-task-list{ display:flex; flex-direction:column; gap:8px; }
+  .pln-task-row{ display:flex; align-items:center; gap:9px; padding:8px; border-radius:var(--radius-sm); }
+  .pln-task-row.is-done{ opacity:0.6; }
+  .pln-task-row.is-missed .pln-task-status{ color:var(--amber); }
+  .pln-task-status{ font-size:15px; flex-shrink:0; }
+  .pln-task-body{ display:flex; flex-direction:column; gap:1px; flex:1; min-width:0; }
+  .pln-task-subject{ font-size:10.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .pln-task-title{ font-size:13px; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pln-task-meta{ font-size:11.5px; color:var(--ink-soft); }
+  .pln-task-btn{ flex-shrink:0; font-size:12px; }
+  .pln-task-done-badge{ font-size:11px; font-weight:700; color:var(--green); flex-shrink:0; }
+  .pln-start-all-btn{ width:100%; }
+
+  .pln-footer-actions{ display:flex; gap:18px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+
+  @media (prefers-reduced-motion: reduce){
+    .pln-mode-toggle button, .pln-goal-card, .pln-deadline-card{ transition:none; }
+  }
+
+  @media (max-width:860px){
+    .pln-week-grid{ grid-template-columns:repeat(7,1fr); gap:5px; }
+    .pln-day-col{ padding:7px 5px; min-height:80px; }
+    .pln-day-head .num{ font-size:13px; }
+  }
+  @media (max-width:680px){
+    .pln-week-grid{ grid-template-columns:1fr; }
+    .pln-day-col{ min-height:0; }
+    .pln-goal-grid{ grid-template-columns:1fr; }
+    .pln-wizard{ padding:18px 16px 20px; }
+  }
+
   .dash-section{
     background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
     padding:20px 21px; margin-bottom:18px; box-shadow: var(--shadow-sm);
@@ -2069,6 +2214,10 @@
      LyonSmartRevision.buildConfidence (voir statistics.js). Chargé après
      smart-revision.js pour que window.LyonStatistics puisse s'appuyer dessus. -->
 <script src="statistics.js"></script>
+<!-- Moteur de planification de révision : module autonome et pur, reçoit les
+     recommandations déjà calculées par smart-revision.js en entrée (ne les
+     recalcule jamais) — voir planning.js. -->
+<script src="planning.js"></script>
 
 <script>
 /* ============================================================
@@ -3011,6 +3160,7 @@ let state = {
   // --- planning / calendrier (import manuel .ics, aucune donnée distante) ---
   planning: {
     events: [], officialUrl: "",
+    view: "schedule",         // schedule (emploi du temps existant) | study (Mon planning intelligent, nouveau)
     calView: "week",          // day | week | month
     anchorDate: null,         // ms — jour de référence pour toutes les vues
     expandedMonthDay: null,   // ms — jour "+N" déplié en vue mois
@@ -3093,6 +3243,28 @@ let state = {
 
   // --- mes statistiques (navigation interne, jamais persistée) ---
   statsView: { view: "overview", subjectId: null, chapterId: null }, // overview | subject | chapter
+
+  // --- mon planning intelligent ---
+  studyPlan: null,              // {id, createdAt, updatedAt, deadlineAt, deadlineLabel, deadlineEventId, goal, subjectIds, chapterIds, availability, days} | null tant qu'aucun plan n'a été créé
+  studyPlanScreen: "overview",  // overview | wizard
+  studyPlanView: "week",        // week | list — préférence d'affichage, jamais persistée (repart sur "week")
+  studyWizard: {                // état du parcours de création, jamais persisté tel quel (seul le plan final l'est)
+    step: 1,
+    goal: null,                 // "exam" | "weekly" | "custom"
+    deadlineMode: "event",      // "event" | "custom" | "none"
+    deadlineEventId: null,
+    deadlineDate: "",
+    deadlineLabel: "",
+    availabilityMode: "daily",  // "daily" | "perDay"
+    dailyMinutes: 30,
+    perDay: { mon: 30, tue: 30, wed: 30, thu: 30, fri: 30, sat: 0, sun: 0 },
+    subjectIds: [],
+    chapterIds: [],
+  },
+  // Session en cours lancée depuis "Mon planning" (même principe que
+  // smartSession, jamais persisté, reconstruit à chaque lancement) :
+  // {dayIndex, taskIds, stepIndex, results, startedAt}
+  planningSession: null,
 
   // --- mode examen ---
   exam: {
@@ -3353,6 +3525,7 @@ const KEY_PLANNING = "planning";
 const KEY_DOCUMENTS = "documents";
 const KEY_AIBUBBLE = "ai-bubble-pos";
 const KEY_COURSE_DATA = "course-data";
+const KEY_STUDY_PLAN = "study-plan";
 
 const memoryFallback = {};   // utilisé si localStorage est indisponible
 let storageAvailable = true;
@@ -3461,6 +3634,7 @@ async function loadAllData(){
   state.planning.lastSyncAt = (savedPlanning && savedPlanning.lastSyncAt) || null;
   state.documents = await loadKey(KEY_DOCUMENTS, []);
   state.courseData = await loadKey(KEY_COURSE_DATA, {});
+  state.studyPlan = await loadKey(KEY_STUDY_PLAN, null);
   const savedBubble = lsGet(KEY_AIBUBBLE);
   const defaultFabPos = defaultAIFabPos();
   state.aiBubble.side = defaultFabPos.side;
@@ -3489,7 +3663,7 @@ function storageNamespacedKeys(){
   return [
     KEY_QUIZ, KEY_FLASH, KEY_AI, KEY_DASH, KEY_QSTATS, KEY_EXAM, KEY_AICARDS,
     KEY_BADGES, KEY_USER_SUBJECTS, KEY_USER_CHAPTERS, KEY_PLANNING, KEY_DOCUMENTS,
-    KEY_COURSE_DATA, KEY_AIBUBBLE, KEY_AIMODEL,
+    KEY_COURSE_DATA, KEY_AIBUBBLE, KEY_AIMODEL, KEY_STUDY_PLAN,
   ];
 }
 
@@ -3529,6 +3703,7 @@ function saveAIHistory(){ lsSet(KEY_AI, state.aiHistory.slice(-20)); }
 function saveUserSubjects(){ lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
 function saveUserChapters(){ lsSet(KEY_USER_CHAPTERS, state.userChapters); }
 function savePlanning(){ lsSet(KEY_PLANNING, { events: state.planning.events, officialUrl: state.planning.officialUrl, lastSyncAt: state.planning.lastSyncAt }); }
+function saveStudyPlan(){ lsSet(KEY_STUDY_PLAN, state.studyPlan); }
 function saveDocuments(){ lsSet(KEY_DOCUMENTS, state.documents); }
 function saveAIBubblePos(){ lsSet(KEY_AIBUBBLE, { side: state.aiBubble.side, y: state.aiBubble.y }); }
 
@@ -3955,6 +4130,11 @@ function nextQuestion(){
       advanceSmartSession();
       return;
     }
+    if(state.planningSession){
+      recordPlanningSessionStep({ mode: "quiz", score: state.score, total: state.pool.length, pct, timeUsed });
+      advancePlanningSession();
+      return;
+    }
     state.screen = "results";
     render();
   }
@@ -3962,6 +4142,7 @@ function nextQuestion(){
 
 function backToPicker(){
   if(state.smartSession){ abortSmartSession(); return; }
+  if(state.planningSession){ abortPlanningSession(); return; }
   state.screen = "picker";
   render();
 }
@@ -8655,6 +8836,11 @@ function judgeCard(knewIt){
       advanceSmartSession();
       return;
     }
+    if(state.planningSession){
+      recordPlanningSessionStep({ mode: "flash", score: d.known.length, total: d.cards.length, pct, timeUsed: null });
+      advancePlanningSession();
+      return;
+    }
     state.flashScreen = "summary";
     render();
   }
@@ -8668,6 +8854,7 @@ function replayUnknown(){
 
 function backToFlashPicker(){
   if(state.smartSession){ abortSmartSession(); return; }
+  if(state.planningSession){ abortPlanningSession(); return; }
   state.flashScreen = "picker";
   render();
 }
@@ -11734,6 +11921,316 @@ function attachStatisticsEvents(){
   if(emptySubjects) emptySubjects.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
 }
 
+/* ============================================================
+   MON PLANNING INTELLIGENT — pont entre l'état réel de l'app et le moteur
+   pur window.LyonPlanning (voir planning.js).
+   ------------------------------------------------------------
+   Ce pont NE RECALCULE JAMAIS de priorité : il lit la recommandation déjà
+   produite par getSmartRevisionRecommendations() (voir plus haut, "Révision
+   intelligente") pour chaque chapitre choisi, et se contente de la
+   transmettre telle quelle au moteur de planification. Aucune deuxième
+   logique de priorisation n'existe dans ce fichier.
+   ============================================================ */
+
+const PLANNING_DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+
+function chaptersOfSubjectsFlat(subjectIds){
+  const ids = [];
+  (subjectIds || []).forEach(sid=>{
+    chaptersOfSubject(sid).forEach(ch=>{ if(!ids.includes(ch.id)) ids.push(ch.id); });
+  });
+  return ids;
+}
+
+/* Construit les candidats consommés par LyonPlanning.generateStudyPlan,
+   pour une liste de chapitres déjà choisie par l'utilisateur (jamais
+   devinée). Réutilise buildChapterFacts() (déjà écrit pour "Révision
+   intelligente") pour les faits bruts, getSmartRevisionRecommendations()
+   pour la priorité déjà calculée, et LyonSmartRevision.estimateMinutes()
+   pour les estimations de durée — aucun de ces calculs n'est reproduit ici. */
+function buildPlanningCandidates(chapterIds){
+  const recoByChapter = {};
+  getSmartRevisionRecommendations().forEach(r => { recoByChapter[r.chapterId] = r; });
+  const factByChapter = {};
+  buildChapterFacts().forEach(f => { factByChapter[f.chapterId] = f; });
+
+  return (chapterIds || []).map(chId=>{
+    const ch = findAnyChapter(chId);
+    if(!ch) return null;
+    const fact = factByChapter[chId];
+    if(!fact) return null; // aucun contenu jouable (ni quiz ni flashcards) : rien à planifier
+    const subj = findSubject(ch.subjectId);
+    const reco = recoByChapter[chId];
+    const hasFiche = isUserChapter(chId) ? !!(ch.content || ch.originalText) : !!FICHES[chId];
+    return {
+      chapterId: chId, subjectId: ch.subjectId, title: ch.title,
+      subjectName: subj ? subj.name : "",
+      smartPriority: reco ? reco.priority : null,
+      smartReasonKey: reco ? reco.reasonKey : null,
+      smartReasonVars: reco ? reco.reasonVars : null,
+      confidence: reco ? reco.confidence : LyonSmartRevision.buildConfidence(fact.masterySampleSize),
+      mastery: fact.mastery,
+      hasQuiz: fact.hasQuiz, hasFlashcards: fact.hasFlashcards, hasFiche,
+      quizEstimateMinutes: LyonSmartRevision.estimateMinutes(fact, "quiz"),
+      flashEstimateMinutes: fact.hasFlashcards ? LyonSmartRevision.estimateMinutes(fact, "flash") : 0,
+      lastRevisionAt: fact.lastRevisionAt,
+    };
+  }).filter(Boolean);
+}
+
+/* Résout l'échéance choisie dans le parcours de création en timestamp
+   (fin de journée), ou null si aucune échéance (planning hebdomadaire). */
+function resolveWizardDeadline(w){
+  if(w.deadlineMode === "event" && w.deadlineEventId){
+    const evt = state.planning.events.find(e => e.id === w.deadlineEventId);
+    if(evt) return new Date(evt.start).setHours(23,59,59,999);
+  }
+  if(w.deadlineMode === "custom" && w.deadlineDate){
+    const d = new Date(w.deadlineDate + "T23:59:59");
+    if(!isNaN(d.getTime())) return d.getTime();
+  }
+  return null;
+}
+
+/* Jours concrets + minutes disponibles pour chacun, à partir de la
+   disponibilité renseignée par l'utilisateur. Bornée à 30 jours même sans
+   échéance très éloignée, pour rester un planning réaliste (§28, performance
+   et réalisme) — 7 jours par défaut si aucune échéance n'est choisie. */
+function buildAvailabilityDays(w, deadlineAt){
+  const days = [];
+  const start = new Date(); start.setHours(0,0,0,0);
+  const span = deadlineAt
+    ? clampInt(Math.ceil((deadlineAt - start.getTime()) / 86400000) + 1, 1, 30)
+    : 7;
+  for(let i = 0; i < span; i++){
+    const d = new Date(start); d.setDate(d.getDate() + i);
+    if(deadlineAt && d.getTime() > deadlineAt) break;
+    const dow = PLANNING_DOW_KEYS[d.getDay()];
+    const minutes = w.availabilityMode === "perDay" ? (w.perDay[dow] || 0) : (w.dailyMinutes || 0);
+    days.push({ dateKey: dateKey(d), minutes });
+  }
+  return days;
+}
+function clampInt(n, lo, hi){ return Math.max(lo, Math.min(hi, Math.round(n))); }
+
+/* Construit et enregistre un nouveau plan à partir de l'état du parcours de
+   création (state.studyWizard). Retourne false si rien n'est réellement
+   planifiable (aucun chapitre sélectionné ou aucun temps disponible),
+   auquel cas l'interface doit l'indiquer honnêtement plutôt que créer un
+   plan vide silencieusement. */
+function createStudyPlan(){
+  const w = state.studyWizard;
+  const chapterIds = w.chapterIds.length ? w.chapterIds.slice() : chaptersOfSubjectsFlat(w.subjectIds);
+  if(!chapterIds.length) return false;
+  const deadlineAt = resolveWizardDeadline(w);
+  const availability = buildAvailabilityDays(w, deadlineAt);
+  if(!availability.some(d => d.minutes > 0)) return false;
+  const candidates = buildPlanningCandidates(chapterIds);
+  if(!candidates.length) return false;
+  const result = LyonPlanning.generateStudyPlan({ now: Date.now(), deadlineAt, availability, candidates });
+
+  state.studyPlan = {
+    id: genLibId("plan"),
+    createdAt: Date.now(), updatedAt: Date.now(), lastCheckedMissedAt: null, lastReplanMessage: null,
+    deadlineAt, deadlineLabel: w.deadlineLabel || null, deadlineEventId: w.deadlineMode === "event" ? w.deadlineEventId : null,
+    goal: w.goal, subjectIds: w.subjectIds.slice(), chapterIds,
+    availability: { mode: w.availabilityMode, dailyMinutes: w.dailyMinutes, perDay: Object.assign({}, w.perDay) },
+    days: result.days.map(d => ({
+      dateKey: d.dateKey, availableMinutes: d.availableMinutes,
+      tasks: d.tasks.map(t => Object.assign({ id: genLibId("task"), status: "pending" }, t)),
+    })),
+  };
+  saveStudyPlan();
+  state.studyPlanScreen = "overview";
+  return true;
+}
+
+function deleteStudyPlan(){
+  state.studyPlan = null;
+  saveStudyPlan();
+  state.studyPlanScreen = "overview";
+}
+
+function computeStudyPlanCoverage(plan){
+  let total = 0, done = 0;
+  plan.days.forEach(d => d.tasks.forEach(t => { total++; if(t.status === "done") done++; }));
+  return { total, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
+}
+
+/* Détecte les séances passées jamais réalisées (§12/§13) : les marque
+   "missed" (jamais supprimées), puis redistribue les tâches encore en
+   attente (dont celles manquées, avec un léger boost documenté — voir
+   LyonPlanning.replan) sur les jours futurs uniquement. Ne touche jamais
+   une tâche déjà "done", ni un jour déjà passé. Ne s'exécute réellement
+   qu'une fois par jour (lastCheckedMissedAt) pour rester léger (§28). */
+function checkAndReplanMissedSessions(){
+  const plan = state.studyPlan;
+  if(!plan) return;
+  const today = todayKey();
+  if(plan.lastCheckedMissedAt === today) return;
+  plan.lastCheckedMissedAt = today;
+
+  let anyMissed = false;
+  const missedChapterIds = [];
+  plan.days.forEach(day=>{
+    if(day.dateKey >= today) return;
+    day.tasks.forEach(t=>{
+      if(t.status === "pending"){
+        t.status = "missed";
+        anyMissed = true;
+        if(!missedChapterIds.includes(t.chapterId)) missedChapterIds.push(t.chapterId);
+      }
+    });
+  });
+
+  if(!anyMissed){ saveStudyPlan(); return; }
+
+  const futureDays = plan.days.filter(d => d.dateKey >= today);
+  const pendingChapterIds = new Set(missedChapterIds);
+  futureDays.forEach(d => d.tasks.forEach(t => { if(t.status === "pending") pendingChapterIds.add(t.chapterId); }));
+
+  if(pendingChapterIds.size === 0 || futureDays.length === 0){
+    plan.lastReplanMessage = "planning.replan_missed_no_future";
+    saveStudyPlan();
+    return;
+  }
+
+  const candidates = buildPlanningCandidates(Array.from(pendingChapterIds));
+  const availability = futureDays.map(d=>{
+    const usedByDoneOrMissed = d.tasks.filter(t => t.status !== "pending").reduce((s, t) => s + t.duration, 0);
+    return { dateKey: d.dateKey, minutes: Math.max(0, d.availableMinutes - usedByDoneOrMissed) };
+  });
+  const missedCandidates = candidates.filter(c => missedChapterIds.includes(c.chapterId));
+  const result = LyonPlanning.replan({ now: Date.now(), deadlineAt: plan.deadlineAt, availability, candidates }, missedCandidates);
+
+  result.days.forEach((newDay, i)=>{
+    const targetDay = futureDays[i];
+    if(!targetDay) return;
+    const keep = targetDay.tasks.filter(t => t.status !== "pending");
+    const fresh = newDay.tasks.map(t => Object.assign({ id: genLibId("task"), status: "pending" }, t));
+    targetDay.tasks = keep.concat(fresh);
+  });
+  plan.lastReplanMessage = "planning.replan_missed_reorganized";
+  plan.updatedAt = Date.now();
+  saveStudyPlan();
+}
+
+/* ---------- Session de planning : orchestration ----------
+   Même principe que la session de Révision intelligente (state.smartSession) :
+   réutilise entièrement startQuiz()/startFlashDeck() et attachSessionPayload()
+   (déjà écrits pour Révision intelligente), jamais une nouvelle logique de
+   quiz/flashcards. Un hook conditionnel dans nextQuestion()/judgeCard()/
+   backToPicker()/backToFlashPicker() (voir plus haut) enchaîne les étapes
+   et revient sur "Mon planning" — jamais sur l'écran de Révision
+   intelligente, pour ne pas désorienter l'utilisateur venu du planning. */
+function buildPlanningSessionItem(task){
+  if(task.mode === "course") return null; // "lire le cours" n'est pas une session quiz/flashcards, voir launchPlanningTask
+  const ch = findAnyChapter(task.chapterId);
+  if(!ch) return null;
+  const resolved = attachSessionPayload({ chapterId: task.chapterId, suggestedMode: task.mode, hasQuiz: true });
+  if(!resolved.payload || !resolved.payload.length) return null;
+  return Object.assign({}, task, { execMode: resolved.execMode, payload: resolved.payload });
+}
+
+function launchPlanningTask(dayIndex, taskId){
+  const day = state.studyPlan && state.studyPlan.days[dayIndex];
+  const task = day && day.tasks.find(t => t.id === taskId);
+  if(!task) return;
+  if(task.mode === "course"){
+    const ch = findAnyChapter(task.chapterId);
+    if(ch){ libGoto("chapterDetail", { subjectId: ch.subjectId, chapterId: ch.id }); switchTab("library"); }
+    return;
+  }
+  const item = buildPlanningSessionItem(task);
+  if(!item) return;
+  startPlanningSession(dayIndex, [item]);
+}
+
+function markPlanningTaskDoneManually(dayIndex, taskId){
+  const day = state.studyPlan && state.studyPlan.days[dayIndex];
+  const task = day && day.tasks.find(t => t.id === taskId);
+  if(!task || task.status === "done") return;
+  task.status = "done";
+  task.completedAt = Date.now();
+  task.actualMinutes = task.duration;
+  state.studyPlan.updatedAt = Date.now();
+  saveStudyPlan();
+  render();
+}
+
+function launchPlanningDay(dayIndex){
+  const day = state.studyPlan && state.studyPlan.days[dayIndex];
+  if(!day) return;
+  const items = day.tasks
+    .filter(t => t.status === "pending" && t.mode !== "course")
+    .map(buildPlanningSessionItem)
+    .filter(Boolean);
+  if(!items.length) return;
+  startPlanningSession(dayIndex, items);
+}
+
+function startPlanningSession(dayIndex, items){
+  if(!items.length) return;
+  state.planningSession = { dayIndex, items, stepIndex: 0, results: [], startedAt: Date.now(), stepStartedAt: null };
+  launchPlanningSessionStep();
+}
+
+function launchPlanningSessionStep(){
+  const s = state.planningSession;
+  if(!s) return;
+  const item = s.items[s.stepIndex];
+  if(!item || !item.payload || !item.payload.length){ advancePlanningSession(); return; }
+  s.stepStartedAt = Date.now();
+  if(item.execMode === "flash") startFlashDeck(item.chapterId, item.title, item.payload);
+  else startQuiz("chapter:" + item.chapterId, item.title, null, item.payload);
+}
+
+function recordPlanningSessionStep(result){
+  const s = state.planningSession;
+  if(!s) return;
+  const actualMinutes = s.stepStartedAt ? Math.max(1, Math.round((Date.now() - s.stepStartedAt) / 60000)) : null;
+  s.results.push(Object.assign({}, result, { actualMinutes }));
+}
+
+function advancePlanningSession(){
+  const s = state.planningSession;
+  if(!s) return;
+  s.stepIndex++;
+  if(s.stepIndex < s.items.length) launchPlanningSessionStep();
+  else finishPlanningSession();
+}
+
+function finishPlanningSession(){
+  const s = state.planningSession;
+  const plan = state.studyPlan;
+  if(s && plan){
+    const day = plan.days[s.dayIndex];
+    if(day){
+      s.items.forEach((item, i)=>{
+        const result = s.results[i];
+        const task = day.tasks.find(t => t.id === item.id);
+        if(task && result){
+          task.status = "done";
+          task.completedAt = Date.now();
+          task.actualMinutes = result.actualMinutes || task.duration;
+          task.resultPct = result.pct;
+        }
+      });
+      plan.updatedAt = Date.now();
+      saveStudyPlan();
+    }
+  }
+  state.planningSession = null;
+  state.studyPlanScreen = "overview";
+  switchTab("planning");
+}
+
+function abortPlanningSession(){
+  state.planningSession = null;
+  state.studyPlanScreen = "overview";
+  switchTab("planning");
+}
+
 function subjectQuestionCount(subjectId){
   const chs = chaptersOfSubject(subjectId);
   let n = 0;
@@ -13869,11 +14366,27 @@ function attachCourseModalEvents(){
 }
 
 
+/* Bascule "Emploi du temps" (calendrier existant, inchangé) / "Mon planning"
+   (nouveau, voir plus haut) — un seul onglet de navigation, pas un deuxième
+   point d'entrée (voir §15/§21 du cahier des charges : ne pas multiplier
+   les accès). */
+function renderPlanningModeToggle(){
+  return `<div class="pln-mode-toggle" role="tablist" aria-label="${t("planning.mode_toggle_aria")}">
+    <button type="button" role="tab" aria-selected="${state.planning.view!=="study"}" class="${state.planning.view!=="study"?"active":""}" data-planning-mode="schedule">${t("planning.mode_schedule")}</button>
+    <button type="button" role="tab" aria-selected="${state.planning.view==="study"}" class="${state.planning.view==="study"?"active":""}" data-planning-mode="study">${t("planning.mode_study")}</button>
+  </div>`;
+}
+
 function renderPlanning(){
+  if(state.planning.view === "study"){
+    return renderPlanningModeToggle() + renderStudyPlanScreen();
+  }
+
   const hasPlanning = state.planning.events.length > 0;
   const configOpen = state.planning.configPanelOpen || !hasPlanning;
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
+  let html = renderPlanningModeToggle();
+  html += `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
   <p class="ai-intro">Ton emploi du temps — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
 
   if(hasPlanning && !configOpen){
@@ -13948,6 +14461,14 @@ function renderPlanning(){
 }
 
 function attachPlanningEvents(){
+  document.querySelectorAll("[data-planning-mode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.planning.view = btn.dataset.planningMode;
+      render();
+    });
+  });
+  if(state.planning.view === "study"){ attachStudyPlanEvents(); return; }
+
   const icsInput = document.getElementById("planning-ics-input");
   if(icsInput) icsInput.addEventListener("change", async ()=>{
     const file = icsInput.files[0];
@@ -14066,6 +14587,431 @@ function attachPlanningEvents(){
         openCourseModal(el.dataset.openEvent);
       }
     });
+  });
+}
+
+/* ============================================================
+   MON PLANNING INTELLIGENT — rendu
+   ============================================================ */
+
+function planningModeInfo(mode){
+  if(mode === "flash") return { icon: "🃏", label: t("smart.mode_flash") };
+  if(mode === "course") return { icon: "📖", label: t("planning.mode_course") };
+  return { icon: "📝", label: t("smart.mode_quiz") };
+}
+
+/* Événements du calendrier déjà importé (voir §20 : réutilise l'import .ics
+   existant, ne recrée rien) proposables comme échéance — uniquement ceux à
+   venir, triés chronologiquement, dédupliqués par (résumé+jour). */
+function upcomingPlanningEvents(limit){
+  const now = Date.now();
+  const seen = new Set();
+  const out = [];
+  state.planning.events
+    .filter(e => e.start > now)
+    .sort((a, b) => a.start - b.start)
+    .forEach(e=>{
+      const key = e.summary + "|" + dateKey(new Date(e.start));
+      if(seen.has(key)) return;
+      seen.add(key);
+      out.push(e);
+    });
+  return out.slice(0, limit || 12);
+}
+
+function daysUntil(ts){
+  return Math.max(0, Math.ceil((ts - Date.now()) / 86400000));
+}
+
+function renderStudyPlanScreen(){
+  if(state.studyPlanScreen === "wizard") return renderStudyWizard();
+  if(!state.studyPlan) return renderStudyPlanEmpty();
+  return renderStudyPlanOverview();
+}
+
+function renderStudyPlanEmpty(){
+  const hasEvents = upcomingPlanningEvents(1).length > 0;
+  return `<div class="dash-section pln-empty-hero">
+    <div class="pln-empty-ico">📅</div>
+    <h2>${t("planning.empty_title")}</h2>
+    <p>${t("planning.empty_body")}</p>
+    <button class="btn red" id="pln-start-wizard-btn">${t("planning.create_btn")}</button>
+    ${!hasEvents ? `<p class="pln-empty-hint">${t("planning.no_deadline_hint")}</p>` : ""}
+  </div>`;
+}
+
+/* ---------- Parcours de création (4 étapes) ---------- */
+function renderStudyWizard(){
+  const w = state.studyWizard;
+  const steps = [
+    t("planning.step_goal_title"), t("planning.step_deadline_title"),
+    t("planning.step_time_title"), t("planning.step_subjects_title"),
+  ];
+  let html = `<div class="pln-wizard">
+    <div class="pln-wizard-steps" role="list">
+      ${steps.map((s,i)=>`<div class="pln-wizard-step ${w.step===i+1?"active":""} ${w.step>i+1?"done":""}" role="listitem">${i+1}</div>`).join("")}
+    </div>`;
+
+  if(w.step === 1) html += renderWizardStepGoal();
+  else if(w.step === 2) html += renderWizardStepDeadline();
+  else if(w.step === 3) html += renderWizardStepTime();
+  else html += renderWizardStepSubjects();
+
+  html += `</div>`;
+  return html;
+}
+
+function renderWizardStepGoal(){
+  const goals = [
+    { key: "control", icon: "📝", label: t("planning.goal_control") },
+    { key: "exam", icon: "🎓", label: t("planning.goal_exam") },
+    { key: "multi", icon: "📚", label: t("planning.goal_multi") },
+    { key: "week", icon: "🗓️", label: t("planning.goal_week") },
+  ];
+  return `<h2 class="pln-step-title">${t("planning.step_goal_title")}</h2>
+    <div class="pln-goal-grid">
+      ${goals.map(g=>`<button type="button" class="pln-goal-card ${state.studyWizard.goal===g.key?"active":""}" data-wizard-goal="${g.key}">
+        <span class="ico">${g.icon}</span><span class="lbl">${g.label}</span>
+      </button>`).join("")}
+    </div>
+    <div class="pln-wizard-actions">
+      <span></span>
+      <button class="btn red" id="pln-wizard-next" ${state.studyWizard.goal?"":"disabled"}>${t("planning.next_btn")} →</button>
+    </div>`;
+}
+
+function renderWizardStepDeadline(){
+  const w = state.studyWizard;
+  const events = upcomingPlanningEvents(10);
+  return `<h2 class="pln-step-title">${t("planning.step_deadline_title")}</h2>
+    ${events.length ? `<div class="pln-deadline-list">
+      ${events.map(e=>`<button type="button" class="pln-deadline-card ${w.deadlineMode==="event"&&w.deadlineEventId===e.id?"active":""}" data-wizard-deadline-event="${e.id}">
+        <span class="d">${new Date(e.start).toLocaleDateString(currentLocaleTag(),{weekday:"long",day:"numeric",month:"long"})}</span>
+        <span class="s">${escapeHtml(e.summary)}</span>
+      </button>`).join("")}
+    </div>` : `<p class="dash-empty">${t("planning.no_events_found")}</p>`}
+    <div class="pln-deadline-custom">
+      <button type="button" class="pln-deadline-card ${w.deadlineMode==="custom"?"active":""}" data-wizard-deadline-custom="1">
+        <span class="d">${t("planning.custom_date")}</span>
+        <span class="s">${t("planning.custom_date_hint")}</span>
+      </button>
+      ${w.deadlineMode==="custom" ? `<input type="date" id="pln-custom-date-input" class="ai-select" value="${escapeHtml(w.deadlineDate)}" min="${todayKey()}">
+        <input type="text" id="pln-custom-label-input" class="ai-select" placeholder="${t("planning.custom_label_placeholder")}" value="${escapeHtml(w.deadlineLabel)}" style="margin-top:8px;">` : ""}
+      <button type="button" class="btn-text" id="pln-deadline-none" style="margin-top:10px;">${t("planning.no_deadline_btn")}</button>
+    </div>
+    <div class="pln-wizard-actions">
+      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
+      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")} →</button>
+    </div>`;
+}
+
+function renderWizardStepTime(){
+  const w = state.studyWizard;
+  const dayLabels = { mon: t("date.mon"), tue: t("date.tue"), wed: t("date.wed"), thu: t("date.thu"), fri: t("date.fri"), sat: t("date.sat"), sun: t("date.sun") };
+  return `<h2 class="pln-step-title">${t("planning.step_time_title")}</h2>
+    <div class="pln-time-mode-toggle">
+      <button type="button" class="${w.availabilityMode==="daily"?"active":""}" data-wizard-time-mode="daily">${t("planning.time_mode_daily")}</button>
+      <button type="button" class="${w.availabilityMode==="perDay"?"active":""}" data-wizard-time-mode="perDay">${t("planning.time_mode_perday")}</button>
+    </div>
+    ${w.availabilityMode === "daily" ? `
+      <div class="pln-daily-input">
+        <input type="range" id="pln-daily-minutes" min="10" max="120" step="5" value="${w.dailyMinutes}">
+        <span class="v">${t("planning.minutes_per_day", {n: w.dailyMinutes})}</span>
+      </div>
+    ` : `
+      <div class="pln-perday-grid">
+        ${PLANNING_DOW_KEYS.filter(k=>k!=="sun").concat(["sun"]).map(k=>`
+          <div class="pln-perday-row">
+            <span class="lbl">${dayLabels[k]}</span>
+            <input type="number" min="0" max="180" step="5" class="ai-select" data-wizard-perday="${k}" value="${w.perDay[k]}">
+          </div>`).join("")}
+      </div>
+    `}
+    <div class="pln-wizard-actions">
+      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
+      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")} →</button>
+    </div>`;
+}
+
+function renderWizardStepSubjects(){
+  const w = state.studyWizard;
+  const subjects = allSubjects();
+  return `<h2 class="pln-step-title">${t("planning.step_subjects_title")}</h2>
+    ${subjects.length === 0 ? `<p class="dash-empty">${t("progress.subjects_empty")}</p>` : `
+      <div class="pln-subjects-grid">
+        ${subjects.map(s=>{
+          const chs = chaptersOfSubject(s.id).filter(ch=>{
+            const facts = buildChapterFacts().find(f=>f.chapterId===ch.id);
+            return !!facts;
+          });
+          const active = w.subjectIds.includes(s.id);
+          return `<div class="pln-subject-block">
+            <button type="button" class="pln-subject-chip ${active?"active":""}" data-wizard-subject="${s.id}">
+              ${s.icon||"📘"} ${escapeHtml(s.name)}
+            </button>
+            ${active && chs.length ? `<div class="pln-chapter-list">
+              ${chs.map(ch=>`<label class="pln-chapter-check"><input type="checkbox" data-wizard-chapter="${ch.id}" data-wizard-chapter-subject="${s.id}" ${w.chapterIds.includes(ch.id)?"checked":""}> ${escapeHtml(ch.title)}</label>`).join("")}
+            </div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    `}
+    <div class="pln-wizard-actions">
+      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
+      <button class="btn red" id="pln-wizard-create" ${w.subjectIds.length===0?"disabled":""}>${t("planning.create_btn")}</button>
+    </div>
+    <p class="pln-wizard-error" id="pln-wizard-error" style="display:none;">${t("planning.create_error")}</p>`;
+}
+
+/* ---------- Vue d'ensemble d'un plan existant ---------- */
+function renderStudyPlanOverview(){
+  checkAndReplanMissedSessions();
+  const plan = state.studyPlan;
+  const coverage = computeStudyPlanCoverage(plan);
+  const today = todayKey();
+
+  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("planning.title")}</h1>
+    <p class="ai-intro">${t("planning.subtitle")}</p>`;
+
+  if(plan.lastReplanMessage){
+    html += `<div class="pln-replan-banner">⚠️ ${t(plan.lastReplanMessage)}</div>`;
+  }
+
+  if(plan.deadlineAt){
+    html += `<div class="dash-section pln-deadline-hero">
+      <div class="pln-deadline-hero-top">
+        <span class="lbl">📅 ${escapeHtml(plan.deadlineLabel || t("planning.deadline_default_label"))}</span>
+        <span class="days">${t("planning.days_left", {n: daysUntil(plan.deadlineAt)})}</span>
+      </div>
+      <div class="deckbar-track"><div class="deckbar-fill good" style="width:${coverage.pct}%;"></div></div>
+      <p class="pln-deadline-note">${t("planning.coverage_note", {pct: coverage.pct})}</p>
+    </div>`;
+  }
+
+  html += `<div class="pg-overview">
+    <div class="pg-tile"><div class="pg-tile-num">${coverage.done} / ${coverage.total}</div><div class="pg-tile-lbl">${t("planning.sessions_done")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${plan.days.reduce((s,d)=>s+d.availableMinutes,0)}</div><div class="pg-tile-lbl">${t("planning.minutes_planned")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${new Set(plan.chapterIds).size}</div><div class="pg-tile-lbl">${t("progress.chapters_tile")}</div></div>
+    <div class="pg-tile"><div class="pg-tile-num">${coverage.pct}%</div><div class="pg-tile-lbl">${t("stats.success_rate")==="Réussite"?"Avancement":"Progress"}</div></div>
+  </div>`;
+
+  const todayIdx = plan.days.findIndex(d => d.dateKey === today);
+  if(todayIdx !== -1 && plan.days[todayIdx].tasks.length){
+    html += `<div class="dash-section pln-today-card">
+      <div class="section-title">${t("planning.today_title")}</div>
+      ${renderStudyDayTasks(plan.days[todayIdx], todayIdx, true)}
+    </div>`;
+  }
+
+  html += `<div class="pln-view-toggle">
+    <button type="button" class="${state.studyPlanView==="week"?"active":""}" data-plan-view="week">${t("planning.view_calendar")}</button>
+    <button type="button" class="${state.studyPlanView==="list"?"active":""}" data-plan-view="list">${t("planning.view_list")}</button>
+  </div>`;
+
+  html += state.studyPlanView === "list" ? renderStudyListView(plan) : renderStudyWeekView(plan);
+
+  html += `<div class="pln-footer-actions">
+    <button class="btn-text" id="pln-edit-btn">✏️ ${t("planning.edit_btn")}</button>
+    <button class="btn-text" id="pln-delete-btn" style="color:var(--red-dark);">🗑️ ${t("planning.delete_btn")}</button>
+  </div>`;
+
+  return html;
+}
+
+function renderStudyWeekView(plan){
+  const today = todayKey();
+  return `<div class="pln-week-grid">
+    ${plan.days.map((day, i)=>{
+      const isToday = day.dateKey === today;
+      const isPast = day.dateKey < today;
+      const d = new Date(day.dateKey + "T00:00:00");
+      return `<div class="pln-day-col ${isToday?"is-today":""} ${isPast?"is-past":""}">
+        <div class="pln-day-head">
+          <span class="dow">${d.toLocaleDateString(currentLocaleTag(),{weekday:"short"})}</span>
+          <span class="num">${d.getDate()}</span>
+        </div>
+        ${day.tasks.length === 0 ? `<div class="pln-day-empty">—</div>` : renderStudyDayTasks(day, i, false)}
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function renderStudyListView(plan){
+  const today = todayKey();
+  return `<div class="pln-list">
+    ${plan.days.filter(d=>d.tasks.length).map((day, realIdx)=>{
+      const i = plan.days.indexOf(day);
+      const isToday = day.dateKey === today;
+      const d = new Date(day.dateKey + "T00:00:00");
+      return `<div class="pln-list-day ${isToday?"is-today":""}">
+        <div class="pln-list-day-head">${d.toLocaleDateString(currentLocaleTag(),{weekday:"long",day:"numeric",month:"long"})}${isToday ? " · " + t("dashboard.today") : ""}</div>
+        ${renderStudyDayTasks(day, i, false, true)}
+      </div>`;
+    }).join("") || `<p class="dash-empty">${t("planning.no_tasks")}</p>`}
+  </div>`;
+}
+
+function renderStudyDayTasks(day, dayIndex, showStartAll, listMode){
+  const pendingCount = day.tasks.filter(t=>t.status==="pending").length;
+  let html = `<div class="pln-task-list">`;
+  html += day.tasks.map(task=>{
+    const info = planningModeInfo(task.mode);
+    const isDone = task.status === "done";
+    const isMissed = task.status === "missed";
+    return `<div class="pln-task-row ${isDone?"is-done":""} ${isMissed?"is-missed":""}">
+      <span class="pln-task-status" aria-hidden="true">${isDone?"☑️":(isMissed?"⚠️":"○")}</span>
+      <div class="pln-task-body">
+        <span class="pln-task-subject">${escapeHtml(task.subjectName)}</span>
+        <span class="pln-task-title">${escapeHtml(task.title)}</span>
+        <span class="pln-task-meta">${info.icon} ${info.label} · ${task.duration} min${listMode ? " · " + t(task.reasonKey, task.reasonVars || {}) : ""}</span>
+      </div>
+      ${!isDone ? `<button type="button" class="btn-text pln-task-btn" data-plan-task="${task.id}" data-plan-day="${dayIndex}">${isMissed ? t("planning.reschedule_btn") : t("planning.start_task_btn")}</button>`
+        : `<span class="pln-task-done-badge">${t("planning.done_badge")}</span>`}
+    </div>`;
+  }).join("");
+  html += `</div>`;
+  if(showStartAll && pendingCount > 0){
+    html += `<button class="btn red pln-start-all-btn" data-plan-start-day="${dayIndex}">${t("planning.start_all_btn")} →</button>`;
+  }
+  return html;
+}
+
+function attachStudyPlanEvents(){
+  const startBtn = document.getElementById("pln-start-wizard-btn");
+  if(startBtn) startBtn.addEventListener("click", ()=>{
+    state.studyWizard = { step: 1, goal: null, deadlineMode: "event", deadlineEventId: null, deadlineDate: "", deadlineLabel: "", availabilityMode: "daily", dailyMinutes: 30, perDay: { mon:30,tue:30,wed:30,thu:30,fri:30,sat:0,sun:0 }, subjectIds: [], chapterIds: [] };
+    state.studyPlanScreen = "wizard";
+    render();
+  });
+  document.querySelectorAll("[data-wizard-goal]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.studyWizard.goal = btn.dataset.wizardGoal;
+      if(btn.dataset.wizardGoal === "week") state.studyWizard.deadlineMode = "none";
+      render();
+    });
+  });
+  document.querySelectorAll("[data-wizard-deadline-event]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const evt = state.planning.events.find(e => e.id === btn.dataset.wizardDeadlineEvent);
+      state.studyWizard.deadlineMode = "event";
+      state.studyWizard.deadlineEventId = btn.dataset.wizardDeadlineEvent;
+      state.studyWizard.deadlineLabel = evt ? evt.summary : "";
+      const matched = evt ? matchEventSubject(evt.summary) : null;
+      if(matched && !state.studyWizard.subjectIds.includes(matched.id)) state.studyWizard.subjectIds.push(matched.id);
+      render();
+    });
+  });
+  const deadlineCustomBtn = document.querySelector("[data-wizard-deadline-custom]");
+  if(deadlineCustomBtn) deadlineCustomBtn.addEventListener("click", ()=>{
+    state.studyWizard.deadlineMode = "custom";
+    render();
+  });
+  const deadlineNoneBtn = document.getElementById("pln-deadline-none");
+  if(deadlineNoneBtn) deadlineNoneBtn.addEventListener("click", ()=>{
+    state.studyWizard.deadlineMode = "none";
+    state.studyWizard.deadlineEventId = null;
+    state.studyWizard.step = 3;
+    render();
+  });
+  const customDateInput = document.getElementById("pln-custom-date-input");
+  if(customDateInput) customDateInput.addEventListener("change", ()=>{ state.studyWizard.deadlineDate = customDateInput.value; });
+  const customLabelInput = document.getElementById("pln-custom-label-input");
+  if(customLabelInput) customLabelInput.addEventListener("input", ()=>{ state.studyWizard.deadlineLabel = customLabelInput.value; });
+
+  document.querySelectorAll("[data-wizard-time-mode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.studyWizard.availabilityMode = btn.dataset.wizardTimeMode; render(); });
+  });
+  const dailyMinutesInput = document.getElementById("pln-daily-minutes");
+  if(dailyMinutesInput) dailyMinutesInput.addEventListener("input", ()=>{
+    state.studyWizard.dailyMinutes = parseInt(dailyMinutesInput.value, 10);
+    render();
+  });
+  document.querySelectorAll("[data-wizard-perday]").forEach(inp=>{
+    inp.addEventListener("change", ()=>{
+      state.studyWizard.perDay[inp.dataset.wizardPerday] = Math.max(0, parseInt(inp.value, 10) || 0);
+    });
+  });
+
+  document.querySelectorAll("[data-wizard-subject]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const sid = btn.dataset.wizardSubject;
+      const idx = state.studyWizard.subjectIds.indexOf(sid);
+      if(idx === -1) state.studyWizard.subjectIds.push(sid);
+      else {
+        state.studyWizard.subjectIds.splice(idx, 1);
+        state.studyWizard.chapterIds = state.studyWizard.chapterIds.filter(cid=>{
+          const ch = findAnyChapter(cid);
+          return !ch || ch.subjectId !== sid;
+        });
+      }
+      render();
+    });
+  });
+  document.querySelectorAll("[data-wizard-chapter]").forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      const cid = cb.dataset.wizardChapter;
+      const idx = state.studyWizard.chapterIds.indexOf(cid);
+      if(cb.checked && idx === -1) state.studyWizard.chapterIds.push(cid);
+      else if(!cb.checked && idx !== -1) state.studyWizard.chapterIds.splice(idx, 1);
+    });
+  });
+
+  attachStudyWizardNext();
+
+  const createBtn = document.getElementById("pln-wizard-create");
+  if(createBtn) createBtn.addEventListener("click", ()=>{
+    const ok = createStudyPlan();
+    if(!ok){
+      const err = document.getElementById("pln-wizard-error");
+      if(err) err.style.display = "block";
+      return;
+    }
+    render();
+    window.scrollTo(0,0);
+  });
+
+  document.querySelectorAll("[data-plan-view]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.studyPlanView = btn.dataset.planView; render(); });
+  });
+  document.querySelectorAll("[data-plan-task]").forEach(btn=>{
+    btn.addEventListener("click", ()=> launchPlanningTask(parseInt(btn.dataset.planDay,10), btn.dataset.planTask));
+  });
+  document.querySelectorAll("[data-plan-start-day]").forEach(btn=>{
+    btn.addEventListener("click", ()=> launchPlanningDay(parseInt(btn.dataset.planStartDay,10)));
+  });
+  const editBtn = document.getElementById("pln-edit-btn");
+  if(editBtn) editBtn.addEventListener("click", ()=>{
+    const plan = state.studyPlan;
+    state.studyWizard = {
+      step: 1, goal: plan.goal, deadlineMode: plan.deadlineEventId ? "event" : (plan.deadlineAt ? "custom" : "none"),
+      deadlineEventId: plan.deadlineEventId, deadlineDate: plan.deadlineAt ? dateKey(new Date(plan.deadlineAt)) : "",
+      deadlineLabel: plan.deadlineLabel || "", availabilityMode: plan.availability.mode,
+      dailyMinutes: plan.availability.dailyMinutes, perDay: Object.assign({}, plan.availability.perDay),
+      subjectIds: plan.subjectIds.slice(), chapterIds: plan.chapterIds.slice(),
+    };
+    state.studyPlanScreen = "wizard";
+    render();
+  });
+  const deleteBtn = document.getElementById("pln-delete-btn");
+  if(deleteBtn) deleteBtn.addEventListener("click", ()=>{
+    if(confirm(t("planning.delete_confirm"))){ deleteStudyPlan(); render(); }
+  });
+}
+
+function attachStudyWizardNext(){
+  const nextBtn = document.getElementById("pln-wizard-next");
+  if(nextBtn) nextBtn.addEventListener("click", ()=>{
+    const w = state.studyWizard;
+    if(w.step === 1 && w.goal === "week"){ w.step = 3; render(); return; }
+    w.step = Math.min(4, w.step + 1);
+    render();
+  });
+  const backBtn = document.getElementById("pln-wizard-back");
+  if(backBtn) backBtn.addEventListener("click", ()=>{
+    const w = state.studyWizard;
+    if(w.step === 3 && w.goal === "week"){ w.step = 1; render(); return; }
+    w.step = Math.max(1, w.step - 1);
+    render();
   });
 }
 
