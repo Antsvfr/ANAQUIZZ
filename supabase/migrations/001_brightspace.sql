@@ -174,16 +174,26 @@ create policy "brightspace_connections_select_own" on public.brightspace_connect
 -- via la clé service_role qui contourne RLS. Un utilisateur ne peut donc pas
 -- forger, modifier ni supprimer une connexion depuis le navigateur.
 
--- Column Level Security : on retire l'accès à toute la table, puis on redonne
--- colonne par colonne — les trois colonnes de secret ne sont volontairement
+-- Column Level Security : on retire TOUS les privilèges des deux rôles exposés
+-- au navigateur (anon et authenticated), puis on redonne à `authenticated` la
+-- lecture colonne par colonne — les colonnes de secret ne sont volontairement
 -- PAS dans cette liste. Elles deviennent inaccessibles au navigateur, quelle
 -- que soit la policy RLS.
-revoke select on public.brightspace_connections from authenticated;
+--
+-- `revoke all` et pas `revoke select` : Supabase accorde par défaut tous les
+-- privilèges à anon et authenticated sur les tables de `public`. Ne révoquer
+-- que le SELECT de `authenticated` laissait (a) anon avec un SELECT sur les
+-- colonnes de token et (b) authenticated avec INSERT/UPDATE dessus. Les
+-- policies RLS bloquaient déjà ces accès — aucune ligne n'était lisible — mais
+-- la défense en profondeur exige que le privilège lui-même n'existe pas.
+revoke all on public.brightspace_connections from anon, authenticated;
 grant  select (
   user_id, tenant_url, external_user_id, status, scopes,
   last_synced_at, last_error, token_expires_at, created_at, updated_at
 ) on public.brightspace_connections to authenticated;
 -- NON accordées (invisibles au client) : access_token_enc, refresh_token_enc
+-- anon : aucun privilège d'aucune sorte sur cette table.
+-- Les écritures passent exclusivement par les Edge Functions (service_role).
 
 -- ---- sync_runs -------------------------------------------------------------
 -- Contrairement à brightspace_connections, cette table ne contient AUCUN
@@ -211,10 +221,11 @@ create policy "sync_runs_update_own" on public.sync_runs
 --   select count(*) from public.subjects where source <> 'manual';
 --   select count(*) from public.chapters where source <> 'manual';
 --
---   -- (b) les colonnes de token sont bien inaccessibles au rôle authenticated :
---   select column_name from information_schema.column_privileges
+--   -- (b) les colonnes de token sont bien inaccessibles aux rôles du navigateur :
+--   select grantee, column_name, privilege_type
+--     from information_schema.column_privileges
 --    where table_name = 'brightspace_connections'
---      and grantee = 'authenticated'
+--      and grantee in ('anon','authenticated')
 --      and column_name in ('access_token_enc','refresh_token_enc');
 --   -- => doit renvoyer 0 ligne
 -- ============================================================================

@@ -71,9 +71,10 @@ select count(*) from public.subjects where source <> 'manual';
 select count(*) from public.chapters where source <> 'manual';
 
 -- (b) les colonnes de token sont inaccessibles au client → doit renvoyer 0 ligne
-select column_name from information_schema.column_privileges
+select grantee, column_name, privilege_type
+  from information_schema.column_privileges
  where table_name = 'brightspace_connections'
-   and grantee = 'authenticated'
+   and grantee in ('anon','authenticated')
    and column_name in ('access_token_enc','refresh_token_enc');
 ```
 
