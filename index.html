@@ -1763,6 +1763,28 @@
 
   .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
+  /* ---------- Sources connectées (Brightspace) ----------
+     Volontairement discret : c'est un réglage, pas une fonctionnalité
+     principale. Une seule carte, pas de dégradé, pas d'ombre lourde —
+     l'état se lit par le texte et une pastille, jamais par la couleur seule. */
+  .src-card{ border:1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); background: var(--surface-2); }
+  .src-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: var(--space-xs); }
+  .src-name{ font-size: var(--text-h3); font-weight:700; color:var(--ink); }
+  .src-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom: var(--space-sm); }
+  .src-state{ display:inline-flex; align-items:center; gap:6px; font-size: var(--text-xs); font-weight:700; }
+  .src-state::before{ content:""; width:7px; height:7px; border-radius:50%; background: var(--muted); }
+  .src-state.src-ok{ color: var(--green); }
+  .src-state.src-ok::before{ background: var(--green); }
+  .src-actions{ display:flex; align-items:center; gap: var(--space-md); flex-wrap:wrap; }
+  .src-progress{ margin: var(--space-sm) 0; }
+  .src-progress .deckbar-track{ margin-bottom: var(--space-2xs); }
+  .src-result{ margin-top: var(--space-sm); }
+  .src-warn{ margin-top: var(--space-2xs); color: var(--amber); }
+  @media (max-width:560px){
+    .src-actions{ flex-direction:column; align-items:stretch; }
+    .src-actions .btn{ width:100%; text-align:center; }
+  }
+
   /* ---------- Assistant IA personnel (§25 : doit être une des interfaces
      les plus soignées du produit) ---------- */
   .ai-hero{ margin-bottom:8px; }
@@ -2375,6 +2397,12 @@
      recommandations déjà calculées par smart-revision.js en entrée (ne les
      recalcule jamais) — voir planning.js. -->
 <script src="planning.js"></script>
+
+<!-- Sources de contenu externes (Brightspace aujourd'hui, autres LMS plus
+     tard) : normalisation et diff, module pur sans DOM/état/réseau — voir
+     content-sources.js. Les appels réseau, eux, passent exclusivement par les
+     Edge Functions Supabase (aucun secret côté navigateur). -->
+<script src="content-sources.js"></script>
 
 <script>
 /* ============================================================
@@ -8568,9 +8596,407 @@ function renderCourseLibrarySection(){
   return html;
 }
 
+/* ============================================================
+   15duodecies. SOURCES CONNECTÉES — Brightspace
+   ------------------------------------------------------------
+   Brightspace est une SOURCE de contenu, pas une expérience séparée : un
+   cours importé devient une matière REV-EM normale, qui bénéficie ensuite
+   des fiches, quiz, flashcards, révision intelligente, statistiques,
+   planning et assistant IA exactement comme un cours importé en PDF.
+
+   Répartition des responsabilités :
+     • Edge Function brightspace-api  → parle à Brightspace (token, CORS)
+     • content-sources.js             → normalise et calcule le diff (pur)
+     • ici                            → orchestre, écrit, affiche
+
+   Supabase est la source de vérité pour le contenu Brightspace (d'où la
+   disponibilité multi-appareils) ; l'état local en est une copie de travail,
+   réhydratée au chargement.
+   ============================================================ */
+
+function bsConnected(){
+  return !!(state.brightspace && state.brightspace.connection && state.brightspace.connection.status === "connected");
+}
+
+/* L'intégration n'existe que pour un compte connecté : sans identité
+   Supabase, il n'y a ni token à rattacher ni ligne à protéger par RLS. */
+function bsAvailable(){
+  return !!(window.LyonAuth && LyonAuth.available && LyonAuth.client
+    && LyonAuth.state.status === "signed-in" && window.LyonContentSources);
+}
+
+async function bsInvoke(fn, body){
+  const { data, error } = await LyonAuth.client.functions.invoke(fn, { body: body || {} });
+  if(error){
+    // Le corps d'erreur des Edge Functions porte un message déjà rédigé pour
+    // l'utilisateur : on le préfère au message technique de supabase-js.
+    let payload = null;
+    try{ payload = await error.context.json(); }catch(e){}
+    const err = new Error((payload && payload.message) || "Service indisponible.");
+    err.code = payload && payload.error;
+    err.retryable = !!(payload && payload.retryable);
+    throw err;
+  }
+  return data;
+}
+
+async function bsLoadConnection(){
+  if(!bsAvailable()){ state.brightspace.connection = null; return null; }
+  // Les colonnes de token ne sont pas accordées au rôle authenticated :
+  // même ce select ne peut pas les rapporter (voir la migration).
+  const { data, error } = await LyonAuth.client
+    .from("brightspace_connections")
+    .select("tenant_url,status,scopes,last_synced_at,last_error,token_expires_at")
+    .maybeSingle();
+  if(error){ state.brightspace.connection = null; return null; }
+  state.brightspace.connection = data || null;
+  return data || null;
+}
+
+async function bsConnect(){
+  if(!bsAvailable()) return;
+  state.brightspace.busy = "connecting";
+  state.brightspace.error = null;
+  render();
+  try{
+    const res = await bsInvoke("brightspace-connect");
+    if(res && res.url){ window.location.href = res.url; return; }
+    throw new Error("URL d'autorisation absente.");
+  }catch(e){
+    state.brightspace.busy = null;
+    state.brightspace.error = e.message || t("sources.error_generic");
+    render();
+  }
+}
+
+async function bsDisconnect(){
+  if(!bsAvailable()) return;
+  if(!confirm(t("sources.disconnect_confirm"))) return;
+  state.brightspace.busy = "disconnecting";
+  render();
+  try{
+    await bsInvoke("brightspace-disconnect");
+    state.brightspace.connection = null;
+    state.brightspace.lastResult = null;
+    showToast(t("sources.disconnected"));
+  }catch(e){
+    state.brightspace.error = e.message || t("sources.error_generic");
+  }finally{
+    state.brightspace.busy = null;
+    render();
+  }
+}
+
+/* ---------- synchronisation ----------
+   Étapes : récupérer → normaliser → différencier → écrire → réhydrater.
+   La progression affichée vient du nombre réel de cours traités, jamais
+   d'une barre qui avance toute seule (§17). */
+async function bsSync(){
+  if(!bsAvailable() || state.brightspace.busy) return;
+  const CS = window.LyonContentSources;
+  state.brightspace.busy = "syncing";
+  state.brightspace.error = null;
+  state.brightspace.progress = { done: 0, total: 0, label: "" };
+  state.brightspace.lastResult = null;
+  render();
+
+  const totals = { subjectsCreated:0, subjectsUpdated:0, chaptersCreated:0, chaptersUpdated:0, removed:0, unavailable:0 };
+  let runId = null;
+
+  try{
+    const run = await LyonAuth.client.from("sync_runs")
+      .insert({ user_id: LyonAuth.state.user.id, source: "brightspace", status: "running" })
+      .select("id").maybeSingle();
+    runId = run && run.data ? run.data.id : null;
+
+    /* 1. cours distants */
+    const coursesRaw = await bsInvoke("brightspace-api", { op: "courses" });
+    const remoteCourses = (coursesRaw.items || [])
+      .map(CS.normalizeBrightspaceCourse)
+      .filter(Boolean);
+
+    state.brightspace.progress.total = remoteCourses.length;
+    render();
+
+    /* 2. matières : diff puis écriture */
+    const { data: localSubjects } = await LyonAuth.client
+      .from("subjects").select("id,external_id,source,sync_status,source_meta")
+      .eq("source", "brightspace");
+    const subjDiff = CS.diffCollections(
+      (localSubjects || []).map(s => ({
+        id: s.id, source: s.source, externalId: s.external_id,
+        syncStatus: s.sync_status, fingerprint: (s.source_meta || {}).fingerprint,
+      })),
+      remoteCourses, { source: "brightspace" },
+    );
+
+    const subjectIdByExternal = {};
+    (localSubjects || []).forEach(s => { subjectIdByExternal[s.external_id] = s.id; });
+
+    for(const item of subjDiff.created){
+      const c = item.remote;
+      const { data } = await LyonAuth.client.from("subjects").insert({
+        user_id: LyonAuth.state.user.id,
+        name: c.name, description: c.description,
+        semester_id: SEMESTERS[0].id,
+        source: "brightspace", external_id: c.externalId, external_type: c.externalType,
+        sync_status: "active", last_synced_at: new Date().toISOString(),
+        source_meta: { fingerprint: c.fingerprint, code: c.code },
+      }).select("id").maybeSingle();
+      if(data){ subjectIdByExternal[c.externalId] = data.id; totals.subjectsCreated++; }
+    }
+    for(const item of subjDiff.updated.concat(subjDiff.restored)){
+      const c = item.remote;
+      await LyonAuth.client.from("subjects").update({
+        name: c.name, description: c.description,
+        sync_status: "active", last_synced_at: new Date().toISOString(),
+        source_meta: { fingerprint: c.fingerprint, code: c.code },
+      }).eq("id", item.local.id);
+      totals.subjectsUpdated++;
+    }
+    /* Disparu de Brightspace : MARQUÉ, jamais supprimé (§13). */
+    for(const item of subjDiff.removed){
+      await LyonAuth.client.from("subjects").update({ sync_status: "removed" }).eq("id", item.local.id);
+      totals.removed++;
+    }
+
+    /* 3. contenu, cours par cours */
+    for(let i = 0; i < remoteCourses.length; i++){
+      const course = remoteCourses[i];
+      state.brightspace.progress.done = i;
+      state.brightspace.progress.label = course.name;
+      render();
+
+      let tree;
+      try{
+        tree = await bsInvoke("brightspace-api", { op: "content", orgUnitId: course.externalId });
+      }catch(e){
+        /* Un cours inaccessible ne fait pas échouer toute la synchronisation :
+           on le signale et on continue (§18, import partiel). */
+        totals.unavailable++;
+        continue;
+      }
+
+      const remoteChapters = CS.normalizeBrightspaceContentTree(tree.items || [], { courseExternalId: course.externalId });
+      const subjectId = subjectIdByExternal[course.externalId];
+      if(!subjectId) continue;
+
+      const { data: localChapters } = await LyonAuth.client
+        .from("chapters").select("id,external_id,source,sync_status,source_meta")
+        .eq("source", "brightspace").eq("subject_id", subjectId);
+
+      const chapDiff = CS.diffCollections(
+        (localChapters || []).map(c => ({
+          id: c.id, source: c.source, externalId: c.external_id,
+          syncStatus: c.sync_status, fingerprint: (c.source_meta || {}).fingerprint,
+        })),
+        remoteChapters, { source: "brightspace" },
+      );
+
+      let order = 0;
+      for(const it of chapDiff.created){
+        const m = it.remote;
+        order++;
+        await LyonAuth.client.from("chapters").insert({
+          user_id: LyonAuth.state.user.id, subject_id: subjectId,
+          num: pad2(order), title: m.title, description: m.description,
+          source: "brightspace", external_id: m.externalId, external_type: m.externalType,
+          sync_status: "active", last_synced_at: new Date().toISOString(),
+          sort_order: m.order, resources: m.resources || [],
+          source_meta: { fingerprint: m.fingerprint, parentExternalId: m.parentExternalId },
+        });
+        totals.chaptersCreated++;
+      }
+      for(const it of chapDiff.updated.concat(chapDiff.restored)){
+        const m = it.remote;
+        /* Seuls les champs venant de la source sont écrasés : la fiche, le
+           quiz, les flashcards et la progression générés dans REV-EM ne sont
+           jamais touchés par une resynchronisation. */
+        await LyonAuth.client.from("chapters").update({
+          title: m.title, description: m.description,
+          sort_order: m.order, resources: m.resources || [],
+          sync_status: "active", last_synced_at: new Date().toISOString(),
+          source_meta: { fingerprint: m.fingerprint, parentExternalId: m.parentExternalId },
+        }).eq("id", it.local.id);
+        totals.chaptersUpdated++;
+      }
+      for(const it of chapDiff.removed){
+        await LyonAuth.client.from("chapters").update({ sync_status: "removed" }).eq("id", it.local.id);
+        totals.removed++;
+      }
+    }
+
+    state.brightspace.progress.done = remoteCourses.length;
+
+    if(runId){
+      await LyonAuth.client.from("sync_runs")
+        .update({ status: totals.unavailable ? "partial" : "completed", finished_at: new Date().toISOString(), counts: totals })
+        .eq("id", runId);
+    }
+
+    await bsPullIntoLocalState();
+    await bsLoadConnection();
+    state.brightspace.lastResult = totals;
+  }catch(e){
+    state.brightspace.error = e.message || t("sources.error_generic");
+    if(runId){
+      await LyonAuth.client.from("sync_runs")
+        .update({ status: "failed", finished_at: new Date().toISOString(), error_summary: String(e.message || e).slice(0, 500) })
+        .eq("id", runId);
+    }
+  }finally{
+    state.brightspace.busy = null;
+    state.brightspace.progress = null;
+    render();
+  }
+}
+
+/* Réhydrate l'état local à partir de Supabase pour que les fonctionnalités
+   existantes (bibliothèque, quiz, révision intelligente, planning…) voient
+   les cours Brightspace comme n'importe quels autres. Les matières/chapitres
+   d'autres sources ne sont jamais touchés. */
+async function bsPullIntoLocalState(){
+  if(!bsAvailable()) return;
+  const { data: subs } = await LyonAuth.client
+    .from("subjects").select("*").eq("source", "brightspace").neq("sync_status", "removed");
+  const { data: chaps } = await LyonAuth.client
+    .from("chapters").select("*").eq("source", "brightspace").neq("sync_status", "removed");
+
+  state.userSubjects = state.userSubjects.filter(s => s.source !== "brightspace");
+  (subs || []).forEach(s => {
+    state.userSubjects.push({
+      id: s.id, name: s.name, semesterId: s.semester_id || SEMESTERS[0].id,
+      icon: s.icon || "🎓", color: s.color || SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
+      description: s.description || "", builtin: false,
+      source: "brightspace", externalId: s.external_id, syncStatus: s.sync_status,
+    });
+  });
+
+  state.userChapters = state.userChapters.filter(c => c.source !== "brightspace");
+  (chaps || []).forEach(c => {
+    state.userChapters.push({
+      id: c.id, subjectId: c.subject_id, num: c.num || "", title: c.title,
+      desc: c.description || "", content: c.content || "",
+      originalText: c.original_text || "", summary: c.summary || "",
+      aiQuiz: c.ai_quiz || [], aiFlashcards: c.ai_flashcards || [],
+      aiReviewQuestions: c.ai_review_questions || [], keyNotions: c.key_notions || [],
+      createdAt: c.created_at ? Date.parse(c.created_at) : Date.now(),
+      updatedAt: c.updated_at ? Date.parse(c.updated_at) : Date.now(),
+      markedReviewed: !!c.marked_reviewed,
+      source: "brightspace", externalId: c.external_id, syncStatus: c.sync_status,
+      resources: c.resources || [],
+    });
+  });
+
+  saveUserSubjects();
+  saveUserChapters();
+}
+
+/* ---------- rendu ---------- */
+
+function renderSourcesSection(){
+  const bs = state.brightspace || {};
+  let body;
+
+  if(!bsAvailable()){
+    // Sans compte connecté, l'intégration n'a pas de sens : on l'explique
+    // plutôt que d'afficher un bouton qui échouerait.
+    body = `<p class="meta">${t("sources.requires_account")}</p>`;
+  } else if(bs.busy === "connecting"){
+    body = `<p class="meta"><span class="ai-spinner"></span> ${t("sources.connecting")}</p>`;
+  } else if(!bsConnected()){
+    body = `<p class="section-sub">${t("sources.bs_pitch")}</p>
+      <button class="btn red" id="bs-connect-btn">${t("sources.connect")}</button>`;
+  } else {
+    const c = bs.connection;
+    const last = c.last_synced_at ? fmtRelativeDate(dateKey(new Date(c.last_synced_at))).toLowerCase() : t("sources.never_synced");
+    const progress = bs.progress;
+    body = `<div class="src-row">
+        <span class="src-state src-ok">${t("sources.connected")}</span>
+        <span class="meta">${t("sources.last_sync", { when: escapeHtml(last) })}</span>
+      </div>`;
+
+    if(bs.busy === "syncing"){
+      const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+      body += `<div class="src-progress">
+        <div class="deckbar-track"><div class="deckbar-fill good" style="width:${pct}%;"></div></div>
+        <p class="meta">${t("sources.syncing")}${progress && progress.label ? " · " + escapeHtml(progress.label) : ""}
+          ${progress && progress.total ? ` (${progress.done}/${progress.total})` : ""}</p>
+      </div>`;
+    } else {
+      body += `<div class="src-actions">
+        <button class="btn outline small" id="bs-sync-btn">${t("sources.sync_now")}</button>
+        <button class="btn-text" id="bs-disconnect-btn">${t("sources.disconnect")}</button>
+      </div>`;
+    }
+
+    const r = bs.lastResult;
+    if(r && !bs.busy){
+      const created = r.subjectsCreated + r.chaptersCreated;
+      const updated = r.subjectsUpdated + r.chaptersUpdated;
+      let msg;
+      if(created === 0 && updated === 0 && r.removed === 0) msg = t("sources.up_to_date");
+      else {
+        const bits = [];
+        if(created) bits.push(t("sources.n_new", { n: created }));
+        if(updated) bits.push(t("sources.n_updated", { n: updated }));
+        if(r.removed) bits.push(t("sources.n_removed", { n: r.removed }));
+        msg = bits.join(" · ");
+      }
+      body += `<p class="meta src-result">${escapeHtml(msg)}</p>`;
+      if(r.unavailable) body += `<p class="meta src-warn">${t("sources.n_unavailable", { n: r.unavailable })}</p>`;
+    }
+  }
+
+  if(state.brightspace && state.brightspace.error){
+    body += `<p class="meta src-warn">${escapeHtml(state.brightspace.error)}</p>`;
+  }
+
+  return `<div class="dash-section src-section">
+    <div class="section-title">${t("sources.title")}</div>
+    <div class="src-card">
+      <div class="src-head">
+        <span class="src-name">Brightspace</span>
+      </div>
+      ${body}
+    </div>
+  </div>`;
+}
+
+function attachSourcesEvents(){
+  const c = document.getElementById("bs-connect-btn");
+  if(c) c.addEventListener("click", bsConnect);
+  const s = document.getElementById("bs-sync-btn");
+  if(s) s.addEventListener("click", bsSync);
+  const d = document.getElementById("bs-disconnect-btn");
+  if(d) d.addEventListener("click", bsDisconnect);
+}
+
+/* Retour du flux OAuth : ?brightspace=connected|denied|invalid|error.
+   Le paramètre est retiré de l'URL après lecture pour qu'un rafraîchissement
+   ne rejoue pas le message. */
+function bsHandleOAuthReturn(){
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("brightspace");
+  if(!status) return;
+  params.delete("brightspace");
+  const clean = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+  try{ window.history.replaceState({}, "", clean); }catch(e){}
+
+  if(status === "connected"){
+    showToast(t("sources.connect_success"));
+    bsLoadConnection().then(()=>{ state.tab = "fiches"; render(); });
+  } else if(status === "denied"){
+    showToast(t("sources.connect_denied"));
+  } else {
+    showToast(t("sources.connect_error"));
+  }
+}
+
 function renderFiches(){
   let html = `<h1 class="page-title">Ressources</h1>
   <p class="ai-intro">Automatise tes révisions et retrouve tous tes cours, fiches, quiz et flashcards au même endroit.</p>`;
+  html += renderSourcesSection();
   html += renderCourseAutomationCard();
   html += renderCourseLibrarySection();
   return html;
@@ -8578,6 +9004,7 @@ function renderFiches(){
 
 function attachFichesEvents(){
   attachCourseImportEvents();
+  attachSourcesEvents();
 
   document.querySelectorAll("[data-catalog-open]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -9944,6 +10371,10 @@ Object.assign(state, {
   // --- assistant personnel (§1-§35 du cahier des charges "ASSISTANT IA PERSONNEL") ---
   aiPersonalQuery: "",
   aiPersonalIntent: null,
+  // --- sources de contenu externes (Brightspace) ---
+  // Jamais persisté : la connexion fait autorité côté Supabase, cet objet
+  // n'est qu'un cache d'affichage rechargé à chaque ouverture de session.
+  brightspace: { connection: null, busy: null, progress: null, lastResult: null, error: null },
   // --- état d'interface du formulaire de compte ("Mon espace") ---
   accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null },
 });
@@ -16187,6 +16618,19 @@ async function handleAuthUserChange(){
 if(window.LyonAuth){
   LyonAuth.onChange(handleAuthUserChange);
   LyonAuth.init();
+}
+
+// Retour du flux OAuth Brightspace (?brightspace=…) : traité une seule fois,
+// après que l'authentification ait eu une chance de se rétablir — la
+// connexion Brightspace est rattachée au compte Supabase, donc inutile de
+// l'interroger avant d'avoir une session.
+if(window.LyonAuth && typeof bsHandleOAuthReturn === "function"){
+  LyonAuth.onChange(function bsOnce(){
+    if(LyonAuth.state.status === "signed-in"){
+      bsHandleOAuthReturn();
+      bsLoadConnection().then(()=>{ if(state.tab === "fiches") render(); });
+    }
+  });
 }
 
 // Premier affichage : lancé immédiatement (espace invité par défaut) sans
