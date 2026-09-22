@@ -90,6 +90,27 @@
     return isNaN(t) ? null : t;
   }
 
+  /* Date de dernière modification DÉCLARÉE PAR LA SOURCE, en ISO 8601, ou null.
+     Toutes les sources ne la fournissent pas, et toutes ne l'appellent pas
+     pareil : on cherche les orthographes plausibles, et on renvoie null plutôt
+     que de la remplacer par la date d'import — ce qui transformerait une
+     absence d'information en fait inventé.
+
+     Volontairement HORS du fingerprint : certains LMS touchent cette date sans
+     que le contenu change. Le fingerprint reste fondé sur le contenu réel ;
+     cette date est conservée telle quelle, à titre d'information. */
+  function sourceUpdatedAt(obj){
+    const raw = pick(obj, [
+      "LastModifiedDate", "lastModifiedDate",
+      "DateModified", "dateModified",
+      "LastUpdated", "lastUpdated",
+      "LastModified", "lastModified",
+    ]);
+    if(!raw) return null;
+    const t = toTimestamp(raw);
+    return t === null ? null : new Date(t).toISOString();
+  }
+
   /* Empreinte de contenu : sert UNIQUEMENT à détecter qu'un élément a changé
      côté source. Volontairement limitée aux champs qui viennent de la source
      (jamais au contenu généré par REV-EM, qui ne doit pas déclencher de
@@ -128,6 +149,7 @@
       code: code || null,
       description: cleanText(pick(ou, ["Description", "description"], "")) || null,
       startDate, endDate,
+      sourceUpdatedAt: sourceUpdatedAt(ou) || sourceUpdatedAt(entry),
       fingerprint: fingerprint({ name, code, startDate, endDate }),
     };
   }
@@ -160,6 +182,7 @@
       startDate: toTimestamp(pick(mod, ["ModuleStartDate", "StartDate", "startDate"])),
       endDate: toTimestamp(pick(mod, ["ModuleEndDate", "EndDate", "endDate"])),
       resources: [],
+      sourceUpdatedAt: sourceUpdatedAt(mod),
       fingerprint: fingerprint({ title, shortTitle, description, order }),
     };
   }
@@ -195,6 +218,7 @@
          null = pas encore tenté. On n'affirme JAMAIS qu'une ressource est
          accessible sans l'avoir vérifié (§8). */
       accessible: null,
+      sourceUpdatedAt: sourceUpdatedAt(topic),
       fingerprint: fingerprint({ title, url, kind, order }),
     };
   }
@@ -396,7 +420,7 @@
     diffCollections,
     buildUpdatePatch,
     // exposés pour les tests et la réutilisation par une future source
-    fingerprint, classifyTopic, pick,
+    fingerprint, classifyTopic, pick, sourceUpdatedAt,
   };
 
 })(typeof window !== "undefined" ? window : globalThis);

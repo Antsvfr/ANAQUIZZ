@@ -2403,6 +2403,16 @@
      content-sources.js. Les appels réseau, eux, passent exclusivement par les
      Edge Functions Supabase (aucun secret côté navigateur). -->
 <script src="content-sources.js"></script>
+<!-- Moteur de synchronisation générique : ne connaît aucun LMS en
+     particulier, seulement le contrat SourceAdapter → Store. Il porte le
+     diff, les réessais, l'annulation, le curseur de reprise et le journal
+     (started/completed/partial/failed/cancelled) — voir sync-engine.js. -->
+<script src="sync-engine.js"></script>
+<!-- Registre des sources de contenu (manual, pdf, brightspace ; moodle et
+     Google Classroom volontairement non développés) — voir
+     source-adapters.js. Ajouter une source = ajouter un adaptateur, sans
+     toucher ni au moteur ni à ce fichier. -->
+<script src="source-adapters.js"></script>
 
 <script>
 /* ============================================================
@@ -8622,7 +8632,8 @@ function bsConnected(){
    Supabase, il n'y a ni token à rattacher ni ligne à protéger par RLS. */
 function bsAvailable(){
   return !!(window.LyonAuth && LyonAuth.available && LyonAuth.client
-    && LyonAuth.state.status === "signed-in" && window.LyonContentSources);
+    && LyonAuth.state.status === "signed-in" && window.LyonContentSources
+    && window.LyonSync && window.LyonSourceAdapters);
 }
 
 async function bsInvoke(fn, body){
@@ -8688,166 +8699,109 @@ async function bsDisconnect(){
 }
 
 /* ---------- synchronisation ----------
-   Étapes : récupérer → normaliser → différencier → écrire → réhydrater.
-   La progression affichée vient du nombre réel de cours traités, jamais
-   d'une barre qui avance toute seule (§17). */
+   Tout le travail est fait par le moteur générique (sync-engine.js) : diff,
+   déduplication, réessais, annulation, curseur de reprise et journal. Ce qui
+   reste ici, c'est le BRANCHEMENT — quel adaptateur, quel store, quel journal —
+   et l'affichage. Aucune logique de synchronisation n'est dupliquée dans le
+   frontend, et aucune ligne de ce fichier ne connaît l'API Brightspace.
+
+   Ajouter Moodle un jour : écrire un adaptateur, l'enregistrer. Ici, rien. */
+
+/* L'adaptateur n'est construit qu'une fois : il lui faut un transport
+   authentifié (bsInvoke), donc une session Supabase établie. */
+function bsAdapter(){
+  const SA = window.LyonSourceAdapters;
+  if(!SA.has("brightspace")) SA.registerBrightspace({ transport: bsInvoke });
+  return SA.get("brightspace");
+}
+
+function bsEngine(){
+  const userId = LyonAuth.state.user.id;
+  return LyonSync.createEngine({
+    adapter: bsAdapter(),
+    /* Le store est générique : il ne sait pas d'où vient le contenu. Seuls
+       les champs venant de la source y transitent — fiches, quiz, flashcards
+       et progression ne peuvent pas être écrasés par une resynchronisation. */
+    store: LyonSync.createSupabaseStore(LyonAuth.client, userId, {
+      containerDefaults: { semester_id: SEMESTERS[0].id },
+    }),
+    journal: LyonSync.createSupabaseJournal(LyonAuth.client, userId),
+  });
+}
+
+/* Le rapport du moteur est générique (conteneurs / éléments) ; l'interface
+   parle de matières et de chapitres. On traduit ici, une seule fois. */
+function bsReportToResult(rep){
+  const c = rep.counts;
+  return {
+    subjectsCreated: c.containersCreated,
+    subjectsUpdated: c.containersUpdated + c.containersRestored,
+    chaptersCreated: c.itemsCreated,
+    chaptersUpdated: c.itemsUpdated + c.itemsRestored,
+    removed: c.containersRemoved + c.itemsRemoved,
+    unavailable: c.unavailable,
+    status: rep.status,
+    resumed: rep.resumed,
+  };
+}
+
 async function bsSync(){
   if(!bsAvailable() || state.brightspace.busy) return;
-  const CS = window.LyonContentSources;
   state.brightspace.busy = "syncing";
   state.brightspace.error = null;
   state.brightspace.progress = { done: 0, total: 0, label: "" };
   state.brightspace.lastResult = null;
+  /* Objet d'annulation partagé avec le moteur : le bouton se contente de
+     passer `aborted` à true, le moteur s'arrête au prochain point de contrôle. */
+  state.brightspace.cancel = { aborted: false };
   render();
 
-  const totals = { subjectsCreated:0, subjectsUpdated:0, chaptersCreated:0, chaptersUpdated:0, removed:0, unavailable:0 };
-  let runId = null;
-
   try{
-    const run = await LyonAuth.client.from("sync_runs")
-      .insert({ user_id: LyonAuth.state.user.id, source: "brightspace", status: "running" })
-      .select("id").maybeSingle();
-    runId = run && run.data ? run.data.id : null;
+    const report = await bsEngine().run({
+      signal: state.brightspace.cancel,
+      /* La progression affichée vient du nombre réel de cours traités,
+         jamais d'une barre qui avance toute seule. */
+      onProgress: function(p){
+        if(p.stage === "containers"){
+          state.brightspace.progress = { done: 0, total: p.total, label: "" };
+          render();
+        } else if(p.stage === "container"){
+          state.brightspace.progress = { done: p.index, total: p.total, label: p.label };
+          render();
+        }
+      },
+    });
 
-    /* 1. cours distants */
-    const coursesRaw = await bsInvoke("brightspace-api", { op: "courses" });
-    const remoteCourses = (coursesRaw.items || [])
-      .map(CS.normalizeBrightspaceCourse)
-      .filter(Boolean);
-
-    state.brightspace.progress.total = remoteCourses.length;
-    render();
-
-    /* 2. matières : diff puis écriture */
-    const { data: localSubjects } = await LyonAuth.client
-      .from("subjects").select("id,external_id,source,sync_status,source_meta")
-      .eq("source", "brightspace");
-    const subjDiff = CS.diffCollections(
-      (localSubjects || []).map(s => ({
-        id: s.id, source: s.source, externalId: s.external_id,
-        syncStatus: s.sync_status, fingerprint: (s.source_meta || {}).fingerprint,
-      })),
-      remoteCourses, { source: "brightspace" },
-    );
-
-    const subjectIdByExternal = {};
-    (localSubjects || []).forEach(s => { subjectIdByExternal[s.external_id] = s.id; });
-
-    for(const item of subjDiff.created){
-      const c = item.remote;
-      const { data } = await LyonAuth.client.from("subjects").insert({
-        user_id: LyonAuth.state.user.id,
-        name: c.name, description: c.description,
-        semester_id: SEMESTERS[0].id,
-        source: "brightspace", external_id: c.externalId, external_type: c.externalType,
-        sync_status: "active", last_synced_at: new Date().toISOString(),
-        source_meta: { fingerprint: c.fingerprint, code: c.code },
-      }).select("id").maybeSingle();
-      if(data){ subjectIdByExternal[c.externalId] = data.id; totals.subjectsCreated++; }
+    if(report.status === LyonSync.RUN_STATUS.FAILED){
+      state.brightspace.error = report.errorCode === "already_running"
+        ? t("sources.already_running")
+        : (report.error || t("sources.error_generic"));
+    } else {
+      if(report.status === LyonSync.RUN_STATUS.CANCELLED) showToast(t("sources.cancelled"));
+      else if(report.resumed) showToast(t("sources.resumed"));
+      /* Même annulée, une synchronisation a réellement importé ce qu'elle a
+         eu le temps d'importer : on réhydrate, et on affiche ces chiffres-là. */
+      await bsPullIntoLocalState();
+      await bsLoadConnection();
+      state.brightspace.lastResult = bsReportToResult(report);
     }
-    for(const item of subjDiff.updated.concat(subjDiff.restored)){
-      const c = item.remote;
-      await LyonAuth.client.from("subjects").update({
-        name: c.name, description: c.description,
-        sync_status: "active", last_synced_at: new Date().toISOString(),
-        source_meta: { fingerprint: c.fingerprint, code: c.code },
-      }).eq("id", item.local.id);
-      totals.subjectsUpdated++;
-    }
-    /* Disparu de Brightspace : MARQUÉ, jamais supprimé (§13). */
-    for(const item of subjDiff.removed){
-      await LyonAuth.client.from("subjects").update({ sync_status: "removed" }).eq("id", item.local.id);
-      totals.removed++;
-    }
-
-    /* 3. contenu, cours par cours */
-    for(let i = 0; i < remoteCourses.length; i++){
-      const course = remoteCourses[i];
-      state.brightspace.progress.done = i;
-      state.brightspace.progress.label = course.name;
-      render();
-
-      let tree;
-      try{
-        tree = await bsInvoke("brightspace-api", { op: "content", orgUnitId: course.externalId });
-      }catch(e){
-        /* Un cours inaccessible ne fait pas échouer toute la synchronisation :
-           on le signale et on continue (§18, import partiel). */
-        totals.unavailable++;
-        continue;
-      }
-
-      const remoteChapters = CS.normalizeBrightspaceContentTree(tree.items || [], { courseExternalId: course.externalId });
-      const subjectId = subjectIdByExternal[course.externalId];
-      if(!subjectId) continue;
-
-      const { data: localChapters } = await LyonAuth.client
-        .from("chapters").select("id,external_id,source,sync_status,source_meta")
-        .eq("source", "brightspace").eq("subject_id", subjectId);
-
-      const chapDiff = CS.diffCollections(
-        (localChapters || []).map(c => ({
-          id: c.id, source: c.source, externalId: c.external_id,
-          syncStatus: c.sync_status, fingerprint: (c.source_meta || {}).fingerprint,
-        })),
-        remoteChapters, { source: "brightspace" },
-      );
-
-      let order = 0;
-      for(const it of chapDiff.created){
-        const m = it.remote;
-        order++;
-        await LyonAuth.client.from("chapters").insert({
-          user_id: LyonAuth.state.user.id, subject_id: subjectId,
-          num: pad2(order), title: m.title, description: m.description,
-          source: "brightspace", external_id: m.externalId, external_type: m.externalType,
-          sync_status: "active", last_synced_at: new Date().toISOString(),
-          sort_order: m.order, resources: m.resources || [],
-          source_meta: { fingerprint: m.fingerprint, parentExternalId: m.parentExternalId },
-        });
-        totals.chaptersCreated++;
-      }
-      for(const it of chapDiff.updated.concat(chapDiff.restored)){
-        const m = it.remote;
-        /* Seuls les champs venant de la source sont écrasés : la fiche, le
-           quiz, les flashcards et la progression générés dans REV-EM ne sont
-           jamais touchés par une resynchronisation. */
-        await LyonAuth.client.from("chapters").update({
-          title: m.title, description: m.description,
-          sort_order: m.order, resources: m.resources || [],
-          sync_status: "active", last_synced_at: new Date().toISOString(),
-          source_meta: { fingerprint: m.fingerprint, parentExternalId: m.parentExternalId },
-        }).eq("id", it.local.id);
-        totals.chaptersUpdated++;
-      }
-      for(const it of chapDiff.removed){
-        await LyonAuth.client.from("chapters").update({ sync_status: "removed" }).eq("id", it.local.id);
-        totals.removed++;
-      }
-    }
-
-    state.brightspace.progress.done = remoteCourses.length;
-
-    if(runId){
-      await LyonAuth.client.from("sync_runs")
-        .update({ status: totals.unavailable ? "partial" : "completed", finished_at: new Date().toISOString(), counts: totals })
-        .eq("id", runId);
-    }
-
-    await bsPullIntoLocalState();
-    await bsLoadConnection();
-    state.brightspace.lastResult = totals;
   }catch(e){
+    /* run() ne lève jamais : si on arrive ici, c'est la réhydratation locale. */
     state.brightspace.error = e.message || t("sources.error_generic");
-    if(runId){
-      await LyonAuth.client.from("sync_runs")
-        .update({ status: "failed", finished_at: new Date().toISOString(), error_summary: String(e.message || e).slice(0, 500) })
-        .eq("id", runId);
-    }
   }finally{
     state.brightspace.busy = null;
     state.brightspace.progress = null;
+    state.brightspace.cancel = null;
     render();
+  }
+}
+
+/* Annulation : le moteur clôt son journal en `cancelled` et CONSERVE son
+   curseur. La synchronisation suivante reprend où celle-ci s'est arrêtée,
+   sans retélécharger les cours déjà traités. */
+function bsCancelSync(){
+  if(state.brightspace && state.brightspace.cancel){
+    state.brightspace.cancel.aborted = true;
   }
 }
 
@@ -8922,6 +8876,7 @@ function renderSourcesSection(){
         <div class="deckbar-track"><div class="deckbar-fill good" style="width:${pct}%;"></div></div>
         <p class="meta">${t("sources.syncing")}${progress && progress.label ? " · " + escapeHtml(progress.label) : ""}
           ${progress && progress.total ? ` (${progress.done}/${progress.total})` : ""}</p>
+        <button class="btn-text" id="bs-cancel-btn">${t("sources.cancel")}</button>
       </div>`;
     } else {
       body += `<div class="src-actions">
@@ -8970,6 +8925,8 @@ function attachSourcesEvents(){
   if(s) s.addEventListener("click", bsSync);
   const d = document.getElementById("bs-disconnect-btn");
   if(d) d.addEventListener("click", bsDisconnect);
+  const x = document.getElementById("bs-cancel-btn");
+  if(x) x.addEventListener("click", bsCancelSync);
 }
 
 /* Retour du flux OAuth : ?brightspace=connected|denied|invalid|error.

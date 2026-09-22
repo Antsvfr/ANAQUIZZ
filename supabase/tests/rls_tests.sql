@@ -96,7 +96,7 @@ declare
     array['activities','user_id','ts, day, type','now(), current_date, ''quiz''','now() - interval ''1 hour'', current_date, ''flashcards''','y','y','y'],
     array['chapter_visits','user_id','chapter_key','''ch-a''','''ch-b''','y','y','y'],
     array['study_plans','user_id','','','','n','y','y'],
-    array['sync_runs','user_id','status','''running''','''completed''','y','y','n'],
+    array['sync_runs','user_id','status','''started''','''completed''','y','y','n'],
     array['brightspace_connections','user_id','tenant_url','''https://tenant-a.example''','''https://tenant-b.example''','n','n','n'],
     array['profiles','id','display_name','''RLS A''','''RLS B''','n','y','n']
   ];

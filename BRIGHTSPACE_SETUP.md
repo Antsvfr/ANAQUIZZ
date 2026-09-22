@@ -53,13 +53,22 @@ administrateur de l'établissement) possède.
 
 ## Étape 2 — Appliquer la migration SQL
 
-Dashboard Supabase → **SQL Editor** → coller et exécuter le contenu de :
+Dashboard Supabase → **SQL Editor** → coller et exécuter, **dans cet ordre** :
 
 ```
-supabase/migrations/001_brightspace.sql
+supabase/migrations/001_brightspace.sql   provenance + connexion + journal
+supabase/migrations/002_centralisation.sql statistiques, activités, planning
+supabase/migrations/003_sync_layer.sql     source_updated_at, upsert idempotent
 ```
 
-La migration est **idempotente** : tu peux la relancer sans risque.
+Puis les tests, qui doivent tous afficher `0 FAIL` sur leur ligne `RÉSUMÉ` :
+
+```
+supabase/tests/sync_idempotency_tests.sql
+supabase/tests/rls_tests.sql
+```
+
+Les migrations sont **idempotentes** : tu peux les relancer sans risque.
 Elle n'altère aucune donnée existante (toutes les lignes actuelles restent
 `source = 'manual'`).
 

@@ -265,10 +265,15 @@ Dans l'ordre. Dashboard Supabase → **SQL Editor**.
 
 2. **`supabase/migrations/002_centralisation.sql`**
 
-3. **`supabase/tests/rls_tests.sql`** — attends la ligne `RÉSUMÉ` : elle doit
+3. **`supabase/migrations/003_sync_layer.sql`** — ajoutée à l'étape 3
+   (couche de synchronisation, voir `SYNC_ARCHITECTURE.md`).
+
+4. **`supabase/tests/rls_tests.sql`** — attends la ligne `RÉSUMÉ` : elle doit
    afficher `0 FAIL` / `PASS`.
 
-4. Vérifications finales (facultatif, elles sont déjà dans les tests) :
+5. **`supabase/tests/sync_idempotency_tests.sql`** — idem, `0 FAIL`.
+
+6. Vérifications finales (facultatif, elles sont déjà dans les tests) :
 
 ```sql
 -- 20 tables, toutes avec RLS
