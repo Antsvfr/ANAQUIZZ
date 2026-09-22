@@ -47,6 +47,30 @@
     --color-accent: var(--blue);
     --color-success: var(--green);
 
+    /* ---- Échelle typographique (§3) ----
+       Une vraie échelle, à la place des ~24 tailles ad hoc (9 → 22px) qui
+       coexistaient en style inline. Chaque niveau a un rôle, pas juste une
+       taille : voir .page-title / .section-title / .meta plus bas. */
+    --text-display:26px;  /* hero du dashboard uniquement */
+    --text-h1:22px;       /* titre de page (niveau 1) */
+    --text-h2:15.5px;     /* titre de section (niveau 2) */
+    --text-h3:13.5px;     /* titre de bloc/carte (niveau 3) */
+    --text-body:13px;     /* texte principal */
+    --text-sm:12.5px;     /* texte secondaire */
+    --text-xs:11.5px;     /* metadata, légendes */
+    --text-2xs:10.5px;    /* eyebrow, micro-label */
+
+    /* ---- Échelle d'espacement (§15/§38) ----
+       L'espace exprime la hiérarchie : plus le niveau est élevé, plus
+       l'espace qui l'entoure est grand. */
+    --space-2xs:4px;
+    --space-xs:6px;
+    --space-sm:10px;
+    --space-md:14px;
+    --space-lg:18px;
+    --space-xl:22px;
+    --space-2xl:28px;
+
     --radius-xl:18px;
     --radius-lg:14px;
     --radius-md:10px;
@@ -573,8 +597,31 @@
     .fiche-keypoints{ padding:14px 15px; }
   }
 
-  /* ===== QUIZ CARD ===== */
-  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px 30px; box-shadow: var(--shadow-md); }
+  /* ============================================================
+     SYSTÈME DE CARTES (§6/§7)
+     ------------------------------------------------------------
+     Une carte = une unité logique réelle (une matière, une séance, une
+     recommandation, un formulaire, une fonctionnalité autonome) — jamais
+     un simple paragraphe ni un bouton isolé.
+
+     Les deux conteneurs historiques du projet (.card et .dash-section)
+     servaient au même rôle avec des décorations différentes (18px vs 14px
+     de rayon, deux ombres, deux paddings) : c'était la principale source
+     d'incohérence visuelle entre les pages. Ils forment désormais UNE
+     famille — même rayon, même bordure, même ombre — et ne se distinguent
+     plus que par la DENSITÉ :
+
+       .card          → variante spacieuse (formulaire, panneau, quiz)
+       .dash-section  → variante standard (section de contenu)
+
+     Ne pas imbriquer une carte dans une carte : au-delà d'un niveau, le
+     regroupement doit se faire par l'espace et la typographie (§5).
+     ============================================================ */
+  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 22px; box-shadow: var(--shadow-sm); }
+  /* Une carte posée à l'intérieur d'une autre surface ne réaffiche ni ombre
+     ni relief : elle se distingue par sa bordure seule (évite l'effet
+     « carte dans une carte dans une carte »). */
+  .dash-section .card, .card .card{ box-shadow: none; background: var(--surface-2); }
 
   .progress-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 17px; gap:10px; }
   .progress-row .label{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
@@ -880,7 +927,12 @@
   .flash-review-list .mark{ color: var(--red); flex-shrink:0; font-weight:800; }
 
   /* ===== ASSISTANT IA ===== */
-  .ai-intro{ font-size: 13px; color: var(--ink-soft); margin: 6px 0 24px; max-width: 560px; line-height:1.65; }
+  /* Historiquement le sous-titre de page de l'assistant IA, puis réutilisé
+     tel quel par ~24 écrans sans rapport avec l'IA. Conservé comme alias
+     strict de .page-subtitle (même rendu, une seule source de vérité) pour
+     ne casser aucun appelant existant — le nouveau code utilise
+     .page-subtitle. */
+  .ai-intro{ font-size: var(--text-body); color: var(--ink-soft); font-weight:400; margin: 0 0 var(--space-xl); max-width: 560px; line-height:1.65; }
   .ai-notice{ background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 15px; font-size: 12px; color: var(--ink-soft); margin-bottom: 24px; line-height:1.65; }
   .ai-notice b{ color: var(--ink); }
 
@@ -1801,8 +1853,61 @@
   }
   .dash-goal-block + .dash-goal-block{ margin-top:18px; padding-top:18px; border-top:1px solid var(--border); }
 
-  /* ===== SECTION TITLE (shared) ===== */
-  .section-title{ font-size: 15.5px; font-weight: 800; margin-bottom: 12px; letter-spacing:-0.005em; }
+  /* ============================================================
+     GRAMMAIRE VISUELLE PARTAGÉE (§2/§37)
+     ------------------------------------------------------------
+     Quatre niveaux, cohérents dans TOUT le site. La grammaire n'est pas
+     inventée ici : c'est celle que le dashboard utilisait déjà
+     (eyebrow → titre → meta → action) et qui manquait aux 30 autres
+     pages, formalisée pour être réutilisable.
+
+       Niveau 1  .page-head / .page-title / .page-subtitle  → « où suis-je ? »
+       Niveau 2  .section-title (+ .section-sub)            → sous-section
+       Niveau 3  .dash-section / .card                      → bloc/unité logique
+       Niveau 4  .meta / .eyebrow                           → information secondaire
+
+     La hiérarchie repose sur taille + poids + contraste + espace, jamais
+     sur la seule taille ni sur le gras systématique (§3).
+     ============================================================ */
+
+  /* --- Niveau 1 : titre de page ---
+     Remplace 31 <h1 style="font-size:22px;font-weight:800;margin:…"> qui
+     portaient 7 valeurs de marge différentes. Une seule source de vérité. */
+  .page-head{ margin: var(--space-2xl) 0 var(--space-xl); }
+  .page-head .page-title{ margin: 0; }
+  .page-head .page-subtitle{ margin: var(--space-xs) 0 0; }
+  .page-title{
+    font-size: var(--text-h1); font-weight: 800; line-height:1.25;
+    letter-spacing:-0.015em; color: var(--ink);
+    margin: var(--space-2xl) 0 var(--space-2xs);
+  }
+  /* Titre de page dans un contexte déjà introduit (fil d'ariane, retour) :
+     l'espace au-dessus est déjà fourni par l'élément précédent. */
+  .page-title.tight{ margin-top: 0; }
+  /* Titre SANS sous-titre : c'est lui qui porte l'espace avant le contenu,
+     puisqu'aucun .page-subtitle ne viendra le faire. */
+  .page-title.solo{ margin-bottom: var(--space-lg); }
+  .page-subtitle{
+    font-size: var(--text-body); color: var(--ink-soft); font-weight: 400;
+    margin: 0 0 var(--space-xl); max-width: 560px; line-height:1.65;
+  }
+
+  /* --- Niveau 2 : titre de section --- */
+  .section-title{ font-size: var(--text-h2); font-weight: 800; margin-bottom: var(--space-md); letter-spacing:-0.005em; }
+  /* Titre de section aligné avec une action sur la même ligne (en-tête de
+     section) : la marge basse est portée par le conteneur flex, pas par le
+     titre. Remplace 13 style="margin-bottom:0;" identiques. */
+  .section-title.inline{ margin-bottom: 0; }
+  /* Sous-titre de section : explique la section sans la transformer en page. */
+  .section-sub{ font-size: var(--text-sm); color: var(--ink-soft); font-weight:400; margin: calc(-1 * var(--space-sm)) 0 var(--space-md); line-height:1.6; }
+
+  /* --- Niveau 4 : information secondaire (§10) ---
+     Moins de contraste et de poids, jamais illisible pour autant. */
+  .meta{ font-size: var(--text-xs); color: var(--muted); font-weight: 500; line-height:1.55; }
+  .eyebrow{
+    font-size: var(--text-2xs); font-weight: 800; letter-spacing:0.07em;
+    text-transform: uppercase; color: var(--muted);
+  }
 
   /* ===== MES MATIÈRES (bibliothèque de cours) ===== */
   .breadcrumb{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:26px 0 18px; font-size:12.5px; }
@@ -2116,7 +2221,7 @@
     .subgrid{ grid-template-columns: 1fr; }
     .hero-mix{ flex-direction:column; align-items:flex-start; padding: 20px; }
     .hero-mix .btn{ width:100%; text-align:center; }
-    .card{ padding: 24px 18px; }
+    .card{ padding: var(--space-lg) var(--space-md); }
     .chapter{ padding: 20px 17px; }
     .chapter-head{ flex-wrap:wrap; }
     .chapter-headright{ text-align:left; }
@@ -4538,7 +4643,7 @@ function renderDashboard(){
 
   /* ---------- Bloc 3 : mes matières ---------- */
   html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.my_subjects")}</span></div>`;
+    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.my_subjects")}</span></div>`;
   if(subjects.length === 0){
     html += `<p class="dash-empty">${t("dashboard.no_subjects")}</p>
       <button class="btn outline small" id="dash-addcourse-btn" style="margin-top:10px;">${t("dashboard.add_first_subject")}</button>`;
@@ -4562,7 +4667,7 @@ function renderDashboard(){
   /* ---------- Bloc 4 : activité récente ---------- */
   const feed = recentFeedItems(5);
   html += `<div class="dash-card" id="dash-recent-activity">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.recent_activity")}</span></div>`;
+    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.recent_activity")}</span></div>`;
   if(feed.length === 0){
     html += `<p class="dash-empty">${t("dashboard.no_recent_activity")}</p>`;
   } else {
@@ -4572,7 +4677,7 @@ function renderDashboard(){
 
   /* ---------- Bloc 5 : actions rapides ---------- */
   html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">${t("dashboard.quick_actions")}</span></div>
+    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.quick_actions")}</span></div>
     <div class="dash-quicklinks">
       <button class="dash-quick-btn" id="dash-import-course-btn"><span class="ico">📥</span><span class="lbl">${t("dashboard.quick_import")}</span></button>
       <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">${t("dashboard.quick_view_subjects")}</span></button>
@@ -4632,7 +4737,7 @@ function renderDashboardRevisions(){
   if(recentChapters.length === 0) return "";
 
   let html = `<div class="dash-card" style="margin-bottom:18px;">
-    <div class="dash-card-head"><span class="section-title" style="margin-bottom:0;">Mes révisions</span></div>
+    <div class="dash-card-head"><span class="section-title inline">Mes révisions</span></div>
     <div class="dash-revisions-list">`;
   recentChapters.forEach(ch=>{
     const s = subjectOfChapter(ch);
@@ -4662,7 +4767,7 @@ function renderDashboardSchedule(){
   const previewDay = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
   let html = `<div class="dash-card dash-schedule-card" id="dash-schedule-card">
     <div class="dash-card-head">
-      <span class="section-title" style="margin-bottom:0;">${t("dashboard.schedule_title")}</span>
+      <span class="section-title inline">${t("dashboard.schedule_title")}</span>
       <div class="dash-schedule-nav">
         <button class="dash-schedule-navbtn ${previewDay===0?"active":""}" data-schedule-day="today">${t("dashboard.today")}</button>
         <button class="dash-schedule-navbtn ${previewDay===1?"active":""}" data-schedule-day="tomorrow">${t("dashboard.tomorrow")}</button>
@@ -4750,7 +4855,7 @@ function renderBadgesSection(){
   const total = BADGES.length;
   return `<div class="dash-section">
     <div class="dash-section-head">
-      <span class="section-title" style="margin-bottom:0;">Réussites</span>
+      <span class="section-title inline">Réussites</span>
       <span class="dash-goal-count">${unlockedCount} / ${total} débloqués</span>
     </div>
     <div class="badge-grid">
@@ -4910,7 +5015,7 @@ function renderSubjectsList(){
   const subjects = allSubjects();
   let html = `
     <div class="lib-pagehead">
-      <h1 style="font-size:22px;font-weight:800;margin:0;">Mes matières</h1>
+      <h1 class="page-title tight">Mes matières</h1>
       <div class="actions" style="justify-content:flex-start;margin:0;">
         <button class="btn-text" id="lib-import-course-btn">📥 Importer un cours</button>
         <button class="btn-text" id="lib-add-subject-btn">+ Ajouter une matière</button>
@@ -4963,7 +5068,7 @@ function renderSubjectDetail(){
   let html = crumb.html;
   html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;">
     <span class="icon subject-card" style="background:${s.color}22;">${s.icon||"📘"}</span>
-    <h1 style="font-size:22px;font-weight:800;margin:0;">${escapeHtml(s.name)}</h1>
+    <h1 class="page-title tight">${escapeHtml(s.name)}</h1>
     ${s.builtin ? '<span class="level-badge L2">Intégré</span>' : ""}
   </div>`;
   if(s.description) html += `<p class="ai-intro" style="margin-top:6px;">${escapeHtml(s.description)}</p>`;
@@ -5021,7 +5126,7 @@ function renderChapterDetail(){
   ]);
 
   let html = crumb.html;
-  html += `<h1 style="font-size:22px;font-weight:800;margin:0 0 6px;">${escapeHtml(ch.title)}</h1>`;
+  html += `<h1 class="page-title tight">${escapeHtml(ch.title)}</h1>`;
   if(ch.desc) html += `<p class="ai-intro">${escapeHtml(ch.desc)}</p>`;
 
   if(isUser){
@@ -5184,7 +5289,7 @@ function renderSubjectForm(){
   const editing = state.library.editingSubjectId ? findSubject(state.library.editingSubjectId) : null;
   const crumb = libBreadcrumb([{label:"Mes matières", view:"subjects"}, {label: editing ? "Modifier la matière" : "Nouvelle matière"}]);
   let html = crumb.html;
-  html += `<h1 style="font-size:22px;font-weight:800;margin:0 0 18px;">${editing ? "Modifier la matière" : "Nouvelle matière"}</h1>`;
+  html += `<h1 class="page-title tight solo">${editing ? "Modifier la matière" : "Nouvelle matière"}</h1>`;
   html += `<div class="card">
     <div class="ai-field"><label for="sf-name">Nom de la matière</label>
       <input class="ai-select" id="sf-name" placeholder="Ex : Introduction à la vente" value="${editing ? escapeHtml(editing.name) : ""}"></div>
@@ -5217,7 +5322,7 @@ function renderChapterForm(){
   const editing = state.library.editingChapterId ? findAnyChapter(state.library.editingChapterId) : null;
   const crumb = libBreadcrumb([{label:"Mes matières", view:"subjects"}, {label: s?s.name:"", view:"subjectDetail", extra:{subjectId:state.library.subjectId}}, {label: editing ? "Modifier le chapitre" : "Nouveau chapitre"}]);
   let html = crumb.html;
-  html += `<h1 style="font-size:22px;font-weight:800;margin:0 0 18px;">${editing ? "Modifier le chapitre" : "Nouveau chapitre"}</h1>`;
+  html += `<h1 class="page-title tight solo">${editing ? "Modifier le chapitre" : "Nouveau chapitre"}</h1>`;
   html += `<div class="card">
     <div class="form-row2">
       <div class="ai-field"><label for="cf-num">Numéro / ordre</label>
@@ -6797,7 +6902,7 @@ function renderCourseImportWizard(){
 }
 
 function renderImportCancelled(item){
-  return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Génération annulée</h1>
+  return `<h1 class="page-title">Génération annulée</h1>
   <div class="ai-notice">Génération annulée.<br>Ton cours original n'a pas été supprimé${item.charCount ? " — le texte extrait (" + item.charCount.toLocaleString(currentLocaleTag()) + " caractères) reste disponible" : ""}.</div>
   <div class="actions" style="justify-content:flex-start;margin-top:16px;flex-wrap:wrap;">
     <button class="btn red" id="import-relaunch-btn">🔄 Relancer la génération</button>
@@ -6807,7 +6912,7 @@ function renderImportCancelled(item){
 
 function renderImportPick(){
   const ci = state.courseImport;
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Importer un cours</h1>
+  let html = `<h1 class="page-title">Importer un cours</h1>
   <p class="ai-intro">Dépose un fichier ou colle ton cours : EM Lyon Révision génère automatiquement une fiche structurée, un résumé, un quiz, des flashcards et des questions de révision — sans rien remplir à la main.</p>`;
 
   html += `<div class="import-dropzone ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
@@ -6917,12 +7022,12 @@ function renderImportDetectOrReview(){
   if(!item) return renderImportPick();
 
   if(item.status === "pending" || item.status === "extracting" || item.status === "detecting"){
-    return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Analyse de ton cours…</h1>
+    return `<h1 class="page-title">Analyse de ton cours…</h1>
     ${renderCourseGenProgressHtml(item)}`;
   }
 
   if(item.status === "error"){
-    return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Import impossible</h1>
+    return `<h1 class="page-title">Import impossible</h1>
     <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
     <div class="actions" style="justify-content:flex-start;margin-top:16px;">
       <button class="btn outline" id="import-retry-file-btn">🔄 Réessayer</button>
@@ -6935,7 +7040,7 @@ function renderImportDetectOrReview(){
   // proposer/vérifier des métadonnées, il ne bloque jamais la sauvegarde.
   const d = item.detected;
   const matched = d.subjectId ? findSubject(d.subjectId) : null;
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Voici ce que nous avons détecté</h1>
+  let html = `<h1 class="page-title">Voici ce que nous avons détecté</h1>
   <p class="ai-intro">Vérifie et corrige si besoin, puis choisis comment continuer.</p>`;
 
   if(item.aiUnavailable && !item.aiError){
@@ -6999,7 +7104,7 @@ function renderImportGenerating(){
   const item = ci.files[ci.activeIndex];
   if(!item) return renderImportPick();
   const curIdx = item.genStepIndex;
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Création de tes supports de révision…</h1>
+  let html = `<h1 class="page-title">Création de tes supports de révision…</h1>
   <p class="ai-intro">« ${escapeHtml(item.detected ? item.detected.title : item.name)} »</p>`;
   html += renderCourseGenProgressHtml(item);
 
@@ -7034,7 +7139,7 @@ function renderImportResult(){
   if(files.length === 1){
     const item = files[0];
     if(item.status === "error"){
-      return `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Import impossible</h1>
+      return `<h1 class="page-title">Import impossible</h1>
       <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
       <div class="actions" style="justify-content:flex-start;margin-top:16px;">
         <button class="btn-text" id="import-back-btn">← Retour à mes cours</button>
@@ -7047,7 +7152,7 @@ function renderImportResult(){
     const qLen = (ch && ch.aiReviewQuestions) ? ch.aiReviewQuestions.length : 0;
     let html = `<div class="card import-result-hero">
       <div class="import-result-icon">🎉</div>
-      <h1 style="font-size:20px;font-weight:800;margin:6px 0 4px;">Ton cours est prêt !</h1>
+      <h1 class="page-title tight">Ton cours est prêt !</h1>
       <p class="ai-intro" style="margin:0 0 14px;">${escapeHtml(item.detected.title)}${subj ? " — " + escapeHtml(subj.name) : ""}</p>
       <div class="import-stats-row">
         <span>🧠 ${quizLen} question${quizLen>1?"s":""} de quiz</span>
@@ -7078,7 +7183,7 @@ function renderImportResult(){
 
   // plusieurs fichiers : récapitulatif compact
   const doneCount = files.filter(f=>f.status==="done").length;
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${doneCount}/${files.length} cours prêts</h1>
+  let html = `<h1 class="page-title">${doneCount}/${files.length} cours prêts</h1>
   <div class="import-result-list">`;
   files.forEach(f=>{
     const ch = f.resultChapterId ? findAnyChapter(f.resultChapterId) : null;
@@ -7277,7 +7382,7 @@ function renderReview(){
   const never = poolNever();
 
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">À revoir</h1>
+    <h1 class="page-title">À revoir</h1>
     <p class="ai-intro">Chaque réponse est mémorisée question par question. Ces listes se recalculent automatiquement à partir de ton historique : réussites, échecs, régularité et questions jamais tentées.</p>
 
     <div class="mode-grid">
@@ -7296,7 +7401,7 @@ function renderReview(){
 
   html += `<div class="dash-section">
     <div class="dash-section-head">
-      <span class="section-title" style="margin-bottom:0;">Priorité de révision (${review.length})</span>
+      <span class="section-title inline">Priorité de révision (${review.length})</span>
       <span style="display:flex;gap:8px;flex-wrap:wrap;">
         ${review.length ? `<button class="ai-inline-btn" id="ai-explain-errors">🤖 M'expliquer mes erreurs</button>` : ""}
         ${review.length ? `<button class="btn red small" data-mode="review">Réviser ces questions</button>` : ""}
@@ -7313,7 +7418,7 @@ function renderReview(){
   if(hard.length){
     html += `<div class="dash-section">
       <div class="dash-section-head">
-        <span class="section-title" style="margin-bottom:0;">Questions difficiles (${hard.length})</span>
+        <span class="section-title inline">Questions difficiles (${hard.length})</span>
         <button class="btn outline small" data-mode="hard">Les travailler</button>
       </div>
       <div class="q-list">` + hard.slice(0,8).map(qItemHtml).join("") + `</div>
@@ -7348,7 +7453,7 @@ function renderReview(){
   if(never.length){
     html += `<div class="dash-section">
       <div class="dash-section-head">
-        <span class="section-title" style="margin-bottom:0;">Jamais faites (${never.length})</span>
+        <span class="section-title inline">Jamais faites (${never.length})</span>
         <button class="btn outline small" data-mode="never">Les découvrir</button>
       </div>
       <div class="q-list">` + never.slice(0,6).map(qItemHtml).join("") + `</div>
@@ -7556,7 +7661,7 @@ function renderExamSetup(){
     : ex.timerMode === "up" ? "Chronomètre libre, sans limite de temps" : "Sans chronomètre";
 
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Mode examen</h1>
+    <h1 class="page-title">Mode examen</h1>
     <p class="ai-intro">Conditions d'examen : aucune correction pendant l'épreuve, navigation libre entre les questions, puis correction complète à la fin. Le résultat alimente tes statistiques et ton niveau de maîtrise.</p>
 
     <div class="card">
@@ -7599,7 +7704,7 @@ function renderExamSetup(){
     const best = ex.history.reduce((a,b)=> b.pct > a.pct ? b : a);
     html += `<div class="dash-section" style="margin-top:22px;">
       <div class="dash-section-head">
-        <span class="section-title" style="margin-bottom:0;">Historique des examens (${ex.history.length})</span>
+        <span class="section-title inline">Historique des examens (${ex.history.length})</span>
         <span class="dash-goal-count">Meilleur score : ${best.pct}%</span>
       </div>
       ${ex.history.slice(0,8).map(h=>`
@@ -8464,7 +8569,7 @@ function renderCourseLibrarySection(){
 }
 
 function renderFiches(){
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Ressources</h1>
+  let html = `<h1 class="page-title">Ressources</h1>
   <p class="ai-intro">Automatise tes révisions et retrouve tous tes cours, fiches, quiz et flashcards au même endroit.</p>`;
   html += renderCourseAutomationCard();
   html += renderCourseLibrarySection();
@@ -10980,7 +11085,7 @@ function renderAI(){
     : (state.aiAction ? AI_ACTIONS[state.aiAction] : null);
 
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Assistant de révision</h1>
+    <h1 class="page-title">Assistant de révision</h1>
     <p class="ai-intro">Choisis une action : l'assistant reçoit automatiquement le contexte utile — la fiche du chapitre, les questions du cours, tes erreurs ou ton niveau de maîtrise réel. Il tourne localement dans ton navigateur, sans serveur ni clé API.</p>
     ${aiStatusHtml()}
     ${aiDiagnosticPanelHtml()}
@@ -11103,7 +11208,7 @@ function renderAI(){
   if(state.aiHistory.length > 0){
     html += `<div class="ai-history">
       <div class="ai-panel-head" style="border-bottom:none; margin-bottom:8px; padding-bottom:0;">
-        <div class="section-title" style="margin-bottom:0;">Historique</div>
+        <div class="section-title inline">Historique</div>
         <button class="btn-text" id="ai-clear-history">Vider l'historique</button>
       </div>
       ${state.aiHistory.slice().reverse().slice(0,10).map((h)=>{
@@ -11247,7 +11352,7 @@ function renderActivities(){
   const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
   const wrongCount = poolWrong().length;
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Activités</h1>
+  let html = `<h1 class="page-title">Activités</h1>
   <p class="ai-intro">Quiz, flashcards et oral — choisis une activité, tu retrouveras ensuite ta matière et ton chapitre à l'intérieur. (Pour les examens blancs, direction l'onglet Examens.)</p>`;
 
   if(rcChapter){
@@ -11306,7 +11411,7 @@ function startOralDrill(ch){
 function renderOral(){
   const subjects = allSubjects();
   let html = `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Interrogation orale</h1>
+    <h1 class="page-title">Interrogation orale</h1>
     <p class="ai-intro">Choisis une matière et un chapitre : l'assistant IA te posera des questions ouvertes à l'oral, une par une, et corrigera tes réponses.</p>
   `;
 
@@ -11928,7 +12033,7 @@ function renderSmartHome(){
     || state.userChapters.some(ch => userChapterProgress(ch) !== null);
   const hasChapters = allChaptersFlat().length > 0;
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">🧠 ${t("smart.title")}</h1>
+  let html = `<h1 class="page-title">🧠 ${t("smart.title")}</h1>
     <p class="ai-intro">${t("smart.subtitle")}</p>`;
 
   if(!hasAnyData){
@@ -11993,7 +12098,7 @@ function renderSmartRecap(){
   const notionsCount = new Set(s.results.map(r=>r.chapterId).filter(Boolean)).size;
   const elapsedSeconds = s.finishedAt ? Math.max(0, Math.round((s.finishedAt - s.startedAt)/1000)) : 0;
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("smart.recap_title")} 🎉</h1>`;
+  let html = `<h1 class="page-title">${t("smart.recap_title")} 🎉</h1>`;
 
   html += `<div class="dash-section"><div class="pg-overview">`;
   if(totalQuestions > 0){
@@ -12157,7 +12262,7 @@ function renderStatsOverview(){
     || QUESTIONS.some(q => qstat(q))
     || state.userChapters.some(ch => userChapterProgress(ch) !== null);
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">📊 ${t("stats.title")}</h1>
+  let html = `<h1 class="page-title">📊 ${t("stats.title")}</h1>
     <p class="ai-intro">${t("stats.subtitle")}</p>`;
 
   if(!hasAnyData){
@@ -12312,7 +12417,7 @@ function renderStatsSubjectDetail(subjectId){
   const tier = statusTier(ss.mastery === null ? null : { best: ss.mastery });
 
   let html = `<button class="btn-text" id="stats-back-overview">← ${t("stats.title")}</button>`;
-  html += `<h1 style="font-size:22px;font-weight:800;margin:14px 0 4px;">${ss.icon||"📘"} ${escapeHtml(ss.name)}</h1>`;
+  html += `<h1 class="page-title tight">${ss.icon||"📘"} ${escapeHtml(ss.name)}</h1>`;
 
   html += `<div class="pg-overview">
     <div class="pg-tile"><div class="pg-tile-num">${ss.mastery===null?"—":ss.mastery+"%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
@@ -12345,7 +12450,7 @@ function renderStatsChapterDetail(chapterId){
   const isRecommended = getSmartRevisionRecommendations().some(r => r.chapterId === chapterId);
 
   let html = `<button class="btn-text" id="stats-back-subject" data-back-subject="${cs.subjectId}">← ${subj ? escapeHtml(subj.name) : t("stats.title")}</button>`;
-  html += `<h1 style="font-size:22px;font-weight:800;margin:14px 0 4px;">${escapeHtml(cs.title)}</h1>`;
+  html += `<h1 class="page-title tight">${escapeHtml(cs.title)}</h1>`;
 
   html += `<div class="pg-overview">
     <div class="pg-tile"><div class="pg-tile-num">${cs.mastery===null?"—":cs.mastery+"%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
@@ -12788,7 +12893,7 @@ function renderProgress(){
   const subjects = allSubjects();
   const hasAnyActivity = state.dash.recentActivity.length > 0 || g.answered > 0 || state.userChapters.some(ch => userChapterProgress(ch) !== null);
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("progress.title")}</h1>
+  let html = `<h1 class="page-title">${t("progress.title")}</h1>
     <p class="ai-intro">${hasAnyActivity ? t("progress.subtitle") : t("progress.subtitle_empty")}</p>`;
 
   /* ---------- Vue d'ensemble ---------- */
@@ -13050,7 +13155,7 @@ function renderSettings(){
   const curLang = window.LyonI18n ? LyonI18n.getLang() : "fr";
   const langOption = (code, flagEmoji, key, fallback) => `<button type="button" class="btn ${curLang===code?"red":"outline"} small" data-settings-lang="${code}" aria-current="${curLang===code?"true":"false"}">${flagEmoji} ${t(key) || fallback}</button>`;
   return `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("settings.title")}</h1>
+    <h1 class="page-title">${t("settings.title")}</h1>
     <p class="ai-intro">${t("settings.intro")}</p>
 
     <div class="dash-section">
@@ -13416,7 +13521,7 @@ function renderMySpace(){
 
   const greeting = greetName ? t("greeting.hello_name", {name: escapeHtml(greetName)}) : t("greeting.hello");
   return `
-    <h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("account.myspace_title")}</h1>
+    <h1 class="page-title">${t("account.myspace_title")}</h1>
     ${authed
       ? `<p class="myspace-greeting">${greeting}</p><p class="myspace-subtext">${subtext}</p>`
       : `<p class="ai-intro">${subtext}</p>`}
@@ -14889,7 +14994,7 @@ function renderPlanning(){
   const configOpen = state.planning.configPanelOpen || !hasPlanning;
 
   let html = renderPlanningModeToggle();
-  html += `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Planning</h1>
+  html += `<h1 class="page-title">Planning</h1>
   <p class="ai-intro">Ton emploi du temps — aucune donnée n'est envoyée à un serveur, tout reste dans ce navigateur.</p>`;
 
   if(hasPlanning && !configOpen){
@@ -14902,7 +15007,7 @@ function renderPlanning(){
   if(configOpen){
     html += `<div class="card" style="margin-bottom:22px;">`;
     if(hasPlanning){
-      html += `<div class="dash-card-head"><div class="section-title" style="margin-bottom:0;">Source de mon planning</div>
+      html += `<div class="dash-card-head"><div class="section-title inline">Source de mon planning</div>
         <button class="btn-text" id="planning-toggle-config">Masquer ▲</button></div>`;
     } else {
       html += `<div class="section-title" style="margin-bottom:10px;">Configurer mon planning</div>`;
@@ -15273,7 +15378,7 @@ function renderStudyPlanOverview(){
   const coverage = computeStudyPlanCoverage(plan);
   const today = todayKey();
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">${t("planning.title")}</h1>
+  let html = `<h1 class="page-title">${t("planning.title")}</h1>
     <p class="ai-intro">${t("planning.subtitle")}</p>`;
 
   if(plan.lastReplanMessage){
@@ -15603,7 +15708,7 @@ function renderExams(){
   const hist = state.exam.history || [];
   const sujets = state.documents.filter(d => d.type === "sujet");
 
-  let html = `<h1 style="font-size:22px;font-weight:800;margin:28px 0 4px;">Examens</h1>
+  let html = `<h1 class="page-title">Examens</h1>
   <p class="ai-intro">Entraîne-toi en conditions d'examen, retrouve tes sujets et consulte tes résultats.</p>`;
 
   html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
@@ -15613,7 +15718,7 @@ function renderExams(){
 
   html += `<div class="dash-section" id="exams-sujets-section">
     <div class="dash-section-head">
-      <span class="section-title" style="margin-bottom:0;">Mes sujets</span>
+      <span class="section-title inline">Mes sujets</span>
       <label class="btn outline small" style="cursor:pointer;margin:0;">+ Importer un sujet<input type="file" id="exams-sujet-input" accept=".txt,.md,.pdf,image/*" style="display:none;"></label>
     </div>
     ${state.examsSujetStatus ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${escapeHtml(state.examsSujetStatus)}</div>` : ""}
