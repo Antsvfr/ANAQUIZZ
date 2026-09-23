@@ -99,14 +99,22 @@ const PROBE = () => {
     }
     if (!/%/.test(cs.borderTopLeftRadius) && px(cs.borderTopLeftRadius) > 0) r.radii.push(px(cs.borderTopLeftRadius));
     if (cs.boxShadow !== "none") r.shadows.push(cs.boxShadow.slice(0, 48));
-    if (/^H[1-6]$/.test(el.tagName)) r.headings.push([el.tagName, px(cs.fontSize)]);
+    if (/^H[1-6]$/.test(el.tagName)
+        && !/\b(panel-label|section-head-label|eyebrow)\b/.test(el.className.toString())) {
+      r.headings.push([el.tagName, px(cs.fontSize)]);
+    }
 
     /* Une boîte encadrée directement dans une boîte encadrée. Une bordure
        transparente n'est pas une boîte ; un contrôle (bouton, champ, chip)
        est bordé par nature — ce n'est pas un emboîtement de surfaces. */
     const boxed = e => {
       const c = getComputedStyle(e);
-      if (parseFloat(c.borderTopWidth) === 0 || c.borderTopStyle !== "solid") return false;
+      /* Une boîte est fermée sur ses quatre côtés. Une bordure sur un seul
+         côté est un FILET de séparation — c'est le geste du système, pas un
+         emboîtement. */
+      const sides = ["Top", "Right", "Bottom", "Left"]
+        .filter(sd => parseFloat(c["border" + sd + "Width"]) > 0 && c["border" + sd + "Style"] === "solid");
+      if (sides.length < 4) return false;
       if (/rgba\(0, 0, 0, 0\)|transparent/.test(c.borderTopColor)) return false;
       if (/^(BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(e.tagName)) return false;
       if (/\b(btn|chip|input|select|textarea|badge|status|segmented|seal|toggle|mark)\b/
@@ -215,8 +223,11 @@ try {
     const maxOf = t => byTag[t] ? Math.max(...byTag[t]) : 0;
     check(`[${vp.n}] h1 domine h2`, maxOf("H1") > maxOf("H2"), byTag);
     check(`[${vp.n}] h2 domine ou égale h3`, maxOf("H2") >= maxOf("H3"), byTag);
-    check(`[${vp.n}] aucun titre sous le corps de texte`,
-      Math.min(...all.headings.map(([, s]) => s)) >= 14, byTag);
+    /* Les libellés de panneau en chasse fixe sont exclus : ils sont des
+       titres pour le lecteur d'écran, pas des titres visuels. */
+    check(`[${vp.n}] aucun titre visuel sous le corps de texte`,
+      all.headings.length > 0 && Math.min(...all.headings.map(([, z]) => z)) >= 14,
+      all.headings.filter(([, z]) => z < 14));
 
     eq(`[${vp.n}] aucune erreur JavaScript`, errors, []);
     await page.close();

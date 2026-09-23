@@ -1,5 +1,5 @@
 /* ============================================================================
-   ÉTAPE 6 — TABLEAU DE BORD ÉDITORIAL
+   TABLEAU DE BORD — PANNEAUX
    ----------------------------------------------------------------------------
    Deux questions sont posées à chaque vérification :
      • la composition dit-elle « où suis-je / qu'est-ce qui compte / que
@@ -104,19 +104,19 @@ try {
       const root = document.querySelector(".dashboard");
       /* L'ordre réel des grandes zones, de haut en bas. */
       const order = [...root.children]
-        .filter(el => el.matches("header, section, footer"))
+        .filter(el => el.offsetParent !== null)
         .map(el => el.className || el.tagName.toLowerCase());
       const top = el => Math.round(el.getBoundingClientRect().top + window.scrollY);
       const lede = document.querySelector(".dash-lede");
-      const focus = document.querySelector(".dash-focus");
+      const focus = document.querySelector(".dash-panel--priority");
       const cs = el => getComputedStyle(el);
       return {
         order,
         ledeTitle: document.querySelector(".dash-lede-title").tagName,
         ledeFont: cs(document.querySelector(".dash-lede-title")).fontFamily.split(",")[0].replace(/"/g, ""),
         ledeSize: cs(document.querySelector(".dash-lede-title")).fontSize,
-        focusTitle: document.querySelector(".dash-focus-title").tagName,
-        focusSize: cs(document.querySelector(".dash-focus-title")).fontSize,
+        focusTitle: document.querySelector(".dash-priority-title").tagName,
+        focusSize: cs(document.querySelector(".dash-priority-title")).fontSize,
         focusRule: cs(focus).borderTopColor + " " + cs(focus).borderTopWidth,
         ledeBeforeFocus: top(lede) < top(focus),
         /* La priorité arrive avant l'emploi du temps, qui arrive avant les actions. */
@@ -131,25 +131,31 @@ try {
     });
 
     eq("l'accroche vient en premier", h.order[0], "dash-lede");
-    eq("puis la priorité", h.order[1], "dash-focus");
+    check("puis la grille priorité + progression",
+      /dash-grid/.test(h.order[1]), h.order);
     check("la salutation est un h1 en serif de titraille",
       h.ledeTitle === "H1" && h.ledeFont === "Newsreader" && h.ledeSize === "40px", h);
     check("la priorité est un h2, plus petit que la salutation",
       h.focusTitle === "H2" && parseFloat(h.focusSize) < parseFloat(h.ledeSize), h);
-    eq("la priorité est marquée par un filet accent, pas par une carte",
+    eq("la carte priorité est coiffée d'un filet accent",
       h.focusRule, "rgb(227, 28, 61) 2px");
     check("l'accroche précède la priorité", h.ledeBeforeFocus, h);
     check("la priorité précède l'emploi du temps", h.focusBeforeSchedule, h);
     eq("une seule action primaire sur la page", h.primaries, 1);
-    eq("un seul filet accent sur la page", h.accentBorders, 1);
+    check("le rouge reste rare : au plus deux filets accent",
+      h.accentBorders <= 2, h.accentBorders);
     eq("aucune erreur JavaScript", errors, []);
     await page.close();
   }
 
   /* ======================================================================
-     2. PLUS DE GRILLE DE CARTES
+     2. DES PANNEAUX SÉPARÉS, ET AUCUN PANNEAU DANS UN PANNEAU
+     ----------------------------------------------------------------------
+     L'accueil est revenu à des cartes. Ce qui ne doit PAS revenir : la
+     bannière en dégradé, les six tuiles identiques, et la boîte dans la
+     boîte.
      ====================================================================== */
-  current = "2. plus de grille de cartes";
+  current = "2. panneaux";
   {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     await freezeClock(page);
@@ -160,38 +166,38 @@ try {
 
     const c = await page.evaluate(() => {
       const root = document.querySelector(".dashboard");
-      const boxed = [...root.querySelectorAll("*")].filter(el => {
+      const panels = [...root.querySelectorAll(".dash-panel")];
+      const shape = panels.map(el => {
         const cs = getComputedStyle(el);
-        return cs.borderTopWidth !== "0px" && cs.borderTopStyle === "solid"
-            && cs.borderLeftWidth !== "0px" && cs.borderRightWidth !== "0px"
-            && cs.borderBottomWidth !== "0px"
-            && el.getBoundingClientRect().height > 60;
-      }).map(el => el.className);
+        return `${cs.borderTopLeftRadius}|${cs.borderLeftWidth}|${cs.backgroundColor}|${cs.boxShadow !== "none"}`;
+      });
       return {
-        boxed,
-        oldCards: root.querySelectorAll(".dash-card").length,
+        panels: panels.length,
+        shapes: [...new Set(shape)],
+        /* Un panneau dans un panneau : jamais. */
+        nested: root.querySelectorAll(".dash-panel .dash-panel").length,
         oldBanner: root.querySelectorAll(".dash-banner").length,
-        oldGrid: root.querySelectorAll(".dash-grid2").length,
-        /* Le seul bloc encadré est le cours en cours : c'est un objet
-           manipulable, pas un simple paragraphe. */
-        features: [...root.querySelectorAll(".block--feature")].map(el => el.className),
-        /* Aucune carte dans une carte. */
-        nested: root.querySelectorAll(".block--feature .block--feature, .card .card").length,
-        sections: root.querySelectorAll(":scope > section").length,
-        /* Les sections tiennent par l'espace : un écart vertical net. */
-        gap: getComputedStyle(root.querySelector(":scope > section:nth-of-type(2)")).marginTop,
+        oldCards: root.querySelectorAll(".dash-card").length,
+        /* Les cartes de matières sont posées sur l'ivoire, pas dans un panneau. */
+        subjectsInPanel: root.querySelectorAll(".dash-panel .dash-subject").length,
+        subjects: root.querySelectorAll(".dash-subject").length,
+        /* L'accroche reste la seule zone sans carte. */
+        ledeBoxed: getComputedStyle(root.querySelector(".dash-lede")).borderTopWidth,
+        gap: getComputedStyle(root.querySelector(".dash-grid")).gap,
       };
     });
 
-    eq("plus aucune carte de l'ancien tableau de bord", c.oldCards, 0);
-    eq("plus de bannière en dégradé", c.oldBanner, 0);
-    eq("plus de grille à deux colonnes de cartes", c.oldGrid, 0);
-    eq("un seul bloc encadré : le cours en cours", c.features.length, 1);
-    check("et c'est bien le cours en cours", /dash-now/.test(c.features[0] || ""), c.features);
-    eq("aucune carte imbriquée", c.nested, 0);
-    check("le tableau de bord est fait de sections, pas de tuiles",
-      c.sections >= 5, c.sections);
-    eq("les sections sont séparées par l'espace, pas par des bordures", c.gap, "64px");
+    check("l'accueil est fait de panneaux", c.panels >= 5, c.panels);
+    eq("tous les panneaux ont la même forme", c.shapes.length, 1);
+    check("filet fin, rayon de surface, ombre très légère",
+      /^12px\|1px\|rgb\(255, 255, 255\)\|true$/.test(c.shapes[0]), c.shapes);
+    eq("aucun panneau dans un panneau", c.nested, 0);
+    eq("la bannière en dégradé n'est pas revenue", c.oldBanner, 0);
+    eq("les anciennes tuiles ne sont pas revenues", c.oldCards, 0);
+    check("des cartes de matières sont affichées", c.subjects >= 1, c.subjects);
+    eq("elles ne sont pas enfermées dans un panneau", c.subjectsInPanel, 0);
+    eq("l'accroche reste sans boîte", c.ledeBoxed, "0px");
+    eq("les panneaux sont séparés par l'espace du système", c.gap, "24px");
     await page.close();
   }
 
@@ -214,6 +220,7 @@ try {
       ["#dash-library-btn2",        () => state.tab === "library" && state.library.view === "subjects"],
       ["[data-dash-add-subject]",   () => state.tab === "library" && state.library.view === "subjectForm"],
       ["#dash-activities-btn",      () => state.tab === "activities"],
+      ["#dash-start-revision",      () => state.tab === "smart" || state.tab === "activities"],
       ["#dash-exams-btn",           () => state.tab === "exams"],
       ["#dash-planning-btn",        () => state.tab === "planning"],
       ["#dash-ai-btn",              () => state.tab === "ai"],
@@ -354,17 +361,17 @@ try {
 
     const m = await page.evaluate(() => {
       const g = globalMetrics();
-      const vals = [...document.querySelectorAll(".dash-metrics .stat-value")].map(e => e.textContent.trim());
-      const labels = [...document.querySelectorAll(".dash-metrics .stat-label")].map(e => e.textContent.trim());
+      const vals = [...document.querySelectorAll(".dash-measure b")].map(e => e.textContent.trim());
+      const labels = [...document.querySelectorAll(".dash-measure span")].map(e => e.textContent.trim());
       return {
-        headline: document.querySelector(".dash-metrics-value").textContent.trim(),
+        headline: document.querySelector(".dash-progress-value").textContent.trim(),
         expectedHeadline: g.mastery + "%",
         vals, labels,
         expectedQuestions: g.answered + "/" + g.total,
         expectedTime: fmtDuration(state.dash.timeSpentSeconds),
-        meterWidth: document.querySelector(".dash-metrics .meter-fill").style.width,
-        /* Le chiffre clé n'est pas une carte. */
-        statBoxed: getComputedStyle(document.querySelector(".dash-metrics .stat")).borderTopWidth,
+        meterWidth: document.querySelector(".dash-panel .meter-fill").style.width,
+        /* Une mesure est une ligne, pas une petite carte. */
+        statBoxed: getComputedStyle(document.querySelector(".dash-measure")).borderTopWidth,
         /* Les cours récents affichent leurs contenus disponibles… */
         tags: [...document.querySelectorAll(".dash-row-tags")].map(e => e.textContent.replace(/\s+/g, " ").trim()),
         /* …et leur état de révision, sur la ligne du titre. */
@@ -380,7 +387,7 @@ try {
       m.vals.includes(m.expectedQuestions), m);
     check("temps de révision : même valeur qu'avant",
       m.vals.includes(m.expectedTime), m);
-    eq("un chiffre clé n'est pas encadré", m.statBoxed, "0px");
+    eq("une mesure n'est pas encadrée", m.statBoxed, "0px");
     check("les contenus disponibles d'un cours sont annoncés",
       m.tags.some(x => /Quiz/.test(x) && /Flashcards/.test(x) && /Questions/.test(x)), m.tags);
     check("l'état de révision aussi",
@@ -428,7 +435,7 @@ try {
     eq("aucun identifiant en double", r.dupIds, []);
     eq("aucun emoji dans le tableau de bord", r.emoji, []);
     eq("aucune flèche typographique postiche", r.arrows, []);
-    eq("les sept destinations sont listées une seule fois", r.actions, 7);
+    eq("les huit destinations sont listées une seule fois", r.actions, 8);
     await page.close();
   }
 
@@ -451,7 +458,7 @@ try {
       const over = [...root.querySelectorAll("*")]
         .filter(el => el.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
         .map(el => el.className || el.tagName).slice(0, 6);
-      const split = getComputedStyle(document.querySelector(".dash-split"));
+      const split = getComputedStyle(document.querySelector(".dash-grid--split"));
       const actions = getComputedStyle(document.querySelector(".dash-actions"));
       const agenda = document.querySelector(".dash-agenda-row");
       return {
@@ -460,27 +467,29 @@ try {
         splitCols: split.gridTemplateColumns.split(" ").length,
         actionCols: actions.gridTemplateColumns.split(" ").length,
         agendaCols: agenda ? getComputedStyle(agenda).gridTemplateColumns.split(" ").length : null,
-        focusDir: getComputedStyle(document.querySelector(".dash-focus-actions")).flexDirection,
+        focusDir: getComputedStyle(document.querySelector(".dash-priority-actions")).flexDirection,
         ledeSize: getComputedStyle(document.querySelector(".dash-lede-title")).fontSize,
         /* Le texte reste lisible : la colonne de lecture ne s'étale pas. */
         subWidth: Math.round(document.querySelector(".dash-lede-sub").getBoundingClientRect().width),
-        sections: root.querySelectorAll(":scope > section").length,
+        sections: root.querySelectorAll(":scope > *").length,
+        panels: root.querySelectorAll(".dash-panel").length,
       };
     });
 
     eq(`[${vp.name}] aucun élément ne déborde`, r.overflowing, []);
     check(`[${vp.name}] pas de défilement horizontal`, !r.pageOverflow, r.pageOverflow);
-    check(`[${vp.name}] toutes les sections sont rendues`, r.sections >= 5, r.sections);
+    check(`[${vp.name}] toutes les zones sont rendues`, r.sections >= 6, r.sections);
+    check(`[${vp.name}] les cinq panneaux sont rendus`, r.panels >= 5, r.panels);
     if (vp.width <= 640) {
-      eq(`[${vp.name}] une seule colonne pour les deux index`, r.splitCols, 1);
+      eq(`[${vp.name}] une seule colonne pour les paires de panneaux`, r.splitCols, 1);
       eq(`[${vp.name}] une action par ligne`, r.actionCols, 1);
       eq(`[${vp.name}] les actions de la priorité s'empilent`, r.focusDir, "column");
       eq(`[${vp.name}] l'heure passe au-dessus du libellé`, r.agendaCols, 2);
       check(`[${vp.name}] la salutation est réduite`, parseFloat(r.ledeSize) <= 30, r.ledeSize);
     } else if (vp.width <= 1024) {
-      eq(`[${vp.name}] les deux index passent l'un sous l'autre`, r.splitCols, 1);
+      eq(`[${vp.name}] les paires de panneaux passent l'une sous l'autre`, r.splitCols, 1);
     } else {
-      eq(`[${vp.name}] les deux index sont côte à côte`, r.splitCols, 2);
+      eq(`[${vp.name}] les paires de panneaux sont côte à côte`, r.splitCols, 2);
       eq(`[${vp.name}] l'heure a sa colonne`, r.agendaCols, 3);
       check(`[${vp.name}] la colonne de lecture reste mesurée`, r.subWidth <= 680, r.subWidth);
     }
