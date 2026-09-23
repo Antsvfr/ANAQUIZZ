@@ -127,6 +127,7 @@
     --motion-state: 180ms;   /* changement d'état, sortie */
     --motion-enter: 240ms;   /* modale, panneau, toast */
     --motion-flip:  420ms;   /* retournement de flashcard — seule exception */
+    --motion-data:  360ms;   /* une jauge qui rejoint sa valeur */
     --ease-enter: cubic-bezier(.2,.8,.2,1);
     --ease-exit:  cubic-bezier(.4,0,.6,1);
 
@@ -251,12 +252,11 @@
   .wrap{ max-width: 920px; margin: 0 auto; padding: 0 22px 90px; }
   .quizwrap{ max-width: 620px; margin: 0 auto; padding: 34px 20px 70px; }
 
-  /* ===== CONTENT TRANSITION ===== */
-  #content{ animation: content-in 0.32s var(--ease); }
-  @keyframes content-in{
-    from{ opacity:0; transform: translateY(6px); }
-    to{ opacity:1; transform: translateY(0); }
-  }
+  /* ===== ENTRÉE DE CONTENU =====
+     #content ne change jamais d'identité : une animation posée ici ne jouait
+     donc qu'au tout premier chargement. L'entrée de vue est désormais gérée
+     par la classe .mo-enter (voir « COUCHE DE MOUVEMENT »), posée à chaque
+     changement d'écran. */
 
   /* ===== TOPBAR ===== */
   /* L'aplat rouge pleine largeur disparaît : c'était l'élément le plus visible
@@ -313,11 +313,8 @@
   .mainnav-link:hover .nav-chevron{ opacity:0.9; }
   .mainnav-link:hover{ background: var(--surface-sunken); color: var(--text-primary); }
   .mainnav-item.active-group > .mainnav-link{ color: var(--text-primary); font-weight: var(--weight-semibold); }
-  /* Le soulignement rouge de l'onglet actif est le seul rouge de la navigation. */
-  .mainnav-item.active-group > .mainnav-link::after{
-    content:""; position:absolute; left:13px; right:13px; bottom:0; height:2px;
-    background: var(--accent); border-radius:0;
-  }
+  /* Le soulignement rouge de l'onglet actif est le seul rouge de la
+     navigation. Son dépliement est décrit dans « COUCHE DE MOUVEMENT ». */
   .mainnav-item.open > .mainnav-link{ background: var(--surface-sunken); color: var(--text-primary); }
   .mainnav-item.open > .mainnav-link .nav-chevron,
   .mainnav-item.open > .lang-btn .nav-chevron{ transform: rotate(180deg); }
@@ -758,7 +755,8 @@
   .auth-toggle{ display:inline-flex; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px; margin-bottom:20px; }
   .auth-toggle button{
     border:none; background:none; border-radius:999px; padding:8px 18px; font-size:12.5px; font-weight:700;
-    color:var(--ink-soft); cursor:pointer; font-family:var(--font-main); transition: all 0.15s var(--ease);
+    color:var(--ink-soft); cursor:pointer; font-family:var(--font-main);
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter), box-shadow var(--motion-micro) var(--ease-enter);
   }
   .auth-toggle button.active{ background: var(--surface); color: var(--accent); box-shadow: var(--shadow-subtle); }
   .auth-msg{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; line-height:1.55; margin-top:12px; }
@@ -776,7 +774,7 @@
   .levelchips button{
     border: 1.5px solid var(--border-strong); background: #fff; border-radius: 999px; padding: 8px 17px;
     font-weight: 700; font-size: 12.5px; color: var(--ink-soft); cursor:pointer; font-family:"Inter",sans-serif;
-    transition: all 0.16s var(--ease);
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
   }
   .levelchips button:hover:not(.active){ border-color: var(--ink); color: var(--ink); }
   .levelchips button.active,
@@ -1758,10 +1756,10 @@
   @media (prefers-reduced-motion: no-preference){
     .qz-opt{ transition: transform .12s var(--ease), border-color .15s var(--ease), background .15s var(--ease); }
     .qz-opt:active:not(:disabled){ transform:scale(0.98); }
-    .qz-progress-fill{ transition: width .4s var(--ease); }
-    .qz-feedback{ animation: qzFeedbackIn .25s var(--ease); }
   }
-  @keyframes qzFeedbackIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+  /* La progression du quiz et sa correction sont animées par la couche de
+     mouvement (--motion-data et mo-view-in) : les deux règles qui vivaient
+     ici faisaient double emploi, avec leurs propres durées. */
 
   .qz-feedback{ margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--border); }
   .qz-verdict{ font-size: var(--text-h3); font-weight: var(--weight-semibold); margin-bottom: var(--space-sm); }
@@ -1785,7 +1783,7 @@
   .quiz-source-toggle:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
   .quiz-source-collapse{ display:grid; grid-template-rows:0fr; opacity:0; }
   @media (prefers-reduced-motion: no-preference){
-    .quiz-source-collapse{ transition: grid-template-rows .28s var(--ease), opacity .22s var(--ease); }
+    .quiz-source-collapse{ transition: grid-template-rows var(--motion-enter) var(--ease-enter), opacity var(--motion-state) var(--ease-enter); }
   }
   .quiz-source.open .quiz-source-collapse{ grid-template-rows:1fr; opacity:1; margin-top:10px; }
   .quiz-source-body{ overflow:hidden; min-height:0; }
@@ -1982,7 +1980,7 @@
   }
   .flash-source-toggle:hover{ color: var(--red-dark); text-decoration: underline; }
   .flash-source-collapse{
-    display:grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s var(--ease), opacity 0.22s var(--ease); opacity:0;
+    display:grid; grid-template-rows: 0fr; transition: grid-template-rows var(--motion-enter) var(--ease-enter), opacity var(--motion-state) var(--ease-enter); opacity:0;
   }
   .flash-source.open .flash-source-collapse{ grid-template-rows: 1fr; opacity:1; margin-top:10px; }
   .flash-source-body{ overflow:hidden; min-height:0; }
@@ -2283,9 +2281,12 @@
   .st-weekbar-col{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
   .st-weekbar-track{ width:100%; max-width:28px; height:70px; display:flex; align-items:flex-end; }
   .st-weekbar-fill{
-    width:100%; background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
+    width:100%; background: var(--accent);
     border-radius:5px 5px 2px 2px; min-height:0;
-    transition: height 0.4s var(--ease);
+    /* La hauteur EST la donnée : elle est posée d'un coup, en ligne. Ce qui
+       est animé, c'est la montée de la barre — une mise à l'échelle, jamais
+       une transition sur `height`, qui reflowerait la colonne à chaque image. */
+    transform-origin: bottom center;
   }
   .st-weekbar-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; }
 
@@ -2296,7 +2297,7 @@
   .st-insights-list li::before{ content:"•"; position:absolute; left:4px; color:var(--red); font-weight:800; }
 
   @media (prefers-reduced-motion: reduce){
-    .st-weekbar-fill{ transition:none; }
+    .st-weekbar-fill{ animation:none; }
   }
 
   @media (max-width:680px){
@@ -2858,7 +2859,7 @@
   .chipset button{
     border:1.5px solid var(--border-strong); background:#fff; border-radius:999px; padding:9px 16px;
     font-family:"Inter",sans-serif; font-weight:700; font-size:12.5px; color:var(--ink-soft); cursor:pointer;
-    transition: all .16s var(--ease);
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
   }
   .chipset button:hover:not(.active){ border-color: var(--ink); color: var(--ink); }
   .chipset button.active{ background: var(--accent-wash); border-color: var(--accent); color: var(--accent); box-shadow: none; }
@@ -2892,7 +2893,8 @@
   .exam-grid button{
     width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border-strong); background:#fff;
     font-family:"Inter",sans-serif; font-weight:800; font-size:11.5px; color:var(--muted); cursor:pointer;
-    font-variant-numeric: tabular-nums; transition: all .14s var(--ease);
+    font-variant-numeric: tabular-nums;
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
   }
   .exam-grid button:hover{ border-color: var(--ink); color: var(--ink); }
   .exam-grid button.done{ background: var(--ink); border-color: var(--ink); color:#fff; }
@@ -2940,7 +2942,7 @@
   .ai-status.checking{ align-items:center; }
 
   .ai-loadbar{ width:100%; height:8px; border-radius:999px; background: var(--border); overflow:hidden; margin:8px 0 2px; }
-  .ai-loadbar-fill{ height:100%; background: var(--red); border-radius:999px; transition: width .25s var(--ease); }
+  .ai-loadbar-fill{ height:100%; background: var(--accent); border-radius:999px; transition: width var(--motion-enter) var(--ease-enter); }
 
   .ai-modelpicker{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
   .ai-modelchoice{
@@ -3086,7 +3088,8 @@
   .ai-inline-btn{
     background:none; border:1.5px solid var(--border-strong); border-radius:999px; padding:6px 13px;
     font-family:"Inter",sans-serif; font-size:11.5px; font-weight:700; color: var(--ink-soft); cursor:pointer;
-    transition: all .15s var(--ease); white-space:nowrap;
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
+    white-space:nowrap;
   }
   .ai-inline-btn:hover{ border-color: var(--red); color: var(--red-dark); background: var(--red-tint); }
 
@@ -3329,7 +3332,7 @@
   }
   .cal-event{
     position:absolute; border-radius:6px; padding:3px 6px; font-size:11px; overflow:hidden;
-    cursor:pointer; transition: box-shadow .15s var(--ease), z-index 0s;
+    cursor:pointer; transition: box-shadow var(--motion-micro) var(--ease-enter);
   }
   .cal-event:hover, .cal-event:focus-visible{ box-shadow: var(--shadow-md); z-index:4; outline:none; }
   .cal-event.is-current{ box-shadow: 0 0 0 1.5px var(--green); }
@@ -3552,6 +3555,170 @@
     .level-heading .btn.small{ width:100%; text-align:center; margin-top:4px; }
     .dash-statgrid{ grid-template-columns: repeat(2,1fr); }
   }
+
+  /* ==========================================================================
+     COUCHE DE MOUVEMENT (étape 8)
+     --------------------------------------------------------------------------
+     Un mouvement n'existe ici que s'il répond à l'une de ces trois questions :
+       • d'où vient cet élément ?      (entrée, ouverture)
+       • qu'est-ce qui vient de changer ? (état, validation, erreur)
+       • est-ce que mon geste a été pris en compte ? (survol, pression)
+     Tout le reste est retiré.
+
+     TROIS RÈGLES TECHNIQUES, sans exception :
+       1. On n'anime que `transform` et `opacity`. Jamais width/height/top/left
+          sur un élément de page : ce sont des reflows, donc des saccades sur
+          mobile. (Les jauges font exception : leur `width` est la donnée
+          elle-même, et elles sont seules sur leur ligne.)
+       2. Aucune animation permanente, sauf pendant une attente réelle
+          (squelette, rouage). Rien ne bouge sur un écran au repos.
+       3. Rien au-dessus de 240 ms, sauf le retournement de flashcard (420 ms)
+          qui est le geste lui-même. Une transition qu'on remarque est trop
+          longue.
+
+     DURÉES (déclarées dans :root) :
+       --motion-micro 120ms  survol, focus, pression
+       --motion-state 180ms  changement d'état, ouverture d'un menu
+       --motion-enter 240ms  survol de page : modale, feuille, toast
+       --motion-flip  420ms  retournement de flashcard — seule exception
+       --motion-data  360ms  une jauge qui rejoint sa valeur
+
+     COURBES : --ease-enter pour ce qui arrive (décélération franche),
+               --ease-exit pour ce qui part.
+     ========================================================================== */
+
+  /* ── ENTRÉE DE VUE ────────────────────────────────────────────────────────
+     Posée par markViewTransition() à chaque changement d'écran, retirée
+     ensuite. Elle ne se déclenche donc PAS aux re-rendus internes (répondre à
+     une question, cocher une case) : le contenu ne clignoterait pas à chaque
+     interaction. */
+  .mo-enter{ animation: mo-view-in var(--motion-state) var(--ease-enter) backwards; }
+  @keyframes mo-view-in{
+    from{ opacity: 0; transform: translateY(6px); }
+    to{ opacity: 1; transform: none; }
+  }
+
+  /* Apparition progressive : les blocs de la page arrivent dans l'ordre de
+     lecture. Le décalage est volontairement court (30 ms) et plafonné à six
+     éléments — au-delà, l'utilisateur attendrait. */
+  .mo-enter > *,
+  .mo-enter > .dashboard > section{
+    animation: mo-view-in var(--motion-state) var(--ease-enter) backwards;
+  }
+  .mo-enter > *:nth-child(1),  .mo-enter > .dashboard > section:nth-child(1){ animation-delay: 0ms; }
+  .mo-enter > *:nth-child(2),  .mo-enter > .dashboard > section:nth-child(2){ animation-delay: 30ms; }
+  .mo-enter > *:nth-child(3),  .mo-enter > .dashboard > section:nth-child(3){ animation-delay: 60ms; }
+  .mo-enter > *:nth-child(4),  .mo-enter > .dashboard > section:nth-child(4){ animation-delay: 90ms; }
+  .mo-enter > *:nth-child(5),  .mo-enter > .dashboard > section:nth-child(5){ animation-delay: 120ms; }
+  .mo-enter > *:nth-child(n+6),.mo-enter > .dashboard > section:nth-child(n+6){ animation-delay: 150ms; }
+
+  /* ── NAVIGATION ───────────────────────────────────────────────────────────
+     Le soulignement de la rubrique courante se déplie depuis la gauche au
+     lieu d'apparaître d'un coup. C'est le seul mouvement de l'en-tête. */
+  .mainnav-item > .mainnav-link::after{
+    content: ""; position: absolute; left: 13px; right: 13px; bottom: 0; height: 2px;
+    background: var(--accent); border-radius: 0;
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform var(--motion-state) var(--ease-enter);
+  }
+  .mainnav-item.active-group > .mainnav-link::after{ transform: scaleX(1); }
+
+  /* ── PRESSION ─────────────────────────────────────────────────────────────
+     Un geste doit être accusé immédiatement. 1px d'enfoncement pour un
+     bouton, un simple assombrissement pour une ligne : pas de mise à
+     l'échelle, qui rend le texte flou pendant la transition. */
+  .dash-row:active, .dash-agenda-row:active, .dash-action:active,
+  .menu-item:active, .qz-opt:active:not(:disabled),
+  .course-card:active, .subcard:active, .lib-chcard:active{
+    background: var(--surface-sunken);
+  }
+
+  /* ── CHANGEMENT D'ÉTAT ────────────────────────────────────────────────────
+     Une donnée qui change rejoint sa nouvelle valeur au lieu de sauter :
+     c'est ce qui rend le chiffre crédible. */
+  .meter > .meter-fill,
+  .qz-progress-fill, .chapter-progress-fill, .bar-fill,
+  .deckbar-fill, .dash-goal-fill{
+    transition: width var(--motion-data) var(--ease-enter);
+  }
+  /* Une pastille de statut, un badge : ils changent de ton, pas de place. */
+  .status, .badge{
+    transition: background var(--motion-state) var(--ease-enter),
+                color var(--motion-state) var(--ease-enter);
+  }
+
+  /* ── VALIDATION ───────────────────────────────────────────────────────────
+     Discrète par construction : un court appui d'échelle, une seule fois.
+     Posée par moFeedback(el, "ok"), jamais par une classe permanente — sinon
+     elle rejouerait à chaque re-rendu. */
+  .mo-ok{ animation: mo-ok var(--motion-state) var(--ease-enter); }
+  @keyframes mo-ok{
+    0%{ transform: scale(1); } 45%{ transform: scale(1.04); } 100%{ transform: scale(1); }
+  }
+
+  /* ── ERREUR ───────────────────────────────────────────────────────────────
+     Trois pixels, deux allers-retours, 180 ms. Pas un tremblement : une
+     hésitation. Assez pour attirer l'œil, trop court pour agacer. */
+  .mo-error{ animation: mo-error var(--motion-state) var(--ease-exit); }
+  .input[aria-invalid="true"], .select[aria-invalid="true"], .textarea[aria-invalid="true"]{
+    animation: mo-error var(--motion-state) var(--ease-exit);
+  }
+  @keyframes mo-error{
+    0%, 100%{ transform: translateX(0); }
+    25%{ transform: translateX(-3px); }
+    75%{ transform: translateX(3px); }
+  }
+  /* Le message d'erreur d'un champ arrive de dessous : on voit d'où il sort. */
+  .field-error{ animation: mo-view-in var(--motion-micro) var(--ease-enter) backwards; }
+
+  /* ── QUIZ ─────────────────────────────────────────────────────────────────
+     La question arrive, les réponses la suivent. Le décalage est de 25 ms :
+     on perçoit l'ordre sans jamais attendre une réponse. */
+  .mo-enter .qz-question{ animation: mo-view-in var(--motion-state) var(--ease-enter) backwards; }
+  .mo-enter .qz-opt{ animation: mo-view-in var(--motion-state) var(--ease-enter) backwards; }
+  .mo-enter .qz-opt:nth-child(1){ animation-delay: 40ms; }
+  .mo-enter .qz-opt:nth-child(2){ animation-delay: 65ms; }
+  .mo-enter .qz-opt:nth-child(3){ animation-delay: 90ms; }
+  .mo-enter .qz-opt:nth-child(n+4){ animation-delay: 115ms; }
+  /* La correction, elle, n'attend pas : elle répond à un geste qui vient
+     d'avoir lieu. */
+  .qz-feedback{ animation: mo-view-in var(--motion-micro) var(--ease-enter); }
+
+  /* Les barres de la semaine montent depuis leur base, une seule fois, à
+     l'entrée de l'écran des statistiques. */
+  .mo-enter .st-weekbar-fill{ animation: mo-grow var(--motion-data) var(--ease-enter) backwards; }
+  @keyframes mo-grow{ from{ transform: scaleY(0); } to{ transform: scaleY(1); } }
+
+  /* ── OUVERTURE / FERMETURE ────────────────────────────────────────────────
+     Ce qui s'ouvre s'annonce ; ce qui se ferme part tout de suite. Une
+     fermeture animée donne l'impression que l'application traîne. */
+  details > summary{ transition: color var(--motion-micro) var(--ease-enter); }
+  details[open] > summary ~ *{ animation: mo-view-in var(--motion-state) var(--ease-enter) backwards; }
+
+  /* ── ATTENTE ──────────────────────────────────────────────────────────────
+     Les deux seules animations permanentes de l'application, et seulement
+     pendant une attente réelle. */
+  .spinner{ animation: ds-spin 0.7s linear infinite; }
+  .skeleton{ animation: ds-pulse 1.2s var(--ease-enter) infinite; }
+
+  /* ==========================================================================
+     MOUVEMENT RÉDUIT — INTERRUPTEUR GÉNÉRAL
+     --------------------------------------------------------------------------
+     Quand le système le demande, plus rien ne bouge : ni entrée de vue, ni
+     décalage, ni retournement, ni jauge. Les états restent lisibles — c'est le
+     mouvement qui disparaît, pas l'information.
+     ========================================================================== */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -5681,6 +5848,7 @@ function startQuiz(scope, label, themeKeys, customPool){
   const chId = chapterIdFromQuizScope(scope);
   if(chId) trackChapterVisit(chId, "quiz");
   render();
+  markViewTransition();
   window.scrollTo(0,0);
 }
 
@@ -5710,6 +5878,10 @@ function nextQuestion(){
     state.selectedOpt = null;
     state.quizSourceOpen = false;
     render();
+    /* Passer à la question suivante EST un changement d'écran : la question
+       arrive, les réponses la suivent. Répondre à la question en cours, en
+       revanche, ne rejoue rien — c'est le même écran. */
+    markViewTransition();
   } else {
     const pct = Math.round((state.score / state.pool.length) * 100);
     const timeUsed = state.playing.startedAt ? Math.round((Date.now() - state.playing.startedAt) / 1000) : null;
@@ -5757,6 +5929,50 @@ function retakeQuizQuestion(q){
 /* ============================================================
    7. NAVIGATION GÉNÉRALE
    ============================================================ */
+/* ============================================================================
+   MOUVEMENT — deux points d'entrée, et c'est tout (voir « COUCHE DE MOUVEMENT »
+   dans la feuille de styles).
+   ----------------------------------------------------------------------------
+   markViewTransition() : pose .mo-enter sur #content le temps de l'entrée.
+   Elle est appelée aux CHANGEMENTS D'ÉCRAN uniquement — jamais depuis
+   render(), sinon l'entrée rejouerait à chaque interaction (répondre à une
+   question, cocher une case) et la page clignoterait en permanence.
+
+   moFeedback(el, ton) : un accusé de réception ponctuel sur un élément
+   (« ok » ou « error »). Passe par une classe retirée à la fin de
+   l'animation, jamais par une classe permanente — une classe permanente
+   rejouerait à chaque re-rendu.
+   ========================================================================== */
+var moViewTimer = null;
+function prefersReducedMotion(){
+  try{ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  catch(e){ return false; }
+}
+function markViewTransition(){
+  if(prefersReducedMotion()) return;
+  const el = document.getElementById("content");
+  if(!el) return;
+  el.classList.remove("mo-enter");
+  /* Forcer un reflow : sans lui, retirer puis reposer la classe dans le même
+     cycle ne relance pas l'animation. */
+  void el.offsetWidth;
+  el.classList.add("mo-enter");
+  clearTimeout(moViewTimer);
+  /* 150ms de décalage maximal + 180ms d'animation, avec une marge. */
+  moViewTimer = setTimeout(function(){ el.classList.remove("mo-enter"); }, 420);
+}
+function moFeedback(el, tone){
+  if(!el || prefersReducedMotion()) return;
+  const cls = tone === "error" ? "mo-error" : "mo-ok";
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+  el.addEventListener("animationend", function handler(){
+    el.classList.remove(cls);
+    el.removeEventListener("animationend", handler);
+  });
+}
+
 function switchTab(tab){
   if(tab !== "exam" && state.exam.screen === "running"){
     if(!confirm("Quitter l'examen en cours ? Tes réponses ne seront pas enregistrées.")) return;
@@ -5765,6 +5981,7 @@ function switchTab(tab){
   }
   state.tab = tab;
   render();
+  markViewTransition();
   window.scrollTo(0,0);
 }
 
@@ -6486,6 +6703,7 @@ function libGoto(view, extra){
   state.library.view = view;
   if(extra) Object.assign(state.library, extra);
   render();
+  markViewTransition();
   window.scrollTo(0,0);
 }
 
@@ -10913,6 +11131,7 @@ function startFlashDeck(scope, label, cards){
   const chId = chapterIdFromQuizScope(scope);
   if(chId) trackChapterVisit(chId, "flash");
   render();
+  markViewTransition();
   window.scrollTo(0,0);
 }
 
@@ -10934,6 +11153,9 @@ function judgeCard(knewIt){
     d.flipped = false;
     d.sourceOpen = false;
     render();
+    /* La carte suivante arrive : on ne la fait PAS se retourner à l'envers,
+       elle entre simplement, face question. */
+    markViewTransition();
   } else {
     const pct = Math.round((d.known.length / d.cards.length) * 100);
     saveFlashProgress(d.scope, pct);
