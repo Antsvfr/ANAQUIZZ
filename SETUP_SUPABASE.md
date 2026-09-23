@@ -113,7 +113,7 @@ Dashboard Supabase → **Authentication → Providers** :
   usage lycée/prépa : la laisser activée (évite les faux comptes), mais
   c'est ton choix.
 - **Authentication → Settings → Site URL** : renseigne l'URL finale de ton
-  site GitHub Pages (voir section 8), ex. `https://tonpseudo.github.io/ANAQUIZZ/`.
+  site GitHub Pages (voir section 8) : `https://antsvfr.github.io/REV-EM/`.
 - **Authentication → Settings → Redirect URLs** : ajoute la même URL (et,
   si tu testes en local, `http://localhost:8860` ou équivalent). Nécessaire
   pour les liens envoyés par email (confirmation, mot de passe oublié) —
@@ -130,7 +130,7 @@ Dashboard Supabase → **Authentication → Providers** :
 - Vérifie l'URL exacte de ton site publié (Settings → Pages du dépôt
   GitHub) : si le dépôt s'appelle `ANAQUIZZ` et n'est pas un site
   "utilisateur/organisation", l'URL est probablement du type
-  `https://<compte>.github.io/ANAQUIZZ/` (avec le nom du dépôt dans le
+  `https://antsvfr.github.io/REV-EM/` (avec le nom du dépôt dans le
   chemin) — c'est CETTE URL exacte qu'il faut renseigner dans "Site URL" et
   "Redirect URLs" à l'étape 7, sous-chemin compris.
 - Aucune variable d'environnement n'est injectée au moment du build

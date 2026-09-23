@@ -50,7 +50,7 @@ l'administrateur de l'établissement.
 | Champ | Valeur à saisir |
 |---|---|
 | **Application Name** | `REV-EM` |
-| **Redirect URI** | `https://<TON-PROJET>.supabase.co/functions/v1/brightspace-callback` |
+| **Redirect URI** | `https://otlkvlmzakklhugvaxeg.supabase.co/functions/v1/brightspace-callback` |
 | **Scopes** | voir ci-dessous |
 | **Prompt for user consent** | ✅ activé |
 | **Enable refresh tokens** | ✅ **activé — obligatoire** |
@@ -58,13 +58,12 @@ l'administrateur de l'établissement.
 #### La Redirect URI, exactement
 
 ```
-https://<TON-PROJET>.supabase.co/functions/v1/brightspace-callback
+https://otlkvlmzakklhugvaxeg.supabase.co/functions/v1/brightspace-callback
 ```
 
-`<TON-PROJET>` est la référence de ton projet Supabase (Dashboard → Project
-Settings → General → *Reference ID*). L'URL complète est visible dans le
-dashboard, section **Edge Functions**, une fois la fonction déployée
-(étape 4).
+Cette valeur est celle de **ton** projet Supabase : elle est déduite de
+`supabase-config.js`, et `scripts/verify-setup.sh` la réaffiche à chaque
+exécution pour que tu puisses la comparer à ce qui est déclaré côté D2L.
 
 Trois règles, sans exception :
 - **en HTTPS**, jamais en HTTP ;
@@ -182,14 +181,14 @@ Puis :
 
 ```bash
 supabase login
-supabase link --project-ref <TON_PROJECT_REF>
+supabase link --project-ref otlkvlmzakklhugvaxeg
 
 supabase secrets set \
   BRIGHTSPACE_CLIENT_ID="…"                        `# ← étape 1` \
   BRIGHTSPACE_CLIENT_SECRET="…"                    `# ← étape 1, jamais ailleurs` \
   BRIGHTSPACE_TENANT_URL="https://emlyon.brightspace.com" \
   BRIGHTSPACE_TOKEN_ENC_KEY="<sortie de openssl rand -base64 32>" \
-  BRIGHTSPACE_APP_URL="https://<ton-user>.github.io/<ton-repo>/" \
+  BRIGHTSPACE_APP_URL="https://antsvfr.github.io/REV-EM/" \
   BRIGHTSPACE_SCOPES="enrollment:orgunit:read content:toc:read content:modules:read content:topics:read users:userdata:read"
 ```
 

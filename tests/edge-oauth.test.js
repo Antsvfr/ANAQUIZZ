@@ -184,7 +184,7 @@ function baseEnvVars(over) {
     BRIGHTSPACE_CLIENT_SECRET: "client-secret-xyz",
     BRIGHTSPACE_TENANT_URL: "https://emlyon.brightspace.com",
     BRIGHTSPACE_TOKEN_ENC_KEY: TEST_KEY,
-    BRIGHTSPACE_APP_URL: "https://antsvfr.github.io/ANAQUIZZ/",
+    BRIGHTSPACE_APP_URL: "https://antsvfr.github.io/REV-EM/",
   }, over || {});
 }
 

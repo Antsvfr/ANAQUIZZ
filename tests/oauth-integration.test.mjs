@@ -135,7 +135,7 @@ function resetD2L(opts = {}) {
 
 /* ------------------------------------------------- environnement des fonctions */
 
-const APP_URL = "https://antsvfr.github.io/ANAQUIZZ/";
+const APP_URL = "https://antsvfr.github.io/REV-EM/";   // URL publique réelle du site
 const SUPA_URL = "https://otlkvlmzakklhugvaxeg.supabase.co";
 const ENC_KEY = Buffer.alloc(32, 7).toString("base64");
 

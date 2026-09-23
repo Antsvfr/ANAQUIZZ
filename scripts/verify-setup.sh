@@ -73,6 +73,22 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+step "Site public (URL de retour d'OAuth)"
+# -----------------------------------------------------------------------------
+APP_URL="${BRIGHTSPACE_APP_URL:-https://antsvfr.github.io/REV-EM/}"
+if ! command -v curl >/dev/null 2>&1; then
+  skip "curl absent : site non vérifié"
+else
+  code="$(curl -s -o /dev/null -w '%{http_code}' -L "$APP_URL" --max-time 20 2>/dev/null)"
+  case "$code" in
+    200) pass "$APP_URL répond — c'est là que Brightspace renverra l'utilisateur" ;;
+    404) fail "$APP_URL renvoie 404 : GitHub Pages n'est pas activé, ou pas sur ce chemin. Le retour d'OAuth échouerait." ;;
+    000) skip "$APP_URL injoignable depuis cette machine (réseau ?)" ;;
+    *)   fail "$APP_URL répond $code" ;;
+  esac
+fi
+
+# -----------------------------------------------------------------------------
 step "Secrets"
 # -----------------------------------------------------------------------------
 if ! command -v supabase >/dev/null 2>&1; then

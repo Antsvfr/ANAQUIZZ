@@ -52,9 +52,12 @@ const SECRET_PATTERNS = [
    (valeur factice) ou une documentation (gabarit `<…>`) : on les cherche donc
    en excluant ces deux cas, et on affiche ce qui a matché pour que rien ne
    soit balayé sous le tapis. */
+/* La valeur doit être un LITTÉRAL : une référence de variable (`"$VAR"`,
+   `"${VAR}"`) ou un gabarit (`"<…>"`) n'est pas un secret — c'est même
+   exactement ce qu'on veut voir dans un script. */
 const ASSIGNMENT_PATTERNS = [
-  { name: "valeur de client_secret Brightspace", rx: /BRIGHTSPACE_CLIENT_SECRET\s*[:=]\s*["'`][^"'`]{6,}["'`]/ },
-  { name: "clé de chiffrement de tokens", rx: /BRIGHTSPACE_TOKEN_ENC_KEY\s*[:=]\s*["'`][^"'`]{10,}["'`]/ },
+  { name: "valeur de client_secret Brightspace", rx: /BRIGHTSPACE_CLIENT_SECRET\s*[:=]\s*["'`](?![$<{])[^"'`]{6,}["'`]/ },
+  { name: "clé de chiffrement de tokens", rx: /BRIGHTSPACE_TOKEN_ENC_KEY\s*[:=]\s*["'`](?![$<{])[^"'`]{10,}["'`]/ },
 ];
 const PLACEHOLDER = /<[^>]*>|\u2026|\.\.\.|de-test|test-|factice|xyz|EXEMPLE|example/i;
 
