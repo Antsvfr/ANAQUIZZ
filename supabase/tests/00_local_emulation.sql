@@ -53,6 +53,12 @@ end $$;
 
 grant usage on schema public to anon, authenticated, service_role;
 
+-- Chez Supabase, service_role peut lire auth.users (c'est ce dont se sert
+-- `auth.getUser()` côté serveur). On reproduit ce privilège, sinon les Edge
+-- Functions échoueraient ici pour une raison qui n'existe pas en production.
+grant usage on schema auth to service_role;
+grant select on auth.users to service_role;
+
 -- Supabase accorde par défaut tous les privilèges de table à ces trois rôles
 -- dans `public` : on reproduit ce comportement, sinon les tests de privilèges
 -- de colonnes (brightspace_connections) ne testeraient rien de réaliste.

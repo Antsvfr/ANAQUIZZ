@@ -4,3 +4,4 @@
 # environnement/déploiement. Copie supabase-config.example.js → supabase-config.js
 # et renseigne tes valeurs.
 supabase-config.js
+node_modules/
