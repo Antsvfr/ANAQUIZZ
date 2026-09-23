@@ -288,8 +288,12 @@ function baseEnvVars(over) {
     const forged = await crypto_.signState("user-b", "nonce-1", "autre-secret");
     check("un state signé avec un autre secret est rejeté",
       !!(await throws(() => crypto_.verifyState(forged, secret))));
+    /* On remplace le dernier caractère par un AUTRE caractère : remplacer par
+       un "A" en dur laissait passer le cas, rare mais réel, où la signature
+       se terminait déjà par un "A" — le test réussissait alors par accident. */
+    const tampered = sig.slice(0, -1) + (sig.slice(-1) === "A" ? "B" : "A");
     check("une signature altérée est rejetée",
-      !!(await throws(() => crypto_.verifyState(body + "." + sig.replace(/.$/, "A"), secret))));
+      !!(await throws(() => crypto_.verifyState(body + "." + tampered, secret))));
     check("un corps altéré est rejeté",
       !!(await throws(() => crypto_.verifyState(
         Buffer.from(JSON.stringify({ u: "user-b", n: "nonce-1", e: Date.now() + 1000 })).toString("base64url") + "." + sig,

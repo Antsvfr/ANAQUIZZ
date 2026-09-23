@@ -1526,6 +1526,12 @@
   @media (max-width: 640px){
     .t-page{ font-size: var(--text-h2); }
     .t-section{ font-size: var(--text-h3); }
+    /* Un en-tête de section porte parfois un contrôle : en compact il passe
+       à la ligne et prend toute la largeur, sinon il déborde de l'écran. */
+    .section-head{ flex-wrap: wrap; gap: var(--space-sm); }
+    .section-head > .section-head-action{ flex-basis: 100%; }
+    .section-head > .section-head-action > .segmented{ display: flex; width: 100%; }
+    .section-head > .section-head-action > .segmented > button{ flex: 1; }
     .page-head{ margin-bottom: var(--space-lg); }
     .block--feature, .card{ padding: var(--space-md); border-radius: var(--radius-sm); }
     /* En compact, une barre d'actions empile ses boutons sur toute la largeur :
@@ -2118,7 +2124,6 @@
     .sr-empty-actions .btn{ width:100%; }
   }
 
-  .dash-card-links{ display:flex; gap:14px; flex-wrap:wrap; margin-top:2px; }
 
   /* ============================================================
      MES STATISTIQUES — namespace st- (distinct de pg-/sr-/qz-/exam ;
@@ -2315,35 +2320,8 @@
   .dash-goal-msg{ font-size:12.5px; color:var(--ink-soft); margin:10px 0 0; }
 
   .dash-cols{ display:grid; grid-template-columns: 1.1fr 1fr; gap:18px; align-items:start; }
-  .dash-col-stack{ display:flex; flex-direction:column; }
 
   /* ===== BANNIÈRE D'ACCUEIL ===== */
-  .dash-banner{
-    background: linear-gradient(120deg, var(--navy) 0%, var(--navy-dark) 55%, var(--red-dark) 130%);
-    border-radius: var(--radius-xl); padding: 34px 30px; margin: 24px 0 22px; color:#fff;
-    box-shadow: var(--shadow-lg);
-    display:flex; align-items:center; justify-content:space-between; gap:26px; flex-wrap:wrap;
-  }
-  .dash-banner-left{ flex:1; min-width:240px; }
-  .dash-banner-eyebrow{ font-size:12px; text-transform:capitalize; color: rgba(255,255,255,0.75); font-weight:700; margin-bottom:10px; }
-  .dash-banner-title{ font-size:26px; font-weight:800; margin:0 0 10px; letter-spacing:-0.015em; color:#fff; }
-  .dash-banner-sub{ font-size:14px; line-height:1.6; color: rgba(255,255,255,0.85); margin:0 0 20px; max-width:520px; }
-  .dash-banner-cta{ background:#fff; color: var(--navy); border:none; font-weight:800; }
-  .dash-banner-cta:hover{ background: rgba(255,255,255,0.9); transform: translateY(-1px); }
-  .dash-banner-actions{ display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
-  .dash-banner-action{
-    display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.28);
-    color:#fff; border-radius: var(--radius-md); padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer;
-    font-family: var(--font-main); white-space:nowrap; transition: background .15s var(--ease), border-color .15s var(--ease);
-  }
-  .dash-banner-action:hover{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
-  .dash-banner-action:active{ transform: scale(0.97); }
-  .dash-banner-action .ico{ font-size:14px; }
-  @media (max-width:680px){
-    .dash-banner{ flex-direction:column; align-items:stretch; }
-    .dash-banner-actions{ flex-direction:row; flex-wrap:wrap; }
-    .dash-banner-action{ flex:1; justify-content:center; min-width:110px; }
-  }
 
   /* ===== GRILLE DE TABLEAU DE BORD (6 blocs) ===== */
   .dash-grid2{ display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; margin-bottom:0; }
@@ -2362,90 +2340,19 @@
   .dash-progress-list li{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); gap:10px; }
   .dash-progress-list li b{ color:var(--ink); font-variant-numeric: tabular-nums; }
 
-  .dash-subject-row{
-    display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--bg); cursor:pointer;
-  }
-  .dash-subject-row:last-of-type{ border-bottom:none; }
-  .dash-subject-row .icon{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .dash-subject-row .name{ font-weight:700; font-size:13.5px; color:var(--ink); }
-  .dash-subject-row .meta{ font-size:11.5px; color:var(--muted); margin-top:1px; }
-  .dash-subject-row .pct{ margin-left:auto; font-size:12.5px; font-weight:800; color:var(--navy); flex-shrink:0; }
 
-  .dash-quicklinks{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-  .dash-quick-btn{
-    display:flex; flex-direction:column; align-items:flex-start; gap:4px;
-    background: var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-md);
-    padding:13px 14px; cursor:pointer; text-align:left; font-family: var(--font-main);
-    transition: border-color 0.16s var(--ease), transform 0.16s var(--ease);
-  }
-  .dash-quick-btn:hover{ border-color: var(--red); transform: translateY(-1px); }
-  .dash-quick-btn .ico{ font-size:17px; }
-  .dash-quick-btn .lbl{ font-size:12.5px; font-weight:700; color:var(--ink); }
 
-  .dash-feed{ display:flex; flex-direction:column; gap:10px; }
-  .dash-feed-item{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
-  .dash-feed-item b{ color:var(--ink); }
 
   .dash-reminders{ display:flex; flex-direction:column; gap:8px; }
   .dash-reminder-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
   .dash-reminder-row b{ color:var(--ink-soft); font-weight:700; }
 
-  .dash-schedule-card{ margin-bottom:18px; }
-  .dash-schedule-nav{ display:flex; gap:6px; flex-wrap:wrap; }
-  .dash-schedule-navbtn{
-    background: var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:5px 12px;
-    font-size:11px; font-weight:700; color: var(--ink-soft); cursor:pointer; font-family: var(--font-main);
-    transition: border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease);
-  }
-  .dash-schedule-navbtn:hover{ border-color: var(--red); color: var(--red-dark); }
-  .dash-schedule-navbtn.active{ background: var(--red); border-color: var(--red); color:#fff; }
-  .dash-current-course{
-    background: var(--green-tint); border:1.5px solid var(--green); border-radius: var(--radius-md);
-    padding:14px 16px; margin-bottom:12px; cursor:pointer; transition: box-shadow 0.15s var(--ease);
-  }
-  .dash-current-course:hover, .dash-current-course:focus-visible{ box-shadow: var(--shadow-md); outline:none; }
-  .badge-current{
-    display:inline-block; font-size:10.5px; font-weight:800; color:#fff; background: var(--green);
-    padding:3px 9px; border-radius:20px; margin-bottom:8px; letter-spacing:0.01em;
-  }
-  .ccourse-title{ font-size:16px; font-weight:800; color:var(--ink); }
-  .ccourse-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
-  .ccourse-progressbar{ height:6px; border-radius:4px; background:rgba(255,255,255,0.65); overflow:hidden; margin-top:10px; }
-  .ccourse-progressbar-fill{ height:100%; background: var(--green); border-radius:4px; transition:width 0.3s var(--ease); }
-  .ccourse-remaining{ font-size:11px; color: var(--green); font-weight:700; margin-top:5px; }
 
-  .dash-schedule-list{ display:flex; flex-direction:column; gap:4px; }
-  .dash-schedule-row{
-    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer;
-    font-size:12.5px; transition: background 0.15s var(--ease);
-  }
-  .dash-schedule-row:hover, .dash-schedule-row:focus-visible{ background: var(--bg); outline:none; }
-  .dash-schedule-row.status-past{ opacity:0.55; }
-  .dash-schedule-time{ font-weight:700; color:var(--ink); min-width:88px; flex-shrink:0; font-variant-numeric: tabular-nums; }
-  .dash-schedule-title{ flex:1; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .dash-schedule-badge{ font-size:9.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.02em; flex-shrink:0; }
-  .dash-schedule-row.status-current .dash-schedule-badge{ color: var(--green); }
 
-  .dash-revisions-list{ display:flex; flex-direction:column; gap:4px; }
-  .dash-revision-row{
-    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; border-radius:8px;
-    cursor:pointer; transition: background .15s var(--ease); flex-wrap:wrap;
-  }
-  .dash-revision-row:hover, .dash-revision-row:focus-visible{ background: var(--bg); outline:none; }
-  .dash-revision-main .name{ font-weight:700; font-size:13px; color: var(--ink); }
-  .dash-revision-main .meta{ font-size:11.5px; color: var(--muted); margin-top:2px; }
-  .dash-revision-badges{ display:flex; gap:6px; flex-wrap:wrap; }
-  .dash-revision-badge{
-    font-size:10px; font-weight:800; padding:3px 9px; border-radius:20px; background: var(--surface-2);
-    color: var(--ink-soft); white-space:nowrap;
-  }
-  .dash-revision-badge.warn{ background: var(--amber-tint); color: var(--amber); }
-  .dash-revision-badge.ok{ background: var(--green-tint); color: var(--green); }
 
   @media (max-width: 860px){
     .dash-grid2{ grid-template-columns: 1fr; }
   }
-  .dash-col-stack .dash-section:last-child{ margin-bottom:0; }
 
   .dash-empty{ font-size:12.5px; color:var(--muted); margin:0; }
 
@@ -2535,6 +2442,265 @@
     .dash-hero-top{ flex-direction:column; align-items:flex-start; }
     .dash-ring{ align-self:flex-start; }
     .dash-cta{ min-width: 100%; }
+  }
+
+  /* ==========================================================================
+     TABLEAU DE BORD — ESPACE ÉDITORIAL (étape 6)
+     --------------------------------------------------------------------------
+     Le tableau de bord n'est plus une grille de cartes. C'est une page qui se
+     lit de haut en bas, dans l'ordre des trois questions :
+
+       1. Où suis-je ?          → .dash-lede     (date, salutation, contexte)
+       2. Qu'est-ce qui compte ? → .dash-focus   (LA priorité, un seul point focal)
+                                   .dash-agenda  (l'emploi du temps du jour)
+       3. Que dois-je faire ?    → .dash-actions (les destinations, une seule fois)
+
+     Puis, volontairement en second plan : progression, reprise, activité.
+
+     Ce bloc n'introduit AUCUNE valeur littérale : tout vient des tokens et
+     des composants de COMPOSANTS.md. Les seules boîtes de la page sont le
+     cours en cours et les boutons d'action — tout le reste tient par
+     l'espace, la typographie et les filets.
+     ========================================================================== */
+  .dashboard{ max-width: var(--width-work); margin: 0 auto; padding-bottom: var(--space-4xl); }
+  /* Le rythme vertical : c'est lui qui regroupe, pas les bordures. */
+  .dashboard > section{ margin-top: var(--space-3xl); }
+  .dashboard > section:first-of-type{ margin-top: 0; }
+
+  /* ── 1. OÙ SUIS-JE — l'accroche éditoriale. Pas de bannière, pas de
+       dégradé, pas d'aplat sombre : la page commence par du texte. ── */
+  .dash-lede{ padding: var(--space-2xl) 0 var(--space-xl); max-width: var(--width-read); }
+  .dash-lede-date{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); display: block;
+  }
+  .dash-lede-title{
+    font-family: var(--font-display); font-size: var(--text-display);
+    line-height: var(--leading-display); font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-tight); color: var(--text-primary);
+    margin: var(--space-sm) 0 var(--space-xs);
+  }
+  .dash-lede-sub{
+    font-size: var(--text-body); line-height: var(--leading-body);
+    color: var(--text-secondary); margin: 0; max-width: 52ch;
+  }
+
+  /* ── 2. LA PRIORITÉ — un seul point focal sur la page.
+       Sa mise en avant tient à UN filet accent et à la taille du titre :
+       ni carte, ni aplat, ni ombre. C'est le seul rouge de cette zone. ── */
+  .dash-focus{ border-top: 2px solid var(--accent); padding-top: var(--space-lg); }
+  .dash-focus-eyebrow{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--accent); display: block; margin-bottom: var(--space-sm);
+  }
+  .dash-focus-title{
+    font-family: var(--font-display); font-size: var(--text-h1);
+    line-height: var(--leading-h1); font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight); color: var(--text-primary);
+    margin: 0 0 var(--space-2xs); max-width: 24ch;
+  }
+  .dash-focus-meta{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--text-muted); margin: var(--space-xs) 0 0;
+  }
+  .dash-focus-reason{
+    font-size: var(--text-body); line-height: var(--leading-body);
+    color: var(--text-secondary); margin: var(--space-md) 0 0; max-width: 56ch;
+  }
+  .dash-focus-actions{
+    display: flex; align-items: center; gap: var(--space-lg);
+    flex-wrap: wrap; margin-top: var(--space-lg);
+  }
+
+  /* ── EMPLOI DU TEMPS — vraie présence, sans boîte autour de la liste.
+       Le cours EN COURS, lui, est un objet manipulable : c'est le seul
+       feature block du tableau de bord. ── */
+  .dash-now{ margin-bottom: var(--space-md); }
+  .dash-now-head{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-xs);
+  }
+  .dash-now-heading{ margin: 0; min-width: 0; }
+  .dash-now-title{
+    border: none; background: none; padding: 0; cursor: pointer; text-align: left;
+    font-family: var(--font-ui); font-size: var(--text-h3);
+    font-weight: var(--weight-semibold); color: var(--text-primary);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--motion-micro) var(--ease-enter);
+  }
+  .dash-now-title:hover{ border-color: var(--border-strong); }
+  .dash-now-meta{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--text-muted); margin: 0 0 var(--space-md);
+  }
+  .dash-now-remaining{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--text-secondary); margin: var(--space-xs) 0 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .dash-now-actions{ margin-top: var(--space-md); }
+
+  .dash-agenda{ display: flex; flex-direction: column; }
+  .dash-agenda-row{
+    display: grid; grid-template-columns: 104px 1fr auto;
+    align-items: baseline; gap: var(--space-md);
+    width: 100%; text-align: left; border: none; background: none; cursor: pointer;
+    padding: var(--space-sm); margin: 0 calc(var(--space-sm) * -1);
+    border-radius: var(--radius-sm);
+    transition: background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-agenda-row + .dash-agenda-row{ border-top: 1px solid var(--border); }
+  .dash-agenda-row:hover{ background: var(--surface-sunken); }
+  .dash-agenda-time{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap;
+  }
+  .dash-agenda-title{
+    font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-agenda-state{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); white-space: nowrap;
+  }
+  /* Un cours passé s'efface, il ne disparaît pas. */
+  .dash-agenda-row.is-past .dash-agenda-time,
+  .dash-agenda-row.is-past .dash-agenda-title{ color: var(--text-muted); }
+  .dash-agenda-row.is-current .dash-agenda-state{ color: var(--success); }
+
+  /* ── PROGRESSION — secondaire, donc sans boîte : un chiffre, une jauge,
+       quatre mesures alignées. ── */
+  .dash-metrics{
+    display: flex; align-items: flex-start; gap: var(--space-2xl); flex-wrap: wrap;
+  }
+  .dash-metrics-lead{ flex-shrink: 0; min-width: 160px; }
+  .dash-metrics-value{
+    font-family: var(--font-data); font-size: var(--text-data-xl);
+    font-variant-numeric: tabular-nums; font-weight: var(--weight-regular);
+    color: var(--text-primary); line-height: 1; display: block;
+  }
+  .dash-metrics-lead .meter{ margin-top: var(--space-sm); }
+  .dash-metrics-rest{ flex: 1 1 380px; min-width: 0; }
+  /* Une grille, pas une rangée qui déborde : un retour à la ligne laisserait
+     un filet vertical orphelin en tête de seconde ligne. */
+  .dash-metrics .stat-row{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-lg); row-gap: var(--space-lg);
+  }
+  .dash-metrics .stat-row > .stat + .stat{ border-left: none; padding-left: 0; }
+  /* Les deux liens de bas de section ne doivent pas se lire comme un seul. */
+  .dashboard .block--action.is-bare{ gap: var(--space-lg); }
+  /* Un état vide DANS le tableau de bord reste aligné sur la colonne. */
+  .dashboard .empty--inline{ padding-left: 0; padding-right: 0; }
+  /* Ces barres ne contiennent que des actions tertiaires : en compact, elles
+     ne doivent pas s'étirer comme des boutons pleine largeur. */
+  @media (max-width: 640px){
+    .dashboard .block--action.is-bare{
+      flex-direction: row; align-items: center; flex-wrap: wrap;
+      gap: var(--space-lg);
+    }
+    .dashboard .block--action.is-bare > .btn{ width: auto; }
+  }
+
+  /* ── REPRENDRE — deux colonnes éditoriales : mes matières, mes cours
+       récents. Deux listes filetées, aucune carte. ── */
+  .dash-split{
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl); align-items: start;
+  }
+  .dash-row{
+    display: flex; align-items: center; gap: var(--space-md);
+    width: 100%; text-align: left; border: none; background: none; cursor: pointer;
+    padding: var(--space-sm); margin: 0 calc(var(--space-sm) * -1);
+    border-radius: var(--radius-sm);
+    transition: background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-row + .dash-row{ border-top: 1px solid var(--border); }
+  .dash-row:hover{ background: var(--surface-sunken); }
+  .dash-row-body{ flex: 1; min-width: 0; }
+  .dash-row-name{
+    display: block;
+    font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-row-meta{
+    display: block;
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); margin-top: 3px;
+  }
+  .dash-row-value{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary); flex-shrink: 0;
+  }
+  .dash-row-tags{ display: flex; gap: var(--space-2xs); flex-wrap: wrap; flex-shrink: 0; }
+  /* Variante empilée : quand une ligne porte un état ET des contenus
+     disponibles, les coller sur une seule ligne écrase le titre. */
+  .dash-row--stack{ flex-direction: column; align-items: stretch; gap: var(--space-2xs); }
+  .dash-row-line{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-sm); min-width: 0;
+  }
+  .dash-row--stack .dash-row-name{ flex: 1; }
+  .dash-row--stack .dash-row-line > .status{ flex-shrink: 0; }
+  .dash-row--stack .dash-row-tags{ margin-top: var(--space-2xs); }
+
+  /* ── 3. QUE DOIS-JE FAIRE — les destinations, listées UNE SEULE FOIS.
+       (La bannière d'accueil en répétait trois ; elles ne vivent plus qu'ici.) ── */
+  .dash-actions{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-xs);
+  }
+  .dash-action{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-sm); min-height: 52px; padding: 0 var(--space-md);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); cursor: pointer; text-align: left;
+    font-family: var(--font-ui); font-size: var(--text-small);
+    font-weight: var(--weight-medium); color: var(--text-primary);
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-action:hover{ border-color: var(--border-strong); background: var(--surface-sunken); }
+  /* Un chevron dessiné, pas une flèche typographique ni un emoji. */
+  .dash-action::after{
+    content: ""; flex-shrink: 0; width: 6px; height: 6px;
+    border-top: 1.5px solid var(--text-muted); border-right: 1.5px solid var(--text-muted);
+    transform: rotate(45deg);
+  }
+
+  /* ── ACTIVITÉ — la trace de ce qui s'est passé. Discrète par construction. ── */
+  .dash-log{ display: flex; flex-direction: column; max-width: var(--width-read); }
+  .dash-log-item{
+    font-size: var(--text-small); line-height: var(--leading-small);
+    color: var(--text-secondary); padding: var(--space-xs) 0;
+  }
+  .dash-log-item + .dash-log-item{ border-top: 1px solid var(--border); }
+  .dash-log-item b{ color: var(--text-primary); font-weight: var(--weight-medium); }
+
+  /* ── RESPONSIVE — mobile d'abord : une colonne, un rythme resserré, et
+       l'action principale sur toute la largeur. ── */
+  @media (max-width: 1024px){
+    .dashboard > section{ margin-top: var(--space-2xl); }
+    .dash-split{ grid-template-columns: 1fr; gap: var(--space-2xl); }
+    .dash-metrics{ gap: var(--space-xl); }
+  }
+  @media (max-width: 640px){
+    .dash-lede{ padding: var(--space-lg) 0 var(--space-md); }
+    .dash-lede-title{ font-size: var(--text-h1); }
+    .dash-lede-sub{ font-size: var(--text-small); }
+    .dash-focus-title{ font-size: var(--text-h2); }
+    .dash-focus-reason{ font-size: var(--text-small); }
+    .dash-focus-actions{ gap: var(--space-sm); align-items: stretch; flex-direction: column; }
+    .dash-focus-actions > .btn{ width: 100%; }
+    /* L'heure passe au-dessus du libellé : 104px de colonne mangeraient le titre. */
+    .dash-agenda-row{ grid-template-columns: 1fr auto; gap: var(--space-2xs) var(--space-sm); }
+    .dash-agenda-time{ grid-column: 1 / -1; }
+    .dash-metrics-lead{ min-width: 0; width: 100%; }
+    .dash-actions{ grid-template-columns: 1fr; }
   }
 
   /* ===== MODE EXAMEN ===== */
@@ -5657,6 +5823,26 @@ function continueRevision(){
 /* ============================================================
    7ter. DASHBOARD — RENDU
    ============================================================ */
+/* ============================================================================
+   TABLEAU DE BORD — espace éditorial (étape 6)
+   ----------------------------------------------------------------------------
+   Refonte VISUELLE : aucune fonctionnalité n'est ajoutée, aucune n'est
+   retirée. Toutes les destinations, tous les boutons et tous les compteurs
+   de l'ancienne version sont encore là — ils sont simplement hiérarchisés.
+
+   L'ordre de lecture répond à trois questions, dans cet ordre :
+     1. Où suis-je ?           l'accroche (date, salutation)
+     2. Qu'est-ce qui compte ?  LA priorité, puis l'emploi du temps
+     3. Que dois-je faire ?     les destinations, listées une seule fois
+   Le reste (progression, reprise, activité) vient après, volontairement.
+
+   Ce qui a disparu est uniquement visuel :
+     • la bannière en dégradé sombre → une accroche typographique ;
+     • la grille de six cartes → des sections séparées par l'espace ;
+     • les trois raccourcis de la bannière, qui répétaient les actions
+       rapides plus bas → une seule liste d'actions ;
+     • les emojis des libellés et les flèches « → » postiches.
+   ========================================================================== */
 function renderDashboard(){
   const d = state.dash;
   const g = globalMetrics();
@@ -5667,208 +5853,257 @@ function renderDashboard(){
   const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
   const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
 
-  let html = "";
-
-  /* ---------- Bannière de bienvenue ---------- */
   const today = new Date();
   const dateLabel = today.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"});
   const greeting = greetName ? t("greeting.hello_name_plain", {name: escapeHtml(greetName)}) : t("greeting.hello_plain");
-  html += `<div class="dash-banner">
-    <div class="dash-banner-left">
-      <div class="dash-banner-eyebrow">${dateLabel}</div>
-      <h1 class="dash-banner-title">${greeting}</h1>
-      <p class="dash-banner-sub">${t("dashboard.subtitle")}</p>
-      <button class="btn dash-banner-cta" id="dash-banner-cta">${rcChapter ? t("dashboard.resume") : t("dashboard.start")}</button>
-    </div>
-    <div class="dash-banner-actions">
-      <button class="dash-banner-action" id="dash-banner-import-btn"><span class="ico">📥</span>${t("dashboard.import_course")}</button>
-      <button class="dash-banner-action" id="dash-banner-planning-btn"><span class="ico">🗓️</span>${t("dashboard.planning")}</button>
-      <button class="dash-banner-action" id="dash-banner-ai-btn"><span class="ico">🤖</span>${t("dashboard.ai_assistant")}</button>
-    </div>
-  </div>`;
 
-  /* ---------- Mon emploi du temps (planning en direct) ---------- */
+  let html = `<div class="dashboard">`;
+
+  /* ---------- 1. OÙ SUIS-JE ---------- */
+  html += `<header class="dash-lede">
+    <span class="dash-lede-date">${dateLabel}</span>
+    <h1 class="dash-lede-title">${greeting}</h1>
+    <p class="dash-lede-sub">${t("dashboard.subtitle")}</p>
+  </header>`;
+
+  /* ---------- 2. QU'EST-CE QUI EST IMPORTANT ---------- */
+  html += renderDashboardFocus(rcChapter, rcSubject, rc);
   html += renderDashboardSchedule();
 
-  html += `<div class="dash-grid2">`;
+  /* ---------- 3. QUE DOIS-JE FAIRE MAINTENANT ----------
+     Les sept destinations de l'ancien tableau de bord (bannière + actions
+     rapides), sans les doublons « importer » et « planning ». */
+  html += `<section>
+    <div class="section-head">
+      <span class="section-head-label">${t("dashboard.quick_actions")}</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="dash-actions">
+      <button class="dash-action" data-dash-import>${t("dashboard.quick_import")}</button>
+      <button class="dash-action" id="dash-library-btn2">${t("dashboard.quick_view_subjects")}</button>
+      <button class="dash-action" data-dash-add-subject>${t("dashboard.quick_add_course")}</button>
+      <button class="dash-action" id="dash-activities-btn">${t("dashboard.quick_activity")}</button>
+      <button class="dash-action" id="dash-exams-btn">${t("dashboard.quick_exam")}</button>
+      <button class="dash-action" id="dash-planning-btn">${t("dashboard.quick_planning")}</button>
+      <button class="dash-action" id="dash-ai-btn">${t("dashboard.ai_assistant")}</button>
+    </div>
+  </section>`;
 
-  /* ---------- Bloc 1 : reprendre mes révisions ---------- */
-  if(rcChapter){
-    const lastKey = dateKey(new Date(rc.ts));
-    html += `<div class="dash-card dash-card-primary">
-      <div class="dash-card-eyebrow">${t("dashboard.resume_revisions")}</div>
-      <h2 class="dash-card-title">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</h2>
-      <p class="dash-card-meta">${t("dashboard.last_revision", {when: fmtRelativeDate(lastKey).toLowerCase()})}</p>
-      <button class="btn red" id="dash-continue-btn">${t("dashboard.resume_btn")}</button>
-    </div>`;
-  } else {
-    html += `<div class="dash-card dash-card-primary">
-      <div class="dash-card-eyebrow">${t("dashboard.resume_revisions")}</div>
-      <h2 class="dash-card-title">${t("dashboard.start_first")}</h2>
-      <p class="dash-card-meta">${t("dashboard.start_first_desc")}</p>
-      <button class="btn outline" id="dash-library-btn">${t("dashboard.view_subjects")}</button>
-    </div>`;
-  }
-
-  /* ---------- Bloc 2 : progression globale ---------- */
+  /* ---------- Progression — secondaire, donc sans boîte ---------- */
   const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
-  html += `<div class="dash-card">
-    <div class="dash-card-eyebrow">${t("dashboard.my_progress")}</div>
-    <div class="dash-progress-big">${g.mastery}%</div>
-    <ul class="dash-progress-list">
-      <li><span>${t("dashboard.subjects_started")}</span><b>${startedSubjects}/${subjects.length}</b></li>
-      <li><span>${t("dashboard.chapters_mastered")}</span><b>${masteredChaptersCount()}/${CHAPTERS.length}</b></li>
-      <li><span>${t("dashboard.questions_worked")}</span><b>${g.answered}/${g.total}</b></li>
-      <li><span>${t("dashboard.revision_time")}</span><b>${fmtDuration(d.timeSpentSeconds)}</b></li>
-    </ul>
-    <div class="dash-card-links">
-      <button class="btn-text" id="dash-progress-link">${t("dashboard.view_detail")}</button>
-      <button class="btn-text" id="dash-stats-link">${t("stats.dashboard_link")} →</button>
+  html += `<section>
+    <div class="section-head">
+      <span class="section-head-label">${t("dashboard.my_progress")}</span>
+      <span class="section-head-rule"></span>
     </div>
-  </div>`;
-
-  /* ---------- Bloc 2bis : révision intelligente (discret, une recommandation
-     principale + un compte réel — jamais de liste, voir §12/§13 : ne doit
-     pas prendre toute la place, pas de sur-gamification). ---------- */
-  html += renderDashboardSmartBlock();
-
-  /* ---------- Bloc 3 : mes matières ---------- */
-  html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.my_subjects")}</span></div>`;
-  if(subjects.length === 0){
-    html += `<p class="dash-empty">${t("dashboard.no_subjects")}</p>
-      <button class="btn outline small" id="dash-addcourse-btn" style="margin-top:10px;">${t("dashboard.add_first_subject")}</button>`;
-  } else {
-    recentSubjectsPreview(3).forEach(s=>{
-      const chs = chaptersOfSubject(s.id);
-      const prog = subjectProgress(s.id);
-      html += `<div class="dash-subject-row" data-open-subject-dash="${s.id}">
-        <span class="icon" style="background:${s.color}22;">${s.icon||"📘"}</span>
-        <div>
-          <div class="name">${escapeHtml(s.name)}</div>
-          <div class="meta">${chs.length} chapitre${chs.length>1?"s":""}</div>
+    <div class="dash-metrics">
+      <div class="dash-metrics-lead">
+        <span class="dash-metrics-value">${g.mastery}%</span>
+        <div class="meter accent"><div class="meter-fill" style="width:${g.mastery}%;"></div></div>
+      </div>
+      <div class="dash-metrics-rest">
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">${t("dashboard.subjects_started")}</span><span class="stat-value sm">${startedSubjects}/${subjects.length}</span></div>
+          <div class="stat"><span class="stat-label">${t("dashboard.chapters_mastered")}</span><span class="stat-value sm">${masteredChaptersCount()}/${CHAPTERS.length}</span></div>
+          <div class="stat"><span class="stat-label">${t("dashboard.questions_worked")}</span><span class="stat-value sm">${g.answered}/${g.total}</span></div>
+          <div class="stat"><span class="stat-label">${t("dashboard.revision_time")}</span><span class="stat-value sm">${fmtDuration(d.timeSpentSeconds)}</span></div>
         </div>
-        <span class="pct">${prog===null?"—":prog+"%"}</span>
-      </div>`;
-    });
-    html += `<button class="btn-text" id="dash-viewall-subjects" style="margin-top:10px;">${t("dashboard.view_all_subjects")}</button>`;
-  }
-  html += `</div>`;
-
-  /* ---------- Bloc 4 : activité récente ---------- */
-  const feed = recentFeedItems(5);
-  html += `<div class="dash-card" id="dash-recent-activity">
-    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.recent_activity")}</span></div>`;
-  if(feed.length === 0){
-    html += `<p class="dash-empty">${t("dashboard.no_recent_activity")}</p>`;
-  } else {
-    html += `<div class="dash-feed">` + feed.map(it => `<div class="dash-feed-item">${it}</div>`).join("") + `</div>`;
-  }
-  html += `</div>`;
-
-  /* ---------- Bloc 5 : actions rapides ---------- */
-  html += `<div class="dash-card">
-    <div class="dash-card-head"><span class="section-title inline">${t("dashboard.quick_actions")}</span></div>
-    <div class="dash-quicklinks">
-      <button class="dash-quick-btn" id="dash-import-course-btn"><span class="ico">📥</span><span class="lbl">${t("dashboard.quick_import")}</span></button>
-      <button class="dash-quick-btn" id="dash-library-btn2"><span class="ico">📚</span><span class="lbl">${t("dashboard.quick_view_subjects")}</span></button>
-      <button class="dash-quick-btn" id="dash-addcourse-btn"><span class="ico">➕</span><span class="lbl">${t("dashboard.quick_add_course")}</span></button>
-      <button class="dash-quick-btn" id="dash-activities-btn"><span class="ico">🧠</span><span class="lbl">${t("dashboard.quick_activity")}</span></button>
-      <button class="dash-quick-btn" id="dash-exams-btn"><span class="ico">📝</span><span class="lbl">${t("dashboard.quick_exam")}</span></button>
-      <button class="dash-quick-btn" id="dash-planning-btn"><span class="ico">🗓️</span><span class="lbl">${t("dashboard.quick_planning")}</span></button>
+        <div class="block block--action is-bare" style="margin-top: var(--space-lg);">
+          <button class="btn btn--tertiary" id="dash-progress-link">${t("dashboard.view_detail")}</button>
+          <button class="btn btn--tertiary" id="dash-stats-link">${t("stats.dashboard_link")}</button>
+        </div>
+      </div>
     </div>
-  </div>`;
+  </section>`;
 
-  html += `</div>`; // dash-grid2
+  /* ---------- Reprendre : mes matières / mes cours récents ---------- */
+  html += `<section><div class="dash-split">
+    ${renderDashboardSubjects(subjects)}
+    ${renderDashboardRevisions()}
+  </div></section>`;
 
-  html += renderDashboardRevisions();
+  /* ---------- Activité récente ---------- */
+  const feed = recentFeedItems(5);
+  html += `<section id="dash-recent-activity">
+    <div class="section-head">
+      <span class="section-head-label">${t("dashboard.recent_activity")}</span>
+      <span class="section-head-rule"></span>
+    </div>`;
+  if(feed.length === 0){
+    html += `<p class="dash-log-item">${t("dashboard.no_recent_activity")}</p>`;
+  } else {
+    html += `<div class="dash-log">` + feed.map(it => `<div class="dash-log-item">${it}</div>`).join("") + `</div>`;
+  }
+  html += `</section>`;
 
   html += `<footer class="hint">${t("dashboard.storage_hint")}${storageAvailable ? "" : t("dashboard.storage_warning")}</footer>`;
-
+  html += `</div>`;
   return html;
 }
 
-/* Bloc discret "Révision intelligente" du dashboard (§12) : une seule
-   recommandation principale (la plus prioritaire) + un compte réel du
-   nombre de notions qui méritent l'attention — jamais une liste complète
-   (ça, c'est le rôle de la page dédiée). Recalculé à chaque rendu du
-   dashboard comme le reste des blocs, via le même moteur que la page
-   "Révision intelligente" (getSmartRevisionRecommendations) — aucune
-   deuxième logique de recommandation. */
-function renderDashboardSmartBlock(){
-  // Même règle que renderSmartHome() : un utilisateur sans aucune donnée ne
-  // doit jamais voir "N notions à réviser" (tous les chapitres jamais faits
-  // qualifieraient), seulement le message neutre d'invitation.
+/* LE point focal de la page : une seule priorité, une seule action primaire.
+   L'ancien tableau de bord montrait deux blocs quasi identiques — « Reprendre
+   mes révisions » et « Révision intelligente » — qui posaient la même
+   question. Ils sont fusionnés : la recommandation du moteur passe devant
+   quand il y en a une, la reprise devient l'action secondaire, et réciproquement.
+   Les deux restent donc atteignables, avec les mêmes identifiants qu'avant.
+   Le moteur reste getSmartRevisionRecommendations() : aucune deuxième
+   logique de recommandation n'est introduite. */
+function renderDashboardFocus(rcChapter, rcSubject, rc){
+  // Même règle que renderSmartHome() : sans aucune donnée, on n'annonce pas
+  // « N notions à réviser » (tous les chapitres jamais faits qualifieraient).
   const hasAnyData = state.dash.recentActivity.length > 0
     || QUESTIONS.some(q => qstat(q))
     || state.userChapters.some(ch => userChapterProgress(ch) !== null);
   const recos = hasAnyData ? getSmartRevisionRecommendations() : [];
   const top = recos[0] || null;
-  return `<div class="dash-card">
-    <div class="dash-card-eyebrow">🧠 ${t("smart.title")}</div>
-    ${top ? `
-      <p class="dash-card-meta">${t("smart.dashboard_count", {n: recos.length})}</p>
-      <h2 class="dash-card-title" style="font-size:16px;">${escapeHtml(top.title)}</h2>
-      ${smartReasonHtml(top)}
-      <button class="btn red small" id="dash-smart-btn" style="margin-top:10px;">${t("smart.dashboard_cta")} →</button>
-    ` : `
-      <p class="dash-card-meta">${t("smart.dashboard_empty")}</p>
-    `}
-  </div>`;
+
+  const resumeLabel = rcChapter
+    ? t("dashboard.resume_other", {title: escapeHtml(rcChapter.title)})
+    : t("dashboard.view_subjects");
+  const resumeBtnId = rcChapter ? "dash-continue-btn" : "dash-library-btn";
+
+  let body;
+  if(top){
+    /* Priorité : la recommandation du moteur. */
+    body = `<h2 class="dash-focus-title">${escapeHtml(top.title)}</h2>
+      <p class="dash-focus-meta">${t("smart.title")} · ${t("smart.dashboard_count", {n: recos.length})}</p>
+      <p class="dash-focus-reason">${t(top.reasonKey, top.reasonVars || {})}</p>
+      <div class="dash-focus-actions">
+        <button class="btn btn--primary large" id="dash-smart-btn">${t("smart.dashboard_cta")}</button>
+        <button class="btn btn--tertiary" id="${resumeBtnId}">${resumeLabel}</button>
+      </div>`;
+  } else if(rcChapter){
+    /* Pas de recommandation : la reprise devient la priorité. */
+    const lastKey = dateKey(new Date(rc.ts));
+    body = `<h2 class="dash-focus-title">${escapeHtml(rcChapter.title)}</h2>
+      <p class="dash-focus-meta">${rcSubject ? escapeHtml(rcSubject.name) + " · " : ""}${t("dashboard.last_revision", {when: fmtRelativeDate(lastKey).toLowerCase()})}</p>
+      <div class="dash-focus-actions">
+        <button class="btn btn--primary large" id="dash-continue-btn">${t("dashboard.resume_btn")}</button>
+        <button class="btn btn--tertiary" id="dash-library-btn">${t("dashboard.view_subjects")}</button>
+      </div>`;
+  } else {
+    /* Ni l'un ni l'autre : on dit quoi faire, une seule fois. */
+    body = `<h2 class="dash-focus-title">${t("dashboard.start_first")}</h2>
+      <p class="dash-focus-reason">${t("dashboard.start_first_desc")}</p>
+      <div class="dash-focus-actions">
+        <button class="btn btn--primary large" id="dash-library-btn">${t("dashboard.view_subjects")}</button>
+        <button class="btn btn--tertiary" id="dash-banner-cta">${t("dashboard.start")}</button>
+      </div>`;
+  }
+
+  return `<section class="dash-focus">
+    <span class="dash-focus-eyebrow">${t("dashboard.section_priority")}</span>
+    ${body}
+  </section>`;
 }
 
-/* "Mes révisions" — cours récemment importés/créés, avec indicateurs de ce qui est
-   disponible (quiz, flashcards, questions) et un badge "à revoir" tant qu'ils ne sont
-   pas marqués comme révisés. */
+/* « Mes matières » — les trois matières les plus récemment consultées.
+   Liste filetée : ce n'est pas une carte, c'est un index. */
+function renderDashboardSubjects(subjects){
+  let html = `<div>
+    <div class="section-head" style="margin-top:0;">
+      <span class="section-head-label">${t("dashboard.my_subjects")}</span>
+      <span class="section-head-rule"></span>
+    </div>`;
+  if(subjects.length === 0){
+    html += `<div class="empty empty--inline">
+      <p class="empty-text">${t("dashboard.no_subjects")}</p>
+      <div class="empty-actions"><button class="btn btn--secondary" data-dash-add-subject>${t("dashboard.add_first_subject")}</button></div>
+    </div>`;
+  } else {
+    recentSubjectsPreview(3).forEach(s=>{
+      const chs = chaptersOfSubject(s.id);
+      const prog = subjectProgress(s.id);
+      html += `<button type="button" class="dash-row" data-open-subject-dash="${s.id}">
+        <span class="dash-row-body">
+          <span class="dash-row-name">${escapeHtml(s.name)}</span>
+          <span class="dash-row-meta">${t(chs.length > 1 ? "dashboard.chapter_many" : "dashboard.chapter_one", {n: chs.length})}</span>
+        </span>
+        <span class="dash-row-value">${prog === null ? "—" : prog + "%"}</span>
+      </button>`;
+    });
+    html += `<div class="block block--action is-bare" style="margin-top: var(--space-md);">
+      <button class="btn btn--tertiary" id="dash-viewall-subjects">${t("dashboard.view_all_subjects")}</button>
+    </div>`;
+  }
+  return html + `</div>`;
+}
+
+/* « Cours récents » — cours importés/créés récemment, avec ce qui est
+   disponible dessus (quiz, flashcards, questions) et leur état de révision.
+   Mêmes données qu'avant, mêmes destinations : seuls les emojis et les
+   pastilles colorées ont laissé place aux badges du système. */
 function renderDashboardRevisions(){
   const recentChapters = state.userChapters
     .slice()
     .sort((a,b) => (b.updatedAt||b.createdAt||0) - (a.updatedAt||a.createdAt||0))
     .slice(0, 5);
-  if(recentChapters.length === 0) return "";
 
-  let html = `<div class="dash-card" style="margin-bottom:18px;">
-    <div class="dash-card-head"><span class="section-title inline">Mes révisions</span></div>
-    <div class="dash-revisions-list">`;
+  let html = `<div>
+    <div class="section-head" style="margin-top:0;">
+      <span class="section-head-label">${t("dashboard.recent_courses")}</span>
+      <span class="section-head-rule"></span>
+    </div>`;
+
+  if(recentChapters.length === 0){
+    html += `<div class="empty empty--inline">
+      <p class="empty-text">${t("dashboard.no_recent_courses")}</p>
+      <div class="empty-actions"><button class="btn btn--secondary" data-dash-import>${t("dashboard.quick_import")}</button></div>
+    </div>`;
+    return html + `</div>`;
+  }
+
   recentChapters.forEach(ch=>{
     const s = subjectOfChapter(ch);
     const dateLbl = fmtRelativeDate(dateKey(new Date(ch.updatedAt||ch.createdAt||Date.now()))).toLowerCase();
-    html += `<div class="dash-revision-row" data-open-revision="${ch.id}" tabindex="0" role="button" aria-label="${escapeHtml(ch.title)}">
-      <div class="dash-revision-main">
-        <div class="name">${escapeHtml(ch.title)}</div>
-        <div class="meta">${s ? escapeHtml(s.name) + " · " : ""}${dateLbl}</div>
-      </div>
-      <div class="dash-revision-badges">
-        ${ch.aiQuiz && ch.aiQuiz.length ? `<span class="dash-revision-badge">🧠 Quiz</span>` : ""}
-        ${ch.aiFlashcards && ch.aiFlashcards.length ? `<span class="dash-revision-badge">🃏 Flashcards</span>` : ""}
-        ${ch.aiReviewQuestions && ch.aiReviewQuestions.length ? `<span class="dash-revision-badge">🎯 Questions</span>` : ""}
-        ${!ch.markedReviewed ? `<span class="dash-revision-badge warn">À revoir</span>` : `<span class="dash-revision-badge ok">✅ Révisé</span>`}
-      </div>
-    </div>`;
+    const tags = [];
+    if(ch.aiQuiz && ch.aiQuiz.length) tags.push(`<span class="badge">${t("dashboard.has_quiz")}</span>`);
+    if(ch.aiFlashcards && ch.aiFlashcards.length) tags.push(`<span class="badge">${t("dashboard.has_flashcards")}</span>`);
+    if(ch.aiReviewQuestions && ch.aiReviewQuestions.length) tags.push(`<span class="badge">${t("dashboard.has_questions")}</span>`);
+    html += `<button type="button" class="dash-row dash-row--stack" data-open-revision="${ch.id}">
+      <span class="dash-row-line">
+        <span class="dash-row-name">${escapeHtml(ch.title)}</span>
+        ${ch.markedReviewed
+          ? `<span class="status success">${t("dashboard.reviewed")}</span>`
+          : `<span class="status warning">${t("dashboard.to_review")}</span>`}
+      </span>
+      <span class="dash-row-meta">${s ? escapeHtml(s.name) + " · " : ""}${dateLbl}</span>
+      ${tags.length ? `<span class="dash-row-tags">${tags.join("")}</span>` : ""}
+    </button>`;
   });
-  html += `</div>
-    <button class="btn-text" id="dash-viewall-revisions" style="margin-top:10px;">Voir toutes mes matières →</button>
+  html += `<div class="block block--action is-bare" style="margin-top: var(--space-md);">
+    <button class="btn btn--tertiary" id="dash-viewall-revisions">${t("dashboard.view_all_courses")}</button>
   </div>`;
-  return html;
+  return html + `</div>`;
 }
 
-/* "Mon emploi du temps" — aperçu du planning du jour directement sur le dashboard,
-   avec détection du cours en cours et accès direct à l'espace de notes. */
+/* « Mon emploi du temps » — le planning du jour a une vraie présence : il
+   occupe une section entière, avec le cours en cours traité comme un objet
+   manipulable (le seul bloc encadré du tableau de bord). Le reste est une
+   liste filetée à colonne d'heures en chasse fixe. Les identifiants de la
+   barre de progression vive (#dash-ccourse-*) sont inchangés : le compteur
+   à la seconde continue de fonctionner sans re-rendu. */
 function renderDashboardSchedule(){
   const previewDay = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
-  let html = `<div class="dash-card dash-schedule-card" id="dash-schedule-card">
-    <div class="dash-card-head">
-      <span class="section-title inline">${t("dashboard.schedule_title")}</span>
-      <div class="dash-schedule-nav">
-        <button class="dash-schedule-navbtn ${previewDay===0?"active":""}" data-schedule-day="today">${t("dashboard.today")}</button>
-        <button class="dash-schedule-navbtn ${previewDay===1?"active":""}" data-schedule-day="tomorrow">${t("dashboard.tomorrow")}</button>
-        <button class="dash-schedule-navbtn" id="dash-schedule-week">${t("dashboard.week")}</button>
-      </div>
+  let html = `<section id="dash-schedule-card">
+    <div class="section-head" style="margin-top:0;">
+      <span class="section-head-label">${t("dashboard.schedule_title")}</span>
+      <span class="section-head-rule"></span>
+      <span class="section-head-action">
+        <span class="segmented">
+          <button type="button" data-schedule-day="today" class="${previewDay===0?"active":""}" aria-pressed="${previewDay===0}">${t("dashboard.today")}</button>
+          <button type="button" data-schedule-day="tomorrow" class="${previewDay===1?"active":""}" aria-pressed="${previewDay===1}">${t("dashboard.tomorrow")}</button>
+          <button type="button" id="dash-schedule-week">${t("dashboard.week")}</button>
+        </span>
+      </span>
     </div>`;
 
   if(state.planning.events.length === 0){
-    html += `<p class="dash-empty">${t("dashboard.no_planning")}</p>
-      <button class="btn outline small" id="dash-schedule-setup" style="margin-top:6px;">${t("dashboard.setup_planning")}</button></div>`;
+    html += `<div class="empty empty--inline">
+      <p class="empty-text">${t("dashboard.no_planning")}</p>
+      <div class="empty-actions"><button class="btn btn--secondary" id="dash-schedule-setup">${t("dashboard.setup_planning")}</button></div>
+    </div></section>`;
     return html;
   }
 
@@ -5882,35 +6117,44 @@ function renderDashboardSchedule(){
     const elapsed = Math.min(total, Math.max(0, Date.now() - current.start));
     const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
     const remainMin = Math.max(0, Math.round(((current.end || current.start) - Date.now()) / 60000));
-    html += `<div class="dash-current-course" data-open-event="${current.id}" tabindex="0" role="button" aria-label="${escapeHtml(current.summary)} — en cours">
-      <span class="badge-current">🟢 En cours${cd.favorite ? " · ★" : ""}</span>
-      <div class="ccourse-title">${escapeHtml(current.summary)}</div>
-      <div class="ccourse-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}</div>
-      <div class="ccourse-progressbar" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
-        <div class="ccourse-progressbar-fill" id="dash-ccourse-fill" style="width:${pct}%;"></div>
+    const remainLbl = remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min";
+    html += `<div class="block block--feature dash-now">
+      <div class="dash-now-head">
+        <h3 class="dash-now-heading"><button type="button" class="dash-now-title" data-open-event="${current.id}">${escapeHtml(current.summary)}</button></h3>
+        <span class="status success">${t("dashboard.status_current")}${cd.favorite ? " · ★" : ""}</span>
       </div>
-      <div class="ccourse-remaining" id="dash-ccourse-text">${pct}% · ${remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min"} restantes</div>
-      <button class="btn red small" data-open-event-notes="${current.id}" style="margin-top:8px;">✏️ Prendre des notes</button>
+      <p class="dash-now-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}</p>
+      <div class="meter" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
+        <div class="meter-fill" id="dash-ccourse-fill" style="width:${pct}%;"></div>
+      </div>
+      <p class="dash-now-remaining" id="dash-ccourse-text">${pct}% · ${t("dashboard.remaining", {time: remainLbl})}</p>
+      <div class="dash-now-actions">
+        <button class="btn btn--secondary small" data-open-event-notes="${current.id}">${t("dashboard.take_notes")}</button>
+      </div>
     </div>`;
   }
 
   const others = todaysEvents.filter(e => !current || e.id !== current.id);
   if(others.length){
-    html += `<div class="dash-schedule-list">` + others.map(e=>{
+    html += `<div class="dash-agenda">` + others.map(e=>{
       const st = getCourseStatus(e);
       const stLabel = st === "past" ? t("dashboard.status_done") : (st === "current" ? t("dashboard.status_current") : t("dashboard.status_upcoming"));
-      return `<div class="dash-schedule-row status-${st}" data-open-event="${e.id}" tabindex="0" role="button" aria-label="${escapeHtml(e.summary)}">
-        <span class="dash-schedule-time">${fmtEventTimeRange(e)}</span>
-        <span class="dash-schedule-title">${escapeHtml(e.summary)}</span>
-        <span class="dash-schedule-badge">${stLabel}</span>
-      </div>`;
+      return `<button type="button" class="dash-agenda-row is-${st}" data-open-event="${e.id}">
+        <span class="dash-agenda-time">${fmtEventTimeRange(e)}</span>
+        <span class="dash-agenda-title">${escapeHtml(e.summary)}</span>
+        <span class="dash-agenda-state">${stLabel}</span>
+      </button>`;
     }).join("") + `</div>`;
   } else if(!current){
-    html += `<p class="dash-empty">${previewDay === 0 ? t("dashboard.no_course_today") : t("dashboard.no_course_tomorrow")}</p>`;
+    html += `<div class="empty empty--inline">
+      <p class="empty-text">${previewDay === 0 ? t("dashboard.no_course_today") : t("dashboard.no_course_tomorrow")}</p>
+    </div>`;
   }
 
-  html += `<button class="btn-text" id="dash-schedule-full" style="margin-top:10px;">${t("dashboard.view_full_planning")}</button>`;
-  html += `</div>`;
+  html += `<div class="block block--action is-bare" style="margin-top: var(--space-md);">
+    <button class="btn btn--tertiary" id="dash-schedule-full">${t("dashboard.view_full_planning")}</button>
+  </div>`;
+  html += `</section>`;
   return html;
 }
 
@@ -5983,17 +6227,13 @@ function attachModeEvents(){
 }
 
 function attachDashboardEvents(){
-  const bannerCta = document.getElementById("dash-banner-cta");
-  if(bannerCta) bannerCta.addEventListener("click", ()=>{
+  /* Le bouton « Commencer à réviser » du bloc focal : il n'existe que dans
+     le cas où l'utilisateur n'a encore ni recommandation ni reprise. */
+  const startCta = document.getElementById("dash-banner-cta");
+  if(startCta) startCta.addEventListener("click", ()=>{
     if(state.dash.recentChapters && state.dash.recentChapters.length > 0) continueRevision();
     else { libGoto("subjects"); switchTab("library"); }
   });
-  const bannerImportBtn = document.getElementById("dash-banner-import-btn");
-  if(bannerImportBtn) bannerImportBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
-  const bannerPlanningBtn = document.getElementById("dash-banner-planning-btn");
-  if(bannerPlanningBtn) bannerPlanningBtn.addEventListener("click", ()=> switchTab("planning"));
-  const bannerAiBtn = document.getElementById("dash-banner-ai-btn");
-  if(bannerAiBtn) bannerAiBtn.addEventListener("click", ()=> switchTab("ai"));
 
   const cbtn = document.getElementById("dash-continue-btn");
   if(cbtn) cbtn.addEventListener("click", continueRevision);
@@ -6001,16 +6241,19 @@ function attachDashboardEvents(){
   if(libbtn) libbtn.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
   const libbtn2 = document.getElementById("dash-library-btn2");
   if(libbtn2) libbtn2.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
-  document.querySelectorAll("#dash-addcourse-btn").forEach(btn=>{
+  /* « Ajouter un cours » et « Importer un cours » apparaissent à deux
+     endroits (action rapide + état vide) : on cible par attribut plutôt que
+     de répéter un identifiant dans la page. */
+  document.querySelectorAll("[data-dash-add-subject]").forEach(btn=>{
     btn.addEventListener("click", ()=>{ libGoto("subjectForm", {editingSubjectId:null}); switchTab("library"); });
   });
-  const importBtn = document.getElementById("dash-import-course-btn");
-  if(importBtn) importBtn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  document.querySelectorAll("[data-dash-import]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ goToCourseImport(); switchTab("library"); });
+  });
+  const aiBtn = document.getElementById("dash-ai-btn");
+  if(aiBtn) aiBtn.addEventListener("click", ()=> switchTab("ai"));
   document.querySelectorAll("[data-open-revision]").forEach(el=>{
     el.addEventListener("click", ()=>{ libGoto("chapterDetail", {chapterId: el.dataset.openRevision}); switchTab("library"); });
-    el.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); libGoto("chapterDetail", {chapterId: el.dataset.openRevision}); switchTab("library"); }
-    });
   });
   const viewAllRevisions = document.getElementById("dash-viewall-revisions");
   if(viewAllRevisions) viewAllRevisions.addEventListener("click", ()=>{ libGoto("subjects"); switchTab("library"); });
@@ -6045,14 +6288,10 @@ function attachDashboardEvents(){
   });
   const scheduleWeekBtn = document.getElementById("dash-schedule-week");
   if(scheduleWeekBtn) scheduleWeekBtn.addEventListener("click", ()=>{ state.planning.calView = "week"; switchTab("planning"); });
+  /* Ces éléments sont de vrais <button> : Entrée et Espace déclenchent déjà
+     le clic. Un gestionnaire clavier en plus ouvrirait la fiche deux fois. */
   document.querySelectorAll("[data-open-event]").forEach(el=>{
     el.addEventListener("click", ()=> openCourseModal(el.dataset.openEvent));
-    el.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" || e.key === " "){
-        e.preventDefault();
-        openCourseModal(el.dataset.openEvent);
-      }
-    });
   });
   document.querySelectorAll("[data-open-event-notes]").forEach(btn=>{
     btn.addEventListener("click", (e)=>{

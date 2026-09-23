@@ -349,14 +349,15 @@ const TABS = ["dashboard", "library", "fiches", "progress", "smart", "stats", "p
       return n;
     };
 
-    /* Plafonds constatés au moment de la pose de la fondation.
+    /* Plafonds constatés au moment de la pose de la fondation, puis abaissés
+       à chaque écran migré (tableau de bord : étape 6).
        À DIMINUER au fil des migrations d'écrans — jamais à relever. */
     const LIMITS = {
-      "tailles de texte en dur": { n: hardcoded("font-size"),     max: 398 },
-      "graisses en dur":         { n: hardcoded("font-weight"),   max: 271 },
-      "rayons en dur":           { n: hardcoded("border-radius"), max: 88 },
+      "tailles de texte en dur": { n: hardcoded("font-size"),     max: 368 },
+      "graisses en dur":         { n: hardcoded("font-weight"),   max: 247 },
+      "rayons en dur":           { n: hardcoded("border-radius"), max: 79 },
       "ombres en dur":           { n: hardcoded("box-shadow"),    max: 2 },
-      "graisses 700 ou 800":     { n: (body.match(/font-weight:\s*[78]00/g) || []).length, max: 240 },
+      "graisses 700 ou 800":     { n: (body.match(/font-weight:\s*[78]00/g) || []).length, max: 219 },
     };
     for (const [label, { n, max }] of Object.entries(LIMITS)) {
       check(`${label} : ${n} (plafond ${max})`, n <= max, `${n} > ${max} — le système recule`);
