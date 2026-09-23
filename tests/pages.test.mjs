@@ -132,6 +132,106 @@ try {
   }
 
   /* ======================================================================
+     1 bis. LA GAMME DE ROUGES — UN TON PAR NIVEAU D'ORGANISATION
+     ----------------------------------------------------------------------
+     Le rouge dit à quel étage de l'interface on se trouve. On vérifie que
+     la gamme existe, qu'elle est ordonnée, que chaque niveau emploie SON
+     ton, et qu'aucun ton clair ne sert à écrire du texte.
+     ====================================================================== */
+  current = "1 bis. la gamme";
+  {
+    const { page } = await open(browser, 1440, 1000);
+
+    const ramp = await page.evaluate(() => {
+      const cs = getComputedStyle(document.documentElement);
+      return [1, 2, 3, 4].map(n =>
+        cs.getPropertyValue(n === 1 ? "--accent" : "--accent-" + n).trim().toUpperCase());
+    });
+    eq("les quatre niveaux sont déclarés", ramp,
+       ["#E31C3D", "#EA526C", "#F0899A", "#F5ADB9"]);
+
+    /* La gamme doit s'éclaircir strictement : sinon deux niveaux se
+       confondent et le repère ne dit plus rien. */
+    const lum = hex => {
+      const v = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255)
+        .map(x => x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4));
+      return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+    };
+    const lums = ramp.map(lum);
+    check("la gamme s'éclaircit d'un niveau à l'autre",
+      lums.every((l, i) => i === 0 || l > lums[i - 1]), lums.map(l => Math.round(l * 1000) / 1000));
+
+    /* Chaque niveau emploie son ton, et pas celui du voisin. */
+    await page.evaluate(() => { switchTab("dashboard"); });
+    await page.waitForTimeout(450);
+    const levels = await page.evaluate(() => {
+      const bg = (sel, pseudo) => {
+        const el = document.querySelector(sel);
+        if (!el) return null;
+        return getComputedStyle(el, pseudo || null).backgroundColor;
+      };
+      return {
+        n1_onglet: bg(".mainnav-item.active-group > .mainnav-link", "::after"),
+        n1_priorite: getComputedStyle(document.querySelector(".dash-panel--priority")).borderTopColor,
+        n1_action: bg(".dashboard .btn--primary"),
+        n3_panneau: bg(".dash-panel-label", "::before"),
+      };
+    });
+    eq("niveau 1 — l'onglet courant", levels.n1_onglet, "rgb(227, 28, 61)");
+    eq("niveau 1 — le panneau prioritaire", levels.n1_priorite, "rgb(227, 28, 61)");
+    eq("niveau 1 — l'action principale", levels.n1_action, "rgb(227, 28, 61)");
+    eq("niveau 3 — le libellé d'un panneau", levels.n3_panneau, "rgb(240, 137, 154)");
+
+    await page.evaluate(() => { switchTab("stats"); });
+    await page.waitForTimeout(450);
+    const n2 = await page.evaluate(() => ({
+      section: getComputedStyle(document.querySelector("#content .section-title"), "::before").backgroundColor,
+      page: getComputedStyle(document.querySelector("#content .page-title"), "::before").backgroundColor,
+    }));
+    eq("niveau 2 — le titre de section", n2.section, "rgb(234, 82, 108)");
+    eq("niveau 1 — le filet qui ouvre la page", n2.page, "rgb(227, 28, 61)");
+
+    /* Niveau 4, dans une fiche. */
+    await page.evaluate(() => { libGoto("chapterDetail", { chapterId: "t-ch1" }); switchTab("library"); });
+    await page.waitForTimeout(450);
+    const n4 = await page.evaluate(() => {
+      const el = document.querySelector("#content .fiche-table th");
+      return el ? getComputedStyle(el).borderBottomColor : "absent";
+    });
+    check("niveau 4 — l'en-tête d'un tableau de fiche",
+      n4 === "rgb(245, 173, 185)" || n4 === "absent", n4);
+
+    /* Une donnée n'est pas un niveau d'organisation : les jauges restent
+       au ton plein. */
+    await page.evaluate(() => { switchTab("dashboard"); });
+    await page.waitForTimeout(450);
+    const jauge = await page.evaluate(() => {
+      const el = document.querySelector(".meter.accent > .meter-fill");
+      return el ? getComputedStyle(el).backgroundColor : null;
+    });
+    eq("une jauge garde le ton plein", jauge, "rgb(227, 28, 61)");
+
+    /* Et aucun texte n'est écrit dans un ton clair : ils ne se lisent pas. */
+    const faibles = [];
+    for (const [name, go] of PAGES) {
+      await page.evaluate(go);
+      await page.waitForTimeout(300);
+      const bad = await page.evaluate(() => {
+        const CLAIRS = ["rgb(234, 82, 108)", "rgb(240, 137, 154)", "rgb(245, 173, 185)"];
+        const view = document.getElementById("view") || document.body;
+        return [...view.querySelectorAll("*")]
+          .filter(el => el.offsetParent !== null
+                     && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())
+                     && CLAIRS.includes(getComputedStyle(el).color))
+          .map(el => el.className.toString().slice(0, 30)).slice(0, 3);
+      });
+      if (bad.length) faibles.push([name, bad]);
+    }
+    eq("aucun texte écrit dans un ton clair de la gamme", faibles, []);
+    await page.close();
+  }
+
+  /* ======================================================================
      2. LE REPÈRE DE SECTION — LE MÊME PARTOUT
      ====================================================================== */
   current = "2. repère de section";
@@ -152,8 +252,9 @@ try {
     }
     check("des titres de sous-section existent sur plusieurs pages", seen.length >= 5, seen.length);
     const shapes = new Set(seen.map(([, r]) => `${r.bg}|${r.w}|${r.h}`));
+    /* Niveau 2 de la gamme : le ton de la SECTION, le même partout. */
     eq("le repère de section est identique sur toutes les pages", [...shapes],
-       ["rgb(227, 28, 61)|14px|2px"]);
+       ["rgb(234, 82, 108)|14px|2px"]);
     await page.close();
   }
 
@@ -323,7 +424,8 @@ try {
       flash && flash.qFont === "Newsreader" && flash.qSize === "30px", flash);
     eq("flashcards : retournement à la durée du système", flash && flash.duration, "0.42s");
     eq("flashcards : plus de dégradé au verso", flash && flash.backGradient, "none");
-    eq("flashcards : un filet accent signale le verso", flash && flash.backRule, "rgb(227, 28, 61) 2px");
+    /* Le verso d'une carte est une information dans un groupe : niveau 4. */
+    eq("flashcards : un filet de la gamme signale le verso", flash && flash.backRule, "rgb(245, 173, 185) 2px");
     await page.close();
   }
 

@@ -51,6 +51,35 @@
     --accent-active:    #B4152F;
     --accent-wash:      #FDF2F4;
 
+    /* ── LA GAMME DE ROUGES — UN TON PAR NIVEAU D'ORGANISATION ───────────
+       Le rouge ne sert pas à décorer : il dit À QUEL ÉTAGE de l'interface
+       on se trouve. Plus le ton est franc, plus le niveau est haut. On lit
+       la structure d'un écran sans lire un mot.
+
+         --accent     niveau 1 · L'ÉCRAN
+                      le filet qui ouvre la page, l'onglet courant,
+                      l'action principale, le panneau prioritaire
+         --accent-2   niveau 2 · LA SECTION
+                      le repère devant chaque titre de section
+         --accent-3   niveau 3 · LE GROUPE
+                      le libellé d'un panneau, un en-tête en chasse fixe
+         --accent-4   niveau 4 · L'INFORMATION
+                      une définition, un point clé, le cours en cours,
+                      l'en-tête d'un tableau — ce qui est mis en avant
+                      À L'INTÉRIEUR d'un groupe
+
+       Un ton ne porte JAMAIS l'information à lui seul : à chaque niveau, la
+       position et la typographie disent déjà de quoi il s'agit (un titre de
+       section est un titre, un libellé de panneau est en chasse fixe). Le
+       ton ne fait que confirmer — c'est pourquoi le niveau 4 peut être
+       clair sans rien coûter en lisibilité.
+
+       Les jauges gardent --accent : une donnée n'est pas un niveau
+       d'organisation. Le texte en rouge aussi — un ton clair ne se lit pas. */
+    --accent-2:         #EA526C;   /* 76 % de rouge — section */
+    --accent-3:         #F0899A;   /* 52 % — groupe */
+    --accent-4:         #F5ADB9;   /* 36 % — information */
+
     /* Fonctionnelles : trois, chacune avec un rôle unique. Jamais en fond de
        bouton, sauf --error en confirmation destructive. */
     --success:          #1F6B4D;
@@ -892,7 +921,7 @@
   /* DÉFINITION — filet accent, lavis accent. Le seul aplat teinté du corps
      de la fiche : c'est ce qu'on relit en premier. */
   .fiche-def{
-    background: var(--accent-wash); border-left: 2px solid var(--accent);
+    background: var(--accent-wash); border-left: 2px solid var(--accent-4);
     padding:var(--space-md); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-size: var(--text-small); line-height: 1.7; margin:0 0 var(--space-lg);
     color: var(--text-primary);
@@ -916,7 +945,7 @@
     font-family: var(--font-data); font-size: var(--text-label);
     letter-spacing: var(--tracking-label); text-transform: uppercase;
     font-weight: var(--weight-medium); color: var(--text-muted);
-    border-bottom: 2px solid var(--accent); white-space: normal;
+    border-bottom: 2px solid var(--accent-4); white-space: normal;
   }
   .fiche-table td{ padding:var(--space-sm); border-bottom: 1px solid var(--border); color: var(--text-secondary); white-space: normal; }
   .fiche-table tr:last-child td{ border-bottom:none; }
@@ -977,7 +1006,7 @@
   /* POINTS IMPORTANTS — pas un aplat de plus : un filet accent au-dessus et
      un titre en chasse fixe. C'est la dernière chose qu'on lit. */
   .fiche-keypoints{
-    background: none; border-top: 2px solid var(--accent); border-radius: 0;
+    background: none; border-top: 2px solid var(--accent-4); border-radius: 0;
     padding:var(--space-md) 0 0; margin-top:var(--space-xl);
   }
   .fiche-keypoints-title{
@@ -1967,7 +1996,7 @@
      changé de face. */
   .flashcard-back{
     background: var(--surface); color: var(--text-primary); transform: rotateY(180deg);
-    border-color: var(--border); border-top: 2px solid var(--accent);
+    border-color: var(--border); border-top: 2px solid var(--accent-4);
   }
   .flashcard-back .a{ font-size: var(--text-body); font-weight: var(--weight-regular); line-height: 1.75; color: var(--text-secondary); }
   .flashcard-back .lbl{
@@ -2679,8 +2708,9 @@
     color: var(--text-muted); margin: 0;
   }
   /* Le même repère accent que partout ailleurs dans l'application. */
+  /* Niveau 3 — LE GROUPE : un panneau est un groupe dans un écran. */
   .dash-panel-label::before{
-    content: ""; width: 10px; height: 2px; background: var(--accent);
+    content: ""; width: 10px; height: 2px; background: var(--accent-3);
     border-radius: 1px; flex-shrink: 0;
   }
   /* Le pied d'un panneau : les actions discrètes, poussées en bas quand la
@@ -2759,7 +2789,7 @@
   /* Le cours en cours n'est PAS une carte dans une carte : un filet accent à
      gauche et un aplat creusé suffisent à le détacher. */
   .dash-now{
-    background: var(--surface-sunken); border-left: 2px solid var(--accent);
+    background: var(--surface-sunken); border-left: 2px solid var(--accent-4);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     padding: var(--space-md); margin-bottom: var(--space-sm);
   }
@@ -3289,13 +3319,20 @@
   /* Le repère de section : un tiret accent de 14px, aligné sur la ligne de
      base du titre. C'est LE geste qui fait circuler le rouge emlyon dans
      toutes les pages — un repère, jamais un aplat de plus. */
-  .section-title::before,
-  .section-head > .section-head-label::before{
+  /* Niveau 2 — LA SECTION. Le repère qui court dans toutes les pages. */
+  .section-title::before{
     content: ""; display: inline-block; vertical-align: middle;
-    width: 14px; height: 2px; background: var(--accent);
+    width: 14px; height: 2px; background: var(--accent-2);
     margin-right:var(--space-sm); border-radius: 1px;
   }
-  .section-head > .section-head-label::before{ width: 10px; margin-right:var(--space-xs); }
+  /* Niveau 2 aussi : un .section-head découpe la PAGE en sections, comme un
+     .section-title — seule sa forme diffère (libellé en chasse fixe et
+     filet). Le repère est donc plus court, mais du même ton. */
+  .section-head > .section-head-label::before{
+    content: ""; display: inline-block; vertical-align: middle;
+    width: 10px; height: 2px; background: var(--accent-2);
+    margin-right:var(--space-xs); border-radius: 1px;
+  }
   /* Titre de section aligné avec une action sur la même ligne (en-tête de
      section) : la marge basse est portée par le conteneur flex, pas par le
      titre. Remplace 13 style="margin-bottom:0;" identiques. */

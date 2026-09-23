@@ -139,9 +139,43 @@ progression : `#EDEAE5` → `#C9C5BE` → `#9A958C` → `#5C5850` → `#2A2721`.
 Les graphiques n'utilisent aucune couleur : la rampe porte la quantité, le
 rouge marque **une seule chose** — la période courante ou la cible.
 
+### La gamme de rouges — un ton par niveau d'organisation
+
+> Révisé après la pose du système : le rouge ne marque plus seulement
+> « l'action ». Il marque **à quel étage de l'interface on se trouve**. Plus
+> le ton est franc, plus le niveau est haut — on lit la structure d'un écran
+> sans lire un mot.
+
+| Ton | Niveau | Ce qu'il marque |
+|---|---|---|
+| `--accent` `#E31C3D` | **1 · l'écran** | le filet qui ouvre la page, l'onglet courant, l'action principale, le panneau prioritaire |
+| `--accent-2` `#EA526C` | **2 · la section** | le repère devant un `.section-title` ou un `.section-head-label` |
+| `--accent-3` `#F0899A` | **3 · le groupe** | le libellé d'un panneau (`.dash-panel-label`) |
+| `--accent-4` `#F5ADB9` | **4 · l'information** | une définition, un point clé, le cours en cours, l'en-tête d'un tableau — ce qui est mis en avant *à l'intérieur* d'un groupe |
+
+Trois garde-fous, sans lesquels la gamme redeviendrait de la décoration :
+
+- **Un ton ne porte jamais l'information à lui seul.** À chaque niveau, la
+  position et la typographie disent déjà de quoi il s'agit (un titre de
+  section est un titre ; un libellé de panneau est en chasse fixe). Le ton ne
+  fait que confirmer — c'est pourquoi le niveau 4 peut être clair sans rien
+  coûter en lisibilité.
+- **Les tons clairs n'écrivent jamais de texte.** Un texte rouge reste
+  `--accent` (4,67:1 sur blanc). Les niveaux 2 à 4 ne servent que pour des
+  filets et des repères.
+- **Une donnée n'est pas un niveau d'organisation.** Les jauges, les barres de
+  progression et les graphiques gardent `--accent` plein.
+
+Vérifié par `tests/pages.test.mjs` §1 bis : la gamme existe, elle s'éclaircit
+strictement d'un niveau à l'autre, chaque niveau emploie son ton, et aucun
+texte n'est écrit dans un ton clair.
+
 ### Règles de couleur
 
 1. **Trois occurrences de rouge maximum par écran**, une idéalement.
+   *(Assoupli : la gamme ci-dessus ajoute des repères structurels, qui ne
+   comptent pas comme des « occurrences » — un filet de 2 px n'attire pas
+   l'œil comme un aplat. La règle continue de valoir pour les APLATS.)*
 2. **Aucun dégradé**, à une exception près : un voile vertical ivoire → blanc
    sur l'en-tête au défilement. Pas de glassmorphism, pas de néon, pas de flou
    décoratif.
