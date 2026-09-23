@@ -427,6 +427,55 @@ begin
   return next;
 
   -- ==========================================================================
+  -- 4 bis. oauth_states — hermétique au navigateur
+  -- ==========================================================================
+  -- Cette table porte les nonces du flux OAuth. Elle n'a AUCUNE policy et
+  -- AUCUN privilège pour les rôles exposés au navigateur : seules les Edge
+  -- Functions y accèdent, via service_role. On le vérifie au lieu de le
+  -- supposer.
+  for op in 1 .. 3 loop
+    okv := false; observe := null;
+    begin
+      execute 'reset role';
+      if op = 3 then
+        perform set_config('request.jwt.claim.sub', '', false);
+        perform set_config('request.jwt.claims',    '', false);
+        execute 'set role anon';
+      else
+        execute format(
+          'select set_config(''request.jwt.claim.sub'', %L, false), set_config(''request.jwt.claims'', %L, false)',
+          ua::text, jsonb_build_object('sub', ua::text, 'role', 'authenticated')::text);
+        execute 'set role authenticated';
+      end if;
+
+      if op = 2 then
+        execute format(
+          'insert into public.oauth_states (id, user_id, expires_at) values (''forge'', %L, now() + interval ''1 hour'')', ua);
+        observe := 'ÉCRITURE ACCEPTÉE';
+      else
+        execute 'select count(*) from public.oauth_states' into cnt;
+        observe := cnt::text || ' ligne(s) lue(s)';
+        okv := (cnt = 0);
+      end if;
+    exception when others then
+      observe := 'refusé (' || sqlstate || ')'; okv := true;
+    end;
+
+    k := k + 1; n := k;
+    phase    := '5. anon';
+    cible    := 'oauth_states';
+    controle := case op
+                  when 1 then 'authenticated lit les nonces OAuth'
+                  when 2 then 'authenticated forge un nonce OAuth'
+                  else        'anon lit les nonces OAuth'
+                end;
+    attendu  := 'refus, ou 0 ligne';
+    statut   := case when okv then 'PASS' else 'FAIL' end;
+    if not okv then nb_fail := nb_fail + 1; end if;
+    return next;
+  end loop;
+
+  -- ==========================================================================
   -- 5. INTÉGRITÉ — une ligne rattachée à la matière d'un autre compte
   -- ==========================================================================
   -- Avant la migration 002, les policies d'écriture ne contrôlaient que

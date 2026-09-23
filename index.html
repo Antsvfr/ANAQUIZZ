@@ -1775,6 +1775,10 @@
   .src-state::before{ content:""; width:7px; height:7px; border-radius:50%; background: var(--muted); }
   .src-state.src-ok{ color: var(--green); }
   .src-state.src-ok::before{ background: var(--green); }
+  /* Session expirée : l'état est porté par le LIBELLÉ, la pastille ne fait que
+     l'accompagner — jamais la couleur seule. */
+  .src-state.src-warn-state{ color: var(--orange, #c2410c); }
+  .src-state.src-warn-state::before{ background: var(--orange, #c2410c); }
   .src-actions{ display:flex; align-items:center; gap: var(--space-md); flex-wrap:wrap; }
   .src-progress{ margin: var(--space-sm) 0; }
   .src-progress .deckbar-track{ margin-bottom: var(--space-2xs); }
@@ -8624,8 +8628,20 @@ function renderCourseLibrarySection(){
    réhydratée au chargement.
    ============================================================ */
 
+/* « Connecté » n'est jamais une supposition : la ligne en base n'est écrite
+   qu'après un échange OAuth réel ET un appel authentifié réussi côté
+   Brightspace (voir supabase/functions/_shared/callback-flow.ts). On exige
+   donc les deux : le statut ET la date de vérification. */
 function bsConnected(){
-  return !!(state.brightspace && state.brightspace.connection && state.brightspace.connection.status === "connected");
+  const c = state.brightspace && state.brightspace.connection;
+  return !!(c && c.status === "connected" && c.last_verified_at);
+}
+
+/* La session Brightspace a expiré : ce n'est pas « déconnecté », et ce n'est
+   pas « connecté » non plus. L'utilisateur doit repasser par D2L. */
+function bsExpired(){
+  const c = state.brightspace && state.brightspace.connection;
+  return !!(c && (c.status === "expired" || c.status === "revoked"));
 }
 
 /* L'intégration n'existe que pour un compte connecté : sans identité
@@ -8657,11 +8673,36 @@ async function bsLoadConnection(){
   // même ce select ne peut pas les rapporter (voir la migration).
   const { data, error } = await LyonAuth.client
     .from("brightspace_connections")
-    .select("tenant_url,status,scopes,last_synced_at,last_error,token_expires_at")
+    .select("tenant_url,status,scopes,last_synced_at,last_verified_at,external_user_name,last_error,token_expires_at")
     .maybeSingle();
   if(error){ state.brightspace.connection = null; return null; }
   state.brightspace.connection = data || null;
   return data || null;
+}
+
+/* Vérification RÉELLE : l'Edge Function brightspace-status appelle Brightspace
+   avec le token de l'utilisateur. On n'affiche jamais « connecté » sur la foi
+   d'une ligne en base sans qu'un appel authentifié ait abouti au moins une
+   fois — c'est la fonction qui l'établit, pas le navigateur. */
+async function bsCheckConnection(opts){
+  if(!bsAvailable()) return null;
+  opts = opts || {};
+  if(opts.showBusy){ state.brightspace.busy = "checking"; state.brightspace.error = null; render(); }
+  try{
+    const res = await bsInvoke("brightspace-status", { probe: opts.probe !== false });
+    state.brightspace.check = res || null;
+    await bsLoadConnection();
+    if(res && !res.connected && res.reason === "forbidden"){
+      state.brightspace.error = t("sources.connect_forbidden");
+    }
+    return res;
+  }catch(e){
+    state.brightspace.check = null;
+    state.brightspace.error = e.message || t("sources.error_generic");
+    return null;
+  }finally{
+    if(opts.showBusy){ state.brightspace.busy = null; render(); }
+  }
 }
 
 async function bsConnect(){
@@ -8858,6 +8899,16 @@ function renderSourcesSection(){
     body = `<p class="meta">${t("sources.requires_account")}</p>`;
   } else if(bs.busy === "connecting"){
     body = `<p class="meta"><span class="ai-spinner"></span> ${t("sources.connecting")}</p>`;
+  } else if(bs.busy === "checking"){
+    body = `<p class="meta"><span class="ai-spinner"></span> ${t("sources.checking")}</p>`;
+  } else if(bsExpired()){
+    /* Session expirée : ni « connecté » ni « déconnecté ». On dit exactement
+       ce qui se passe et la seule action utile. */
+    body = `<div class="src-row">
+        <span class="src-state src-warn-state">${t("sources.session_expired")}</span>
+      </div>
+      <p class="meta">${t("sources.reconnect_needed")}</p>
+      <button class="btn red" id="bs-connect-btn">${t("sources.reconnect")}</button>`;
   } else if(!bsConnected()){
     body = `<p class="section-sub">${t("sources.bs_pitch")}</p>
       <button class="btn red" id="bs-connect-btn">${t("sources.connect")}</button>`;
@@ -8870,6 +8921,12 @@ function renderSourcesSection(){
         <span class="meta">${t("sources.last_sync", { when: escapeHtml(last) })}</span>
       </div>`;
 
+    /* Dire À QUEL compte Brightspace on est relié : c'est la preuve visible,
+       pour l'utilisateur, que la connexion est réelle et que c'est la sienne. */
+    if(c.external_user_name){
+      body += `<p class="meta">${t("sources.verified_as", { name: escapeHtml(c.external_user_name) })}</p>`;
+    }
+
     if(bs.busy === "syncing"){
       const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
       body += `<div class="src-progress">
@@ -8881,6 +8938,7 @@ function renderSourcesSection(){
     } else {
       body += `<div class="src-actions">
         <button class="btn outline small" id="bs-sync-btn">${t("sources.sync_now")}</button>
+        <button class="btn-text" id="bs-check-btn">${t("sources.verify")}</button>
         <button class="btn-text" id="bs-disconnect-btn">${t("sources.disconnect")}</button>
       </div>`;
     }
@@ -8901,6 +8959,15 @@ function renderSourcesSection(){
       body += `<p class="meta src-result">${escapeHtml(msg)}</p>`;
       if(r.unavailable) body += `<p class="meta src-warn">${t("sources.n_unavailable", { n: r.unavailable })}</p>`;
     }
+  }
+
+  /* Résultat de la dernière vérification réelle, quand elle vient d'avoir
+     lieu : l'utilisateur voit que quelque chose a été réellement contrôlé. */
+  const chk = state.brightspace && state.brightspace.check;
+  if(chk && chk.probed && !state.brightspace.busy){
+    body += chk.connected
+      ? `<p class="meta src-result">${t("sources.verify_ok")}</p>`
+      : `<p class="meta src-warn">${t("sources.verify_failed")}</p>`;
   }
 
   if(state.brightspace && state.brightspace.error){
@@ -8927,6 +8994,8 @@ function attachSourcesEvents(){
   if(d) d.addEventListener("click", bsDisconnect);
   const x = document.getElementById("bs-cancel-btn");
   if(x) x.addEventListener("click", bsCancelSync);
+  const v = document.getElementById("bs-check-btn");
+  if(v) v.addEventListener("click", () => bsCheckConnection({ probe: true, showBusy: true }));
 }
 
 /* Retour du flux OAuth : ?brightspace=connected|denied|invalid|error.
@@ -8940,11 +9009,24 @@ function bsHandleOAuthReturn(){
   const clean = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
   try{ window.history.replaceState({}, "", clean); }catch(e){}
 
+  /* Chaque issue possible du callback est traitée explicitement. Un statut
+     inconnu n'est jamais interprété comme une réussite. */
   if(status === "connected"){
+    state.tab = "fiches";
     showToast(t("sources.connect_success"));
-    bsLoadConnection().then(()=>{ state.tab = "fiches"; render(); });
+    // On revérifie côté serveur avant d'afficher quoi que ce soit : le
+    // paramètre d'URL ne prouve rien à lui seul, il est falsifiable.
+    bsCheckConnection({ probe: true }).then(()=>{ render(); });
   } else if(status === "denied"){
     showToast(t("sources.connect_denied"));
+  } else if(status === "no_refresh_token"){
+    // Cas de configuration : inutile de faire réessayer l'utilisateur, il
+    // faut que l'administrateur coche « Enable refresh tokens ».
+    state.brightspace.error = t("sources.connect_no_refresh");
+    state.tab = "fiches"; render();
+  } else if(status === "forbidden"){
+    state.brightspace.error = t("sources.connect_forbidden");
+    state.tab = "fiches"; render();
   } else {
     showToast(t("sources.connect_error"));
   }
@@ -10331,7 +10413,7 @@ Object.assign(state, {
   // --- sources de contenu externes (Brightspace) ---
   // Jamais persisté : la connexion fait autorité côté Supabase, cet objet
   // n'est qu'un cache d'affichage rechargé à chaque ouverture de session.
-  brightspace: { connection: null, busy: null, progress: null, lastResult: null, error: null },
+  brightspace: { connection: null, busy: null, progress: null, lastResult: null, error: null, check: null },
   // --- état d'interface du formulaire de compte ("Mon espace") ---
   accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null },
 });

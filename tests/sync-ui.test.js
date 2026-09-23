@@ -29,7 +29,7 @@ window.__tenant = {
              "202":[{Type:"module",Id:2001,Title:"Cadre",Structure:[]}] }
 };
 window.__db = { subjects: [], chapters: [], sync_runs: [], brightspace_connections: [
-  { user_id:"user-a", tenant_url:"https://t.example", status:"connected", scopes:["core:*:read"], last_synced_at:null, last_error:null, token_expires_at:null }
+  { user_id:"user-a", tenant_url:"https://t.example", status:"connected", scopes:["content:toc:read"], last_synced_at:null, last_verified_at:new Date().toISOString(), external_user_name:"Anton S", last_error:null, token_expires_at:null }
 ]};
 window.__delay = 0;
 window.__invokeCount = 0;
@@ -100,7 +100,7 @@ window.__client = {
   }},
 };
 Object.defineProperty(window.LyonAuth, "client", { get: function(){ return window.__client; }, configurable: true });
-state.brightspace = { connection: { tenant_url:"https://t.example", status:"connected", scopes:[], last_synced_at:null }, busy:null, progress:null, lastResult:null, error:null };
+state.brightspace = { connection: { tenant_url:"https://t.example", status:"connected", scopes:[], last_synced_at:null, last_verified_at:new Date().toISOString(), external_user_name:"Anton S" }, busy:null, progress:null, lastResult:null, error:null, check:null };
 `;
 
 (async () => {
