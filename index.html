@@ -2721,7 +2721,15 @@
   }
 
   /* ── PRIORITÉ — le panneau le plus fort de la page ───────────────────── */
-  .dash-panel--priority{ border-top: 2px solid var(--accent); }
+  /* La carte priorité est le SEUL fond coloré de l'accueil. Un lavis, pas un
+     aplat : le texte garde son contraste, et le bloc se voit de loin. */
+  .dash-panel--priority{
+    background: var(--accent-wash);
+    /* L'ordre compte : border-color d'abord (les quatre côtés), le filet de
+       coiffe ensuite — sinon il retomberait au ton du contour. */
+    border-color: var(--accent-4);
+    border-top: 2px solid var(--accent);
+  }
   .dash-priority-title{
     font-family: var(--font-display); font-size: var(--text-h1);
     line-height: var(--leading-h1); font-weight: var(--weight-semibold);
@@ -2785,11 +2793,19 @@
     font-weight: var(--weight-medium); color: var(--text-primary);
   }
 
+  /* ── LA COULEUR DES MATIÈRES ──────────────────────────────────────────
+     Chaque matière porte une couleur, choisie par l'utilisateur parmi les
+     huit du produit. C'est la seule couleur de l'interface qui ne vient pas
+     de la marque — et c'est la plus utile : elle rend une matière
+     reconnaissable sans la lire. On l'applique par un FILET et une JAUGE,
+     jamais par un aplat : huit aplats saturés sur un écran, c'est un
+     tableau de bord générique.
+     Elle arrive par --course-color, posée en ligne au rendu. */
   /* ── EMPLOI DU TEMPS ─────────────────────────────────────────────────── */
   /* Le cours en cours n'est PAS une carte dans une carte : un filet accent à
      gauche et un aplat creusé suffisent à le détacher. */
   .dash-now{
-    background: var(--surface-sunken); border-left: 2px solid var(--accent-4);
+    background: var(--surface-sunken); border-left: 3px solid var(--course-color, var(--accent-4));
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     padding: var(--space-md); margin-bottom: var(--space-sm);
   }
@@ -2823,6 +2839,8 @@
     align-items: baseline; gap: var(--space-md);
     width: 100%; text-align: left; border: none; background: none; cursor: pointer;
     padding: var(--space-sm); margin: 0 calc(var(--space-sm) * -1);
+    /* Le filet de couleur vient APRÈS `border: none`, sinon il est annulé. */
+    border-left: 3px solid var(--course-color, transparent);
     border-radius: var(--radius-sm);
     transition: background var(--motion-micro) var(--ease-enter);
   }
@@ -2852,6 +2870,93 @@
     color: var(--text-muted); font-variant-numeric: tabular-nums;
   }
 
+  /* ── LA SEMAINE, CLIQUABLE ────────────────────────────────────────────
+     Sept jours, un point par cours à la couleur de sa matière : on voit sa
+     semaine sans la lire, et on change de jour sans quitter l'accueil. ── */
+  .dash-days{
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2xs);
+    margin-bottom: var(--space-md);
+  }
+  .dash-day{
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: var(--space-xs) var(--space-2xs); min-height: 56px;
+    border: 1px solid transparent; border-radius: var(--radius-sm);
+    background: none; cursor: pointer;
+    transition: background var(--motion-micro) var(--ease-enter),
+                border-color var(--motion-micro) var(--ease-enter);
+  }
+  .dash-day:hover{ background: var(--surface-sunken); }
+  .dash-day-wd{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .dash-day-num{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  }
+  /* Aujourd'hui est repéré par son chiffre en accent ; le jour CHOISI est
+     repéré par son cadre. Les deux repères ne disent pas la même chose et ne
+     doivent donc pas se confondre. */
+  .dash-day.is-today .dash-day-num{ color: var(--accent); font-weight: var(--weight-semibold); }
+  .dash-day.is-selected{ background: var(--surface-sunken); border-color: var(--border-strong); }
+  .dash-day-dots{ display: flex; gap: 2px; align-items: center; min-height: 6px; margin-top: 2px; }
+  .dash-day-dot{ width: 4px; height: 4px; border-radius: 50%; }
+  .dash-day-more{
+    font-family: var(--font-data); font-size: 9px; color: var(--text-muted); line-height: 1;
+  }
+
+  /* ── LE RAIL DE LA JOURNÉE ────────────────────────────────────────────
+     La journée en une ligne, à l'échelle des heures. Chaque cours est à sa
+     place réelle, à la couleur de sa matière ; le trait rouge est l'heure
+     qu'il est. C'est le seul endroit du produit où la couleur porte une
+     position, pas un état. ── */
+  .dash-rail{ margin-bottom: var(--space-md); }
+  .dash-rail-track{
+    position: relative; height: 34px;
+    background: var(--surface-sunken); border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .dash-rail-block{
+    position: absolute; top: 4px; bottom: 4px;
+    border: none; border-radius: 2px; cursor: pointer;
+    background: color-mix(in srgb, var(--course-color, var(--data-3)) 22%, transparent);
+    border-left: 3px solid var(--course-color, var(--data-4));
+    padding: 0 var(--space-2xs); overflow: hidden; text-align: left;
+    transition: background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-rail-block > span{
+    display: block; font-size: var(--text-label); line-height: 26px;
+    color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dash-rail-block:hover{ background: color-mix(in srgb, var(--course-color, var(--data-3)) 38%, transparent); }
+  .dash-rail-block.is-past{ opacity: 0.5; }
+  /* Le trait de l'heure : le seul rouge plein du rail, et il bouge. */
+  .dash-rail-now{
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: var(--accent); pointer-events: none; z-index: 2;
+    /* Pas de transition sur `left` : c'est une propriété de reflow, et le
+       trait n'avance que d'une fraction de pixel par seconde. */
+  }
+  .dash-rail-now::before{
+    content: ""; position: absolute; top: 0; left: -2px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+  .dash-rail-axis{ position: relative; height: 14px; margin-top: 2px; }
+  .dash-rail-tick{
+    position: absolute; transform: translateX(-50%);
+    font-family: var(--font-data); font-size: var(--text-label);
+    color: var(--text-muted); white-space: nowrap;
+  }
+
+  /* La matière d'un cours, sous son intitulé. */
+  .dash-agenda-body{ min-width: 0; }
+  .dash-agenda-subject{
+    display: block; font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); margin-top: 2px;
+  }
+
   /* ── MES MATIÈRES — des cartes compactes, sur l'ivoire ───────────────── */
   .dash-subject-grid{
     display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -2866,6 +2971,14 @@
     transition: border-color var(--motion-micro) var(--ease-enter),
                 box-shadow var(--motion-micro) var(--ease-enter),
                 transform var(--motion-micro) var(--ease-enter);
+  }
+  /* La couleur de la matière, posée APRÈS la définition de la carte : sinon
+     le `border: 1px solid var(--border)` de celle-ci reprendrait le dessus. */
+  .dash-subject{ border-left-width: 4px; border-left-color: var(--course-color, var(--border)); }
+  .dash-subject .meter-fill{ background: var(--course-color, var(--data-4)); }
+  .dash-subject-mark{
+    background: color-mix(in srgb, var(--course-color, var(--text-muted)) 16%, transparent);
+    color: var(--course-color, var(--text-secondary));
   }
   .dash-subject:hover{
     border-color: var(--border-strong); box-shadow: var(--shadow-elevated);
@@ -2944,6 +3057,11 @@
     letter-spacing: var(--tracking-label); text-transform: uppercase;
     color: var(--text-muted); margin-top: 2px;
   }
+  /* Le point de couleur d'une matière, dans une ligne de liste. */
+  .dash-row-dot{
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    margin-right: var(--space-2xs); vertical-align: 1px;
+  }
   .dash-row-value{
     font-family: var(--font-data); font-size: var(--text-metadata);
     font-variant-numeric: tabular-nums; color: var(--text-secondary); flex-shrink: 0;
@@ -2986,6 +3104,11 @@
     .dash-agenda-time{ grid-column: 1 / -1; }
     .dash-actions{ grid-template-columns: 1fr; }
     .dash-subject-grid{ grid-template-columns: 1fr; }
+    /* Sept colonnes de 44px tiennent à 375px : on garde la semaine entière
+       plutôt que de la réduire à trois jours. */
+    .dash-days{ gap: 1px; }
+    .dash-day{ padding: var(--space-xs) 0; min-height: 52px; }
+    .dash-rail-block > span{ display: none; }
   }
 
   /* ===== MODE EXAMEN ===== */
@@ -5078,6 +5201,7 @@ let state = {
 
   // --- aperçu du planning sur le dashboard : "today" | "tomorrow" ---
   dashSchedulePreview: "today",
+  dashScheduleOffset: 0,
 
   // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
   courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
@@ -6657,9 +6781,9 @@ function renderDashboardSubjects(subjects){
   recentSubjectsPreview(4).forEach(s=>{
     const chs = chaptersOfSubject(s.id);
     const prog = subjectProgress(s.id);
-    html += `<button type="button" class="dash-subject" data-open-subject-dash="${s.id}">
+    html += `<button type="button" class="dash-subject" data-open-subject-dash="${s.id}" style="--course-color:${s.color || "#8A8A93"};">
       <span class="dash-subject-top">
-        <span class="dash-subject-mark" style="background:${s.color}1A;color:${s.color};">${escapeHtml(subjectMark(s))}</span>
+        <span class="dash-subject-mark">${escapeHtml(subjectMark(s))}</span>
         <span class="dash-subject-name">${escapeHtml(s.name)}</span>
         <span class="dash-subject-pct">${prog === null ? "—" : prog + "%"}</span>
       </span>
@@ -6703,7 +6827,7 @@ function renderDashboardRevisions(){
           ? `<span class="status success">${t("dashboard.reviewed")}</span>`
           : `<span class="status warning">${t("dashboard.to_review")}</span>`}
       </span>
-      <span class="dash-row-meta">${s ? escapeHtml(s.name) + " · " : ""}${dateLbl}</span>
+      <span class="dash-row-meta">${s ? `<span class="dash-row-dot" style="background:${s.color || "#8A8A93"};"></span>` + escapeHtml(s.name) + " · " : ""}${dateLbl}</span>
       ${tags.length ? `<span class="dash-row-tags">${tags.join("")}</span>` : ""}
     </button>`;
   });
@@ -6713,20 +6837,131 @@ function renderDashboardRevisions(){
   return html;
 }
 
+/* Les cours d'une JOURNÉE CIVILE (minuit → minuit).
+   eventsOnDay() prend la date qu'on lui passe comme début de fenêtre : appelée
+   avec « maintenant », elle renvoie les 24 h à venir, ce qui convient à un
+   aperçu mais pas à un sélecteur de jour — le lundi cliqué doit montrer le
+   lundi, y compris ses cours déjà terminés. eventsOnDay() est laissée telle
+   quelle : la page Planning s'appuie dessus. */
+function eventsOnCalendarDay(dayDate){
+  const start = new Date(dayDate); start.setHours(0, 0, 0, 0);
+  const s = start.getTime(), e = s + 86400000;
+  return state.planning.events
+    .filter(ev => ev.start < e && (ev.end || ev.start) > s)
+    .sort((a, b) => a.start - b.start);
+}
+
+/* La couleur d'un cours.
+   1. Celle de sa matière quand on la reconnaît dans son intitulé — c'est la
+      couleur que l'utilisateur a choisie, elle porte un sens.
+   2. Sinon, une couleur STABLE tirée de son intitulé. Elle ne dit pas quelle
+      matière c'est (on ne le sait pas), mais elle dit « ce cours-ci est le
+      même que celui de mardi » — et c'est déjà une information. Stable veut
+      dire : le même intitulé donne toujours la même couleur, à chaque
+      rendu et d'une session à l'autre. Ce n'est pas un tirage au sort. */
+function eventColor(ev){
+  const subj = matchEventSubject(ev.summary);
+  if(subj && subj.color) return subj.color;
+  const key = String(ev.summary || "");
+  let h = 0;
+  for(let i = 0; i < key.length; i++){ h = (h * 31 + key.charCodeAt(i)) >>> 0; }
+  return SUBJECT_COLORS[h % SUBJECT_COLORS.length];
+}
+
+/* La bande des sept jours : un jour = un bouton, avec un point par cours,
+   à la couleur de sa matière. On voit sa semaine d'un coup d'œil. */
+function renderDashboardDayStrip(offset){
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let html = `<div class="dash-days" role="tablist" aria-label="${t("dashboard.schedule_title")}">`;
+  for(let i = 0; i < 7; i++){
+    const d = new Date(today); d.setDate(d.getDate() + i);
+    const evs = eventsOnCalendarDay(d);
+    const wd = d.toLocaleDateString(currentLocaleTag(), {weekday:"short"}).replace(".", "");
+    const sel = i === offset;
+    html += `<button type="button" class="dash-day${sel ? " is-selected" : ""}${i === 0 ? " is-today" : ""}"
+      data-schedule-offset="${i}" role="tab" aria-selected="${sel}"
+      aria-label="${escapeHtml(d.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long"}))} — ${evs.length}">
+      <span class="dash-day-wd">${escapeHtml(wd)}</span>
+      <span class="dash-day-num">${d.getDate()}</span>
+      <span class="dash-day-dots">${
+        evs.slice(0, 4).map(ev => `<span class="dash-day-dot" style="background:${eventColor(ev)};"></span>`).join("")
+      }${evs.length > 4 ? `<span class="dash-day-more">+</span>` : ""}</span>
+    </button>`;
+  }
+  return html + `</div>`;
+}
+
+/* Le rail de la journée : chaque cours à sa place réelle sur l'axe des
+   heures, à la couleur de sa matière, et le trait de l'heure qu'il est.
+   Cliquer un bloc ouvre la fiche du cours. */
+function renderDashboardDayRail(events, isToday){
+  if(!events.length) return "";
+  const dayStart = new Date(events[0].start); dayStart.setHours(0,0,0,0);
+  const H = 3600000;
+  /* La fenêtre s'ajuste aux cours du jour, arrondie à l'heure, avec une
+     marge d'une heure de chaque côté — et elle englobe toujours l'heure
+     qu'il est quand on regarde aujourd'hui. */
+  let from = Math.floor((Math.min(...events.map(e => e.start)) - dayStart) / H) - 1;
+  let to   = Math.ceil((Math.max(...events.map(e => (e.end || e.start))) - dayStart) / H) + 1;
+  if(isToday){
+    const nowH = (Date.now() - dayStart) / H;
+    from = Math.min(from, Math.floor(nowH));
+    to   = Math.max(to,   Math.ceil(nowH));
+  }
+  from = Math.max(0, from); to = Math.min(24, to);
+  const span = Math.max(1, to - from);
+  const pos = ms => ((ms - dayStart) / H - from) / span * 100;
+
+  const blocks = events.map(ev => {
+    const left = Math.max(0, pos(ev.start));
+    const right = Math.min(100, pos(ev.end || (ev.start + H)));
+    const st = getCourseStatus(ev);
+    return `<button type="button" class="dash-rail-block is-${st}" data-open-event="${ev.id}"
+      style="left:${left}%;width:${Math.max(2, right - left)}%;--course-color:${eventColor(ev)};"
+      title="${escapeHtml(ev.summary)} · ${fmtEventTimeRange(ev)}"
+      aria-label="${escapeHtml(ev.summary)} — ${fmtEventTimeRange(ev)}"><span>${escapeHtml(ev.summary)}</span></button>`;
+  }).join("");
+
+  const nowMark = isToday && (Date.now() - dayStart) / H >= from && (Date.now() - dayStart) / H <= to
+    ? `<span class="dash-rail-now" id="dash-rail-now" data-rail-from="${from}" data-rail-span="${span}"
+             data-rail-day="${dayStart.getTime()}" style="left:${pos(Date.now())}%;"></span>`
+    : "";
+
+  /* Les graduations : une par tranche de deux heures, pour lire le rail. */
+  let ticks = "";
+  for(let h = from; h <= to; h += (span > 8 ? 2 : 1)){
+    ticks += `<span class="dash-rail-tick" style="left:${(h - from) / span * 100}%;">${String(h).padStart(2,"0")}h</span>`;
+  }
+
+  return `<div class="dash-rail">
+    <div class="dash-rail-track">${blocks}${nowMark}</div>
+    <div class="dash-rail-axis">${ticks}</div>
+  </div>`;
+}
+
 /* « Mon emploi du temps » — un panneau à part entière. Le cours en cours y est
    détaché par un filet accent, pas par une seconde boîte. Les identifiants de
    la barre vive (#dash-ccourse-*) sont inchangés : updateCurrentTimeIndicator()
    continue de l'avancer à la seconde, sans re-rendu. */
 function renderDashboardSchedule(){
-  const previewDay = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
+  /* Le jour affiché : 0 = aujourd'hui … 6 = dans six jours.
+     state.dashSchedulePreview reste tenu à jour — d'autres parties du code
+     s'y réfèrent, et une sauvegarde plus ancienne ne connaît que lui. */
+  let offset = typeof state.dashScheduleOffset === "number" ? state.dashScheduleOffset : null;
+  if(offset === null) offset = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
+  offset = Math.min(6, Math.max(0, offset));
+  state.dashScheduleOffset = offset;
+  state.dashSchedulePreview = offset === 1 ? "tomorrow" : "today";
+
+  const isToday = offset === 0;
   const nowLabel = new Date().toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
 
   let html = `<section class="dash-panel" id="dash-schedule-card">
     <div class="dash-panel-head">
       <h2 class="dash-panel-label">${t("dashboard.schedule_title")}</h2>
       <span class="segmented">
-        <button type="button" data-schedule-day="today" class="${previewDay===0?"active":""}" aria-pressed="${previewDay===0}">${t("dashboard.today")}</button>
-        <button type="button" data-schedule-day="tomorrow" class="${previewDay===1?"active":""}" aria-pressed="${previewDay===1}">${t("dashboard.tomorrow")}</button>
+        <button type="button" data-schedule-offset="0" class="${offset===0?"active":""}" aria-pressed="${offset===0}">${t("dashboard.today")}</button>
+        <button type="button" data-schedule-offset="1" class="${offset===1?"active":""}" aria-pressed="${offset===1}">${t("dashboard.tomorrow")}</button>
         <button type="button" id="dash-schedule-week">${t("dashboard.week")}</button>
       </span>
     </div>`;
@@ -6739,14 +6974,19 @@ function renderDashboardSchedule(){
     return html;
   }
 
-  const targetDate = new Date(Date.now() + previewDay * 86400000);
-  const todaysEvents = eventsOnDay(targetDate).slice().sort((a,b)=>a.start-b.start);
-  const current = previewDay === 0 ? getCurrentCourse() : null;
+  /* La semaine, cliquable : on choisit son jour sans quitter l'accueil. */
+  html += renderDashboardDayStrip(offset);
 
-  /* Le repère temporel : l'heure qu'il est, seulement pour aujourd'hui. */
-  if(previewDay === 0){
+  const targetDate = new Date(); targetDate.setDate(targetDate.getDate() + offset);
+  const dayEvents = eventsOnCalendarDay(targetDate);
+  const current = isToday ? getCurrentCourse() : null;
+
+  if(isToday){
     html += `<p class="dash-clock" id="dash-clock">${t("dashboard.now_at", {time: nowLabel})}</p>`;
   }
+
+  /* Le rail : la journée en une ligne, à l'échelle des heures. */
+  html += renderDashboardDayRail(dayEvents, isToday);
 
   if(current){
     const cd = getCourseData(current.id);
@@ -6755,14 +6995,14 @@ function renderDashboardSchedule(){
     const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
     const remainMin = Math.max(0, Math.round(((current.end || current.start) - Date.now()) / 60000));
     const remainLbl = remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min";
-    html += `<div class="dash-now">
+    html += `<div class="dash-now" style="--course-color:${eventColor(current)};">
       <div class="dash-now-head">
         <h3 class="dash-now-heading"><button type="button" class="dash-now-title" data-open-event="${current.id}">${escapeHtml(current.summary)}</button></h3>
         <span class="status success">${t("dashboard.status_current")}${cd.favorite ? " · ★" : ""}</span>
       </div>
       <p class="dash-now-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}</p>
       <div class="meter" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
-        <div class="meter-fill" id="dash-ccourse-fill" style="width:${pct}%;"></div>
+        <div class="meter-fill" id="dash-ccourse-fill" style="width:${pct}%;background:var(--course-color);"></div>
       </div>
       <p class="dash-now-remaining" id="dash-ccourse-text">${pct}% · ${t("dashboard.remaining", {time: remainLbl})}</p>
       <div class="dash-now-actions">
@@ -6771,20 +7011,24 @@ function renderDashboardSchedule(){
     </div>`;
   }
 
-  const others = todaysEvents.filter(e => !current || e.id !== current.id);
+  const others = dayEvents.filter(e => !current || e.id !== current.id);
   if(others.length){
     html += `<div class="dash-agenda">` + others.map(e=>{
       const st = getCourseStatus(e);
       const stLabel = st === "past" ? t("dashboard.status_done") : (st === "current" ? t("dashboard.status_current") : t("dashboard.status_upcoming"));
-      return `<button type="button" class="dash-agenda-row is-${st}" data-open-event="${e.id}">
+      const subj = matchEventSubject(e.summary);
+      return `<button type="button" class="dash-agenda-row is-${st}" data-open-event="${e.id}" style="--course-color:${eventColor(e)};">
         <span class="dash-agenda-time">${fmtEventTimeRange(e)}</span>
-        <span class="dash-agenda-title">${escapeHtml(e.summary)}</span>
+        <span class="dash-agenda-body">
+          <span class="dash-agenda-title">${escapeHtml(e.summary)}</span>
+          ${subj ? `<span class="dash-agenda-subject">${escapeHtml(subj.name)}</span>` : ""}
+        </span>
         <span class="dash-agenda-state">${stLabel}</span>
       </button>`;
     }).join("") + `</div>`;
   } else if(!current){
     html += `<div class="empty empty--inline">
-      <p class="empty-text">${previewDay === 0 ? t("dashboard.no_course_today") : t("dashboard.no_course_tomorrow")}</p>
+      <p class="empty-text">${offset === 0 ? t("dashboard.no_course_today") : (offset === 1 ? t("dashboard.no_course_tomorrow") : t("dashboard.no_course_day"))}</p>
     </div>`;
   }
 
@@ -6933,8 +7177,13 @@ function attachDashboardEvents(){
   if(scheduleFull) scheduleFull.addEventListener("click", ()=> switchTab("planning"));
   const scheduleSetup = document.getElementById("dash-schedule-setup");
   if(scheduleSetup) scheduleSetup.addEventListener("click", ()=> switchTab("planning"));
-  document.querySelectorAll("[data-schedule-day]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{ state.dashSchedulePreview = btn.dataset.scheduleDay; render(); });
+  /* Un jour se choisit par son décalage (0 = aujourd'hui) : la bande des
+     sept jours et les boutons Aujourd'hui/Demain pilotent le même état. */
+  document.querySelectorAll("[data-schedule-offset]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.dashScheduleOffset = Number(btn.dataset.scheduleOffset) || 0;
+      render();
+    });
   });
   const scheduleWeekBtn = document.getElementById("dash-schedule-week");
   if(scheduleWeekBtn) scheduleWeekBtn.addEventListener("click", ()=>{ state.planning.calView = "week"; switchTab("planning"); });
@@ -18562,6 +18811,18 @@ function updateCurrentTimeIndicator(){
     const textEl = document.getElementById(ids.text);
     if(textEl) textEl.textContent = pct + "% · " + (remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min") + " restantes";
   });
+
+  /* Le trait de l'heure du rail : même mise à jour à la seconde que la barre
+     du cours en cours, toujours sans re-rendu. */
+  const rail = document.getElementById("dash-rail-now");
+  if(rail){
+    const from = Number(rail.dataset.railFrom), span = Number(rail.dataset.railSpan);
+    const dayStart = Number(rail.dataset.railDay);
+    const h = (Date.now() - dayStart) / 3600000;
+    const pct = (h - from) / span * 100;
+    if(pct >= 0 && pct <= 100) rail.style.left = pct + "%";
+    else rail.style.display = "none";
+  }
 
   const cur = getCurrentCourse();
   const curId = cur ? cur.id : null;

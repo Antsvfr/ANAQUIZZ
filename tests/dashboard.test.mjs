@@ -188,9 +188,11 @@ try {
     });
 
     check("l'accueil est fait de panneaux", c.panels >= 5, c.panels);
-    eq("tous les panneaux ont la même forme", c.shapes.length, 1);
-    check("filet fin, rayon de surface, ombre très légère",
-      /^12px\|1px\|rgb\(255, 255, 255\)\|true$/.test(c.shapes[0]), c.shapes);
+    /* Deux formes : les panneaux blancs, et la carte priorité sur lavis. */
+    check("les panneaux partagent rayon, filet et ombre",
+      c.shapes.every(x => /^12px\|1px\|/.test(x) && /\|true$/.test(x)), c.shapes);
+    check("un seul panneau est sur lavis : la priorité",
+      c.shapes.filter(x => !/rgb\(255, 255, 255\)/.test(x)).length === 1, c.shapes);
     eq("aucun panneau dans un panneau", c.nested, 0);
     eq("la bannière en dégradé n'est pas revenue", c.oldBanner, 0);
     eq("les anciennes tuiles ne sont pas revenues", c.oldCards, 0);
@@ -308,18 +310,17 @@ try {
     eq("le compteur à la seconde a gardé ses ancres", s.ticker, [true, true, true]);
     check("et ses bornes de temps", s.evStart, s.evStart);
     check("« Prendre des notes » est toujours là", s.notesBtn, s.notesBtn);
-    eq("les autres cours de la journée sont listés", s.rows.length, 2);
-    check("chaque cours à venir est marqué « À venir »",
-      s.rows.every(r => /is-upcoming/.test(r.cls) && r.state === "À venir"), s.rows);
+    /* La journée affichée est une VRAIE journée civile depuis que l'on peut
+       choisir son jour : le lundi cliqué doit montrer le lundi entier, cours
+       terminés compris. (Auparavant la fenêtre était « les 24 h qui
+       viennent », ce qui convenait à un aperçu mais pas à un sélecteur.) */
+    eq("toute la journée est listée, cours terminés compris", s.rows.length, 3);
     check("ils sont dans l'ordre horaire",
-      s.rows.map(r => r.time).join(" ") === "16:00 – 17:30 18:00 – 19:30", s.rows);
-    /* Comportement PRÉEXISTANT, inchangé par la refonte visuelle :
-       renderDashboardSchedule() appelle eventsOnDay(new Date(Date.now())), donc
-       la fenêtre est « les 24 h qui viennent », pas « la journée civile ». Un
-       cours déjà terminé n'apparaît donc pas dans cette liste. Le test le
-       constate pour que le jour où ce choix changera, il change sciemment. */
-    check("un cours déjà terminé n'apparaît pas (comportement d'origine)",
-      !s.rows.some(r => /Statistiques/.test(r.title)), s.rows);
+      s.rows.map(r => r.time).join(" ") === "09:00 – 10:30 16:00 – 17:30 18:00 – 19:30", s.rows);
+    check("un cours déjà terminé est marqué comme tel",
+      s.rows.some(r => /is-past/.test(r.cls) && r.state === "Terminé"), s.rows);
+    check("les cours à venir aussi",
+      s.rows.filter(r => /is-upcoming/.test(r.cls) && r.state === "À venir").length === 2, s.rows);
     eq("la colonne d'heures est en chasse fixe", s.timeFont, "IBM Plex Mono");
     eq("les heures sont tabulaires", s.timeNums, "tabular-nums");
 
@@ -334,16 +335,173 @@ try {
       after.width.endsWith("%") && /%/.test(after.text), { before, after });
 
     /* Aujourd'hui / demain change bien le jour affiché. */
-    await page.click('[data-schedule-day="tomorrow"]');
+    await page.click('[data-schedule-offset="1"]');
     await page.waitForTimeout(350);
     const tomorrow = await page.evaluate(() => ({
       pref: state.dashSchedulePreview,
-      active: document.querySelector('[data-schedule-day="tomorrow"]').className,
+      active: document.querySelector('.segmented [data-schedule-offset="1"]').className,
       noCurrent: !document.querySelector(".dash-now"),
     }));
     eq("« Demain » bascule l'aperçu", tomorrow.pref, "tomorrow");
     check("et le bouton est marqué actif", /active/.test(tomorrow.active), tomorrow);
     check("le cours « en cours » n'est pas montré pour demain", tomorrow.noCurrent, tomorrow);
+    await page.close();
+  }
+
+  /* ======================================================================
+     4 bis. LE CALENDRIER EST INTERACTIF, ET IL EST EN COULEUR
+     ----------------------------------------------------------------------
+     La couleur d'un cours n'est pas décorative : c'est celle de sa matière
+     quand on la reconnaît, et sinon une couleur STABLE tirée de son
+     intitulé — le même cours garde la même couleur d'un jour à l'autre.
+     ====================================================================== */
+  current = "4 bis. calendrier";
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await freezeClock(page);
+    await page.goto(APP);
+    await page.waitForTimeout(1500);
+    await page.evaluate(SEED);
+    await page.waitForTimeout(500);
+
+    /* La bande des sept jours. */
+    const strip = await page.evaluate(() => {
+      const days = [...document.querySelectorAll(".dash-day")];
+      return {
+        n: days.length,
+        today: days.filter(d => d.classList.contains("is-today")).length,
+        selected: days.filter(d => d.classList.contains("is-selected")).length,
+        todayIsFirst: days[0].classList.contains("is-today"),
+        dots: days[0].querySelectorAll(".dash-day-dot").length,
+        dotColors: [...days[0].querySelectorAll(".dash-day-dot")]
+          .map(d => getComputedStyle(d).backgroundColor),
+        labelled: days.every(d => (d.getAttribute("aria-label") || "").length > 5),
+      };
+    });
+    eq("la semaine entière est proposée", strip.n, 7);
+    eq("aujourd'hui est repéré, et une seule fois", strip.today, 1);
+    check("et c'est le premier jour de la bande", strip.todayIsFirst, strip);
+    eq("un seul jour est sélectionné", strip.selected, 1);
+    check("un point par cours du jour", strip.dots >= 2, strip);
+    check("chaque jour est nommé pour les lecteurs d'écran", strip.labelled, strip);
+    check("les points ne sont pas tous de la même couleur",
+      new Set(strip.dotColors).size > 1, strip.dotColors);
+
+    /* Choisir un jour change réellement la journée affichée. */
+    const before = await page.evaluate(() =>
+      [...document.querySelectorAll(".dash-agenda-title")].map(e => e.textContent.trim()));
+    await page.click('.dash-day[data-schedule-offset="3"]');
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(() => ({
+      offset: state.dashScheduleOffset,
+      selected: document.querySelector(".dash-day.is-selected").dataset.scheduleOffset,
+      titles: [...document.querySelectorAll(".dash-agenda-title")].map(e => e.textContent.trim()),
+      /* Un jour sans cours le dit, il ne montre pas la veille. */
+      empty: !!document.querySelector("#dash-schedule-card .empty"),
+    }));
+    eq("cliquer un jour le sélectionne", after.offset, 3);
+    eq("et la bande le montre", after.selected, "3");
+    check("la journée affichée a changé",
+      JSON.stringify(after.titles) !== JSON.stringify(before) || after.empty, { before, after });
+
+    /* Les boutons Aujourd'hui / Demain pilotent le même état. */
+    await page.click('[data-schedule-offset="1"]');
+    await page.waitForTimeout(350);
+    eq("« Demain » ramène au deuxième jour",
+      await page.evaluate(() => state.dashScheduleOffset), 1);
+    await page.click('[data-schedule-offset="0"]');
+    await page.waitForTimeout(350);
+    eq("« Aujourd'hui » ramène au premier",
+      await page.evaluate(() => state.dashScheduleOffset), 0);
+    check("et l'ancien état reste tenu à jour",
+      await page.evaluate(() => state.dashSchedulePreview) === "today", "");
+
+    /* Le rail : les cours à leur heure réelle, et le trait de l'heure. */
+    const rail = await page.evaluate(() => {
+      const track = document.querySelector(".dash-rail-track");
+      if (!track) return null;
+      const blocks = [...track.querySelectorAll(".dash-rail-block")];
+      const now = document.getElementById("dash-rail-now");
+      return {
+        blocks: blocks.length,
+        /* Les blocs sont ordonnés comme les heures. */
+        lefts: blocks.map(b => Math.round(parseFloat(b.style.left))),
+        colors: blocks.map(b => getComputedStyle(b).borderLeftColor),
+        titled: blocks.every(b => (b.getAttribute("title") || "").length > 5),
+        nowVisible: !!now,
+        nowLeft: now ? Math.round(parseFloat(now.style.left)) : null,
+        ticks: track.parentElement.querySelectorAll(".dash-rail-tick").length,
+      };
+    });
+    check("le rail montre les cours du jour", rail && rail.blocks >= 2, rail);
+    check("dans l'ordre des heures",
+      rail.lefts.every((v, i) => i === 0 || v >= rail.lefts[i - 1]), rail.lefts);
+    check("chacun à sa couleur", new Set(rail.colors).size > 1, rail.colors);
+    check("chacun nommé au survol", rail.titled, rail);
+    check("le trait de l'heure est là", rail.nowVisible, rail);
+    check("et il est dans le rail", rail.nowLeft >= 0 && rail.nowLeft <= 100, rail.nowLeft);
+    check("les heures sont graduées", rail.ticks >= 2, rail.ticks);
+
+    /* Cliquer un bloc ouvre la fiche du cours. */
+    await page.click(".dash-rail-block");
+    await page.waitForTimeout(400);
+    check("cliquer un bloc ouvre la fiche du cours",
+      await page.evaluate(() => !!document.querySelector(".cal-modal, .modal")), "");
+
+    await page.close();
+  }
+
+  /* ======================================================================
+     4 ter. LA COULEUR DES MATIÈRES ENTRE DANS L'INTERFACE
+     ====================================================================== */
+  current = "4 ter. couleur";
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await freezeClock(page);
+    await page.goto(APP);
+    await page.waitForTimeout(1500);
+    await page.evaluate(SEED);
+    await page.waitForTimeout(500);
+
+    const c = await page.evaluate(() => {
+      const card = document.querySelector(".dash-subject");
+      const row = document.querySelector(".dash-agenda-row");
+      const prio = document.querySelector(".dash-panel--priority");
+      const plain = document.querySelector(".dash-panel:not(.dash-panel--priority)");
+      return {
+        subjectRule: card ? getComputedStyle(card).borderLeftColor : null,
+        subjectVar: card ? card.style.getPropertyValue("--course-color") : null,
+        rowRule: row ? getComputedStyle(row).borderLeftColor : null,
+        rowWidth: row ? getComputedStyle(row).borderLeftWidth : null,
+        prioBg: getComputedStyle(prio).backgroundColor,
+        plainBg: getComputedStyle(plain).backgroundColor,
+        dot: (() => {
+          const d = document.querySelector(".dash-row-dot");
+          return d ? getComputedStyle(d).backgroundColor : null;
+        })(),
+      };
+    });
+    eq("une carte de matière porte le filet de sa couleur", c.subjectRule, "rgb(227, 28, 61)");
+    check("posée par variable, pas par trois styles en ligne",
+      /^#/.test(c.subjectVar), c.subjectVar);
+    check("une ligne d'agenda aussi",
+      c.rowWidth === "3px" && c.rowRule !== "rgb(0, 0, 0)", c);
+    /* Le seul fond coloré de la page est la carte priorité. */
+    eq("la carte priorité est sur lavis", c.prioBg, "rgb(253, 242, 244)");
+    eq("les autres panneaux restent blancs", c.plainBg, "rgb(255, 255, 255)");
+    check("les listes portent un point de couleur", c.dot !== null, c);
+
+    /* La couleur d'un cours non rattaché est STABLE : deux rendus du même
+       intitulé donnent la même couleur. */
+    const stable = await page.evaluate(() => {
+      const a = eventColor({ summary: "Droit des affaires" });
+      const b = eventColor({ summary: "Droit des affaires" });
+      const d = eventColor({ summary: "Anglais des affaires" });
+      return { a, b, d, dansLaPalette: SUBJECT_COLORS.includes(a) };
+    });
+    eq("le même intitulé donne toujours la même couleur", stable.a, stable.b);
+    check("deux intitulés différents en donnent deux", stable.a !== stable.d, stable);
+    check("et elle vient de la palette du produit", stable.dansLaPalette, stable);
     await page.close();
   }
 
@@ -410,10 +568,21 @@ try {
 
     const r = await page.evaluate(() => {
       const root = document.querySelector(".dashboard");
-      const labels = [...root.querySelectorAll("button")]
-        .map(b => b.textContent.replace(/\s+/g, " ").trim())
-        .filter(Boolean);
-      const dup = labels.filter((l, i) => labels.indexOf(l) !== i);
+      /* On cherche les doublons DANS UNE MÊME zone : un même libellé sur
+         deux boutons de sections différentes (une matière et le cours qui
+         porte son nom) désigne deux objets distincts, ce n'est pas une
+         répétition. */
+      const dup = [];
+      for (const zone of root.children) {
+        /* On compare les NOMS ACCESSIBLES : le bloc du rail et la fiche du
+           cours en cours montrent le même cours sous deux formes, et le rail
+           précise son horaire dans son aria-label — ce sont bien deux
+           commandes distinctes pour un lecteur d'écran. */
+        const labels = [...zone.querySelectorAll("button")]
+          .map(b => (b.getAttribute("aria-label") || b.textContent).replace(/\s+/g, " ").trim())
+          .filter(Boolean);
+        labels.forEach((l, i) => { if (labels.indexOf(l) !== i) dup.push(l); });
+      }
       const ids = {};
       root.querySelectorAll("[id]").forEach(e => { ids[e.id] = (ids[e.id] || 0) + 1; });
       return {
