@@ -655,6 +655,16 @@
   .btn-text:hover, .btn.btn--tertiary:hover{ color: var(--text-primary); border-color: var(--border-strong); }
   .btn-text.active, .btn.btn--tertiary.active{ color: var(--accent); border-color: var(--accent); }
   .btn-text:disabled, .btn.btn--tertiary:disabled{ color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+  /* Action tertiaire qui reflète un état déjà atteint (« Révisé »). */
+  .btn-text.is-done{ color: var(--success); }
+
+  /* En compact, un libellé long ne peut plus rester sur une ligne : le
+     bouton déborderait de l'écran (constaté sur « Exporter toutes mes
+     données (sauvegarde complète) » à 375px). Il s'enroule, et sa hauteur
+     s'adapte. */
+  @media (max-width: 640px){
+    .btn{ white-space: normal; max-width: 100%; height: auto; padding-top: var(--space-xs); padding-bottom: var(--space-xs); text-align: center; }
+  }
 
   /* Cible tactile : 44px minimum dès que le pointeur est grossier. */
   @media (pointer: coarse){
@@ -750,7 +760,7 @@
     border:none; background:none; border-radius:999px; padding:8px 18px; font-size:12.5px; font-weight:700;
     color:var(--ink-soft); cursor:pointer; font-family:var(--font-main); transition: all 0.15s var(--ease);
   }
-  .auth-toggle button.active{ background:#fff; color:var(--red); box-shadow: var(--shadow-xs); }
+  .auth-toggle button.active{ background: var(--surface); color: var(--accent); box-shadow: var(--shadow-subtle); }
   .auth-msg{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; line-height:1.55; margin-top:12px; }
   .auth-msg .ico{ flex-shrink:0; }
   .auth-confirm{
@@ -769,8 +779,11 @@
     transition: all 0.16s var(--ease);
   }
   .levelchips button:hover:not(.active){ border-color: var(--ink); color: var(--ink); }
-  .levelchips button.active{ background: var(--ink); color: #fff; border-color: var(--ink); box-shadow: var(--shadow-xs); }
-  .levelchips button.L3.active{ background: var(--red); border-color: var(--red); }
+  .levelchips button.active,
+  .levelchips button.L3.active{
+    background: var(--accent-wash); color: var(--accent);
+    border-color: var(--accent); box-shadow: none;
+  }
 
   /* ===== LEVEL HEADING ===== */
   .level-heading{ display:flex; align-items:center; gap: 11px; margin: 38px 0 16px; flex-wrap:wrap; }
@@ -848,49 +861,113 @@
   .chapter-actions{ display:flex; justify-content:flex-end; }
 
   /* ===== FICHES ===== */
+  /* Une fiche est un texte qu'on LIT : colonne mesurée, corps de 16px,
+     interlignage de 1,75. C'est la seule page où la longueur de ligne prime
+     sur la densité. */
   .fiche-card{
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
-    padding: 28px 28px 26px; margin-bottom: 18px; box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s var(--ease);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-xl); margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-subtle);
   }
-  .fiche-card:hover{ box-shadow: var(--shadow-md); }
-  .fiche-card-head{ display:flex; gap: 15px; align-items:flex-start; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-  .fiche-card-head .title-row{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
-  .fiche-card-head h2{ font-size: 18.5px; font-weight: 800; margin: 0; letter-spacing:-0.01em; }
-  .fiche-card-head p{ font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; line-height:1.5; }
-  .fiche-card h3{ font-size: 14.5px; font-weight: 800; margin: 24px 0 9px; color: var(--ink); letter-spacing:-0.005em; }
+  .fiche-card-head{
+    display:flex; gap: var(--space-md); align-items:flex-start;
+    margin-bottom: var(--space-lg); padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+  .fiche-card-head .title-row{ display:flex; align-items:center; gap: var(--space-xs); flex-wrap:wrap; }
+  /* Le titre d'une fiche est du texte rédactionnel : il prend le sérif. */
+  .fiche-card-head h2{
+    font-family: var(--font-display); font-size: var(--text-h2);
+    line-height: var(--leading-h2); font-weight: var(--weight-semibold);
+    margin: 0; letter-spacing: var(--tracking-tight);
+  }
+  .fiche-card-head p{
+    font-size: var(--text-small); color: var(--text-secondary);
+    margin: var(--space-2xs) 0 0; line-height: var(--leading-small);
+  }
+  .fiche-card h3{
+    font-size: var(--text-h3); font-weight: var(--weight-semibold);
+    margin: var(--space-xl) 0 var(--space-xs); color: var(--text-primary); letter-spacing: 0;
+  }
   .fiche-card h3:first-of-type{ margin-top: 0; }
+  /* DÉFINITION — filet accent, lavis accent. Le seul aplat teinté du corps
+     de la fiche : c'est ce qu'on relit en premier. */
   .fiche-def{
-    background: var(--red-tint); border-left: 3px solid var(--red); padding: 13px 15px; border-radius: 0 10px 10px 0;
-    font-size: 13.5px; line-height:1.65; margin: 0 0 18px; color: var(--ink);
+    background: var(--accent-wash); border-left: 2px solid var(--accent);
+    padding: var(--space-md); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: var(--text-small); line-height: 1.7; margin: 0 0 var(--space-lg);
+    color: var(--text-primary);
   }
   .fiche-def b{ color: var(--red-dark); }
-  .fiche-list{ margin: 0 0 6px; padding-left: 20px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.75; }
-  .fiche-list li{ margin-bottom: 6px; }
+  /* SOUS-LIBELLÉ de fiche : qualifie la liste qui suit (avantages,
+     inconvénients, étapes…) sans consommer un niveau de titre. */
+  .fiche-sublabel{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    font-weight: var(--weight-medium); color: var(--text-muted);
+    margin: var(--space-md) 0 var(--space-xs);
+  }
+  .fiche-list{ margin: 0 0 var(--space-md); padding-left: var(--space-lg); font-size: var(--text-body); color: var(--text-secondary); line-height: 1.75; }
+  .fiche-list li{ margin-bottom: var(--space-xs); }
   .fiche-list b{ color: var(--ink); }
   .table-wrap{ overflow-x:auto; margin: 12px 0 20px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
-  .fiche-table{ width:100%; border-collapse: collapse; font-size: 12.5px; min-width: 420px; }
-  .fiche-table th{ background: var(--surface-2); text-align:left; padding: 9px 12px; font-weight: 800; border-bottom: 1.5px solid var(--border); white-space: normal; }
-  .fiche-table td{ padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--ink-soft); white-space: normal; }
+  .fiche-table{ width:100%; border-collapse: collapse; font-size: var(--text-small); min-width: 420px; }
+  .fiche-table th{
+    background: none; text-align:left; padding: var(--space-xs) var(--space-sm);
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    font-weight: var(--weight-medium); color: var(--text-muted);
+    border-bottom: 2px solid var(--accent); white-space: normal;
+  }
+  .fiche-table td{ padding: var(--space-sm); border-bottom: 1px solid var(--border); color: var(--text-secondary); white-space: normal; }
   .fiche-table tr:last-child td{ border-bottom:none; }
-  .fiche-tip{ background: var(--bg); border-radius: 10px; padding: 12px 15px; font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height:1.6; border: 1px solid var(--border); }
+  .fiche-tip{ background: var(--surface-sunken); border-radius: var(--radius-sm); padding: var(--space-sm) var(--space-md); font-size: var(--text-small); color: var(--text-secondary); margin-top: var(--space-2xs); line-height: var(--leading-small); border: none; }
   .fiche-tip b{ color: var(--ink); }
 
   /* ===== FICHE DE COURS — rendu premium (IA structurée + anciennes fiches) ===== */
-  .fiche-content h3{ display:flex; align-items:center; font-size: 14.5px; font-weight: 800; margin: 22px 0 10px; color: var(--ink); letter-spacing:-0.005em; }
+  .fiche-content{ max-width: var(--width-read); }
+  .fiche-content h3{
+    display:flex; align-items:center; font-size: var(--text-h3);
+    font-weight: var(--weight-semibold); margin: var(--space-xl) 0 var(--space-sm);
+    color: var(--text-primary); letter-spacing: 0;
+  }
   .fiche-content h3:first-of-type{ margin-top: 0; }
-  .fiche-content > p{ font-size: 13.5px; color: var(--ink-soft); line-height:1.7; margin: 0 0 12px; }
-  .fiche-intro{ font-size: 13.5px; color: var(--ink-soft); line-height:1.7; margin: 0 0 18px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .fiche-content > p{ font-size: var(--text-body); color: var(--text-secondary); line-height: 1.75; margin: 0 0 var(--space-md); }
+  /* Le chapô : plus grand que le corps, en encre pleine — c'est lui qui
+     donne envie de lire la suite. */
+  .fiche-intro{
+    font-size: var(--text-body); color: var(--text-primary); line-height: 1.75;
+    margin: 0 0 var(--space-lg); padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+  /* Le numéro de section : en chasse fixe, sur lavis accent. Une pastille
+     rouge pleine à chaque titre ferait six ronds rouges par fiche. */
   .fiche-secnum{
-    display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; flex-shrink:0;
-    background: var(--red); color:#fff; border-radius:999px; font-size:10.5px; font-weight:800; margin-right:8px;
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:20px; height:20px; padding: 0 5px; flex-shrink:0;
+    background: var(--accent-wash); color: var(--accent);
+    border-radius: var(--radius-sm); font-family: var(--font-data);
+    font-size: var(--text-label); font-weight: var(--weight-medium);
+    margin-right: var(--space-xs);
   }
   .fiche-notion{ padding:10px 0; border-bottom:1px solid var(--bg); }
   .fiche-notion:last-child{ border-bottom:none; }
-  .fiche-notion-title{ font-size:13.5px; font-weight:800; color:var(--ink); margin-bottom:3px; }
-  .fiche-notion-content{ font-size:13px; color:var(--ink-soft); line-height:1.6; }
-  .fiche-notion-example{ font-size:12px; color:var(--muted); margin-top:6px; padding-left:10px; border-left:2px solid var(--border-strong); line-height:1.55; }
-  .fiche-notion-example .lbl{ font-weight:700; color:var(--ink-soft); }
+  .fiche-notion-title{ font-size: var(--text-h3); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-2xs); }
+  .fiche-notion-content{ font-size: var(--text-small); color: var(--text-secondary); line-height: 1.7; }
+  /* EXEMPLE — mis à l'écart du flux par un filet neutre : on doit pouvoir
+     le sauter sans perdre le fil. */
+  .fiche-notion-example{
+    font-size: var(--text-small); color: var(--text-secondary);
+    margin-top: var(--space-xs); padding-left: var(--space-sm);
+    border-left: 2px solid var(--border); line-height: var(--leading-small);
+  }
+  .fiche-notion-example .lbl{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    font-weight: var(--weight-medium); color: var(--text-muted);
+    display: block; margin-bottom: 2px;
+  }
   .fiche-steps{ list-style:none; margin:0 0 6px; padding:0; counter-reset:fichestep; }
   .fiche-steps li{ display:flex; align-items:center; gap:11px; padding:7px 0; font-size:13.5px; color:var(--ink-soft); line-height:1.5; }
   .fiche-step-num{ flex-shrink:0; }
@@ -899,12 +976,27 @@
     display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
     background: var(--red-tint); color: var(--red-dark); border-radius:8px; font-size:11px; font-weight:800;
   }
-  .fiche-keypoints{ background: var(--red-tint); border-radius: var(--radius-md); padding:16px 18px; margin-top:22px; }
-  .fiche-keypoints-title{ font-size:13px; font-weight:800; color:var(--red-dark); margin-bottom:9px; letter-spacing:-0.005em; }
+  /* POINTS IMPORTANTS — pas un aplat de plus : un filet accent au-dessus et
+     un titre en chasse fixe. C'est la dernière chose qu'on lit. */
+  .fiche-keypoints{
+    background: none; border-top: 2px solid var(--accent); border-radius: 0;
+    padding: var(--space-md) 0 0; margin-top: var(--space-xl);
+  }
+  .fiche-keypoints-title{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    font-weight: var(--weight-medium); color: var(--accent);
+    margin-bottom: var(--space-sm);
+  }
   .fiche-keypoints-list{ list-style:none; margin:0; padding:0; }
-  .fiche-keypoints-list li{ font-size:13px; color:var(--ink); line-height:1.6; padding-left:22px; position:relative; margin-bottom:7px; }
+  .fiche-keypoints-list li{ font-size: var(--text-small); color: var(--text-primary); line-height: 1.7; padding-left: var(--space-lg); position:relative; margin-bottom: var(--space-xs); }
   .fiche-keypoints-list li:last-child{ margin-bottom:0; }
-  .fiche-keypoints-list li::before{ content:"✓"; position:absolute; left:0; top:0; color:var(--red); font-weight:800; }
+  /* Un tiret, pas une coche : la coche dit « fait », or ces points ne sont
+     pas des tâches. */
+  .fiche-keypoints-list li::before{
+    content:""; position:absolute; left:0; top:0.65em;
+    width: 10px; height: 2px; background: var(--accent); border-radius:1px;
+  }
   @media (max-width:560px){
     .fiche-notion-example{ padding-left:8px; }
     .fiche-keypoints{ padding:14px 15px; }
@@ -1052,7 +1144,7 @@
   }
   .segmented > button:hover{ color: var(--text-primary); }
   .segmented > button[aria-selected="true"], .segmented > button.active{
-    background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-subtle);
+    background: var(--surface); color: var(--accent); box-shadow: var(--shadow-subtle);
   }
 
   /* ── PASTILLE DE STATUT — seul usage du rayon pill. La couleur ne porte
@@ -1614,39 +1706,54 @@
      règle existante n'est modifiée, ces classes ne sont utilisées que par
      renderQuiz()/renderResults()/renderQuizErrorReview().
      ============================================================ */
-  .qz-screen{ max-width:640px; margin:0 auto; padding: 18px 0 40px; }
+  /* Un quiz demande de la CONCENTRATION : colonne étroite, peu d'objets,
+     et une question qui domine tout le reste. */
+  .qz-screen{ max-width: var(--width-read); margin:0 auto; padding: var(--space-lg) 0 var(--space-3xl); }
   .qz-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
-  .qz-quit{ background:none; border:none; cursor:pointer; font-weight:700; font-size:13px; color:var(--muted); padding:8px 4px; font-family:var(--font-main); }
-  .qz-quit:hover{ color:var(--red-dark); }
+  .qz-quit{ background:none; border:none; cursor:pointer; font-weight: var(--weight-medium); font-size: var(--text-small); color: var(--text-muted); padding: var(--space-xs) var(--space-2xs); font-family: var(--font-ui); }
+  .qz-quit:hover{ color: var(--text-primary); }
   .qz-quit:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; border-radius:4px; }
   .qz-header-info{ text-align:right; }
-  .qz-chapter{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--red); }
-  .qz-counter{ display:block; font-size:13px; font-weight:700; color:var(--ink-soft); margin-top:2px; }
-  .qz-progress-track{ height:6px; border-radius:99px; background:var(--bg); overflow:hidden; margin-bottom:10px; }
-  .qz-progress-fill{ height:100%; background:var(--red); border-radius:99px; }
-  .qz-score-row{ font-size:12.5px; color:var(--ink-soft); font-weight:700; margin-bottom:18px; }
-  .qz-score-row b{ color:var(--ink); }
+  .qz-chapter{ display:block; font-family: var(--font-data); font-size: var(--text-label); text-transform:uppercase; letter-spacing: var(--tracking-label); font-weight: var(--weight-medium); color: var(--text-muted); }
+  /* Le compteur de questions est une donnée : chasse fixe, chiffres tabulaires. */
+  .qz-counter{ display:block; font-family: var(--font-data); font-size: var(--text-metadata); font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); color: var(--text-secondary); margin-top:2px; }
+  /* Progression élégante : un filet de 2px, pas une barre de jeu vidéo. */
+  .qz-progress-track{ height:2px; border-radius:0; background: var(--border); overflow:hidden; margin-bottom: var(--space-sm); }
+  .qz-progress-fill{ height:100%; background: var(--accent); border-radius:0; }
+  .qz-score-row{ font-family: var(--font-data); font-size: var(--text-metadata); color: var(--text-muted); font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; margin-bottom: var(--space-xl); }
+  .qz-score-row b{ color: var(--text-primary); font-weight: var(--weight-medium); }
 
-  .qz-card{ background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-xl); padding:28px 26px; box-shadow:var(--shadow-sm); }
-  .qz-meta{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .qz-tag{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--red); }
-  .qz-question{ font-size:21px; font-weight:800; line-height:1.4; margin:0 0 22px; color:var(--ink); }
-
-  .qz-options{ display:flex; flex-direction:column; gap:11px; }
-  .qz-opt{
-    display:flex; align-items:center; gap:13px; width:100%; text-align:left; min-height:52px;
-    padding:14px 17px; border-radius:var(--radius-lg); border:1.5px solid var(--border-strong);
-    background:#fff; font-family:var(--font-main); font-size:15px; font-weight:600; color:var(--ink); cursor:pointer;
+  /* Pas de boîte autour de la question : l'écran EST le quiz. Retirer le
+     cadre enlève la dernière distraction et laisse la question dominer. */
+  .qz-card{ background:none; border:none; border-radius:0; padding:0; box-shadow:none; }
+  .qz-meta{ display:flex; align-items:center; gap: var(--space-sm); flex-wrap:wrap; margin-bottom: var(--space-md); }
+  .qz-tag{ font-family: var(--font-data); font-size: var(--text-label); font-weight: var(--weight-medium); text-transform:uppercase; letter-spacing: var(--tracking-label); color: var(--accent); }
+  /* La question domine : sérif de titraille, 30px, colonne de 24 mots. */
+  .qz-question{
+    font-family: var(--font-display); font-size: var(--text-h1);
+    font-weight: var(--weight-semibold); line-height: var(--leading-h1);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-xl); color: var(--text-primary);
   }
-  .qz-opt:hover:not(:disabled){ border-color:var(--red); background:var(--red-tint); }
+
+  .qz-options{ display:flex; flex-direction:column; gap: var(--space-xs); }
+  /* Une réponse doit se lire d'un coup d'œil : 16px, encre pleine, cible
+     généreuse, un seul filet. */
+  .qz-opt{
+    display:flex; align-items:center; gap: var(--space-md); width:100%; text-align:left; min-height:56px;
+    padding: var(--space-md); border-radius: var(--radius-sm); border:1px solid var(--border);
+    background: var(--surface); font-family: var(--font-ui); font-size: var(--text-body);
+    font-weight: var(--weight-regular); line-height: var(--leading-small); color: var(--text-primary); cursor:pointer;
+  }
+  .qz-opt:hover:not(:disabled){ border-color: var(--accent); background: var(--accent-wash); }
   .qz-opt:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
   .qz-opt:disabled{ cursor:default; }
-  .qz-opt-letter{ flex-shrink:0; width:28px; height:28px; border-radius:50%; background:var(--bg); color:var(--ink-soft); font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; }
+  .qz-opt-letter{ flex-shrink:0; width:28px; height:28px; border-radius: var(--radius-sm); background: var(--surface-sunken); color: var(--text-secondary); font-family: var(--font-data); font-weight: var(--weight-medium); font-size: var(--text-metadata); display:flex; align-items:center; justify-content:center; }
   .qz-opt-text{ flex:1; }
-  .qz-opt-correct{ border-color:var(--green); background:var(--green-tint); }
-  .qz-opt-correct .qz-opt-letter{ background:var(--green); color:#fff; }
-  .qz-opt-incorrect{ border-color:var(--red); background:var(--red-tint); }
-  .qz-opt-incorrect .qz-opt-letter{ background:var(--red); color:#fff; }
+  .qz-opt-correct{ border-color: var(--success); background: var(--success-wash); }
+  .qz-opt-correct .qz-opt-letter{ background: var(--success); color: var(--text-on-accent); }
+  .qz-opt-incorrect{ border-color: var(--error); background: var(--error-wash); }
+  .qz-opt-incorrect .qz-opt-letter{ background: var(--error); color: var(--text-on-accent); }
   .qz-opt-dim{ opacity:.5; }
   @media (prefers-reduced-motion: no-preference){
     .qz-opt{ transition: transform .12s var(--ease), border-color .15s var(--ease), background .15s var(--ease); }
@@ -1656,13 +1763,13 @@
   }
   @keyframes qzFeedbackIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
 
-  .qz-feedback{ margin-top:20px; padding-top:18px; border-top:1.5px solid var(--border); }
-  .qz-verdict{ font-size:15px; font-weight:800; margin-bottom:10px; }
-  .qz-feedback.ok .qz-verdict{ color:var(--green); }
-  .qz-feedback.ko .qz-verdict{ color:var(--red-dark); }
-  .qz-why-label{ display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--muted); margin-bottom:4px; }
-  .qz-why p{ margin:0; font-size:14px; line-height:1.6; color:var(--ink-soft); }
-  .qz-mastery-line{ display:block; margin-top:10px; font-size:11.5px; color:var(--muted); font-weight:700; }
+  .qz-feedback{ margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--border); }
+  .qz-verdict{ font-size: var(--text-h3); font-weight: var(--weight-semibold); margin-bottom: var(--space-sm); }
+  .qz-feedback.ok .qz-verdict{ color: var(--success); }
+  .qz-feedback.ko .qz-verdict{ color: var(--error); }
+  .qz-why-label{ display:block; font-family: var(--font-data); font-size: var(--text-label); text-transform:uppercase; letter-spacing: var(--tracking-label); font-weight: var(--weight-medium); color: var(--text-muted); margin-bottom: var(--space-2xs); }
+  .qz-why p{ margin:0; font-size: var(--text-small); line-height: 1.7; color: var(--text-secondary); }
+  .qz-mastery-line{ display:block; margin-top: var(--space-sm); font-family: var(--font-data); font-size: var(--text-label); color: var(--text-muted); font-weight: var(--weight-regular); }
 
   .qz-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; gap:12px; flex-wrap:wrap; }
   .qz-actions-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
@@ -1797,43 +1904,71 @@
   .flash-counters .c-unknown{ color: var(--red); }
 
   .flash-stage{ display:flex; flex-direction:column; align-items:center; }
+  /* La carte est plus grande et plus calme : c'est le contenu qu'on regarde,
+     pas l'objet. */
   .flashcard{
-    width: 100%; max-width: 480px; aspect-ratio: 4/3; cursor: pointer;
-    perspective: 1200px; margin-bottom: 22px; border-radius: var(--radius-xl);
+    width: 100%; max-width: 560px; aspect-ratio: 4/3; cursor: pointer;
+    perspective: 1600px; margin-bottom: var(--space-xl); border-radius: var(--radius-lg);
   }
   .flashcard:focus-visible .flashcard-face{ outline: 2.5px solid var(--red); outline-offset: 3px; }
+  /* Retournement raffiné : une seule courbe, la durée dédiée du système,
+     et rien qui rebondisse. */
   .flashcard-inner{
     position:relative; width:100%; height:100%;
-    transform-style: preserve-3d; transition: transform 0.5s var(--ease);
+    transform-style: preserve-3d;
+    transition: transform var(--motion-flip) var(--ease-enter);
   }
   .flashcard.flipped .flashcard-inner{ transform: rotateY(180deg); }
   .flashcard-face{
     position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    border-radius: var(--radius-xl); display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding: 32px; text-align:center; box-shadow: var(--shadow-md); border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: var(--space-2xl); text-align:center;
+    box-shadow: var(--shadow-elevated); border: 1px solid var(--border);
   }
-  .flashcard-front{ background: var(--surface); color: var(--ink); }
-  .flashcard-front .q{ font-size: 19px; font-weight: 800; line-height:1.45; letter-spacing:-0.01em; }
-  .flashcard-front .hint{ position:absolute; bottom:18px; font-size: 11px; color: var(--muted); font-weight:600; }
-  .flashcard-back{ background: linear-gradient(160deg,#fff 0%, var(--red-tint) 130%); color: var(--ink); transform: rotateY(180deg); border-color: var(--red-tint-strong); }
-  .flashcard-back .a{ font-size: 15.5px; font-weight: 600; line-height:1.6; }
-  .flashcard-back .lbl{ position:absolute; top:16px; left:20px; font-size: 10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--red-dark); font-weight:800; }
+  .flashcard-front{ background: var(--surface); color: var(--text-primary); }
+  /* La question prend le sérif : c'est la seule chose à lire sur l'écran. */
+  .flashcard-front .q{
+    font-family: var(--font-display); font-size: var(--text-h1);
+    font-weight: var(--weight-semibold); line-height: var(--leading-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+  .flashcard-front .hint{
+    position:absolute; bottom: var(--space-lg);
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); font-weight: var(--weight-regular);
+  }
+  /* Le verso : pas de dégradé. Un filet accent en haut suffit à dire qu'on a
+     changé de face. */
+  .flashcard-back{
+    background: var(--surface); color: var(--text-primary); transform: rotateY(180deg);
+    border-color: var(--border); border-top: 2px solid var(--accent);
+  }
+  .flashcard-back .a{ font-size: var(--text-body); font-weight: var(--weight-regular); line-height: 1.75; color: var(--text-secondary); }
+  .flashcard-back .lbl{
+    position:absolute; top: var(--space-md); left: var(--space-lg);
+    font-family: var(--font-data); font-size: var(--text-label);
+    text-transform:uppercase; letter-spacing: var(--tracking-label);
+    color: var(--accent); font-weight: var(--weight-medium);
+  }
 
-  .flash-judge{ display:flex; gap: 12px; width:100%; max-width: 480px; }
+  .flash-judge{ display:flex; gap: var(--space-sm); width:100%; max-width: 560px; }
   .flash-judge button{
-    flex:1; padding: 15px 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-strong);
-    background:#fff; font-family:"Inter",sans-serif; font-weight: 800; font-size: 13.5px; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition: transform 0.14s var(--ease), border-color 0.14s var(--ease), background 0.14s var(--ease), box-shadow 0.14s var(--ease);
+    flex:1; min-height: 52px; padding: var(--space-sm); border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface); font-family: var(--font-ui);
+    font-weight: var(--weight-medium); font-size: var(--text-small); cursor:pointer;
+    color: var(--text-primary);
+    display:flex; align-items:center; justify-content:center; gap: var(--space-xs);
+    transition: border-color var(--motion-micro) var(--ease-enter), background var(--motion-micro) var(--ease-enter);
   }
-  .flash-judge button .emoji{ font-size: 21px; }
-  .flash-judge button.unknown:hover{ border-color: var(--red); color: var(--red-dark); background: var(--red-tint); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-  .flash-judge button.known:hover{ border-color: var(--green); color: var(--green); background: var(--green-tint); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-  .flash-judge button:active{ transform: translateY(0) scale(0.97); }
+  .flash-judge button .emoji{ font-size: var(--text-body); }
+  .flash-judge button.unknown:hover{ border-color: var(--error); color: var(--error); background: var(--error-wash); }
+  .flash-judge button.known:hover{ border-color: var(--success); color: var(--success); background: var(--success-wash); }
   .flash-judge button:disabled{ opacity: 0.35; cursor:not-allowed; transform:none; }
-  .flash-hintline{ text-align:center; font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .flash-hintline{ text-align:center; font-family: var(--font-data); font-size: var(--text-label); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted); margin-bottom: var(--space-md); }
 
-  /* ---------- Flashcards : "📖 Dans ton cours" (passage source) ---------- */
+  /* ---------- Flashcards : "Dans ton cours" (passage source) ---------- */
   .flash-source{
     width:100%; max-width:480px; margin: 4px 0 18px; padding: 14px 18px;
     border:1.5px solid var(--border); border-radius: var(--radius-md); background: var(--surface-2);
@@ -2026,7 +2161,12 @@
   .pg-review-body{ display:flex; flex-direction:column; flex:1; gap:2px; }
   .pg-review-title{ font-weight:700; font-size:13.5px; color:var(--ink); }
   .pg-review-sub{ font-size:11.5px; color:var(--muted); font-weight:600; }
-  .pg-review-arrow{ color:var(--muted); font-weight:700; }
+  /* Chevron dessiné, pas une flèche typographique. */
+  .pg-review-arrow{
+    flex-shrink: 0; width: 6px; height: 6px; align-self: center;
+    border-top: 1.5px solid var(--text-muted); border-right: 1.5px solid var(--text-muted);
+    transform: rotate(45deg);
+  }
 
   .pg-recommend-card{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:var(--red-tint); border-radius:var(--radius-lg); padding:18px 20px; }
   .pg-recommend-body{ display:flex; align-items:flex-start; gap:12px; }
@@ -2094,7 +2234,7 @@
     transition: background 0.14s var(--ease), color 0.14s var(--ease), border-color 0.14s var(--ease);
   }
   .sr-length-chips button:hover{ border-color: var(--red); color: var(--red); }
-  .sr-length-chips button.active{ background: var(--red); border-color: var(--red); color:#fff; }
+  .sr-length-chips button.active{ background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
   .sr-length-chips button:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
 
   .sr-session-preview{ display:flex; flex-direction:column; gap:2px; margin-bottom:12px; }
@@ -2175,7 +2315,7 @@
     border:none; background:none; padding:7px 16px; border-radius:999px; font-weight:700; font-size:13px;
     color:var(--muted); cursor:pointer; transition: background 0.14s var(--ease), color 0.14s var(--ease);
   }
-  .pln-mode-toggle button.active{ background:var(--surface); color:var(--ink); box-shadow: var(--shadow-xs); }
+  .pln-mode-toggle button.active{ background: var(--surface); color: var(--accent); box-shadow: var(--shadow-subtle); }
   .pln-mode-toggle button:focus-visible{ outline:2.5px solid var(--red); outline-offset:2px; }
 
   .pln-empty-hero{ text-align:center; padding:40px 20px; }
@@ -2309,14 +2449,17 @@
     .pln-wizard{ padding:18px 16px 20px; }
   }
 
+  /* Même famille que .card / .block--feature : même rayon, même filet, même
+     ombre. Seule la marge basse lui reste propre (c'est un panneau empilé). */
   .dash-section{
-    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
-    padding:20px 21px; margin-bottom:18px; box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: var(--space-lg);
+    margin-bottom: var(--space-lg); box-shadow: var(--shadow-subtle);
   }
   .dash-section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
   .dash-goal-count{ font-size:12.5px; font-weight:800; color:var(--red); font-variant-numeric: tabular-nums; }
   .dash-goal-track{ height:9px; background: var(--bg); border-radius:999px; overflow:hidden; border:1px solid var(--border); }
-  .dash-goal-fill{ height:100%; background: linear-gradient(90deg, var(--red) 0%, var(--red-dark) 100%); border-radius:999px; transition: width 0.5s var(--ease); }
+  .dash-goal-fill{ height:100%; background: var(--accent); border-radius:999px; transition: width 0.5s var(--ease); }
   .dash-goal-msg{ font-size:12.5px; color:var(--ink-soft); margin:10px 0 0; }
 
   .dash-cols{ display:grid; grid-template-columns: 1.1fr 1fr; gap:18px; align-items:start; }
@@ -2718,9 +2861,9 @@
     transition: all .16s var(--ease);
   }
   .chipset button:hover:not(.active){ border-color: var(--ink); color: var(--ink); }
-  .chipset button.active{ background: var(--red); border-color: var(--red); color:#fff; box-shadow: var(--shadow-xs); }
+  .chipset button.active{ background: var(--accent-wash); border-color: var(--accent); color: var(--accent); box-shadow: none; }
   .chipset button:disabled{ opacity:.4; cursor:not-allowed; }
-  .chipset.ch button.active{ background: var(--ink); border-color: var(--ink); }
+  .chipset.ch button.active{ background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
 
   .exam-summary-box{
     background: var(--bg); border:1px solid var(--border); border-radius: var(--radius-md);
@@ -2958,11 +3101,12 @@
   }
   .badge-tile.unlocked{ background: var(--surface); border-color: var(--border-strong); }
   .badge-seal{
+    font-family: var(--font-data);
     width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:14px; font-weight:800; border:2px solid var(--border-strong); color: var(--muted); background: var(--bg);
     font-variant-numeric: tabular-nums;
   }
-  .badge-tile.unlocked .badge-seal{ border-color: var(--red); color: var(--red-dark); background: var(--red-tint); font-size:16px; }
+  .badge-tile.unlocked .badge-seal{ border-color: var(--accent); color: var(--accent); background: var(--accent-wash); }
   .badge-tile .b-name{ font-size:12px; font-weight:800; color: var(--ink); line-height:1.35; }
   .badge-tile.locked .b-name{ color: var(--muted); }
   .badge-tile .b-desc{ font-size:10.5px; color: var(--muted); line-height:1.45; }
@@ -3005,6 +3149,12 @@
     color: var(--text-primary);
     margin: var(--space-2xl) 0 var(--space-xs);
   }
+  /* Un filet accent court ouvre chaque page : la même marque qu'au tableau de
+     bord, à la même place, sur les quinze écrans. */
+  .page-title::before{
+    content: ""; display: block; width: 40px; height: 2px;
+    background: var(--accent); margin-bottom: var(--space-md); border-radius: 1px;
+  }
   /* Titre de page dans un contexte déjà introduit (fil d'ariane, retour) :
      l'espace au-dessus est déjà fourni par l'élément précédent. */
   .page-title.tight{ margin-top: 0; }
@@ -3017,7 +3167,21 @@
   }
 
   /* --- Niveau 2 : titre de section --- */
-  .section-title{ font-size: var(--text-h2); font-weight: var(--weight-semibold); margin-bottom: var(--space-md); letter-spacing: var(--tracking-tight); color: var(--text-primary); }
+  .section-title{
+    font-size: var(--text-h2); font-weight: var(--weight-semibold);
+    margin-bottom: var(--space-md); letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+  }
+  /* Le repère de section : un tiret accent de 14px, aligné sur la ligne de
+     base du titre. C'est LE geste qui fait circuler le rouge emlyon dans
+     toutes les pages — un repère, jamais un aplat de plus. */
+  .section-title::before,
+  .section-head > .section-head-label::before{
+    content: ""; display: inline-block; vertical-align: middle;
+    width: 14px; height: 2px; background: var(--accent);
+    margin-right: var(--space-sm); border-radius: 1px;
+  }
+  .section-head > .section-head-label::before{ width: 10px; margin-right: var(--space-xs); }
   /* Titre de section aligné avec une action sur la même ligne (en-tête de
      section) : la marge basse est portée par le conteneur flex, pas par le
      titre. Remplace 13 style="margin-bottom:0;" identiques. */
@@ -3046,7 +3210,7 @@
   @media (max-width:560px){ .form-row2{ grid-template-columns:1fr; } }
   .color-swatches{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
   .color-swatches button{ width:28px; height:28px; border-radius:8px; border:2px solid transparent; cursor:pointer; }
-  .color-swatches button.active{ border-color: var(--ink); }
+  .color-swatches button.active{ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-wash); }
   .chapter-status-select{ display:flex; gap:8px; }
 
   /* ===== RESSOURCES — AUTOMATISER MES RÉVISIONS ===== */
@@ -3074,7 +3238,7 @@
     border:none; background:none; padding:6px 12px; border-radius:8px; cursor:pointer;
     font-size:14px; color: var(--muted); line-height:1;
   }
-  .course-viewbtn.active{ background: var(--surface); color: var(--ink); box-shadow: var(--shadow-xs); }
+  .course-viewbtn.active{ background: var(--surface); color: var(--accent); box-shadow: var(--shadow-subtle); }
 
   .course-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
   @media (max-width:900px){ .course-grid{ grid-template-columns:repeat(2,1fr); } }
@@ -3127,7 +3291,7 @@
     border:none; background:none; padding:7px 14px; border-radius:999px;
     font-family: var(--font-main); font-weight:700; font-size:12.5px; color: var(--ink-soft); cursor:pointer;
   }
-  .cal-viewbtn.active{ background: var(--ink); color:#fff; }
+  .cal-viewbtn.active{ background: var(--accent-wash); color: var(--accent); }
 
   .cal-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .cal-headerrow{ display:grid; min-width:600px; }
@@ -4198,7 +4362,7 @@ const SEMESTERS = [
 
 // Matière intégrée (le contenu déjà présent sur le site).
 const SUBJECTS = [
-  { id:"analyse-marche", name:"Analyse de marché", icon:"📊", color:"#E31C3D",
+  { id:"analyse-marche", name:"Analyse de marché", icon:"", color:"#E31C3D",
     semesterId:"semestre-1", builtin:true,
     description:"Cours intégré au site : fondamentaux, recherche qualitative et enquête." },
 ];
@@ -4367,13 +4531,17 @@ const FICHES = {
     </table></div>
 
     <h3>Avantages / Inconvénients de l'enquête</h3>
+    <p class="fiche-sublabel">Avantages</p>
     <ul class="fiche-list">
-      <li>✓ Simple à administrer</li>
-      <li>✓ Données fiables</li>
-      <li>✓ Données hautement comparables — variabilité réduite</li>
-      <li>✕ Les répondants ne veulent pas toujours répondre</li>
-      <li>✕ Les répondants sont parfois incapables de répondre (préférences inconnues, aucune option disponible)</li>
-      <li>✕ Difficile à élaborer (formulation, ordre, options)</li>
+      <li>Simple à administrer</li>
+      <li>Données fiables</li>
+      <li>Données hautement comparables — variabilité réduite</li>
+    </ul>
+    <p class="fiche-sublabel">Inconvénients</p>
+    <ul class="fiche-list">
+      <li>Les répondants ne veulent pas toujours répondre</li>
+      <li>Les répondants sont parfois incapables de répondre (préférences inconnues, aucune option disponible)</li>
+      <li>Difficile à élaborer (formulation, ordre, options)</li>
     </ul>
 
     <h3>Modes d'administration</h3>
@@ -4880,6 +5048,16 @@ function chapterIdFromQuizScope(scope){
    4ter. BIBLIOTHÈQUE DE MATIÈRES — helpers
    ============================================================ */
 function allSubjects(){ return SUBJECTS.concat(state.userSubjects); }
+/* Marque d'une matière : l'emoji choisi par l'utilisateur s'il en a mis un,
+   sinon son initiale. Plus de 📘 par défaut : une initiale est neutre, se
+   traduit dans toutes les langues et se lit à toutes les tailles. */
+function subjectMark(subject){
+  const raw = subject && typeof subject.icon === "string" ? subject.icon.trim() : "";
+  if(raw) return raw;
+  const name = subject && subject.name ? String(subject.name).trim() : "";
+  return name ? name.charAt(0).toUpperCase() : "\u2014";
+}
+
 function findSubject(id){ return allSubjects().find(s => s.id === id) || null; }
 
 /* Chapitres "natifs" (CHAPTERS) rattachés à une matière + chapitres créés par l'utilisateur. */
@@ -5363,7 +5541,7 @@ function globalProgressPct(){ return globalMetrics().mastery; }
    5ter. RÉUSSITES (BADGES)
    ============================================================ */
 const BADGES = [
-  { id:"first_quiz",       seal:"✓",   label:"Premier quiz",                 desc:"Terminer un premier quiz ou examen.",
+  { id:"first_quiz",       seal:"1",   label:"Premier quiz",                 desc:"Terminer un premier quiz ou examen.",
     check: ctx => ctx.dash.quizzesCompleted >= 1 },
   { id:"q100",             seal:"100", label:"100 questions",                desc:"Répondre à 100 questions au total.",
     check: ctx => ctx.dash.totalAnswered >= 100 },
@@ -5371,7 +5549,7 @@ const BADGES = [
     check: ctx => ctx.dash.totalAnswered >= 500 },
   { id:"streak10",         seal:"10",  label:"10 bonnes réponses d'affilée", desc:"Enchaîner 10 bonnes réponses consécutives.",
     check: ctx => ctx.dash.bestCorrectStreak >= 10 },
-  { id:"chapter_mastered", seal:"🎓",  label:"Chapitre maîtrisé",            desc:"Atteindre au moins 80 % de maîtrise sur un chapitre complet.",
+  { id:"chapter_mastered", seal:"80%", label:"Chapitre maîtrisé",            desc:"Atteindre au moins 80 % de maîtrise sur un chapitre complet.",
     check: ctx => ctx.masteredCount >= 1 },
   { id:"days7",            seal:"7",   label:"7 jours consécutifs",          desc:"Réviser 7 jours de suite.",
     check: ctx => ctx.bestDayStreak >= 7 },
@@ -6212,7 +6390,7 @@ function modeCardHtml(mode, icon, title, desc, count){
   const zero = !count;
   return `<button class="mode-card" data-mode="${mode}" ${zero ? "disabled" : ""}>
     <div class="mc-top">
-      <span class="mc-title">${icon} ${title}</span>
+      <span class="mc-title">${title}</span>
       <span class="mc-count ${zero ? "zero" : ""}">${count}</span>
     </div>
     <span class="mc-desc">${desc}</span>
@@ -6347,7 +6525,7 @@ function renderSubjectsList(){
     <div class="lib-pagehead">
       <h1 class="page-title tight">Mes matières</h1>
       <div class="actions" style="justify-content:flex-start;margin:0;">
-        <button class="btn-text" id="lib-import-course-btn">📥 Importer un cours</button>
+        <button class="btn-text" id="lib-import-course-btn">Importer un cours</button>
         <button class="btn-text" id="lib-add-subject-btn">+ Ajouter une matière</button>
       </div>
     </div>
@@ -6365,7 +6543,7 @@ function renderSubjectsList(){
       html += `<div class="flash-deckcard" data-open-subject="${s.id}" style="cursor:pointer;">
         <div class="top">
           <div style="display:flex;gap:11px;align-items:center;">
-            <span class="icon" style="background:${s.color}22;">${s.icon || "📘"}</span>
+            <span class="icon" style="background:${s.color}22;">${escapeHtml(subjectMark(s))}</span>
             <div>
               <div class="name">${escapeHtml(s.name)}</div>
               <div class="desc">${chs.length} chapitre${chs.length>1?"s":""}</div>
@@ -6375,7 +6553,7 @@ function renderSubjectsList(){
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${s.color};"></div></div>
         <div class="bottom">
           <span class="mastery ${tier.key}">${prog===null ? "Pas encore commencé" : prog + "% de progression"}</span>
-          <span class="btn-text" style="pointer-events:none;">Ouvrir →</span>
+          <span class="btn-text" style="pointer-events:none;">Ouvrir</span>
         </div>
       </div>`;
     });
@@ -6383,7 +6561,7 @@ function renderSubjectsList(){
   });
 
   if(subjects.length === 0){
-    html += `<div class="empty-state"><div class="big">📭</div>Aucune matière pour l'instant.<br>Clique sur « + Ajouter une matière » pour créer la première.</div>`;
+    html += `<div class="empty-state">Aucune matière pour l'instant.<br>Clique sur « + Ajouter une matière » pour créer la première.</div>`;
   }
 
   return html;
@@ -6397,7 +6575,7 @@ function renderSubjectDetail(){
 
   let html = crumb.html;
   html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;">
-    <span class="icon subject-card" style="background:${s.color}22;">${s.icon||"📘"}</span>
+    <span class="icon subject-card" style="background:${s.color}22;">${escapeHtml(subjectMark(s))}</span>
     <h1 class="page-title tight">${escapeHtml(s.name)}</h1>
     ${s.builtin ? '<span class="level-badge L2">Intégré</span>' : ""}
   </div>`;
@@ -6410,7 +6588,7 @@ function renderSubjectDetail(){
   </div>`;
 
   if(chs.length === 0){
-    html += `<div class="empty-state"><div class="big">📄</div>Aucun chapitre dans cette matière.<br>Clique sur « + Ajouter un chapitre » pour commencer.</div>`;
+    html += `<div class="empty-state">Aucun chapitre dans cette matière.<br>Clique sur « + Ajouter un chapitre » pour commencer.</div>`;
   } else {
     html += `<div class="lib-chgrid">`;
     chs.forEach(ch=>{
@@ -6464,14 +6642,14 @@ function renderChapterDetail(){
     html += `<div class="actions" style="margin:10px 0 16px;justify-content:flex-start;align-items:center;">
       <button class="btn outline small" id="lib-edit-chapter-btn">Modifier le chapitre</button>
       <button class="btn-text" id="lib-delete-chapter-btn">Supprimer le chapitre</button>
-      <button class="btn-text" id="lib-mark-reviewed-btn" style="${ch.markedReviewed?"color:var(--green);":""}">${ch.markedReviewed ? "✅ Révisé" : "Marquer comme révisé"}</button>
+      <button class="btn-text ${ch.markedReviewed ? "is-done" : ""}" id="lib-mark-reviewed-btn">${ch.markedReviewed ? t("dashboard.reviewed") : "Marquer comme révisé"}</button>
     </div>`;
 
-    if(ch.sourceFileName) html += `<p style="font-size:11.5px;color:var(--muted);margin:-8px 0 14px;">📥 Importé depuis « ${escapeHtml(ch.sourceFileName)} »${ch.pageCount ? " · " + ch.pageCount + " page" + (ch.pageCount>1?"s":"") : ""}</p>`;
+    if(ch.sourceFileName) html += `<p style="font-size:11.5px;color:var(--muted);margin:-8px 0 14px;">Importé depuis « ${escapeHtml(ch.sourceFileName)} »${ch.pageCount ? " · " + ch.pageCount + " page" + (ch.pageCount>1?"s":"") : ""}</p>`;
     if(ch.hasOriginalFile){
       html += `<div class="actions" style="margin:-6px 0 16px;justify-content:flex-start;">
-        <button class="btn outline small" id="lib-open-pdf-btn">📄 Lire le PDF</button>
-        <button class="btn-text" id="lib-download-pdf-btn">⬇️ Télécharger le PDF</button>
+        <button class="btn outline small" id="lib-open-pdf-btn">Lire le PDF</button>
+        <button class="btn-text" id="lib-download-pdf-btn">Télécharger le PDF</button>
       </div>`;
     }
     if(ch.keyNotions && ch.keyNotions.length){
@@ -6482,12 +6660,12 @@ function renderChapterDetail(){
       const busy = state.libGenerateBusy === ch.id;
       html += `<div class="ai-notice" style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <span>Ce cours est enregistré${ch.heuristicMode ? " (mode simplifié)" : ""}. La fiche complète, le résumé, le quiz et les flashcards seront prêts dès que l'assistant IA sera disponible.</span>
-        <button class="btn red small" id="lib-generate-ai-btn" ${busy || aiEngineBusy() ? "disabled" : ""}>${busy ? "Génération…" : "🤖 Générer avec l'IA"}</button>
+        <button class="btn red small" id="lib-generate-ai-btn" ${busy || aiEngineBusy() ? "disabled" : ""}>${busy ? "Génération…" : "Générer avec l'IA"}</button>
       </div>`;
     }
 
     if(!ch.content || !ch.content.trim()){
-      html += `<div class="empty-state"><div class="big">✍️</div>Ce chapitre n'a pas encore de contenu.<br>Clique sur « Modifier le chapitre » pour coller ou écrire ton cours, ou importe un fichier depuis « Mes matières ».</div>`;
+      html += `<div class="empty-state">Ce chapitre n'a pas encore de contenu.<br>Clique sur « Modifier le chapitre » pour coller ou écrire ton cours, ou importe un fichier depuis « Mes matières ».</div>`;
     } else {
       html += `<div class="card" style="margin-bottom:20px;">
         <div class="section-title">Fiche de cours</div>
@@ -6509,24 +6687,24 @@ function renderChapterDetail(){
 
       // Une seule action dominante : réviser ce qui existe déjà, ou le créer
       // directement en un clic quand rien n'a encore été généré.
-      let primaryId = "lib-primary-quiz", primaryLabel = state.libToolsBusy==="quiz" ? "Préparation…" : "✨ Réviser ce chapitre";
-      if(hasQuiz){ primaryId = "lib-play-quiz"; primaryLabel = "▶️ Réviser (" + ch.aiQuiz.length + " question" + (ch.aiQuiz.length>1?"s":"") + ")"; }
-      else if(hasCards){ primaryId = "lib-play-flash"; primaryLabel = "🃏 Réviser (" + ch.aiFlashcards.length + " flashcard" + (ch.aiFlashcards.length>1?"s":"") + ")"; }
+      let primaryId = "lib-primary-quiz", primaryLabel = state.libToolsBusy==="quiz" ? "Préparation…" : "Réviser ce chapitre";
+      if(hasQuiz){ primaryId = "lib-play-quiz"; primaryLabel = "Réviser (" + ch.aiQuiz.length + " question" + (ch.aiQuiz.length>1?"s":"") + ")"; }
+      else if(hasCards){ primaryId = "lib-play-flash"; primaryLabel = "Réviser (" + ch.aiFlashcards.length + " flashcard" + (ch.aiFlashcards.length>1?"s":"") + ")"; }
 
       html += `<div class="lib-revise-row">
         <button class="btn red" id="${primaryId}" ${(primaryId==="lib-primary-quiz" && toolsBusy) ? "disabled" : ""}>${primaryLabel}</button>
-        ${(hasQuiz && hasCards) ? `<button class="btn outline" id="lib-play-flash">🃏 Flashcards (${ch.aiFlashcards.length})</button>` : ""}
+        ${(hasQuiz && hasCards) ? `<button class="btn outline" id="lib-play-flash">Flashcards (${ch.aiFlashcards.length})</button>` : ""}
       </div>`;
 
       html += `<details class="ai-extra lib-tools" style="margin-top:18px;" ${state.libToolsOpen ? "open" : ""}>
-        <summary>🛠️ Outils IA</summary>
+        <summary>Outils IA</summary>
         <div class="ai-actiongrid" style="margin-top:12px;">
-          <button class="ai-action" id="lib-ai-summary" ${toolsBusy?"disabled":""}><span class="ico">📖</span><span class="t">${ch.summary ? "Régénérer le résumé" : "Résumer ce chapitre"}</span><span class="d">${state.libToolsBusy==="summary" ? "Génération…" : (aiReadyNow ? "Résumé généré par l'IA" : "Mode simplifié (sans IA)")}</span></button>
-          <button class="ai-action" id="lib-ai-drill" ${(!aiReadyNow || toolsBusy)?"disabled":""}><span class="ico">🎤</span><span class="t">Me faire réviser</span><span class="d">${aiReadyNow ? "Interrogation orale par l'IA" : "Nécessite l'assistant IA"}</span></button>
-          <button class="ai-action" id="lib-ai-quiz" ${toolsBusy?"disabled":""}><span class="ico">🧠</span><span class="t">${hasQuiz ? "Régénérer le quiz" : "Générer un quiz"}</span><span class="d">${state.libToolsBusy==="quiz" ? "Génération…" : (hasQuiz ? ch.aiQuiz.length+" question"+(ch.aiQuiz.length>1?"s":"")+" actuelle"+(ch.aiQuiz.length>1?"s":"") : (aiReadyNow ? "QCM inédits" : "Mode simplifié si possible"))}</span></button>
-          <button class="ai-action" id="lib-ai-cards" ${toolsBusy?"disabled":""}><span class="ico">🃏</span><span class="t">${hasCards ? "Régénérer les flashcards" : "Générer des flashcards"}</span><span class="d">${state.libToolsBusy==="flashcards" ? "Génération…" : (hasCards ? ch.aiFlashcards.length+" carte"+(ch.aiFlashcards.length>1?"s":"")+" actuelle"+(ch.aiFlashcards.length>1?"s":"") : (aiReadyNow ? "Cartes recto/verso" : "Mode simplifié si possible"))}</span></button>
-          <button class="ai-action" id="lib-regen-fiche" ${toolsBusy?"disabled":""}><span class="ico">🔄</span><span class="t">Régénérer la fiche</span><span class="d">${state.libToolsBusy==="fiche" ? "Génération…" : "Reprend le texte source"}</span></button>
-          ${hasReviewQ ? `<button class="ai-action" id="lib-regen-reviewq" ${toolsBusy?"disabled":""}><span class="ico">🎯</span><span class="t">Régénérer les questions</span><span class="d">${state.libToolsBusy==="reviewQuestions" ? "Génération…" : ch.aiReviewQuestions.length+" question"+(ch.aiReviewQuestions.length>1?"s":"")+" actuelle"+(ch.aiReviewQuestions.length>1?"s":"")}</span></button>` : ""}
+          <button class="ai-action" id="lib-ai-summary" ${toolsBusy?"disabled":""}><span class="t">${ch.summary ? "Régénérer le résumé" : "Résumer ce chapitre"}</span><span class="d">${state.libToolsBusy==="summary" ? "Génération…" : (aiReadyNow ? "Résumé généré par l'IA" : "Mode simplifié (sans IA)")}</span></button>
+          <button class="ai-action" id="lib-ai-drill" ${(!aiReadyNow || toolsBusy)?"disabled":""}><span class="t">Me faire réviser</span><span class="d">${aiReadyNow ? "Interrogation orale par l'IA" : "Nécessite l'assistant IA"}</span></button>
+          <button class="ai-action" id="lib-ai-quiz" ${toolsBusy?"disabled":""}><span class="t">${hasQuiz ? "Régénérer le quiz" : "Générer un quiz"}</span><span class="d">${state.libToolsBusy==="quiz" ? "Génération…" : (hasQuiz ? ch.aiQuiz.length+" question"+(ch.aiQuiz.length>1?"s":"")+" actuelle"+(ch.aiQuiz.length>1?"s":"") : (aiReadyNow ? "QCM inédits" : "Mode simplifié si possible"))}</span></button>
+          <button class="ai-action" id="lib-ai-cards" ${toolsBusy?"disabled":""}><span class="t">${hasCards ? "Régénérer les flashcards" : "Générer des flashcards"}</span><span class="d">${state.libToolsBusy==="flashcards" ? "Génération…" : (hasCards ? ch.aiFlashcards.length+" carte"+(ch.aiFlashcards.length>1?"s":"")+" actuelle"+(ch.aiFlashcards.length>1?"s":"") : (aiReadyNow ? "Cartes recto/verso" : "Mode simplifié si possible"))}</span></button>
+          <button class="ai-action" id="lib-regen-fiche" ${toolsBusy?"disabled":""}><span class="t">Régénérer la fiche</span><span class="d">${state.libToolsBusy==="fiche" ? "Génération…" : "Reprend le texte source"}</span></button>
+          ${hasReviewQ ? `<button class="ai-action" id="lib-regen-reviewq" ${toolsBusy?"disabled":""}><span class="t">Régénérer les questions</span><span class="d">${state.libToolsBusy==="reviewQuestions" ? "Génération…" : ch.aiReviewQuestions.length+" question"+(ch.aiReviewQuestions.length>1?"s":"")+" actuelle"+(ch.aiReviewQuestions.length>1?"s":"")}</span></button>` : ""}
         </div>
       </details>`;
 
@@ -6540,7 +6718,7 @@ function renderChapterDetail(){
 
       if(ch.aiFlashcards && ch.aiFlashcards.length){
         html += `<details class="ai-extra" style="margin-top:16px;">
-          <summary>✏️ Modifier les flashcards (${ch.aiFlashcards.length})</summary>
+          <summary>Modifier les flashcards (${ch.aiFlashcards.length})</summary>
           <div class="lib-editor-list">${ch.aiFlashcards.map((c,i)=>`
             <div class="lib-editor-item">
               <input class="ai-select" data-card-front="${i}" value="${escapeHtml(c.front)}" placeholder="Question">
@@ -6560,7 +6738,7 @@ function renderChapterDetail(){
 
       if(ch.aiQuiz && ch.aiQuiz.length){
         html += `<details class="ai-extra" style="margin-top:10px;">
-          <summary>✏️ Modifier les questions du quiz (${ch.aiQuiz.length})</summary>
+          <summary>Modifier les questions du quiz (${ch.aiQuiz.length})</summary>
           <div class="lib-editor-list">${ch.aiQuiz.map((q,i)=>`
             <div class="lib-editor-item">
               <input class="ai-select" data-q-text="${i}" value="${escapeHtml(q.q)}" placeholder="Question">
@@ -6580,14 +6758,14 @@ function renderChapterDetail(){
   } else {
     // Chapitre intégré : une action dominante (réviser le quiz), le reste discret.
     html += `<div class="lib-revise-row">
-      <button class="btn red" id="lib-goto-quiz">▶️ Réviser (quiz)</button>
-      <button class="btn outline" id="lib-goto-flash">🃏 Flashcards</button>
+      <button class="btn red" id="lib-goto-quiz">Réviser (quiz)</button>
+      <button class="btn outline" id="lib-goto-flash">Flashcards</button>
     </div>
     <details class="ai-extra lib-tools" style="margin-top:18px;">
-      <summary>🛠️ Plus d'outils</summary>
+      <summary>Plus d'outils</summary>
       <div class="ai-actiongrid" style="margin-top:12px;grid-template-columns:repeat(2,1fr);">
-        <button class="ai-action" id="lib-goto-fiche"><span class="ico">📖</span><span class="t">Voir la fiche</span><span class="d">Fiche de révision complète du chapitre</span></button>
-        <button class="ai-action" id="lib-goto-ai"><span class="ico">🤖</span><span class="t">Assistant IA</span><span class="d">Résumé, interrogation ou question libre</span></button>
+        <button class="ai-action" id="lib-goto-fiche"><span class="t">Voir la fiche</span><span class="d">Fiche de révision complète du chapitre</span></button>
+        <button class="ai-action" id="lib-goto-ai"><span class="t">Assistant IA</span><span class="d">Résumé, interrogation ou question libre</span></button>
       </div>
     </details>`;
     if(FICHES[ch.id]){
@@ -6629,7 +6807,7 @@ function renderSubjectForm(){
           ${SEMESTERS.map(sem=>`<option value="${sem.id}" ${editing && editing.semesterId===sem.id ? "selected":""}>${escapeHtml(sem.name)}</option>`).join("")}
         </select></div>
       <div class="ai-field"><label for="sf-icon">Icône (un emoji)</label>
-        <input class="ai-select" id="sf-icon" maxlength="4" placeholder="💼" value="${editing ? escapeHtml(editing.icon||"") : ""}"></div>
+        <input class="ai-select" id="sf-icon" maxlength="4" placeholder="" value="${editing ? escapeHtml(editing.icon||"") : ""}"></div>
     </div>
     <div class="ai-field"><label>Couleur</label>
       <div class="color-swatches" id="sf-colors">
@@ -6895,7 +7073,7 @@ function attachLibraryEvents(){
       const name = document.getElementById("sf-name").value.trim();
       if(!name){ alert("Le nom de la matière est obligatoire."); return; }
       const semesterId = document.getElementById("sf-semester").value;
-      const icon = document.getElementById("sf-icon").value.trim() || "📘";
+      const icon = document.getElementById("sf-icon").value.trim();
       const color = document.getElementById("sf-color-val").value;
       const description = document.getElementById("sf-desc").value.trim();
       if(lib.editingSubjectId){
@@ -7006,7 +7184,7 @@ async function libRunUserChapterAI(ch, mode){
   const task = mode === "summary"
     ? "TÂCHE : rédige une synthèse de révision de ce chapitre (définitions clés, points essentiels en listes, puis 3 pièges classiques)."
     : "TÂCHE : fais réviser l'étudiant à l'oral sur ce chapitre. Pose UNE SEULE question ouverte à la fois, attends sa réponse, puis corrige brièvement avant d'enchaîner. Commence directement par la première question.";
-  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: (mode==="summary"?"📖 Résumer — ":"🎤 Réviser — ") + ch.title}];
+  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: (mode==="summary"?"Résumer — ":"Réviser — ") + ch.title}];
   state.aiContextLabel = "Contexte : chapitre « " + ch.title + "» (Ma bibliothèque)";
   state.tab = "ai";
   window.scrollTo(0,0);
@@ -7023,7 +7201,7 @@ async function libRunUserChapterFree(ch){
   state.aiCardsDraft = null; state.aiQuizDraft = null; state.aiError = null;
   const ctx = libChapterContext(ch);
   const task = "TÂCHE : présente-toi en une phrase comme prêt à répondre aux questions de l'élève sur ce chapitre, sans reformuler le cours pour l'instant. Termine par : « Pose-moi ta question ci-dessous. »";
-  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: "🤖 Poser une question — " + ch.title}];
+  state.aiThread = [{role:"user", content: aiSystemPrompt() + "\n\n" + ctx + "\n\n" + task, display: "Poser une question — " + ch.title}];
   state.aiContextLabel = "Contexte : chapitre « " + ch.title + " » (Ma bibliothèque)";
   state.tab = "ai";
   window.scrollTo(0,0);
@@ -7177,7 +7355,7 @@ function libChapterMeta(ch){ return { title: ch.title, chapterTitle: ch.desc || 
 async function libRegeneratePart(ch, key){
   const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
   if(state.aiStatus !== "ready"){
-    showToast("Assistant IA non chargé — va dans l'onglet 🤖 Assistant IA.");
+    showToast("Assistant IA non chargé — va dans l'onglet Assistant IA.");
     return;
   }
   const text = libChapterWorkingText(ch);
@@ -7758,7 +7936,7 @@ function buildHeuristicCourseMaterials(rawText){
   const defs = heuristicExtractDefinitions(text);
   const paragraphs = text.split(/\n{2,}/).map(p=>p.trim()).filter(p=>p.length > 60).slice(0, 6);
 
-  let fiche = `<p class="ai-hint" style="margin:0 0 14px;">⚙️ Fiche générée automatiquement <b>sans IA</b> (mode simplifié), à partir des titres et définitions repérés dans le texte. Aucun contenu n'a été inventé.</p>`;
+  let fiche = `<p class="ai-hint" style="margin:0 0 14px;">Fiche générée automatiquement <b>sans IA</b> (mode simplifié), à partir des titres et définitions repérés dans le texte. Aucun contenu n'a été inventé.</p>`;
   if(headings.length) fiche += `<h3>Plan repéré</h3><ul class="fiche-list">${headings.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}</ul>`;
   if(defs.length) fiche += `<h3>Définitions repérées</h3><ul class="fiche-list">${defs.map(d=>`<li><b>${escapeHtml(d.term)}</b> : ${escapeHtml(d.def)}</li>`).join("")}</ul>`;
   if(paragraphs.length) fiche += `<h3>Extraits du cours</h3>` + paragraphs.map(p=>`<p>${escapeHtml(clip(p, 400))}</p>`).join("");
@@ -7791,7 +7969,7 @@ function heuristicSummary(rawText){
     const m = p.match(/^[^.!?]{15,220}[.!?]/);
     return m ? m[0].trim() : clip(p, 180);
   });
-  let out = `<p class="ai-hint" style="margin:0 0 10px;">⚙️ Résumé généré automatiquement <b>sans IA</b> (mode simplifié), à partir de la première phrase de chaque partie du texte.</p>`;
+  let out = `<p class="ai-hint" style="margin:0 0 10px;">Résumé généré automatiquement <b>sans IA</b> (mode simplifié), à partir de la première phrase de chaque partie du texte.</p>`;
   if(headings.length) out += `<p style="margin:0 0 8px;"><b>Plan repéré :</b> ${headings.slice(0,6).map(h=>escapeHtml(h)).join(" · ")}</p>`;
   out += `<ul class="fiche-list">${bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>`;
   return out;
@@ -8167,7 +8345,7 @@ async function courseImportFinalize(index, opts){
     subjectId = genLibId("subj");
     state.userSubjects.push({
       id: subjectId, name: d.newSubjectName || "Autre", semesterId: d.semesterId || SEMESTERS[0].id,
-      icon: "📥", color: SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
+      icon: "", color: SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
       description: "Matière créée automatiquement lors de l'import d'un cours.", builtin: false,
     });
     saveUserSubjects();
@@ -8258,8 +8436,8 @@ function renderImportCancelled(item){
   return `<h1 class="page-title">Génération annulée</h1>
   <div class="ai-notice">Génération annulée.<br>Ton cours original n'a pas été supprimé${item.charCount ? " — le texte extrait (" + item.charCount.toLocaleString(currentLocaleTag()) + " caractères) reste disponible" : ""}.</div>
   <div class="actions" style="justify-content:flex-start;margin-top:16px;flex-wrap:wrap;">
-    <button class="btn red" id="import-relaunch-btn">🔄 Relancer la génération</button>
-    <button class="btn-text" id="import-cancel-back-btn">← Retour à mes cours</button>
+    <button class="btn red" id="import-relaunch-btn">Relancer la génération</button>
+    <button class="btn-text" id="import-cancel-back-btn">Retour à mes cours</button>
   </div>`;
 }
 
@@ -8269,7 +8447,6 @@ function renderImportPick(){
   <p class="ai-intro">Dépose un fichier ou colle ton cours : REV-EM génère automatiquement une fiche structurée, un résumé, un quiz, des flashcards et des questions de révision — sans rien remplir à la main.</p>`;
 
   html += `<div class="import-dropzone ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
-    <div class="import-dropzone-icon">📥</div>
     <div class="import-dropzone-title">Dépose ton cours ici ou clique pour importer un fichier</div>
     <div class="import-dropzone-sub">Tu peux aussi importer plusieurs fichiers à la fois.</div>
     <div class="import-dropzone-formats">Formats acceptés : PDF, DOCX, TXT, Markdown · 15 Mo max par fichier</div>
@@ -8285,7 +8462,7 @@ function renderImportPick(){
   if(ci.files.length){
     html += `<div class="import-filelist">` + ci.files.map(f=>`
       <div class="import-file-row">
-        <span class="name">📄 ${escapeHtml(f.name)}</span>
+        <span class="name">${escapeHtml(f.name)}</span>
         <span class="size">${fmtFileSize(f.size)}</span>
         <button class="btn-text" data-import-remove="${f.id}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button>
       </div>`).join("") + `</div>`;
@@ -8316,21 +8493,21 @@ function renderCourseGenProgressHtml(item){
     <div class="ai-loadbar"><div class="ai-loadbar-fill" style="width:${info.percent}%;"></div></div>
     <p class="s" style="margin:8px 0 0;font-size:12.5px;color:var(--ink-soft);">${escapeHtml(info.label)}</p>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px;">
-      <span style="font-size:12px;color:var(--muted);">⏱️ Temps écoulé : ${escapeHtml(elapsed)}</span>
-      <button class="btn-text" id="import-cancel-gen-btn" style="color:var(--red-dark);">✕ Annuler la génération</button>
+      <span style="font-size:12px;color:var(--muted);">Temps écoulé : ${escapeHtml(elapsed)}</span>
+      <button class="btn-text" id="import-cancel-gen-btn" style="color:var(--red-dark);">Annuler la génération</button>
     </div>
   </div>`;
 
   const cc = item.charCount || 0;
   if(cc > 20000){
-    html += `<div class="ai-notice" style="margin-top:12px;">📚 Ton cours est assez long.<br>L'IA peut prendre plusieurs minutes pour l'analyser. Tu peux laisser cette page ouverte pendant le traitement.<br>Ne ferme pas cet onglet tant que la génération n'est pas terminée.</div>`;
+    html += `<div class="ai-notice" style="margin-top:12px;">Ton cours est assez long.<br>L'IA peut prendre plusieurs minutes pour l'analyser. Tu peux laisser cette page ouverte pendant le traitement.<br>Ne ferme pas cet onglet tant que la génération n'est pas terminée.</div>`;
   } else if(cc > 8000){
     html += `<p class="ai-hint" style="margin-top:10px;">L'analyse peut prendre un peu de temps.</p>`;
   }
 
   const stepStarted = item.currentStepStartedAt || item.genStartedAt;
   if(stepStarted && (Date.now() - stepStarted) > 45000){
-    html += `<div class="ai-error" style="margin-top:10px;">⏳ L'analyse prend plus de temps que prévu.<br>L'IA travaille peut-être encore sur ton cours. Tu peux attendre ou annuler la génération.</div>`;
+    html += `<div class="ai-error" style="margin-top:10px;">L'analyse prend plus de temps que prévu.<br>L'IA travaille peut-être encore sur ton cours. Tu peux attendre ou annuler la génération.</div>`;
   }
   if(item.lastStepError){
     html += `<div class="ai-error" style="margin-top:10px;">${escapeHtml(item.lastStepError.message)}</div>`;
@@ -8383,7 +8560,7 @@ function renderImportDetectOrReview(){
     return `<h1 class="page-title">Import impossible</h1>
     <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
     <div class="actions" style="justify-content:flex-start;margin-top:16px;">
-      <button class="btn outline" id="import-retry-file-btn">🔄 Réessayer</button>
+      <button class="btn outline" id="import-retry-file-btn">Réessayer</button>
       <button class="btn-text" id="import-skip-file-btn">Passer ce fichier</button>
       <button class="btn-text" id="import-cancel-btn">Retour</button>
     </div>`;
@@ -8397,7 +8574,7 @@ function renderImportDetectOrReview(){
   <p class="ai-intro">Vérifie et corrige si besoin, puis choisis comment continuer.</p>`;
 
   if(item.aiUnavailable && !item.aiError){
-    html += `<div class="ai-notice" style="margin-bottom:14px;">🤖 <b>Détection automatique indisponible</b> (IA locale hors ligne) : les champs ci-dessous ont été pré-remplis à partir du nom du fichier — vérifie-les avant d'enregistrer. Ton cours est déjà extrait et prêt à être sauvegardé, avec ou sans IA.</div>`;
+    html += `<div class="ai-notice" style="margin-bottom:14px;"><b>Détection automatique indisponible</b> (IA locale hors ligne) : les champs ci-dessous ont été pré-remplis à partir du nom du fichier — vérifie-les avant d'enregistrer. Ton cours est déjà extrait et prêt à être sauvegardé, avec ou sans IA.</div>`;
   }
   if(item.aiError){
     html += `<div class="ai-error" style="margin-bottom:14px;">${escapeHtml(item.aiError)}<div style="margin-top:8px;">Ton cours reste disponible : réessaie, ou enregistre-le sans IA pour le moment.</div></div>`;
@@ -8435,17 +8612,17 @@ function renderImportDetectOrReview(){
     </div>
 
     <div class="import-stats-row">
-      ${item.numPages ? `<span>📑 ${item.numPages} page${item.numPages>1?"s":""}</span>` : ""}
-      <span>📄 ${item.charCount.toLocaleString(currentLocaleTag())} caractères</span>
-      <span>💡 ${d.notions.length} notion${d.notions.length>1?"s":""} détectée${d.notions.length>1?"s":""}</span>
-      ${matched ? `<span>♻️ Ajouté à « ${escapeHtml(matched.name)} »</span>` : `<span>✨ Nouvelle matière</span>`}
+      ${item.numPages ? `<span>${item.numPages} page${item.numPages>1?"s":""}</span>` : ""}
+      <span>${item.charCount.toLocaleString(currentLocaleTag())} caractères</span>
+      <span>${d.notions.length} notion${d.notions.length>1?"s":""} détectée${d.notions.length>1?"s":""}</span>
+      ${matched ? `<span>Ajouté à « ${escapeHtml(matched.name)} »</span>` : `<span>Nouvelle matière</span>`}
     </div>
     ${d.notions.length ? `<div class="import-notion-tags">${d.notions.map(n=>`<span class="import-notion-tag">${escapeHtml(n)}</span>`).join("")}</div>` : ""}
     ${item.warning ? `<p class="ai-hint" style="margin-top:10px;">${escapeHtml(item.warning)}</p>` : ""}
 
     <div class="actions" style="justify-content:flex-start;margin-top:16px;flex-wrap:wrap;">
-      <button class="btn red" id="import-confirm-generate-btn">🤖 Générer avec l'IA</button>
-      <button class="btn outline" id="import-save-noai-btn">💾 Enregistrer sans IA</button>
+      <button class="btn red" id="import-confirm-generate-btn">Générer avec l'IA</button>
+      <button class="btn outline" id="import-save-noai-btn">Enregistrer sans IA</button>
       <button class="btn-text" id="import-skip-file-btn">Annuler ce fichier</button>
     </div>
   </div>`;
@@ -8474,7 +8651,7 @@ function renderImportGenerating(){
     else if(stepOffset === curIdx) state_ = "current";
     else if(stepOffset > curIdx) state_ = "pending";
     return `<div class="import-step ${state_}">
-      <span class="dot">${state_==="done" ? "✓" : (state_==="current" ? "" : "")}</span>
+      <span class="dot"></span>
       <span class="lbl">${label}</span>
       ${state_==="current" ? `<span class="ai-spinner" style="margin-left:auto;"></span>` : ""}
     </div>`;
@@ -8495,7 +8672,7 @@ function renderImportResult(){
       return `<h1 class="page-title">Import impossible</h1>
       <div class="ai-error">${escapeHtml(item.error || "Erreur inconnue.")}</div>
       <div class="actions" style="justify-content:flex-start;margin-top:16px;">
-        <button class="btn-text" id="import-back-btn">← Retour à mes cours</button>
+        <button class="btn-text" id="import-back-btn">Retour à mes cours</button>
       </div>`;
     }
     const ch = findAnyChapter(item.resultChapterId);
@@ -8504,32 +8681,31 @@ function renderImportResult(){
     const cardsLen = (ch && ch.aiFlashcards) ? ch.aiFlashcards.length : 0;
     const qLen = (ch && ch.aiReviewQuestions) ? ch.aiReviewQuestions.length : 0;
     let html = `<div class="card import-result-hero">
-      <div class="import-result-icon">🎉</div>
       <h1 class="page-title tight">Ton cours est prêt !</h1>
       <p class="ai-intro" style="margin:0 0 14px;">${escapeHtml(item.detected.title)}${subj ? " — " + escapeHtml(subj.name) : ""}</p>
       <div class="import-stats-row">
-        <span>🧠 ${quizLen} question${quizLen>1?"s":""} de quiz</span>
-        <span>🃏 ${cardsLen} flashcard${cardsLen>1?"s":""}</span>
-        <span>🎯 ${qLen} question${qLen>1?"s":""} de révision</span>
-        <span>💡 ${(item.detected.notions||[]).length} notion${(item.detected.notions||[]).length>1?"s":""}</span>
-        <span>📅 importé le ${new Date(ch?ch.createdAt:Date.now()).toLocaleDateString(currentLocaleTag())}</span>
+        <span>${quizLen} question${quizLen>1?"s":""} de quiz</span>
+        <span>${cardsLen} flashcard${cardsLen>1?"s":""}</span>
+        <span>${qLen} question${qLen>1?"s":""} de révision</span>
+        <span>${(item.detected.notions||[]).length} notion${(item.detected.notions||[]).length>1?"s":""}</span>
+        <span>importé le ${new Date(ch?ch.createdAt:Date.now()).toLocaleDateString(currentLocaleTag())}</span>
       </div>`;
     if(item.heuristicMode){
-      html += `<div class="ai-notice" style="margin-top:14px;">⚙️ Cours enregistré <b>sans IA</b> (mode simplifié) : la fiche${cardsLen?" et les flashcards ont":" a"} été construite automatiquement à partir des titres et définitions repérés dans le texte, sans rien inventer. Le résumé, les questions de révision${quizLen?"":" et un quiz plus riche"} pourront être générés dès que l'assistant IA local sera disponible.
-        <div style="margin-top:10px;"><button class="btn outline small" data-generate-ai-later="${item.resultChapterId}">🤖 Générer avec l'IA maintenant</button></div>
+      html += `<div class="ai-notice" style="margin-top:14px;">Cours enregistré <b>sans IA</b> (mode simplifié) : la fiche${cardsLen?" et les flashcards ont":" a"} été construite automatiquement à partir des titres et définitions repérés dans le texte, sans rien inventer. Le résumé, les questions de révision${quizLen?"":" et un quiz plus riche"} pourront être générés dès que l'assistant IA local sera disponible.
+        <div style="margin-top:10px;"><button class="btn outline small" data-generate-ai-later="${item.resultChapterId}">Générer avec l'IA maintenant</button></div>
       </div>`;
     } else if(item.failedSteps && item.failedSteps.length){
       const labels = {fiche:"la fiche", summary:"le résumé", quiz:"le quiz", flashcards:"les flashcards", reviewQuestions:"les questions de révision"};
       html += `<div class="ai-notice" style="margin-top:14px;">${item.failedSteps.map(k=>labels[k]).join(", ")} : à régénérer depuis les outils IA du chapitre.</div>`;
     }
     html += `<div class="import-result-actions">
-        <button class="btn red" data-goto-chapter="${item.resultChapterId}">📖 Ouvrir la fiche de cours</button>
-        ${quizLen ? `<button class="btn outline" data-goto-quiz="${item.resultChapterId}">🧠 Commencer le quiz</button>` : ""}
-        ${cardsLen ? `<button class="btn outline" data-goto-flash="${item.resultChapterId}">🃏 Réviser les flashcards</button>` : ""}
-        <button class="btn outline" data-goto-ask="${item.resultChapterId}">🤖 Poser une question à l'IA</button>
-        <button class="btn-text" data-mark-reviewed="${item.resultChapterId}">✅ Marquer comme révisé</button>
+        <button class="btn red" data-goto-chapter="${item.resultChapterId}">Ouvrir la fiche de cours</button>
+        ${quizLen ? `<button class="btn outline" data-goto-quiz="${item.resultChapterId}">Commencer le quiz</button>` : ""}
+        ${cardsLen ? `<button class="btn outline" data-goto-flash="${item.resultChapterId}">Réviser les flashcards</button>` : ""}
+        <button class="btn outline" data-goto-ask="${item.resultChapterId}">Poser une question à l'IA</button>
+        <button class="btn-text" data-mark-reviewed="${item.resultChapterId}">Marquer comme révisé</button>
       </div>
-      <button class="btn-text" id="import-back-btn" style="margin-top:14px;">← Retour à mes cours</button>
+      <button class="btn-text" id="import-back-btn" style="margin-top:14px;">Retour à mes cours</button>
     </div>`;
     return html;
   }
@@ -8542,14 +8718,14 @@ function renderImportResult(){
     const ch = f.resultChapterId ? findAnyChapter(f.resultChapterId) : null;
     const ok = f.status === "done";
     html += `<div class="import-result-row ${ok?"ok":"ko"}">
-      <span class="name">${ok?"✅":"⚠️"} ${escapeHtml(ok && f.detected ? f.detected.title : f.name)}</span>
+      <span class="name">${escapeHtml(ok && f.detected ? f.detected.title : f.name)}</span>
       <span class="meta">${ok ? ((ch&&ch.aiQuiz?ch.aiQuiz.length:0) + " quiz · " + (ch&&ch.aiFlashcards?ch.aiFlashcards.length:0) + " flashcards") : escapeHtml(f.error||"échec")}</span>
-      ${ok ? `<button class="btn-text" data-goto-chapter="${f.resultChapterId}">Ouvrir →</button>` : ""}
+      ${ok ? `<button class="btn-text" data-goto-chapter="${f.resultChapterId}">Ouvrir</button>` : ""}
     </div>`;
   });
   html += `</div>
   <div class="actions" style="justify-content:flex-start;margin-top:16px;">
-    <button class="btn-text" id="import-back-btn">← Retour à mes cours</button>
+    <button class="btn-text" id="import-back-btn">Retour à mes cours</button>
     <button class="btn outline" id="import-new-btn">Importer d'autres cours</button>
   </div>`;
   return html;
@@ -8739,16 +8915,16 @@ function renderReview(){
     <p class="ai-intro">Chaque réponse est mémorisée question par question. Ces listes se recalculent automatiquement à partir de ton historique : réussites, échecs, régularité et questions jamais tentées.</p>
 
     <div class="mode-grid">
-      ${modeCardHtml("wrong", "🔁", "Réviser mes erreurs", "Les questions dont ta dernière réponse était fausse.", wrong.length)}
-      ${modeCardHtml("express", "⚡", "Révision express", "10 questions ciblées sur tes points faibles.", Math.min(10, QUESTIONS.length))}
-      ${modeCardHtml("hard", "🧗", "Questions difficiles", "Moins de 50 % de réussite après au moins deux passages.", hard.length)}
-      ${modeCardHtml("never", "🆕", "Questions jamais faites", "Ce que tu n'as encore jamais travaillé.", never.length)}
+      ${modeCardHtml("wrong", "", "Réviser mes erreurs", "Les questions dont ta dernière réponse était fausse.", wrong.length)}
+      ${modeCardHtml("express", "", "Révision express", "10 questions ciblées sur tes points faibles.", Math.min(10, QUESTIONS.length))}
+      ${modeCardHtml("hard", "", "Questions difficiles", "Moins de 50 % de réussite après au moins deux passages.", hard.length)}
+      ${modeCardHtml("never", "", "Questions jamais faites", "Ce que tu n'as encore jamais travaillé.", never.length)}
     </div>
 
     <div class="dash-statgrid">
-      <div class="dash-stat"><div class="dash-stat-icon">📈</div><div class="dash-stat-num">${g.mastery}%</div><div class="dash-stat-lbl">Maîtrise globale</div></div>
-      <div class="dash-stat"><div class="dash-stat-icon">🧭</div><div class="dash-stat-num">${g.coverage}%</div><div class="dash-stat-lbl">Couverture du programme</div></div>
-      <div class="dash-stat"><div class="dash-stat-icon">🏅</div><div class="dash-stat-num">${g.masteredCount}</div><div class="dash-stat-lbl">Questions maîtrisées</div></div>
+      <div class="dash-stat"><div class="dash-stat-num">${g.mastery}%</div><div class="dash-stat-lbl">Maîtrise globale</div></div>
+      <div class="dash-stat"><div class="dash-stat-num">${g.coverage}%</div><div class="dash-stat-lbl">Couverture du programme</div></div>
+      <div class="dash-stat"><div class="dash-stat-num">${g.masteredCount}</div><div class="dash-stat-lbl">Questions maîtrisées</div></div>
     </div>
   `;
 
@@ -8756,7 +8932,7 @@ function renderReview(){
     <div class="dash-section-head">
       <span class="section-title inline">Priorité de révision (${review.length})</span>
       <span style="display:flex;gap:8px;flex-wrap:wrap;">
-        ${review.length ? `<button class="ai-inline-btn" id="ai-explain-errors">🤖 M'expliquer mes erreurs</button>` : ""}
+        ${review.length ? `<button class="ai-inline-btn" id="ai-explain-errors">M'expliquer mes erreurs</button>` : ""}
         ${review.length ? `<button class="btn red small" data-mode="review">Réviser ces questions</button>` : ""}
       </span>
     </div>`;
@@ -8899,11 +9075,11 @@ function examTick(){
   const ex = state.exam;
   if(ex.timerMode === "down"){
     const left = ex.limitSec - examElapsed();
-    el.textContent = "⏱ " + fmtClock(left) + " restantes";
+    el.textContent = "" + fmtClock(left) + " restantes";
     el.classList.toggle("warn", left <= 60);
     if(left <= 0){ finishExam(true); }
   } else {
-    el.textContent = "⏱ " + fmtClock(examElapsed());
+    el.textContent = "" + fmtClock(examElapsed());
   }
 }
 
@@ -9039,7 +9215,7 @@ function renderExamSetup(){
       <div class="exam-setup-group">
         <span class="lbl">Chronomètre</span>
         <div class="chipset">
-          <button data-examtimer="down" class="${ex.timerMode==="down"?"active":""}">⏱ Compte à rebours</button>
+          <button data-examtimer="down" class="${ex.timerMode==="down"?"active":""}">Compte à rebours</button>
           <button data-examtimer="up" class="${ex.timerMode==="up"?"active":""}">Chrono libre</button>
           <button data-examtimer="off" class="${ex.timerMode==="off"?"active":""}">Sans chrono</button>
         </div>
@@ -9119,7 +9295,7 @@ function renderExamRunning(){
 
   const clock = ex.timerMode === "off"
     ? ""
-    : `<span class="exam-clock" id="exam-clock">⏱ ${ex.timerMode==="down" ? fmtClock(ex.limitSec) + " restantes" : "00:00"}</span>`;
+    : `<span class="exam-clock" id="exam-clock">${ex.timerMode==="down" ? fmtClock(ex.limitSec) + " restantes" : "00:00"}</span>`;
 
   const opts = q.opts.map((opt,i)=>`
     <button class="opt ${given===i?"selected":""}" data-i="${i}">
@@ -9146,10 +9322,10 @@ function renderExamRunning(){
       <div class="options" id="exam-options">${opts}</div>
 
       <div class="exam-nav">
-        <button class="btn outline" id="exam-prev" ${ex.idx===0?"disabled":""}>← Précédente</button>
+        <button class="btn outline" id="exam-prev" ${ex.idx===0?"disabled":""}>Précédente</button>
         ${isLast
           ? `<button class="btn red" id="exam-finish">Terminer l'examen</button>`
-          : `<button class="btn" id="exam-next">Suivante →</button>`}
+          : `<button class="btn" id="exam-next">Suivante</button>`}
       </div>
 
       <div class="exam-grid">${grid}</div>
@@ -9209,7 +9385,7 @@ function renderExamResults(){
 
       <div class="actions" style="justify-content:flex-start;gap:12px;">
         ${r.details.length ? `<button class="btn red" id="exam-redo-errors">Revoir mes erreurs (${r.details.length})</button>` : ""}
-        ${r.details.length ? `<button class="btn outline" id="exam-ai-errors">🤖 M'expliquer mes erreurs</button>` : ""}
+        ${r.details.length ? `<button class="btn outline" id="exam-ai-errors">M'expliquer mes erreurs</button>` : ""}
         <button class="btn outline" id="exam-restart">Recommencer un examen</button>
         <button class="btn-text" id="exam-back-setup">Changer les réglages</button>
       </div>
@@ -9230,7 +9406,7 @@ function renderExamResults(){
       `).join("")}
     </div>`;
   } else {
-    html += `<div class="dash-section" style="margin-top:18px;"><p class="dash-empty">Aucune erreur sur cet examen — sans faute ! 🎉</p></div>`;
+    html += `<div class="dash-section" style="margin-top:18px;"><p class="dash-empty">Aucune erreur sur cet examen — sans faute.</p></div>`;
   }
 
   html += `<footer class="hint">Ce résultat a été ajouté à tes statistiques : maîtrise par question, erreurs à revoir et objectif du jour.</footer>`;
@@ -9392,7 +9568,7 @@ function renderPicker(){
 
   const importedWithQuiz = state.userChapters.filter(ch => ch.aiQuiz && ch.aiQuiz.length);
   if(importedWithQuiz.length){
-    html += `<div class="level-heading"><span class="tag">📚</span><span class="name">Mes cours</span><span class="line"></span></div>
+    html += `<div class="level-heading"><span class="name">Mes cours</span><span class="line"></span></div>
     <div class="flash-deckgrid">` + importedWithQuiz.map(ch=>{
       const s = subjectOfChapter(ch);
       return `<div class="flash-deckcard">
@@ -9401,7 +9577,7 @@ function renderPicker(){
         </div>
         <div class="bottom">
           <span class="mastery none">Quiz généré</span>
-          <button class="btn outline small" data-import-quiz="${ch.id}">🧠 Réviser</button>
+          <button class="btn outline small" data-import-quiz="${ch.id}">Réviser</button>
         </div>
       </div>`;
     }).join("") + `</div>`;
@@ -9529,7 +9705,7 @@ function renderQuizCoursePanel(q, open, deckScope){
       (ref.exampleHtml ? `<p class="quiz-source-example"><b>${t("quiz.example_label")}</b><br>${ref.exampleHtml}</p>` : "");
   }
   return `<div class="quiz-source${open ? " open" : ""}">
-    <div class="quiz-source-head"><span class="ico" aria-hidden="true">📖</span><span class="lbl">${t("quiz.in_your_course")}</span></div>
+    <div class="quiz-source-head"><span class="lbl">${t("quiz.in_your_course")}</span></div>
     <button type="button" class="quiz-source-toggle" id="quiz-source-toggle" aria-expanded="${open ? "true" : "false"}">${open ? t("quiz.source_collapse") : t("quiz.source_expand")}</button>
     <div class="quiz-source-collapse"><div class="quiz-source-body">${body}</div></div>
   </div>`;
@@ -9647,8 +9823,8 @@ function renderResults(){
       <div class="qz-results-frac">${state.score} / ${total}</div>
       <p class="qz-results-msg">${msg}<br><span style="font-size:12px;color:var(--muted);font-weight:700;">${t("quiz.global_mastery", {pct: g.mastery, answered: g.answered, total: g.total})}</span></p>
       <div class="qz-results-stats">
-        <span class="qz-results-stat ok">✓ ${t("quiz.correct_count", {n: state.score})}</span>
-        <span class="qz-results-stat ko">✕ ${t("quiz.wrong_count", {n: wrongCount})}</span>
+        <span class="qz-results-stat ok">${t("quiz.correct_count", {n: state.score})}</span>
+        <span class="qz-results-stat ko">${t("quiz.wrong_count", {n: wrongCount})}</span>
       </div>
       ${timeLine}
       ${reviewBlock}
@@ -9747,7 +9923,6 @@ function renderCourseAutomationCard(){
   const ci = state.courseImport;
   let html = `<div class="card automate-card">
     <div class="automate-head">
-      <span class="ico">🤖</span>
       <div>
         <div class="h">Automatiser mes révisions</div>
         <div class="d">Importe un cours et génère automatiquement une fiche, un résumé, des quiz et des flashcards grâce à l'assistant IA local.</div>
@@ -9755,7 +9930,6 @@ function renderCourseAutomationCard(){
     </div>
 
     <div class="import-dropzone import-dropzone-compact ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
-      <div class="import-dropzone-icon">📄</div>
       <div class="import-dropzone-title">Dépose ton PDF ici</div>
       <div class="import-dropzone-sub">ou clique pour choisir un fichier</div>
       <div class="import-dropzone-formats">PDF, DOCX, TXT, Markdown · 15 Mo max</div>
@@ -9771,22 +9945,22 @@ function renderCourseAutomationCard(){
   if(ci.files.length){
     html += `<div class="import-filelist" style="margin-top:14px;">` + ci.files.map(f=>`
       <div class="import-file-row">
-        <span class="name">📄 ${escapeHtml(f.name)}</span>
+        <span class="name">${escapeHtml(f.name)}</span>
         <span class="size">${fmtFileSize(f.size)}</span>
         <button class="btn-text" data-import-remove="${f.id}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button>
       </div>`).join("") + `</div>`;
   }
 
   html += `<div class="actions" style="justify-content:flex-start;margin-top:14px;">
-    <button class="btn red" id="import-generate-btn" ${ci.files.length === 0 ? "disabled" : ""}>📥 Importer un cours${ci.files.length > 1 ? " (" + ci.files.length + " fichiers)" : ""}</button>
+    <button class="btn red" id="import-generate-btn" ${ci.files.length === 0 ? "disabled" : ""}>Importer un cours${ci.files.length > 1 ? " (" + ci.files.length + " fichiers)" : ""}</button>
   </div>
 
   <details class="ai-extra automate-advanced">
     <summary>Options avancées</summary>
     <p class="ai-hint" style="margin:8px 0;">Pour sauvegarder ou restaurer l'ensemble de tes matières et chapitres au format JSON — pas pour importer un cours.</p>
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-      <button class="btn-text" id="catalog-export-btn">⬇️ Exporter mes cours (JSON)</button>
-      <label class="btn-text" style="cursor:pointer;margin:0;">⬆️ Importer une sauvegarde JSON<input type="file" id="catalog-import-input" accept=".json,application/json" style="display:none;"></label>
+      <button class="btn-text" id="catalog-export-btn">Exporter mes cours (JSON)</button>
+      <label class="btn-text" style="cursor:pointer;margin:0;">Importer une sauvegarde JSON<input type="file" id="catalog-import-input" accept=".json,application/json" style="display:none;"></label>
     </div>
   </details>
   </div>`;
@@ -9812,30 +9986,30 @@ function renderCourseCard(ch){
 
   return `<div class="course-card" data-catalog-open="${ch.id}" data-catalog-subject="${ch.subjectId}" tabindex="0" role="button" aria-label="Ouvrir ${escapeHtml(ch.title)}">
     <div class="course-card-top">
-      <span class="course-card-icon" style="background:${subj?subj.color:"#8a8f9c"}22;color:${subj?subj.color:"#8a8f9c"};">${subj&&subj.icon?subj.icon:"📘"}</span>
+      <span class="course-card-icon" style="background:${subj?subj.color:"#8a8f9c"}22;color:${subj?subj.color:"#8a8f9c"};">${subj?escapeHtml(subjectMark(subj)):"\u2014"}</span>
       <div class="course-card-badges">
         ${ch.level ? `<span class="level-badge ${ch.level}">${levelName(ch.level)}</span>` : ""}
-        ${ch.generationPending ? `<span class="course-card-chip" title="Génération IA en attente">🤖⏳</span>` : ""}
-        ${revised ? `<span class="course-card-chip ok">✅</span>` : ""}
+        ${ch.generationPending ? `<span class="course-card-chip" title="Génération IA en attente">IA</span>` : ""}
+        ${revised ? `<span class="course-card-chip ok">${t("dashboard.reviewed")}</span>` : ""}
       </div>
     </div>
     <div class="course-card-title">${escapeHtml(ch.title)}</div>
     <div class="course-card-meta">${subj ? escapeHtml(subj.name) : ""}${ch.desc ? " · " + escapeHtml(ch.desc) : ""}</div>
     <div class="course-card-stats">
-      ${ch.pageCount ? `<span>📑 ${ch.pageCount}p</span>` : ""}
-      ${fmtCourseDate(ch) ? `<span>📅 ${fmtCourseDate(ch)}</span>` : ""}
+      ${ch.pageCount ? `<span>${ch.pageCount}p</span>` : ""}
+      ${fmtCourseDate(ch) ? `<span>${fmtCourseDate(ch)}</span>` : ""}
     </div>
     <div class="course-card-chips">
-      <span class="course-card-chip ${hasFiche?"":"off"}">📖 Fiche</span>
-      <span class="course-card-chip ${hasSummary?"":"off"}">📝 Résumé</span>
-      <span class="course-card-chip ${quizLen?"":"off"}">🧠 ${quizLen}</span>
-      <span class="course-card-chip ${cardsLen?"":"off"}">🃏 ${cardsLen}</span>
+      <span class="course-card-chip ${hasFiche?"":"off"}">Fiche</span>
+      <span class="course-card-chip ${hasSummary?"":"off"}">Résumé</span>
+      <span class="course-card-chip ${quizLen?"":"off"}">${quizLen}</span>
+      <span class="course-card-chip ${cardsLen?"":"off"}">${cardsLen}</span>
     </div>
     <div class="course-card-progress">
       <div class="deckbar-track"><div class="deckbar-fill ${tierKey}" style="width:${progress||0}%;"></div></div>
       <span class="pct">${progress===null?"—":progress+"%"}</span>
     </div>
-    <span class="btn outline small course-card-open">Ouvrir →</span>
+    <span class="btn outline small course-card-open">Ouvrir</span>
   </div>`;
 }
 
@@ -9877,7 +10051,7 @@ function renderCourseLibrarySection(){
   let html = `<div class="section-title" style="margin-top:6px;">Bibliothèque de cours</div>`;
 
   html += `<div class="card course-filters-card">
-    <input type="text" id="catalog-search" class="ai-select" placeholder="🔍 Rechercher un cours…" value="${escapeHtml(state.catalog.query||"")}">
+    <input type="text" id="catalog-search" class="ai-select" placeholder="Rechercher un cours…" value="${escapeHtml(state.catalog.query||"")}">
     <div class="course-filters-row">
       <select id="catalog-subject" class="ai-select">
         <option value="all">Toutes les matières</option>
@@ -9904,15 +10078,15 @@ function renderCourseLibrarySection(){
     </div>
     <div class="course-filters-footer">
       <div class="course-viewtoggle">
-        <button class="course-viewbtn ${viewMode==="grid"?"active":""}" data-view-mode="grid" aria-label="Affichage en grille" title="Grille">▦</button>
-        <button class="course-viewbtn ${viewMode==="list"?"active":""}" data-view-mode="list" aria-label="Affichage en liste" title="Liste">☰</button>
+        <button class="course-viewbtn ${viewMode==="grid"?"active":""}" data-view-mode="grid" aria-label="Affichage en grille" title="Grille"><svg viewBox="0 0 14 14" aria-hidden="true" width="14" height="14"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor"/></svg></button>
+        <button class="course-viewbtn ${viewMode==="list"?"active":""}" data-view-mode="list" aria-label="Affichage en liste" title="Liste"><svg viewBox="0 0 14 14" aria-hidden="true" width="14" height="14"><rect x="1" y="2" width="12" height="1.6" rx=".8" fill="currentColor"/><rect x="1" y="6.2" width="12" height="1.6" rx=".8" fill="currentColor"/><rect x="1" y="10.4" width="12" height="1.6" rx=".8" fill="currentColor"/></svg></button>
       </div>
       ${hasActiveFilters ? `<button class="btn-text" id="catalog-reset-filters">Réinitialiser les filtres</button>` : ""}
     </div>
   </div>`;
 
   if(chapters.length === 0){
-    html += `<div class="empty-state"><div class="big">🔍</div>Aucun cours ne correspond à ta recherche.</div>`;
+    html += `<div class="empty-state">Aucun cours ne correspond à ta recherche.</div>`;
     return html;
   }
 
@@ -10172,7 +10346,7 @@ async function bsPullIntoLocalState(){
   (subs || []).forEach(s => {
     state.userSubjects.push({
       id: s.id, name: s.name, semesterId: s.semester_id || SEMESTERS[0].id,
-      icon: s.icon || "🎓", color: s.color || SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
+      icon: s.icon || "", color: s.color || SUBJECT_COLORS[state.userSubjects.length % SUBJECT_COLORS.length],
       description: s.description || "", builtin: false,
       source: "brightspace", externalId: s.external_id, syncStatus: s.sync_status,
     });
@@ -10701,16 +10875,16 @@ function renderFlashSourcePanel(card, open, fallbackChapterId){
   const ref = resolveFlashcardCourseRef(card, fallbackChapterId);
   let body;
   if(ref.status === "no_chapter"){
-    body = `<p class="flash-source-empty">📖 Passage du cours indisponible pour cette flashcard.</p>`;
+    body = `<p class="flash-source-empty">Passage du cours indisponible pour cette flashcard.</p>`;
   } else if(ref.status === "not_found"){
-    body = `<p class="flash-source-empty">📖 Le passage exact n'a pas pu être retrouvé dans ce cours.</p>`;
+    body = `<p class="flash-source-empty">Le passage exact n'a pas pu être retrouvé dans ce cours.</p>`;
   } else {
     body = `<div class="flash-source-excerpt">${ref.excerptHtml}</div>` +
-      (ref.exampleHtml ? `<p class="flash-source-example"><b>💡 Exemple</b><br>${ref.exampleHtml}</p>` : "");
+      (ref.exampleHtml ? `<p class="flash-source-example"><b>Exemple</b><br>${ref.exampleHtml}</p>` : "");
   }
   return `<div class="flash-source${open ? " open" : ""}">
-    <div class="flash-source-head"><span class="ico" aria-hidden="true">📖</span><span class="lbl">Dans ton cours</span></div>
-    <button type="button" class="flash-source-toggle" id="flash-source-toggle" aria-expanded="${open ? "true" : "false"}">${open ? "↑ Réduire" : "Voir dans le cours ↓"}</button>
+    <div class="flash-source-head"><span class="lbl">Dans ton cours</span></div>
+    <button type="button" class="flash-source-toggle" id="flash-source-toggle" aria-expanded="${open ? "true" : "false"}">${open ? "Réduire" : "Voir dans le cours ↓"}</button>
     <div class="flash-source-collapse"><div class="flash-source-body">${body}</div></div>
   </div>`;
 }
@@ -10854,7 +11028,7 @@ function renderFlashPicker(){
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%"></div></div>
         <div class="bottom">
           <span class="mastery ${tier.key}">${prog ? tier.label + " · " + tier.pct + "%" : "Pas encore tenté"}</span>
-          <button class="btn outline small" data-flashchapter="${ch.id}">🃏 Réviser</button>
+          <button class="btn outline small" data-flashchapter="${ch.id}">Réviser</button>
         </div>
       </div>`;
     });
@@ -10863,7 +11037,7 @@ function renderFlashPicker(){
 
   const importedWithCards = state.userChapters.filter(ch => ch.aiFlashcards && ch.aiFlashcards.length);
   if(importedWithCards.length){
-    html += `<div class="level-heading"><span class="tag">📚</span><span class="name">Mes cours</span><span class="line"></span></div>
+    html += `<div class="level-heading"><span class="name">Mes cours</span><span class="line"></span></div>
     <div class="flash-deckgrid">` + importedWithCards.map(ch=>{
       const s = subjectOfChapter(ch);
       return `<div class="flash-deckcard">
@@ -10873,7 +11047,7 @@ function renderFlashPicker(){
         </div>
         <div class="bottom">
           <span class="mastery none">Cartes générées</span>
-          <button class="btn outline small" data-import-flash="${ch.id}">🃏 Réviser</button>
+          <button class="btn outline small" data-import-flash="${ch.id}">Réviser</button>
         </div>
       </div>`;
     }).join("") + `</div>`;
@@ -10927,13 +11101,13 @@ function renderFlashPlay(){
   const fallbackChapterId = (d.scope && d.scope !== "all" && !/^level:/.test(d.scope) && findAnyChapter(d.scope)) ? d.scope : null;
 
   return `
-    <button class="btn-text" id="flash-back-btn">← Quitter le paquet</button>
+    <button class="btn-text" id="flash-back-btn">Quitter le paquet</button>
     <div class="flash-play-top">
       ${state.smartSession ? `<span class="sr-step-badge">${t("smart.session_step", {n: state.smartSession.stepIndex+1, total: state.smartSession.items.length})}</span>` : ""}
       <span class="lbl">${d.label} — Carte ${d.idx+1} / ${d.cards.length}</span>
       <div class="flash-counters">
-        <span class="c-known">✅ ${d.known.length}</span>
-        <span class="c-unknown">🔁 ${d.unknown.length}</span>
+        <span class="c-known">${d.known.length}</span>
+        <span class="c-unknown">${d.unknown.length}</span>
       </div>
     </div>
     <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
@@ -10955,8 +11129,8 @@ function renderFlashPlay(){
       ${!d.flipped ? `<div class="flash-hintline">Retourne la carte pour voir la réponse</div>` : renderFlashSourcePanel(card, !!d.sourceOpen, fallbackChapterId)}
 
       ${d.flipped ? `<div class="flash-judge">
-            <button class="unknown" id="flash-unknown-btn"><span class="emoji">🔁</span>À revoir</button>
-            <button class="known" id="flash-known-btn"><span class="emoji">✅</span>Je savais</button>
+            <button class="unknown" id="flash-unknown-btn">À revoir</button>
+            <button class="known" id="flash-known-btn">Je savais</button>
           </div>` : ""
       }
     </div>
@@ -10991,7 +11165,7 @@ function renderFlashSummary(){
   let reviewList = "";
   if(d.unknown.length > 0){
     reviewList = `<div class="flash-review-list">` + d.unknown.map(c =>
-      `<div class="item"><span class="mark">🔁</span><span>${c.front}</span></div>`
+      `<div class="item"><span>${c.front}</span></div>`
     ).join("") + `</div>`;
   }
 
@@ -11004,7 +11178,7 @@ function renderFlashSummary(){
           <span class="pct">${pct}%</span>
         </div>
       </div>
-      <p class="sub">✅ ${d.known.length} connues &nbsp;·&nbsp; 🔁 ${d.unknown.length} à revoir</p>
+      <p class="sub">${d.known.length} connues &nbsp;·&nbsp; ${d.unknown.length} à revoir</p>
       <p class="msg" style="margin-top:-10px;">${msg}</p>
       <div class="actions" style="justify-content:center;">
         ${d.unknown.length > 0 ? `<button class="btn red" id="flash-replay-unknown">Rejouer les cartes à revoir</button>` : ""}
@@ -11206,8 +11380,8 @@ async function aiRunQuickTest(){
   state.aiGpuDiag = diag;
   if(diag.ok && state.aiStatus === "nogpu") state.aiStatus = "idle";
   state.aiTestResult = diag.ok
-    ? "✅ WebGPU répond correctement sur cet appareil — tu peux charger l'assistant IA."
-    : "❌ " + diag.message;
+    ? "WebGPU répond correctement sur cet appareil — tu peux charger l'assistant IA."
+    : "" + diag.message;
   render();
 }
 
@@ -11270,7 +11444,7 @@ async function aiRunFullEngineTest(){
     for(let i=5;i<steps.length;i++) steps[i].status = "skip";
     state.aiStatus = "nogpu";
     const attemptDetail = diag.adapterAttempts.map(a => a.powerPreference + " → " + (a.found ? "trouvé" : (a.error ? "erreur : " + a.error : "aucun adaptateur"))).join(" · ");
-    state.aiFullTestResult = "❌ " + diag.message + " Détail par tentative : " + attemptDetail + ". Impossible d'aller plus loin : sans adaptateur/périphérique GPU réel, le worker WebLLM ne peut pas être testé pour de vrai sur cet appareil.";
+    state.aiFullTestResult = "" + diag.message + " Détail par tentative : " + attemptDetail + ". Impossible d'aller plus loin : sans adaptateur/périphérique GPU réel, le worker WebLLM ne peut pas être testé pour de vrai sur cet appareil.";
     state.aiFullTestBusy = false;
     render();
     return;
@@ -11288,7 +11462,7 @@ async function aiRunFullEngineTest(){
     steps[7].status = steps[6].status !== "ok" ? "skip" : "ok";
     steps[8].status = steps[7].status !== "ok" ? "skip" : "fail";
     steps[9].status = "skip"; steps[10].status = "skip";
-    state.aiFullTestResult = "❌ Le moteur ne s'est pas chargé réellement (étape : " + (state.aiDiagnostic ? state.aiDiagnostic.typeLabel : "inconnue") + "). " + (state.aiDiagnostic ? state.aiDiagnostic.message : "") + " Adaptateur ET périphérique GPU étaient pourtant réels et fonctionnels — cherche la cause côté worker/réseau/mémoire/cache plutôt que côté GPU.";
+    state.aiFullTestResult = "Le moteur ne s'est pas chargé réellement (étape : " + (state.aiDiagnostic ? state.aiDiagnostic.typeLabel : "inconnue") + "). " + (state.aiDiagnostic ? state.aiDiagnostic.message : "") + " Adaptateur ET périphérique GPU étaient pourtant réels et fonctionnels — cherche la cause côté worker/réseau/mémoire/cache plutôt que côté GPU.";
     state.aiFullTestBusy = false;
     render();
     return;
@@ -11303,14 +11477,14 @@ async function aiRunFullEngineTest(){
     const text = (res && res.text || "").trim();
     if(text){
       steps[10].status = "ok";
-      state.aiFullTestResult = "✅ Test réel réussi — le modèle « " + aiModelMeta(modelId).label + " » a répondu : « " + clip(text, 200) + " »";
+      state.aiFullTestResult = "Test réel réussi — le modèle « " + aiModelMeta(modelId).label + " » a répondu : « " + clip(text, 200) + " »";
     } else {
       steps[10].status = "fail";
-      state.aiFullTestResult = "❌ Requête envoyée, mais réponse vide reçue : le moteur tourne, mais la génération elle-même échoue.";
+      state.aiFullTestResult = "Requête envoyée, mais réponse vide reçue : le moteur tourne, mais la génération elle-même échoue.";
     }
   }catch(e){
     steps[9].status = "fail"; steps[10].status = "skip";
-    state.aiFullTestResult = "❌ Échec de la génération réelle : " + (e && e.message ? e.message : "erreur inconnue") + ".";
+    state.aiFullTestResult = "Échec de la génération réelle : " + (e && e.message ? e.message : "erreur inconnue") + ".";
   }
   state.aiFullTestBusy = false;
   render();
@@ -11373,9 +11547,9 @@ function aiDiagnosticPanelHtml(){
       <div><b>Mode actuel :</b> ${escapeHtml(aiCurrentModeLabel())}</div>
     </div>
     <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn-text" id="ai-test-btn">🧪 Tester WebGPU (rapide)</button>
-      <button class="btn-text" id="ai-retry-check-btn">🔄 Réessayer le chargement</button>
-      <button class="btn-text" id="ai-full-test-btn" ${(aiEngineBusy() || state.aiFullTestBusy) ? "disabled" : ""}>${state.aiFullTestBusy ? "⏳ Test en cours…" : "🧪 Test complet (réel, charge le modèle)"}</button>
+      <button class="btn-text" id="ai-test-btn">Tester WebGPU (rapide)</button>
+      <button class="btn-text" id="ai-retry-check-btn">Réessayer le chargement</button>
+      <button class="btn-text" id="ai-full-test-btn" ${(aiEngineBusy() || state.aiFullTestBusy) ? "disabled" : ""}>${state.aiFullTestBusy ? "Test en cours…" : "Test complet (réel, charge le modèle)"}</button>
     </div>
     ${state.aiTestResult ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiTestResult)}</div>` : ""}
     ${(state.aiFullTestSteps && state.aiFullTestSteps.length) ? aiFullTestStepsHtml() : ""}
@@ -11405,7 +11579,7 @@ function aiDiagnosticPanelHtml(){
    de causes réelles et connues, pas une certitude sur ta machine précise. */
 function aiChromeGpuContradictionHtml(diag){
   return `<details class="ai-extra" style="margin-top:10px;">
-    <summary>⚠️ « chrome://gpu » dit WebGPU accéléré, mais aucun adaptateur n'est trouvé ici — pourquoi ?</summary>
+    <summary>« chrome://gpu » dit WebGPU accéléré, mais aucun adaptateur n'est trouvé ici — pourquoi ?</summary>
     <div style="font-size:12px; line-height:1.7; margin-top:6px; color:var(--ink-soft);">
       <p>Cette page ne peut pas lire <code>chrome://gpu</code> (c'est une page interne du navigateur, non accessible aux sites web) : impossible pour ce diagnostic de comparer directement les deux. Voici les causes réelles connues pour cet écart précis :</p>
       <ul class="fiche-list">
@@ -11812,7 +11986,7 @@ function questionContext(q, givenIdx){
   const s = qstat(q);
   return clip(
     "QUESTION DU COURS" + (ch ? " (chapitre " + ch.num + " — " + ch.title + ")" : "") + " :\n" + q.q +
-    "\nOptions :\n" + q.opts.map((o,i) => (i === q.correct ? "✔ " : "- ") + o).join("\n") +
+    "\nOptions :\n" + q.opts.map((o,i) => (i === q.correct ? "" : "- ") + o).join("\n") +
     (givenIdx !== null && givenIdx !== undefined ? "\nRéponse donnée par l'étudiant : " + q.opts[givenIdx] : "") +
     "\nExplication du cours : " + q.exp +
     (s ? "\nHistorique de l'étudiant sur cette question : " + s.correct + "/" + s.seen + " réussies." : "")
@@ -12081,7 +12255,7 @@ function aiRunHeuristicChapterAction(action){
     if(!summary) return false;
     state.aiThread = [
       {role:"user", content:"", display},
-      {role:"assistant", content: "⚙️ Mode simplifié (sans IA) — généré à partir de la fiche de ce chapitre, sans modèle de langage.\n\n" + stripHtml(summary)},
+      {role:"assistant", content: "Mode simplifié (sans IA) — généré à partir de la fiche de ce chapitre, sans modèle de langage.\n\n" + stripHtml(summary)},
     ];
     render();
     return true;
@@ -12485,9 +12659,9 @@ function aiStatusHtml(){
         <p class="s" style="margin-top:6px;">Ces pistes aident sur la plupart des appareils, mais certains ne pourront pas exécuter WebLLM correctement (matériel trop ancien ou non pris en charge) — ce n'est pas garanti.</p>
       </div>
       <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn outline small" id="ai-retry-check-btn" ${checking?"disabled":""}>${checking ? "⏳ Vérification…" : "🔄 Réessayer"}</button>
-        <button class="btn-text" id="ai-goto-simplified-btn">⚙️ Utiliser le mode simplifié</button>
-        <button class="btn-text" id="ai-goto-import-noai-btn">📥 Importer et enregistrer sans IA</button>
+        <button class="btn outline small" id="ai-retry-check-btn" ${checking?"disabled":""}>${checking ? "Vérification…" : "Réessayer"}</button>
+        <button class="btn-text" id="ai-goto-simplified-btn">Utiliser le mode simplifié</button>
+        <button class="btn-text" id="ai-goto-import-noai-btn">Importer et enregistrer sans IA</button>
       </div>
       </div></div>`;
   }
@@ -12499,7 +12673,7 @@ function aiStatusHtml(){
       Premier lancement : téléchargement unique du modèle (${meta.size}), puis mis en cache par ton navigateur — les fois suivantes seront quasi instantanées.</div>
       ${aiModelPickerHtml()}
       <div style="margin-top:10px; display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-        <button class="btn red small" id="ai-load-btn">⬇️ Charger l'assistant IA</button>
+        <button class="btn red small" id="ai-load-btn">Charger l'assistant IA</button>
         <button class="btn-text" id="ai-reset-cache">Réinitialiser le cache IA</button>
       </div>
       ${state.aiCacheResetMsg ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiCacheResetMsg)}</div>` : ""}
@@ -12515,7 +12689,7 @@ function aiStatusHtml(){
     return `<div class="ai-status checking"><span class="ai-spinner"></span><div style="flex:1;"><b>Chargement du modèle IA… ${pct}%</b>
       <div class="ai-loadbar"><div class="ai-loadbar-fill" style="width:${pct}%;"></div></div>
       <div class="s">${escapeHtml(state.aiLoadText || "Téléchargement en cours…")}${detailBits.length ? "<br>" + escapeHtml(detailBits.join(" · ")) : ""}<br>Ne ferme pas cet onglet. Ce téléchargement ne se fera qu'une seule fois : il sera ensuite conservé en cache par ton navigateur.</div>
-      <button class="btn outline small" id="ai-cancel-load" style="margin-top:10px;">✕ Annuler le chargement</button>
+      <button class="btn outline small" id="ai-cancel-load" style="margin-top:10px;">Annuler le chargement</button>
       </div></div>`;
   }
 
@@ -12524,7 +12698,7 @@ function aiStatusHtml(){
       ${state.aiDiagnostic ? aiDiagnosticHtml(state.aiDiagnostic) : `<div class="s">${escapeHtml(state.aiError || "Erreur inconnue.")}</div>`}
       ${aiModelPickerHtml()}
       <div style="margin-top:10px; display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-        <button class="btn red small" id="ai-load-btn">🔄 Réessayer</button>
+        <button class="btn red small" id="ai-load-btn">Réessayer</button>
         <button class="btn-text" id="ai-reset-cache">Réinitialiser le cache IA</button>
       </div>
       ${state.aiCacheResetMsg ? `<div class="s" style="margin-top:8px;">${escapeHtml(state.aiCacheResetMsg)}</div>` : ""}
@@ -12697,13 +12871,13 @@ function assistantMessageActionsHtml(){
   if(!intent || state.aiBusy) return "";
   if(!state.aiThread.length || state.aiThread[state.aiThread.length-1].role !== "assistant") return "";
   if(intent === "today" || intent === "revise"){
-    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-revise-now">🧠 ${t("assistant.action_revise_now")}</button></div>`;
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-revise-now">${t("assistant.action_revise_now")}</button></div>`;
   }
   if(intent === "planning"){
-    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-open-planning">📅 ${t("assistant.action_open_planning")}</button></div>`;
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-open-planning">${t("assistant.action_open_planning")}</button></div>`;
   }
   if(intent === "errors"){
-    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-review-errors">🔁 ${t("assistant.action_review_errors")}</button></div>`;
+    return `<div class="ai-msg-actions"><button type="button" class="btn-text" id="ai-action-review-errors">${t("assistant.action_review_errors")}</button></div>`;
   }
   return "";
 }
@@ -12733,7 +12907,7 @@ function renderAssistantModeChipsHtml(){
   ];
   return `<div class="ai-modechips" role="group" aria-label="${t("assistant.panel_title")}">
     ${modes.map(m=>`<button type="button" class="ai-modechip" data-assistant-mode="${m.key}" ${m.enabled?"":"disabled"}>
-      <span class="ico" aria-hidden="true">${m.icon}</span><span class="t">${t(m.labelKey)}</span>
+      <span class="t">${t(m.labelKey)}</span>
     </button>`).join("")}
   </div>`;
 }
@@ -12747,10 +12921,10 @@ function assistantNoAiFallbackHtml(){
     <p class="s">${t("assistant.noai_body")}</p>
     <div class="ai-noai-actions">
       <button type="button" class="btn-text" data-assistant-goto="smart">${t("nav.smart_revision")}</button>
-      <button type="button" class="btn-text" data-assistant-goto="quiz">📝 ${t("nav.activities_quiz")}</button>
-      <button type="button" class="btn-text" data-assistant-goto="flash">🃏 ${t("nav.activities_flash")}</button>
-      <button type="button" class="btn-text" data-assistant-goto="stats">📊 ${t("stats.title")}</button>
-      <button type="button" class="btn-text" data-assistant-goto="planning">📅 ${t("planning.title")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="quiz">${t("nav.activities_quiz")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="flash">${t("nav.activities_flash")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="stats">${t("stats.title")}</button>
+      <button type="button" class="btn-text" data-assistant-goto="planning">${t("planning.title")}</button>
     </div>
   </div>`;
 }
@@ -12876,7 +13050,6 @@ function renderAI(){
       ${Object.entries(AI_ACTIONS).map(([k,a])=>{
         const usable = ready || a.heuristic;
         return `<button class="ai-action ${state.aiAction===k?"active":""}" data-aiaction="${k}" ${usable?"":"disabled"}>
-          <span class="ico">${a.icon}</span>
           <span class="t">${a.label}</span>
           <span class="d">${(!ready && a.heuristic) ? "Mode simplifié (sans IA)" : a.desc}</span>
         </button>`;}).join("")}
@@ -12888,7 +13061,7 @@ function renderAI(){
     const needsTopic = action.needs === "topic";
     html += `<div class="card ai-panel">
       <div class="ai-panel-head">
-        <div class="ai-panel-title">${action.icon} ${action.label}</div>
+        <div class="ai-panel-title">${action.label}</div>
         <div style="display:flex; gap:14px; align-items:center;">
           ${state.aiThread.length ? `<button class="btn-text" id="ai-clear-thread">Effacer la conversation</button>` : ""}
           <button class="btn-text" id="ai-close">Fermer</button>
@@ -12916,23 +13089,23 @@ function renderAI(){
       html += `<details class="ai-extra">
         <summary>Joindre un document (optionnel)</summary>
         <div class="ai-filezone" id="ai-filezone" role="button" tabindex="0" aria-label="Ajouter un fichier texte">
-          <div class="txt">📎 Ajouter un fichier texte</div>
+          <div class="txt">Ajouter un fichier texte</div>
           <div class="sub">.txt, .md, .csv, .json — pour un PDF ou un Word, colle le texte dans le champ ci-dessus</div>
         </div>
         <input type="file" id="ai-file-input" multiple accept=".txt,.md,.csv,.json,.markdown" style="display:none;">
         ${state.aiFiles.length > 0 ? `<div class="ai-filelist">${state.aiFiles.map((f,i)=>`
-          <div class="ai-fileitem"><span class="fname">📄 ${escapeHtml(f.name)}</span><button data-removefile="${i}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button></div>`).join("")}</div>` : ""}
+          <div class="ai-fileitem"><span class="fname">${escapeHtml(f.name)}</span><button data-removefile="${i}" aria-label="Retirer ${escapeHtml(f.name)}">✕</button></div>`).join("")}</div>` : ""}
       </details>`;
 
       html += `<div class="ai-generate-row">
         <span class="ai-charcount">${state.aiContextLabel ? escapeHtml(state.aiContextLabel) : defaultContextLabel(state.aiAction)}</span>
         <span style="display:flex; gap:10px;">
-          ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">✕ Annuler</button>` : ""}
+          ${state.aiBusy ? `<button class="btn outline" id="ai-cancel-btn">Annuler</button>` : ""}
           <button class="btn red" id="ai-run-btn" ${aiEngineBusy() || !(ready || (action && action.heuristic)) ? "disabled" : ""}>${state.aiBusy ? "En cours…" : (state.aiThread.length ? "Relancer" : "Lancer")}</button>
         </span>
       </div>`;
       if(!ready && action && action.heuristic){
-        html += `<p class="ai-hint" style="margin-top:6px;">⚙️ IA locale indisponible : ce bouton utilisera le <b>mode simplifié</b> (règles locales, sans modèle), à partir de la fiche de ce chapitre. Si le chapitre n'a pas assez de définitions repérables, un message clair te le dira plutôt qu'un faux résultat.</p>`;
+        html += `<p class="ai-hint" style="margin-top:6px;">IA locale indisponible : ce bouton utilisera le <b>mode simplifié</b> (règles locales, sans modèle), à partir de la fiche de ce chapitre. Si le chapitre n'a pas assez de définitions repérables, un message clair te le dira plutôt qu'un faux résultat.</p>`;
       }
     } else if(state.aiContextLabel){
       html += `<div class="ai-generate-row"><span class="ai-charcount">${escapeHtml(state.aiContextLabel)}</span></div>`;
@@ -13142,14 +13315,14 @@ function renderActivities(){
         <div class="dash-card-eyebrow">Reprendre ma dernière activité</div>
         <div style="font-weight:800;font-size:15px;">${rcSubject ? escapeHtml(rcSubject.name) + " — " : ""}${escapeHtml(rcChapter.title)}</div>
       </div>
-      <button class="btn red" id="act-continue-btn">▶️ Reprendre</button>
+      <button class="btn red" id="act-continue-btn">Reprendre</button>
     </div>`;
   }
 
   html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(3,1fr);">
-    <button class="ai-action" id="act-quiz"><span class="ico">🧠</span><span class="t">Quiz</span><span class="d">Teste tes connaissances sur une matière ou un chapitre.</span></button>
-    <button class="ai-action" id="act-flash"><span class="ico">🃏</span><span class="t">Flashcards</span><span class="d">Mémorise les notions importantes.</span></button>
-    <button class="ai-action" id="act-oral"><span class="ico">🎤</span><span class="t">Interrogation orale</span><span class="d">Prépare-toi à répondre à l'oral, question par question.</span></button>
+    <button class="ai-action" id="act-quiz"><span class="t">Quiz</span><span class="d">Teste tes connaissances sur une matière ou un chapitre.</span></button>
+    <button class="ai-action" id="act-flash"><span class="t">Flashcards</span><span class="d">Mémorise les notions importantes.</span></button>
+    <button class="ai-action" id="act-oral"><span class="t">Interrogation orale</span><span class="d">Prépare-toi à répondre à l'oral, question par question.</span></button>
   </div>`;
 
   html += `<div class="card" style="margin-bottom:22px;">
@@ -13159,7 +13332,7 @@ function renderActivities(){
   </div>`;
 
   if(wrongCount > 0){
-    html += `<p class="dash-empty">Tu as ${wrongCount} question${wrongCount>1?"s":""} à revoir en priorité. <button class="btn-text" id="act-review-link" style="padding:0;">Voir la liste →</button></p>`;
+    html += `<p class="dash-empty">Tu as ${wrongCount} question${wrongCount>1?"s":""} à revoir en priorité. <button class="btn-text" id="act-review-link" style="padding:0;">Voir la liste</button></p>`;
   }
 
   return html;
@@ -13197,7 +13370,7 @@ function renderOral(){
   `;
 
   if(subjects.length === 0){
-    html += `<div class="empty-state"><div class="big">📭</div>Aucune matière pour l'instant.<br>Ajoute une matière et un chapitre pour commencer à t'entraîner à l'oral.</div>`;
+    html += `<div class="empty-state">Aucune matière pour l'instant.<br>Ajoute une matière et un chapitre pour commencer à t'entraîner à l'oral.</div>`;
     return html;
   }
 
@@ -13206,7 +13379,7 @@ function renderOral(){
     const chs = chaptersOfSubject(s.id);
     if(chs.length === 0) return;
     anyChapter = true;
-    html += `<div class="level-heading"><span class="icon" style="background:${s.color}22;border-radius:8px;padding:2px 6px;">${s.icon||"📘"}</span><span class="name">${escapeHtml(s.name)}</span><span class="line"></span></div>`;
+    html += `<div class="level-heading"><span class="icon" style="background:${s.color}22;border-radius:8px;padding:2px 6px;">${escapeHtml(subjectMark(s))}</span><span class="name">${escapeHtml(s.name)}</span><span class="line"></span></div>`;
     chs.forEach(ch=>{
       html += `<div class="chapter" data-oral-chapter="${ch.id}" style="cursor:pointer;">
         <div class="chapter-head">
@@ -13216,7 +13389,7 @@ function renderOral(){
             <p>${escapeHtml(ch.desc||"")}</p>
           </div>
           <div class="chapter-headright">
-            <span class="btn red small" style="pointer-events:none;">🎤 Réviser à l'oral</span>
+            <span class="btn red small" style="pointer-events:none;">Réviser à l'oral</span>
           </div>
         </div>
       </div>`;
@@ -13224,7 +13397,7 @@ function renderOral(){
   });
 
   if(!anyChapter){
-    html += `<div class="empty-state"><div class="big">📄</div>Aucun chapitre pour l'instant.<br>Ajoute des chapitres à tes matières pour t'entraîner à l'oral.</div>`;
+    html += `<div class="empty-state">Aucun chapitre pour l'instant.<br>Ajoute des chapitres à tes matières pour t'entraîner à l'oral.</div>`;
   }
 
   return html;
@@ -13770,7 +13943,7 @@ function abortSmartSession(){
 const SMART_ERROR_REASON_KEYS = ["smart.reason_recurring_errors", "smart.reason_errors_recent", "smart.reason_declining_trend"];
 
 function smartReasonHtml(item){
-  const icon = SMART_ERROR_REASON_KEYS.includes(item.reasonKey) ? "⚠️" : "💡";
+  const icon = "";
   return `<span class="sr-reason">${icon} ${t(item.reasonKey, item.reasonVars || {})}</span>`;
 }
 
@@ -13790,17 +13963,17 @@ function smartRecoCardHtml(item){
   const tier = item.mastery !== null ? masteryTier(item.mastery) : null;
   return `<div class="sr-card">
     <div class="sr-card-top">
-      <span class="sr-card-subject">${subject ? (subject.icon || "📘") + " " + escapeHtml(subject.name) : ""}</span>
+      <span class="sr-card-subject">${subject ? subjectMark(subject) + " " + escapeHtml(subject.name) : ""}</span>
       ${showConfidence ? `<span class="sr-confidence">${t("smart.confidence_low")}</span>` : ""}
     </div>
     <h3 class="sr-card-title">${escapeHtml(item.title)}</h3>
     ${item.mastery !== null ? `<div class="sr-card-mastery"><span class="m-chip ${tier.key}">${t("smart.mastery_label", {pct: item.mastery})}</span></div>` : ""}
     ${smartReasonHtml(item)}
     <div class="sr-card-meta">
-      <span class="sr-card-mode">${modeInfo.icon} ${modeInfo.label}</span>
+      <span class="sr-card-mode">${modeInfo.label}</span>
       <span class="sr-card-time">~${item.estimatedMinutes} min</span>
     </div>
-    <button class="btn red small" data-smart-start-one="${item.chapterId}">${t("smart.review_now_btn")} →</button>
+    <button class="btn outline small" data-smart-start-one="${item.chapterId}">${t("smart.review_now_btn")}</button>
   </div>`;
 }
 
@@ -13814,7 +13987,7 @@ function renderSmartHome(){
     || state.userChapters.some(ch => userChapterProgress(ch) !== null);
   const hasChapters = allChaptersFlat().length > 0;
 
-  let html = `<h1 class="page-title">🧠 ${t("smart.title")}</h1>
+  let html = `<h1 class="page-title">${t("smart.title")}</h1>
     <p class="ai-intro">${t("smart.subtitle")}</p>`;
 
   if(!hasAnyData){
@@ -13879,7 +14052,7 @@ function renderSmartRecap(){
   const notionsCount = new Set(s.results.map(r=>r.chapterId).filter(Boolean)).size;
   const elapsedSeconds = s.finishedAt ? Math.max(0, Math.round((s.finishedAt - s.startedAt)/1000)) : 0;
 
-  let html = `<h1 class="page-title">${t("smart.recap_title")} 🎉</h1>`;
+  let html = `<h1 class="page-title">${t("smart.recap_title")}</h1>`;
 
   html += `<div class="dash-section"><div class="pg-overview">`;
   if(totalQuestions > 0){
@@ -13914,7 +14087,7 @@ function renderSmartRecap(){
     html += `<div class="dash-section">
       <div class="section-title">${t("smart.recap_soon_title")}</div>
       <div class="pg-review-list">${soon.map(r=>`<div class="pg-review-item" style="cursor:default;">
-        <span class="pg-review-dot">🟠</span>
+        
         <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(r.title)}</span></span>
       </div>`).join("")}</div>
     </div>`;
@@ -14043,7 +14216,7 @@ function renderStatsOverview(){
     || QUESTIONS.some(q => qstat(q))
     || state.userChapters.some(ch => userChapterProgress(ch) !== null);
 
-  let html = `<h1 class="page-title">📊 ${t("stats.title")}</h1>
+  let html = `<h1 class="page-title">${t("stats.title")}</h1>
     <p class="ai-intro">${t("stats.subtitle")}</p>`;
 
   if(!hasAnyData){
@@ -14118,9 +14291,9 @@ function renderStatsOverview(){
     html += `<div class="pg-review-list">` + errorItems.map(item=>{
       const subj = findSubject(item.subjectId);
       return `<button type="button" class="pg-review-item" data-stats-chapter="${item.chapterId}">
-        <span class="pg-review-dot">${item.value >= 6 ? "🔴" : "🟠"}</span>
-        <span class="pg-review-body"><span class="pg-review-title">${subj ? (subj.icon||"📘")+" " : ""}${escapeHtml(item.title)}</span><span class="pg-review-sub">${t("progress.review_errors_recent", {n: item.value})}</span></span>
-        <span class="pg-review-arrow" aria-hidden="true">→</span>
+        
+        <span class="pg-review-body"><span class="pg-review-title">${subj ? subjectMark(subj)+" " : ""}${escapeHtml(item.title)}</span><span class="pg-review-sub">${t("progress.review_errors_recent", {n: item.value})}</span></span>
+        <span class="pg-review-arrow" aria-hidden="true"></span>
       </button>`;
     }).join("") + `</div>`;
   }
@@ -14138,7 +14311,7 @@ function renderStatsOverview(){
       const tier = statusTier(ss.mastery === null ? null : { best: ss.mastery });
       return `<div class="pg-subject-card" data-stats-subject="${subj.id}" role="button" tabindex="0">
         <div class="pg-subject-head">
-          <span class="pg-subject-name">${subj.icon||"📘"} ${escapeHtml(subj.name)}</span>
+          <span class="pg-subject-name">${escapeHtml(subjectMark(subj))} ${escapeHtml(subj.name)}</span>
           <span class="mastery ${tier.key}">${ss.mastery===null?"—":ss.mastery+"%"}</span>
         </div>
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${subj.color};"></div></div>
@@ -14147,7 +14320,7 @@ function renderStatsOverview(){
           ${ss.questionsTotal ? `<span>${ss.questionsAnswered}/${ss.questionsTotal} ${t("progress.questions_tile").toLowerCase()}</span>` : ""}
           ${ss.successRate !== null ? `<span>${ss.successRate}% ${t("stats.success_rate").toLowerCase()}</span>` : ""}
         </div>
-        <button class="btn-text" data-stats-subject-btn="${subj.id}">${t("stats.view_details")} →</button>
+        <button class="btn-text" data-stats-subject-btn="${subj.id}">${t("stats.view_details")}</button>
       </div>`;
     }).join("") + `</div>`;
   }
@@ -14174,7 +14347,7 @@ function renderStatsOverview(){
     const groups = groupActivityByDay(state.dash.recentActivity.slice(0, 15));
     html += `<div class="pg-timeline">` + groups.map(g=>{
       const items = g.items.map(a=>{
-        const icon = a.type === "quiz" ? "📝" : (a.type === "exam" ? "🎓" : "🃏");
+        const icon = "";
         const typeLbl = a.type === "quiz" ? t("progress.activity_type_quiz") : (a.type === "exam" ? t("progress.activity_type_exam") : t("progress.activity_type_flash", {n: a.total}));
         return `<div class="pg-timeline-item"><span class="ico">${icon}</span><span class="txt">${typeLbl} — ${escapeHtml(a.label)}</span><span class="pct">${a.pct}%</span></div>`;
       }).join("");
@@ -14197,8 +14370,8 @@ function renderStatsSubjectDetail(subjectId){
   if(!ss){ statsGoTo("overview"); return ""; }
   const tier = statusTier(ss.mastery === null ? null : { best: ss.mastery });
 
-  let html = `<button class="btn-text" id="stats-back-overview">← ${t("stats.title")}</button>`;
-  html += `<h1 class="page-title tight">${ss.icon||"📘"} ${escapeHtml(ss.name)}</h1>`;
+  let html = `<button class="btn-text" id="stats-back-overview">${t("stats.title")}</button>`;
+  html += `<h1 class="page-title tight">${escapeHtml(subjectMark(ss))} ${escapeHtml(ss.name)}</h1>`;
 
   html += `<div class="pg-overview">
     <div class="pg-tile"><div class="pg-tile-num">${ss.mastery===null?"—":ss.mastery+"%"}</div><div class="pg-tile-lbl">${t("progress.mastery_tile")}</div></div>
@@ -14214,9 +14387,9 @@ function renderStatsSubjectDetail(subjectId){
       const chTier = cs.mastery === null ? null : masteryTier(cs.mastery);
       const trendIcon = cs.trend === "up" ? "↑" : (cs.trend === "down" ? "↓" : "");
       return `<button type="button" class="pg-review-item" data-stats-chapter="${cs.chapterId}">
-        <span class="pg-review-dot">${chTier ? (chTier.key==="critical"||chTier.key==="weak" ? "🟠" : "🟢") : "⚪"}</span>
+        
         <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(cs.title)}</span><span class="pg-review-sub">${cs.mastery===null ? t("stats.never_evaluated") : cs.mastery+"% " + trendIcon}</span></span>
-        <span class="pg-review-arrow" aria-hidden="true">→</span>
+        <span class="pg-review-arrow" aria-hidden="true"></span>
       </button>`;
     }).join("") + `</div>
   </div>`;
@@ -14230,7 +14403,7 @@ function renderStatsChapterDetail(chapterId){
   const subj = findSubject(cs.subjectId);
   const isRecommended = getSmartRevisionRecommendations().some(r => r.chapterId === chapterId);
 
-  let html = `<button class="btn-text" id="stats-back-subject" data-back-subject="${cs.subjectId}">← ${subj ? escapeHtml(subj.name) : t("stats.title")}</button>`;
+  let html = `<button class="btn-text" id="stats-back-subject" data-back-subject="${cs.subjectId}">${subj ? escapeHtml(subj.name) : t("stats.title")}</button>`;
   html += `<h1 class="page-title tight">${escapeHtml(cs.title)}</h1>`;
 
   html += `<div class="pg-overview">
@@ -14262,7 +14435,7 @@ function renderStatsChapterDetail(chapterId){
 
   html += `<div class="dash-section">
     ${isRecommended ? `<p class="pg-mastery-note" style="margin-bottom:10px;">${t("stats.chapter_is_priority")}</p>` : ""}
-    <button class="btn red" id="stats-revise-btn" data-stats-revise="${chapterId}">${t("smart.review_now_btn")} →</button>
+    <button class="btn red" id="stats-revise-btn" data-stats-revise="${chapterId}">${t("smart.review_now_btn")}</button>
   </div>`;
 
   return html;
@@ -14692,7 +14865,7 @@ function renderProgress(){
       ${renderMasteryRing(g.mastery)}
       <div class="pg-mastery-side">
         <div class="pg-mastery-stat"><b>${g.successRate===null?"—":g.successRate+"%"}</b><span>${t("dashboard.questions_worked")}: ${g.answered}/${g.total}</span></div>
-        <div class="pg-mastery-stat"><b>🔥 ${streaks.current}</b><span>${t("progress.streak_label")}</span></div>
+        <div class="pg-mastery-stat"><b>${streaks.current}</b><span>${t("progress.streak_label")}</span></div>
         <p class="pg-mastery-note">${t("progress.mastery_note")}</p>
       </div>
     </div>
@@ -14713,7 +14886,7 @@ function renderProgress(){
       const weak = subjectWeakNotionsCount(s.id);
       html += `<div class="pg-subject-card">
         <div class="pg-subject-head">
-          <span class="pg-subject-name">${s.icon||"📘"} ${escapeHtml(s.name)}</span>
+          <span class="pg-subject-name">${escapeHtml(subjectMark(s))} ${escapeHtml(s.name)}</span>
           <span class="mastery ${tier.key}">${prog===null?"—":prog+"%"}</span>
         </div>
         <div class="deckbar-track"><div class="deckbar-fill ${tier.key}" style="width:${tier.pct}%;background:${s.color};"></div></div>
@@ -14722,7 +14895,7 @@ function renderProgress(){
           ${qCount ? `<span>${qCount} ${t("progress.questions_tile").toLowerCase()}</span>` : ""}
           ${weak !== null && weak > 0 ? `<span>${t("progress.weak_notions", {n: weak})}</span>` : ""}
         </div>
-        <button class="btn-text" data-subject-continue="${s.id}">${t("progress.continue_btn")} →</button>
+        <button class="btn-text" data-subject-continue="${s.id}">${t("progress.continue_btn")}</button>
       </div>`;
     });
     html += `</div>`;
@@ -14738,12 +14911,12 @@ function renderProgress(){
   } else {
     html += `<div class="pg-review-list">` + toReview.map(item=>{
       const sev = reviewItemSeverity(item);
-      const dot = sev === "high" ? "🔴" : "🟠";
+      const dot = "";
       const label = item.kind === "errors" ? t("progress.review_errors_recent", {n: item.value}) : t("progress.review_low_score", {pct: item.value});
       return `<button type="button" class="pg-review-item" data-review-chapter="${item.chapterId}" data-review-subject="${item.subjectId}">
         <span class="pg-review-dot">${dot}</span>
         <span class="pg-review-body"><span class="pg-review-title">${escapeHtml(item.title)}</span><span class="pg-review-sub">${label}</span></span>
-        <span class="pg-review-arrow" aria-hidden="true">→</span>
+        <span class="pg-review-arrow" aria-hidden="true"></span>
       </button>`;
     }).join("") + `</div>`;
   }
@@ -14758,7 +14931,7 @@ function renderProgress(){
   } else {
     html += `<div class="pg-recommend-card">
       <div class="pg-recommend-body">
-        <span class="pg-recommend-ico">📚</span>
+        
         <div>
           <div class="pg-recommend-title">${escapeHtml(reco.title)}</div>
           <p class="pg-recommend-reason">${reco.kind === "errors" ? t("progress.recommend_reason_errors") : t("progress.recommend_reason_score")}</p>
@@ -14794,7 +14967,7 @@ function renderProgress(){
     });
     html += `<div class="pg-timeline">` + groups.map(g2=>{
       const items = g2.items.map(a=>{
-        const icon = a.type === "quiz" ? "📝" : (a.type === "exam" ? "🎓" : "🃏");
+        const icon = "";
         const typeLbl = a.type === "quiz" ? t("progress.activity_type_quiz") : (a.type === "exam" ? t("progress.activity_type_exam") : t("progress.activity_type_flash", {n: a.total}));
         return `<div class="pg-timeline-item"><span class="ico">${icon}</span><span class="txt">${typeLbl} — ${escapeHtml(a.label)}</span><span class="pct">${a.pct}%</span></div>`;
       }).join("");
@@ -15054,7 +15227,6 @@ function renderAccountSection(){
 
   if(state.accountUI.pendingConfirmationEmail){
     return `<div class="auth-confirm" id="account-section">
-      <span class="ico">📧</span>
       <div>
         <h2>${t("auth.check_email_title")}</h2>
         <p>${t("auth.check_email_body", {email: "<b>" + escapeHtml(state.accountUI.pendingConfirmationEmail) + "</b>"})}</p>
@@ -15117,7 +15289,7 @@ function attachAccountEvents(){
       const el = document.getElementById("account-form-msg");
       if(!el) return;
       el.innerHTML = text
-        ? `<div class="auth-msg" style="color:${isError ? "var(--red-dark)" : "var(--green)"};"><span class="ico">${isError ? "⚠️" : "✓"}</span><span>${escapeHtml(text)}</span></div>`
+        ? `<div class="auth-msg" style="color:${isError ? "var(--red-dark)" : "var(--green)"};"><span>${escapeHtml(text)}</span></div>`
         : "";
     };
     const email = document.getElementById("account-email").value.trim();
@@ -15338,11 +15510,11 @@ function renderMySpace(){
 
     <div class="section-title" style="margin-top:22px;">${t("myspace.shortcuts_title")}</div>
     <div class="myspace-shortcuts-grid" style="margin-bottom:22px;">
-      <button class="myspace-shortcut" id="myspace-library-btn"><span class="ico">📚</span><span class="txt"><span class="t">${t("myspace.shortcut_subjects")}</span><span class="d">${t("myspace.shortcut_subjects_desc")}</span></span></button>
-      <button class="myspace-shortcut" id="myspace-ai-btn"><span class="ico">🤖</span><span class="txt"><span class="t">${t("myspace.shortcut_ai")}</span><span class="d">${t("myspace.shortcut_ai_desc")}</span></span></button>
-      <button class="myspace-shortcut" id="myspace-planning-btn"><span class="ico">🗓️</span><span class="txt"><span class="t">${t("myspace.shortcut_planning")}</span><span class="d">${t("myspace.shortcut_planning_desc")}</span></span></button>
-      <button class="myspace-shortcut" id="myspace-activities-btn"><span class="ico">🎯</span><span class="txt"><span class="t">${t("myspace.shortcut_activities")}</span><span class="d">${t("myspace.shortcut_activities_desc")}</span></span></button>
-      <button class="myspace-shortcut" id="myspace-settings-btn"><span class="ico">⚙️</span><span class="txt"><span class="t">${t("myspace.shortcut_settings")}</span><span class="d">${t("myspace.shortcut_settings_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-library-btn"><span class="txt"><span class="t">${t("myspace.shortcut_subjects")}</span><span class="d">${t("myspace.shortcut_subjects_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-ai-btn"><span class="txt"><span class="t">${t("myspace.shortcut_ai")}</span><span class="d">${t("myspace.shortcut_ai_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-planning-btn"><span class="txt"><span class="t">${t("myspace.shortcut_planning")}</span><span class="d">${t("myspace.shortcut_planning_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-activities-btn"><span class="txt"><span class="t">${t("myspace.shortcut_activities")}</span><span class="d">${t("myspace.shortcut_activities_desc")}</span></span></button>
+      <button class="myspace-shortcut" id="myspace-settings-btn"><span class="txt"><span class="t">${t("myspace.shortcut_settings")}</span><span class="d">${t("myspace.shortcut_settings_desc")}</span></span></button>
     </div>
 
     ${authed ? renderInfoCard() : ""}
@@ -15444,7 +15616,7 @@ function accountEditModalHtml(){
         <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">${t("account.email_readonly")}</span></div>
       </div>
 
-      <div id="account-edit-msg">${d.error ? `<div class="auth-msg" style="color:var(--red-dark);"><span class="ico">⚠️</span><span>${escapeHtml(d.error)}</span></div>` : ""}</div>
+      <div id="account-edit-msg">${d.error ? `<div class="auth-msg" style="color:var(--red-dark);"><span>${escapeHtml(d.error)}</span></div>` : ""}</div>
 
       <div class="actions" style="justify-content:flex-end;margin-top:8px;">
         <button class="btn-text" id="account-modal-cancel" type="button">${t("account.cancel")}</button>
@@ -16356,7 +16528,7 @@ function courseAIStatusHtml(){
   }
   if(state.aiStatus === "nogpu"){
     const diag = state.aiGpuDiag;
-    return `<div class="cw-ai-status ko">⚠️ ${escapeHtml(diag ? diag.message : "Assistant IA indisponible sur cet appareil.")} La prise de notes reste disponible normalement.</div>`;
+    return `<div class="cw-ai-status ko">${escapeHtml(diag ? diag.message : "Assistant IA indisponible sur cet appareil.")} La prise de notes reste disponible normalement.</div>`;
   }
   if(state.aiStatus === "loading" && state.courseAIUI.activeEventId === state.planning.selectedEventId){
     const pct = Math.max(0, Math.min(100, state.aiLoadProgress || 0));
@@ -16364,10 +16536,10 @@ function courseAIStatusHtml(){
       <div class="ai-loadbar" style="margin-top:6px;width:100%;"><div class="ai-loadbar-fill" style="width:${pct}%;"></div></div></div>`;
   }
   if(state.aiStatus === "error"){
-    return `<div class="cw-ai-status ko">⚠️ Le chargement de l'IA a échoué. <button class="btn-text" id="cw-ai-retry">Réessayer</button></div>`;
+    return `<div class="cw-ai-status ko">Le chargement de l'IA a échoué. <button class="btn-text" id="cw-ai-retry">Réessayer</button></div>`;
   }
   if(state.aiStatus === "idle"){
-    return `<div class="cw-ai-status idle">💤 Assistant IA disponible — clique sur une action pour le lancer (premier lancement : téléchargement unique du modèle).</div>`;
+    return `<div class="cw-ai-status idle">Assistant IA disponible — clique sur une action pour le lancer (premier lancement : téléchargement unique du modèle).</div>`;
   }
   return "";
 }
@@ -16379,7 +16551,7 @@ function courseAiDraftHtml(m, cd, eventId){
     return `<div class="ai-draft">
       <div class="ai-draft-head"><b>${arr.length} flashcards générées</b></div>
       ${arr.map(c=>`<div class="ai-draftcard"><div class="f">${escapeHtml(c.front)}</div><div class="b">${escapeHtml(c.back)}</div></div>`).join("")}
-      <button class="btn-text" id="cw-ai-copy-cards" style="margin-top:4px;">📋 Copier toutes les cartes</button>
+      <button class="btn-text" id="cw-ai-copy-cards" style="margin-top:4px;">Copier toutes les cartes</button>
     </div>`;
   }
   const qi = Math.max(0, Math.min(arr.length - 1, state.courseAIUI.quizIndex || 0));
@@ -16391,8 +16563,8 @@ function courseAiDraftHtml(m, cd, eventId){
       ${state.courseAIUI.quizRevealed ? `<div class="b">${escapeHtml(q.a)}</div>` : `<button class="btn-text" id="cw-ai-quiz-reveal">Afficher la réponse</button>`}
     </div>
     <div style="display:flex;gap:8px;margin-top:6px;">
-      ${qi > 0 ? `<button class="btn-text" id="cw-ai-quiz-prev">← Précédente</button>` : ""}
-      ${qi < arr.length - 1 ? `<button class="btn-text" id="cw-ai-quiz-next">Suivante →</button>` : ""}
+      ${qi > 0 ? `<button class="btn-text" id="cw-ai-quiz-prev">Précédente</button>` : ""}
+      ${qi < arr.length - 1 ? `<button class="btn-text" id="cw-ai-quiz-next">Suivante</button>` : ""}
     </div>
   </div>`;
 }
@@ -16418,8 +16590,8 @@ function courseAiThreadHtml(eventId, cd){
       html += `<div class="ai-bubble assistant">
         <div class="ai-result-body">${renderAIMarkdown(m.content.replace(/\n\n\*\(génération interrompue\)\*$/,""))}</div>
         <div class="cw-ai-msgactions">
-          <button class="btn-text" data-ai-copy="${realIdx}">📋 Copier</button>
-          <button class="btn-text" data-ai-insert="${realIdx}">➕ Insérer dans mes notes</button>
+          <button class="btn-text" data-ai-copy="${realIdx}">Copier</button>
+          <button class="btn-text" data-ai-insert="${realIdx}">Insérer dans mes notes</button>
         </div>
       </div>`;
     }
@@ -16443,7 +16615,7 @@ function courseAiPanelHtml(e, cd){
 
   let html = `<div class="cw-aiside ${collapsed ? "collapsed" : ""} ${mobileOpen ? "is-open" : ""}" id="cw-aiside">
     <div class="cw-ai-header">
-      <span class="cw-ai-title">🤖 Assistant IA du cours</span>
+      <span class="cw-ai-title">Assistant IA du cours</span>
       <button type="button" class="cw-ai-closebtn" id="cw-ai-close-btn" aria-label="Fermer l'assistant IA" title="Fermer l'assistant IA">
         <span aria-hidden="true">✕</span><span class="txt">Fermer l'assistant IA</span>
       </button>
@@ -16456,11 +16628,11 @@ function courseAiPanelHtml(e, cd){
     html += `<div class="cw-ai-actions">
       ${Object.entries(COURSE_AI_ACTIONS).map(([k,a])=>`
         <button class="cw-ai-action" data-course-ai-action="${k}" ${busy ? "disabled" : ""}>
-          <span class="ico">${a.icon}</span><span class="t">${a.label}</span>
+          <span class="t">${a.label}</span>
         </button>`).join("")}
     </div>
     <div class="cw-ai-selection-row">
-      <button class="btn-text" id="cw-ai-reformulate-selection" ${busy ? "disabled" : ""}>✨ Reformuler la sélection dans mes notes</button>
+      <button class="btn-text" id="cw-ai-reformulate-selection" ${busy ? "disabled" : ""}>Reformuler la sélection dans mes notes</button>
       ${state.courseAIUI.selectionHint ? `<div class="cw-ai-hint">${escapeHtml(state.courseAIUI.selectionHint)}</div>` : ""}
     </div>`;
   }
@@ -16473,14 +16645,14 @@ function courseAiPanelHtml(e, cd){
     html += `<div class="cw-ai-composer">
       <textarea id="cw-ai-question" class="ai-textarea" placeholder="Pose une question libre… (Entrée pour envoyer, Maj+Entrée = retour à la ligne)" style="min-height:56px;">${escapeHtml(state.courseAIUI.question)}</textarea>
       <div class="cw-ai-composer-row">
-        ${busy ? `<button class="btn outline small" id="cw-ai-cancel-btn">✕ Annuler</button>` : ""}
+        ${busy ? `<button class="btn outline small" id="cw-ai-cancel-btn">Annuler</button>` : ""}
         <button class="btn red small" id="cw-ai-send-btn" ${(!state.courseAIUI.question.trim() || busy) ? "disabled" : ""}>${busy ? "En cours…" : "Envoyer à l'IA"}</button>
       </div>
     </div>`;
   }
 
   if(hasConvo){
-    html += `<button class="btn-text" id="cw-ai-clear" style="margin-top:10px;color:var(--red-dark);">🗑️ Effacer la conversation IA</button>`;
+    html += `<button class="btn-text" id="cw-ai-clear" style="margin-top:10px;color:var(--red-dark);">Effacer la conversation IA</button>`;
   }
 
   html += `</div></div>`;
@@ -16493,7 +16665,7 @@ function courseWorkspaceModalHtml(e, opts){
   const durMin = e.end ? Math.round((e.end - e.start) / 60000) : 0;
   const status = getCourseStatus(e);
   const cd = getCourseData(e.id);
-  const statusLabel = status === "current" ? "🟢 En cours" : (status === "past" ? "Terminé" : "À venir");
+  const statusLabel = status === "current" ? "En cours" : (status === "past" ? "Terminé" : "À venir");
 
   let progressHtml = "";
   if(status === "current" && !e.allDay && e.end){
@@ -16524,7 +16696,7 @@ function courseWorkspaceModalHtml(e, opts){
         <button class="btn-text" id="cal-modal-close" aria-label="Fermer les détails">✕</button>
       </div>
       <button type="button" class="cw-ai-openbtn ${!state.planning.aiPanelOpenMobile ? "mobile-show" : ""} ${state.planning.aiPanelCollapsed ? "desktop-show" : ""}" id="cw-ai-open-btn" aria-label="Ouvrir l'assistant IA" title="Ouvrir l'assistant IA">
-        <span aria-hidden="true">🤖</span><span class="txt">Assistant IA</span>
+        <span class="txt">Assistant IA</span>
       </button>
       <div class="cw-badges"><span class="cw-badge ${status}">${statusLabel}</span></div>
       ${progressHtml}
@@ -16536,7 +16708,7 @@ function courseWorkspaceModalHtml(e, opts){
         ${e.organizer ? `<li><span>Professeur</span><b>${escapeHtml(e.organizer)}</b></li>` : ""}
       </ul>
       ${e.description ? `<p style="font-size:12.5px;color:var(--ink-soft);margin:12px 0 0;line-height:1.6;">${escapeHtml(e.description)}</p>` : ""}
-      ${subj ? `<button class="btn outline small" data-open-event-subject="${subj.id}" style="margin-top:14px;">Voir la matière : ${escapeHtml(subj.name)} →</button>` : ""}
+      ${subj ? `<button class="btn outline small" data-open-event-subject="${subj.id}" style="margin-top:14px;">Voir la matière : ${escapeHtml(subj.name)}</button>` : ""}
 
       <div class="cw-section">
         <span class="cw-section-label">Statut de révision</span>
@@ -16572,7 +16744,7 @@ function courseWorkspaceModalHtml(e, opts){
 
       <div class="cw-actions">
         <span id="cw-save-indicator" class="cw-save-indicator"></span>
-        ${hasData ? `<button class="btn-text" id="cw-delete-notes" style="margin-left:auto;color:var(--red-dark);">🗑️ Supprimer mes notes</button>` : ""}
+        ${hasData ? `<button class="btn-text" id="cw-delete-notes" style="margin-left:auto;color:var(--red-dark);">Supprimer mes notes</button>` : ""}
       </div>
     </div>
     ${courseAiPanelHtml(e, cd)}
@@ -16641,7 +16813,7 @@ function attachCourseModalEvents(){
         saveCourseData(evId, {[COURSE_TEXT_FIELDS[id]]: ta.value});
         delete courseModalSaveTimers[id];
         const ind = document.getElementById("cw-save-indicator");
-        if(ind) ind.textContent = "Enregistré ✓";
+        if(ind) ind.textContent = "Enregistré";
       }, 500);
     });
   });
@@ -16781,7 +16953,7 @@ function renderPlanning(){
   if(hasPlanning && !configOpen){
     html += `<div class="planning-source-bar">
       <span class="s">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() : ""}</span>
-      <button class="btn-text" id="planning-toggle-config">⚙️ Modifier la source du planning</button>
+      <button class="btn-text" id="planning-toggle-config">Modifier la source du planning</button>
     </div>`;
   }
 
@@ -16789,33 +16961,33 @@ function renderPlanning(){
     html += `<div class="card" style="margin-bottom:22px;">`;
     if(hasPlanning){
       html += `<div class="dash-card-head"><div class="section-title inline">Source de mon planning</div>
-        <button class="btn-text" id="planning-toggle-config">Masquer ▲</button></div>`;
+        <button class="btn-text" id="planning-toggle-config">Masquer</button></div>`;
     } else {
       html += `<div class="section-title" style="margin-bottom:10px;">Configurer mon planning</div>`;
     }
     html += `<p class="ai-intro" style="margin:0 0 12px;">Exporte le fichier .ics depuis Makers Board (ou ton espace étudiant), puis importe-le ici. Ré-importer le même fichier met à jour les cours modifiés sans créer de doublon (basé sur l'identifiant de chaque événement). C'est actuellement la méthode la plus fiable : un site statique comme celui-ci ne peut pas toujours récupérer un calendrier distant automatiquement (CORS, authentification).</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <label class="btn outline small" style="cursor:pointer;margin:0;">⬆️ Importer / actualiser (.ics)<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
+      <label class="btn outline small" style="cursor:pointer;margin:0;">Importer / actualiser (.ics)<input type="file" id="planning-ics-input" accept=".ics,text/calendar" style="display:none;"></label>
       <span style="font-size:12px;color:var(--muted);">${state.planning.lastSyncAt ? "Dernière synchronisation : " + fmtRelativeDate(dateKey(new Date(state.planning.lastSyncAt))).toLowerCase() + " à " + new Date(state.planning.lastSyncAt).toLocaleTimeString(currentLocaleTag(),{hour:"2-digit",minute:"2-digit"}) : "Jamais synchronisé"}</span>
     </div>
     <div id="planning-import-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);">${escapeHtml(state.planning.lastImportMsg||"")}</div>
 
     <div class="section-title" style="margin:20px 0 10px;">Lien de mon planning</div>
-    <p class="ai-intro" style="margin:0 0 10px;">🔒 Reste uniquement dans ce navigateur — jamais écrit dans le code du site, jamais envoyé à un serveur ni à l'assistant IA. Champ masqué par défaut.</p>
+    <p class="ai-intro" style="margin:0 0 10px;">Reste uniquement dans ce navigateur — jamais écrit dans le code du site, jamais envoyé à un serveur ni à l'assistant IA. Champ masqué par défaut.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <input type="${state.planning.urlVisible ? "text" : "password"}" id="planning-url-input" class="ai-select" placeholder="https://..." value="${escapeHtml(state.planning.officialUrl||"")}" autocomplete="off" style="flex:1;min-width:220px;">
-      <button class="btn-text" id="planning-url-toggle-visibility" type="button" aria-label="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}" title="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}">${state.planning.urlVisible ? "🙈" : "👁️"}</button>
+      <button class="btn-text" id="planning-url-toggle-visibility" type="button" aria-label="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}" title="${state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien"}">${state.planning.urlVisible ? "Masquer" : "Afficher"}</button>
       <button class="btn outline small" id="planning-url-save">Enregistrer</button>
       ${state.planning.officialUrl ? `<button class="btn red small" id="planning-url-open">Ouvrir ↗</button>` : ""}
       ${state.planning.officialUrl ? `<button class="btn-text" id="planning-url-delete" style="color:var(--red-dark);">Supprimer le lien</button>` : ""}
     </div>
 
-    ${hasPlanning ? `<p class="dash-empty" style="margin-top:18px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer mon planning (événements importés + lien enregistré)</button></p>` : ""}
+    ${hasPlanning ? `<p class="dash-empty" style="margin-top:18px;"><button class="btn-text" id="planning-clear-btn" style="padding:0;color:var(--red-dark);">Supprimer mon planning (événements importés + lien enregistré)</button></p>` : ""}
     </div>`;
   }
 
   if(state.planning.events.length === 0){
-    html += `<div class="empty-state"><div class="big">🗓️</div>Aucun événement prévu pour cette période.<br>Importe un fichier .ics pour voir apparaître tes cours ici.</div>`;
+    html += `<div class="empty-state">Aucun événement prévu pour cette période.<br>Importe un fichier .ics pour voir apparaître tes cours ici.</div>`;
     return html;
   }
 
@@ -16841,7 +17013,7 @@ function renderPlanning(){
   html += `</div>`;
 
   if(Object.keys(state.courseData).length > 0){
-    html += `<p class="dash-empty" style="margin:14px 0 0;"><button class="btn-text" id="planning-clear-notes-btn" style="padding:0;color:var(--red-dark);">🗑️ Supprimer toutes mes notes de cours (notes, résumés, questions, checklists)</button></p>`;
+    html += `<p class="dash-empty" style="margin:14px 0 0;"><button class="btn-text" id="planning-clear-notes-btn" style="padding:0;color:var(--red-dark);">Supprimer toutes mes notes de cours (notes, résumés, questions, checklists)</button></p>`;
   }
 
   html += `<footer class="hint">Pourquoi un import manuel plutôt qu'automatique ? Un site hébergé sur GitHub Pages n'exécute aucun code serveur : il ne peut récupérer un calendrier distant que si Makers Board autorise les requêtes cross-origin (CORS) depuis un navigateur. Tant que ce point n'est pas vérifié, l'import manuel garantit un fonctionnement fiable sans exposer ton lien personnel.</footer>`;
@@ -16898,7 +17070,7 @@ function attachPlanningEvents(){
     state.planning.urlVisible = !state.planning.urlVisible;
     const input = document.getElementById("planning-url-input");
     if(input) input.type = state.planning.urlVisible ? "text" : "password";
-    urlToggleVis.textContent = state.planning.urlVisible ? "🙈" : "👁️";
+    urlToggleVis.textContent = state.planning.urlVisible ? "Masquer" : "Afficher";
     const lbl = state.planning.urlVisible ? "Masquer le lien" : "Afficher le lien";
     urlToggleVis.title = lbl;
     urlToggleVis.setAttribute("aria-label", lbl);
@@ -17021,7 +17193,7 @@ function renderStudyPlanScreen(){
 function renderStudyPlanEmpty(){
   const hasEvents = upcomingPlanningEvents(1).length > 0;
   return `<div class="dash-section pln-empty-hero">
-    <div class="pln-empty-ico">📅</div>
+    
     <h2>${t("planning.empty_title")}</h2>
     <p>${t("planning.empty_body")}</p>
     <button class="btn red" id="pln-start-wizard-btn">${t("planning.create_btn")}</button>
@@ -17060,12 +17232,12 @@ function renderWizardStepGoal(){
   return `<h2 class="pln-step-title">${t("planning.step_goal_title")}</h2>
     <div class="pln-goal-grid">
       ${goals.map(g=>`<button type="button" class="pln-goal-card ${state.studyWizard.goal===g.key?"active":""}" data-wizard-goal="${g.key}">
-        <span class="ico">${g.icon}</span><span class="lbl">${g.label}</span>
+        <span class="lbl">${g.label}</span>
       </button>`).join("")}
     </div>
     <div class="pln-wizard-actions">
       <span></span>
-      <button class="btn red" id="pln-wizard-next" ${state.studyWizard.goal?"":"disabled"}>${t("planning.next_btn")} →</button>
+      <button class="btn red" id="pln-wizard-next" ${state.studyWizard.goal?"":"disabled"}>${t("planning.next_btn")}</button>
     </div>`;
 }
 
@@ -17089,8 +17261,8 @@ function renderWizardStepDeadline(){
       <button type="button" class="btn-text" id="pln-deadline-none" style="margin-top:10px;">${t("planning.no_deadline_btn")}</button>
     </div>
     <div class="pln-wizard-actions">
-      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
-      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")} →</button>
+      <button class="btn-text" id="pln-wizard-back">${t("planning.back_btn")}</button>
+      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")}</button>
     </div>`;
 }
 
@@ -17117,8 +17289,8 @@ function renderWizardStepTime(){
       </div>
     `}
     <div class="pln-wizard-actions">
-      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
-      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")} →</button>
+      <button class="btn-text" id="pln-wizard-back">${t("planning.back_btn")}</button>
+      <button class="btn red" id="pln-wizard-next">${t("planning.next_btn")}</button>
     </div>`;
 }
 
@@ -17136,7 +17308,7 @@ function renderWizardStepSubjects(){
           const active = w.subjectIds.includes(s.id);
           return `<div class="pln-subject-block">
             <button type="button" class="pln-subject-chip ${active?"active":""}" data-wizard-subject="${s.id}">
-              ${s.icon||"📘"} ${escapeHtml(s.name)}
+              ${escapeHtml(subjectMark(s))} ${escapeHtml(s.name)}
             </button>
             ${active && chs.length ? `<div class="pln-chapter-list">
               ${chs.map(ch=>`<label class="pln-chapter-check"><input type="checkbox" data-wizard-chapter="${ch.id}" data-wizard-chapter-subject="${s.id}" ${w.chapterIds.includes(ch.id)?"checked":""}> ${escapeHtml(ch.title)}</label>`).join("")}
@@ -17146,7 +17318,7 @@ function renderWizardStepSubjects(){
       </div>
     `}
     <div class="pln-wizard-actions">
-      <button class="btn-text" id="pln-wizard-back">← ${t("planning.back_btn")}</button>
+      <button class="btn-text" id="pln-wizard-back">${t("planning.back_btn")}</button>
       <button class="btn red" id="pln-wizard-create" ${w.subjectIds.length===0?"disabled":""}>${t("planning.create_btn")}</button>
     </div>
     <p class="pln-wizard-error" id="pln-wizard-error" style="display:none;">${t("planning.create_error")}</p>`;
@@ -17163,13 +17335,13 @@ function renderStudyPlanOverview(){
     <p class="ai-intro">${t("planning.subtitle")}</p>`;
 
   if(plan.lastReplanMessage){
-    html += `<div class="pln-replan-banner">⚠️ ${t(plan.lastReplanMessage)}</div>`;
+    html += `<div class="pln-replan-banner">${t(plan.lastReplanMessage)}</div>`;
   }
 
   if(plan.deadlineAt){
     html += `<div class="dash-section pln-deadline-hero">
       <div class="pln-deadline-hero-top">
-        <span class="lbl">📅 ${escapeHtml(plan.deadlineLabel || t("planning.deadline_default_label"))}</span>
+        <span class="lbl">${escapeHtml(plan.deadlineLabel || t("planning.deadline_default_label"))}</span>
         <span class="days">${t("planning.days_left", {n: daysUntil(plan.deadlineAt)})}</span>
       </div>
       <div class="deckbar-track"><div class="deckbar-fill good" style="width:${coverage.pct}%;"></div></div>
@@ -17200,8 +17372,8 @@ function renderStudyPlanOverview(){
   html += state.studyPlanView === "list" ? renderStudyListView(plan) : renderStudyWeekView(plan);
 
   html += `<div class="pln-footer-actions">
-    <button class="btn-text" id="pln-edit-btn">✏️ ${t("planning.edit_btn")}</button>
-    <button class="btn-text" id="pln-delete-btn" style="color:var(--red-dark);">🗑️ ${t("planning.delete_btn")}</button>
+    <button class="btn-text" id="pln-edit-btn">${t("planning.edit_btn")}</button>
+    <button class="btn-text" id="pln-delete-btn" style="color:var(--red-dark);">${t("planning.delete_btn")}</button>
   </div>`;
 
   return html;
@@ -17248,11 +17420,11 @@ function renderStudyDayTasks(day, dayIndex, showStartAll, listMode){
     const isDone = task.status === "done";
     const isMissed = task.status === "missed";
     return `<div class="pln-task-row ${isDone?"is-done":""} ${isMissed?"is-missed":""}">
-      <span class="pln-task-status" aria-hidden="true">${isDone?"☑️":(isMissed?"⚠️":"○")}</span>
+      <span class="pln-task-status" aria-hidden="true">${isDone?"\u2014":(isMissed?"!":"\u00b7")}</span>
       <div class="pln-task-body">
         <span class="pln-task-subject">${escapeHtml(task.subjectName)}</span>
         <span class="pln-task-title">${escapeHtml(task.title)}</span>
-        <span class="pln-task-meta">${info.icon} ${info.label} · ${task.duration} min${listMode ? " · " + t(task.reasonKey, task.reasonVars || {}) : ""}</span>
+        <span class="pln-task-meta">${info.label} · ${task.duration} min${listMode ? " · " + t(task.reasonKey, task.reasonVars || {}) : ""}</span>
       </div>
       ${!isDone ? `<button type="button" class="btn-text pln-task-btn" data-plan-task="${task.id}" data-plan-day="${dayIndex}">${isMissed ? t("planning.reschedule_btn") : t("planning.start_task_btn")}</button>`
         : `<span class="pln-task-done-badge">${t("planning.done_badge")}</span>`}
@@ -17260,7 +17432,7 @@ function renderStudyDayTasks(day, dayIndex, showStartAll, listMode){
   }).join("");
   html += `</div>`;
   if(showStartAll && pendingCount > 0){
-    html += `<button class="btn red pln-start-all-btn" data-plan-start-day="${dayIndex}">${t("planning.start_all_btn")} →</button>`;
+    html += `<button class="btn red pln-start-all-btn" data-plan-start-day="${dayIndex}">${t("planning.start_all_btn")}</button>`;
   }
   return html;
 }
@@ -17493,8 +17665,8 @@ function renderExams(){
   <p class="ai-intro">Entraîne-toi en conditions d'examen, retrouve tes sujets et consulte tes résultats.</p>`;
 
   html += `<div class="ai-actiongrid" style="grid-template-columns:repeat(2,1fr);">
-    <button class="ai-action" id="exams-blancs-btn"><span class="ico">📝</span><span class="t">Examens blancs</span><span class="d">Entraîne-toi dans des conditions d'examen chronométré, par matière ou chapitre.</span></button>
-    <button class="ai-action" id="exams-sujets-btn"><span class="ico">📄</span><span class="t">Mes sujets</span><span class="d">${sujets.length} sujet${sujets.length>1?"s":""} importé${sujets.length>1?"s":""}.</span></button>
+    <button class="ai-action" id="exams-blancs-btn"><span class="t">Examens blancs</span><span class="d">Entraîne-toi dans des conditions d'examen chronométré, par matière ou chapitre.</span></button>
+    <button class="ai-action" id="exams-sujets-btn"><span class="t">Mes sujets</span><span class="d">${sujets.length} sujet${sujets.length>1?"s":""} importé${sujets.length>1?"s":""}.</span></button>
   </div>`;
 
   html += `<div class="dash-section" id="exams-sujets-section">
@@ -17596,7 +17768,7 @@ function updateNavDynamic(){
       avatar.style.backgroundImage = "";
       avatar.classList.remove("has-photo");
       const src = authed ? accountDisplayName() : "";
-      avatar.textContent = src ? src.charAt(0).toUpperCase() : "🎓";
+      avatar.textContent = src ? src.charAt(0).toUpperCase() : "";
     }
   }
 }
