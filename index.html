@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EM Lyon Révision</title>
+<title>REV-EM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Trois familles, trois rôles exclusifs (voir DIRECTION_ARTISTIQUE.md §1) :
@@ -274,21 +274,29 @@
   .topbar.is-scrolled{ box-shadow: var(--shadow-subtle); }
   .topbar-inner{ max-width: var(--width-work); margin:0 auto; padding: 0 22px; }
   .brandrow{ display:flex; align-items:center; justify-content:space-between; gap: 18px; min-height: 62px; }
-  .brand-text{ display:flex; align-items:center; gap: 11px; flex-shrink:0; }
-  .brand-mark{
-    width: 34px; height: 34px; flex-shrink:0; border-radius: var(--radius-sm);
-    background: var(--accent); border: none; box-shadow: none;
-    color: var(--text-on-accent); font-family: var(--font-display);
-    font-weight: var(--weight-semibold); font-size: var(--text-small);
-    display:flex; align-items:center; justify-content:center;
+  /* ── MARQUE ───────────────────────────────────────────────────────────
+     Le signe est une GRADUATION : quatre traits croissants, le dernier en
+     rouge. Il dit la mesure et la progression, c'est-à-dire ce que fait le
+     produit — là où un carré à initiales ne disait rien. Présence sans
+     encombrement : 22px de signe, 19px de mot-symbole. */
+  .brand{
+    display:flex; align-items:center; gap: var(--space-sm); flex-shrink:0;
+    background:none; border:none; padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0;
+    cursor:pointer; border-radius: var(--radius-sm); color: var(--text-primary);
+    transition: opacity var(--motion-micro) var(--ease-enter);
   }
-  .brand-text h1{
+  .brand:hover{ opacity: 0.72; }
+  .brand-mark{ display:flex; width: 22px; height: 22px; flex-shrink:0; color: var(--text-primary); }
+  .brand-mark svg{ width:100%; height:100%; display:block; }
+  .brand-name{
     font-family: var(--font-display); font-size: 19px; font-weight: var(--weight-semibold);
-    margin: 0; letter-spacing: var(--tracking-tight); line-height:1.2; color: var(--text-primary);
+    letter-spacing: 0.01em; line-height:1.2; color: var(--text-primary); white-space:nowrap;
   }
 
   /* ===== NAVIGATION PRINCIPALE ===== */
-  .mainnav{ display:flex; align-items:stretch; gap: 2px; flex:1; min-width:0; justify-content:center; }
+  /* Navigation principale : alignée à gauche après la marque, pas centrée —
+     l'œil suit une seule colonne de lecture. */
+  .mainnav{ display:flex; align-items:stretch; gap: 2px; flex:1; min-width:0; justify-content:flex-start; margin-left: var(--space-lg); }
   .mainnav-item{ position:relative; display:flex; }
   .mainnav-link{
     border:none; background:none; padding: 0 13px; height:62px; border-radius:0;
@@ -298,7 +306,11 @@
     transition: background 0.16s var(--ease), color 0.16s var(--ease);
     position:relative;
   }
-  .mainnav-link .caret{ font-size:9px; opacity:0.8; transition: transform 0.16s var(--ease); }
+  .nav-chevron{
+    width:12px; height:12px; flex-shrink:0; opacity:0.55;
+    transition: transform var(--motion-state) var(--ease-enter), opacity var(--motion-micro) var(--ease-enter);
+  }
+  .mainnav-link:hover .nav-chevron{ opacity:0.9; }
   .mainnav-link:hover{ background: var(--surface-sunken); color: var(--text-primary); }
   .mainnav-item.active-group > .mainnav-link{ color: var(--text-primary); font-weight: var(--weight-semibold); }
   /* Le soulignement rouge de l'onglet actif est le seul rouge de la navigation. */
@@ -307,32 +319,75 @@
     background: var(--accent); border-radius:0;
   }
   .mainnav-item.open > .mainnav-link{ background: var(--surface-sunken); color: var(--text-primary); }
-  .mainnav-item.open > .mainnav-link .caret{ transform: rotate(180deg); }
+  .mainnav-item.open > .mainnav-link .nav-chevron,
+  .mainnav-item.open > .lang-btn .nav-chevron{ transform: rotate(180deg); }
 
   .dropdown-menu{
-    position:absolute; top: 100%; left:0; min-width: 240px; margin-top:2px;
-    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg); padding:8px; display:none; z-index: 120;
+    position:absolute; top: calc(100% - 4px); left:0; min-width: 244px;
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-modal); padding: var(--space-xs); display:none; z-index: 120;
   }
+  .mainnav-item.open > .dropdown-menu{ animation: dd-in var(--motion-enter) var(--ease-enter); }
+  @keyframes dd-in{ from{ opacity:0; transform: translateY(-4px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .mainnav-item.open > .dropdown-menu{ animation:none; } }
   .mainnav-item.open > .dropdown-menu{ display:block; }
+  /* Sous-section : un intitulé en chasse fixe, jamais un trait de séparation
+     supplémentaire — c'est le libellé qui structure, pas la ligne. */
   .dropdown-menu .dd-label{
-    font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; font-weight:800; color: var(--muted);
-    padding: 8px 10px 4px;
+    font-family: var(--font-data); font-size: var(--text-label);
+    text-transform:uppercase; letter-spacing: var(--tracking-label);
+    font-weight: var(--weight-medium); color: var(--text-muted);
+    padding: var(--space-sm) var(--space-sm) var(--space-2xs);
   }
   .dropdown-menu button, .dropdown-menu a{
-    display:flex; width:100%; text-align:left; border:none; background:none; cursor:pointer;
-    padding: 9px 10px; border-radius: var(--radius-sm); font-size:13.5px; font-weight:600; color: var(--ink);
-    font-family: var(--font-main); text-decoration:none;
+    display:flex; align-items:center; gap: var(--space-xs); width:100%; text-align:left;
+    border:none; background:none; cursor:pointer;
+    padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm);
+    font-size: var(--text-small); font-weight: var(--weight-regular); color: var(--text-primary);
+    font-family: var(--font-ui); text-decoration:none; min-height: 36px;
+    transition: background var(--motion-micro) var(--ease-enter);
   }
   .dropdown-menu button:hover, .dropdown-menu a:hover{ background: var(--surface-sunken); color: var(--text-primary); }
-  .dropdown-menu hr{ border:none; border-top:1px solid var(--border); margin: 6px 2px; }
-  .dropdown-menu .dd-add{ color: var(--red); font-weight:800; }
-  .dropdown-menu button[aria-current="true"]{ background: var(--red-tint); color: var(--red-dark); }
-  .dropdown-menu button[aria-current="true"]::after{ content:"✓"; margin-left:auto; padding-left:8px; }
-  #lang-trigger-code{ font-weight:800; letter-spacing:0.03em; }
+  .dropdown-menu hr{ border:none; border-top:1px solid var(--border); margin: var(--space-xs) var(--space-2xs); }
+  .dropdown-menu .dd-add{ color: var(--accent); font-weight: var(--weight-medium); }
+  /* Entrée courante : le libellé porte l'information, la coche la confirme.
+     Jamais la couleur seule. */
+  .dropdown-menu button[aria-current="true"]{ background: var(--surface-sunken); font-weight: var(--weight-medium); }
+  .dropdown-menu button[aria-current="true"]::after{
+    content:""; margin-left:auto; width:14px; height:14px; flex-shrink:0;
+    background: var(--accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3.2L13 5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3.2L13 5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  /* ── SÉLECTEUR DE LANGUE — action secondaire, pas une rubrique.
+     Fermé : le code en chasse fixe (FR / EN / ES / DE / IT).
+     Ouvert : drapeau + nom dans la langue, via translations.js.
+     Aucun second système de traduction : le balisage data-set-lang et les
+     clés lang.* existantes sont conservés tels quels. ── */
+  .topbar-lang{ position:relative; flex-shrink:0; }
+  .topbar-lang .dropdown-menu{ left:auto; right:0; min-width: 190px; }
+  .lang-btn{
+    display:flex; align-items:center; gap: var(--space-2xs);
+    background:none; border:1px solid transparent; cursor:pointer;
+    padding: 0 var(--space-xs); height: 32px; border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: background var(--motion-micro) var(--ease-enter),
+                color var(--motion-micro) var(--ease-enter),
+                border-color var(--motion-micro) var(--ease-enter);
+  }
+  .lang-btn:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .mainnav-item.open > .lang-btn{ background: var(--surface-sunken); color: var(--text-primary); border-color: var(--border); }
+  #lang-trigger-code{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-weight: var(--weight-medium); letter-spacing: 0.06em;
+  }
+  .topbar-lang .dropdown-menu button{ gap: var(--space-sm); font-size: var(--text-small); }
+  .topbar-lang .dropdown-menu button > span[aria-hidden]{ font-size: 15px; line-height:1; }
 
-  .topbar-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
-  .topbar-divider{ width:1px; height:24px; background: var(--border); }
+  /* Compte utilisateur : dernier de la ligne, séparé des actions secondaires
+     par un filet. C'est le seul élément qui parle de « moi ». */
+  .topbar-right{ display:flex; align-items:center; gap: var(--space-xs); flex-shrink:0; }
+  .topbar-divider{ width:1px; height:20px; background: var(--border); margin: 0 var(--space-2xs); }
   .profile-chip{
     display:flex; align-items:center; gap:8px; color: var(--text-secondary);
     font-size: var(--text-small); font-weight: var(--weight-medium);
@@ -354,29 +409,58 @@
     border-radius: var(--radius-sm); flex-shrink:0;
   }
   .hamburger-btn:hover{ background: var(--surface-sunken); }
+  .hamburger-btn svg{ width:22px; height:22px; }
+  .hamburger-btn .icon-close{ display:none; }
+  body.mobile-nav-open .hamburger-btn .icon-menu{ display:none; }
+  body.mobile-nav-open .hamburger-btn .icon-close{ display:block; }
 
   /* ===== BULLE ASSISTANT IA (flottante, déplaçable librement) =====
      Nom de classe distinct de .ai-bubble (utilisée par les messages du
      chat IA) pour éviter tout conflit de style. */
+  /* ── ASSISTANT — présence discrète, jamais décorative ──────────────────
+     Ce qui change : plus de dégradé, plus de rebond perpétuel, plus de rouge.
+     Un disque d'encre, une icône tracée, une ombre légère. Il reste
+     identifiable par sa forme et sa position constante, pas en criant ; et il
+     reste DÉPLAÇABLE comme avant (la logique de glissement est inchangée). */
   .ai-fab{
-    position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; z-index:200;
-    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-    border: none; color:#fff; cursor:grab;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 6px 18px rgba(180,21,47,0.38), 0 2px 6px rgba(0,0,0,0.12);
+    position:fixed; right:20px; bottom:20px; width:48px; height:48px;
+    border-radius:50%; z-index:200;
+    background: var(--text-primary); border: none; color: var(--surface);
+    cursor:grab; display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow-elevated);
     touch-action:none; -webkit-user-select:none; user-select:none;
-    transition: box-shadow 0.15s var(--ease), transform 0.1s var(--ease);
-    animation: ai-fab-bob 3.4s ease-in-out infinite;
+    transition: box-shadow var(--motion-state) var(--ease-enter),
+                transform var(--motion-micro) var(--ease-enter),
+                background var(--motion-micro) var(--ease-enter);
   }
-  .ai-fab:hover{ box-shadow: 0 8px 22px rgba(180,21,47,0.46), 0 3px 8px rgba(0,0,0,0.16); }
+  .ai-fab:hover{ background: #2A2A31; box-shadow: var(--shadow-modal); }
   .ai-fab:active{ cursor:grabbing; transform: scale(0.96); }
-  .ai-fab svg{ width:28px; height:28px; pointer-events:none; }
-  .ai-fab:focus-visible{ outline: 2.5px solid #fff; outline-offset: 3px; }
-  @keyframes ai-fab-bob{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-5px); } }
-  @media (prefers-reduced-motion: reduce){ .ai-fab{ animation:none; } }
+  .ai-fab svg{ width:22px; height:22px; pointer-events:none; }
+  .ai-fab:focus-visible{
+    outline: var(--focus-width) solid var(--accent);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px rgba(255,255,255,0.9), var(--shadow-elevated);
+  }
+  /* Le libellé n'apparaît qu'à l'intention — survol ou focus clavier. */
+  .ai-fab::after{
+    content: attr(data-label); position:absolute; right: calc(100% + 10px); top:50%;
+    transform: translateY(-50%) translateX(4px);
+    background: var(--text-primary); color: var(--surface);
+    font-family: var(--font-ui); font-size: var(--text-metadata); font-weight: var(--weight-medium);
+    padding: 6px var(--space-sm); border-radius: var(--radius-sm); white-space:nowrap;
+    opacity:0; pointer-events:none;
+    transition: opacity var(--motion-micro) var(--ease-enter), transform var(--motion-micro) var(--ease-enter);
+  }
+  .ai-fab:hover::after, .ai-fab:focus-visible::after{ opacity:1; transform: translateY(-50%) translateX(0); }
+  /* Ancré à gauche après un glissement : le libellé bascule de côté. */
+  .ai-fab[data-side="left"]::after{ right:auto; left: calc(100% + 10px); transform: translateY(-50%) translateX(-4px); }
+  .ai-fab[data-side="left"]:hover::after, .ai-fab[data-side="left"]:focus-visible::after{ transform: translateY(-50%) translateX(0); }
   body.exam-focus .ai-fab{ display:none; }
-  @media (max-width:680px){
-    .ai-fab{ width:50px; height:50px; }
+  @media (max-width: 640px){
+    .ai-fab{ width:44px; height:44px; right:16px; bottom:16px; }
+    .ai-fab svg{ width:20px; height:20px; }
+    /* Sur petit écran, le libellé au survol n'a pas de sens : il est masqué. */
+    .ai-fab::after{ display:none; }
   }
 
   /* ===== STAT BAR ===== */
@@ -2602,21 +2686,46 @@
     .profile-chip .profile-label{ display:none; }
     .topbar-divider{ display:none; }
 
+    /* Feuille pleine hauteur plutôt qu'un menu miniature : cibles de 48px,
+       une entrée par ligne, les sous-sections restent dépliables sur place. */
+    body.mobile-nav-open{ overflow:hidden; }
     body.mobile-nav-open .mainnav{
       display:flex; flex-direction:column; align-items:stretch;
-      position:fixed; top:56px; left:0; right:0; bottom:0;
-      background: var(--surface); z-index:90; padding:14px; gap:2px; overflow-y:auto;
+      position:fixed; top:56px; left:0; right:0; bottom:0; margin-left:0;
+      background: var(--surface); z-index:90;
+      padding: var(--space-sm) var(--space-md) var(--space-3xl);
+      gap: 2px; overflow-y:auto; overscroll-behavior: contain;
+      animation: sheet-in var(--motion-enter) var(--ease-enter);
     }
+    @keyframes sheet-in{ from{ opacity:0; transform: translateY(-6px); } to{ opacity:1; transform:none; } }
+    @media (prefers-reduced-motion: reduce){ body.mobile-nav-open .mainnav{ animation:none; } }
     .mainnav-item{ flex-direction:column; align-items:stretch; }
     .mainnav-link{
-      height:auto; padding:13px 12px; color: var(--ink); justify-content:space-between;
-      border-radius: var(--radius-md); width:100%;
+      height:auto; min-height:48px; padding: var(--space-sm) var(--space-sm);
+      color: var(--text-primary); justify-content:space-between;
+      border-radius: var(--radius-sm); width:100%; font-size: var(--text-body);
+      font-weight: var(--weight-regular);
     }
-    .mainnav-link:hover{ background: var(--bg); color:var(--ink); }
-    .mainnav-item.active-group > .mainnav-link{ color: var(--red); background: var(--red-tint); }
-    .mainnav-item.active-group > .mainnav-link::after{ display:none; }
-    .mainnav-item.open > .mainnav-link{ background: var(--bg); color:var(--ink); }
-    .dropdown-menu{ position:static; box-shadow:none; border:none; background:var(--bg); margin-top:4px; min-width:0; }
+    .mainnav-link:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+    .mainnav-item.active-group > .mainnav-link{
+      color: var(--text-primary); background: var(--surface-sunken); font-weight: var(--weight-semibold);
+    }
+    /* Le filet rouge passe à gauche : sur une liste verticale, c'est lui qui
+       marque la section courante. */
+    .mainnav-item.active-group > .mainnav-link::after{
+      display:block; content:""; position:absolute; left:0; top:8px; bottom:8px;
+      width:2px; height:auto; right:auto; background: var(--accent); border-radius:0;
+    }
+    .mainnav-item.open > .mainnav-link{ background: var(--surface-sunken); color: var(--text-primary); }
+    .dropdown-menu{
+      position:static; box-shadow:none; border:none; background:transparent;
+      margin: var(--space-2xs) 0 var(--space-xs) var(--space-md); min-width:0; padding:0;
+      border-left: 1px solid var(--border); border-radius:0;
+    }
+    .dropdown-menu button, .dropdown-menu a{ min-height:44px; font-size: var(--text-small); }
+    .topbar-lang .dropdown-menu{ position:absolute; right:0; left:auto; background: var(--surface);
+      border:1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-modal);
+      padding: var(--space-xs); margin:0; }
   }
 
   @media (max-width: 560px){
@@ -2648,10 +2757,17 @@
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brandrow">
-      <div class="brand-text">
-        <div class="brand-mark" aria-hidden="true">EM</div>
-        <h1>Lyon Révision</h1>
-      </div>
+      <button type="button" class="brand" data-goto="dashboard" aria-label="REV-EM — accueil">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="1"  y="15" width="4" height="8"  rx="1" fill="currentColor" opacity=".28"/>
+            <rect x="7"  y="11" width="4" height="12" rx="1" fill="currentColor" opacity=".48"/>
+            <rect x="13" y="6"  width="4" height="17" rx="1" fill="currentColor" opacity=".72"/>
+            <rect x="19" y="1"  width="4" height="22" rx="1" fill="var(--accent)"/>
+          </svg>
+        </span>
+        <span class="brand-name">REV-EM</span>
+      </button>
 
       <nav class="mainnav" id="mainnav">
         <div class="mainnav-item" data-nav="dashboard">
@@ -2659,7 +2775,7 @@
         </div>
 
         <div class="mainnav-item" data-nav="library">
-          <button class="mainnav-link" data-menu-toggle="library"><span data-i18n="nav.subjects">Mes matières</span> <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="library"><span data-i18n="nav.subjects">Mes matières</span> <svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="dropdown-menu" id="menu-library">
             <button data-goto="library" data-i18n="nav.subjects_all">Toutes mes matières</button>
             <div id="menu-library-subjects"></div>
@@ -2669,10 +2785,10 @@
         </div>
 
         <div class="mainnav-item" data-nav="activities">
-          <button class="mainnav-link" data-menu-toggle="activities"><span data-i18n="nav.activities">Activités</span> <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="activities"><span data-i18n="nav.activities">Activités</span> <svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="dropdown-menu" id="menu-activities">
             <button data-goto="activities" data-i18n="nav.activities_all">Toutes les activités</button>
-            <hr>
+            <div class="dd-label" data-i18n="nav.activities">Activités</div>
             <button data-goto="quiz" data-i18n="nav.activities_quiz">Quiz</button>
             <button data-goto="flash" data-i18n="nav.activities_flash">Flashcards</button>
             <button data-goto="oral" data-i18n="nav.activities_oral">Interrogation orale</button>
@@ -2681,18 +2797,18 @@
         </div>
 
         <div class="mainnav-item" data-nav="resources">
-          <button class="mainnav-link" data-menu-toggle="resources"><span data-i18n="nav.resources">Ressources</span> <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="resources"><span data-i18n="nav.resources">Ressources</span> <svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="dropdown-menu" id="menu-resources">
             <button data-goto="fiches" data-filter="all" data-i18n="nav.resources_library">Bibliothèque de cours</button>
-            <button data-goto="import-course" data-i18n="nav.resources_import">📥 Importer un cours</button>
+            <button data-goto="import-course" data-i18n="nav.resources_import">Importer un cours</button>
           </div>
         </div>
 
         <div class="mainnav-item" data-nav="exams">
-          <button class="mainnav-link" data-menu-toggle="exams"><span data-i18n="nav.exams">Examens</span> <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="exams"><span data-i18n="nav.exams">Examens</span> <svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="dropdown-menu" id="menu-exams">
             <button data-goto="exams" data-i18n="nav.exams_overview">Vue d'ensemble</button>
-            <hr>
+            <div class="dd-label" data-i18n="nav.exams">Examens</div>
             <button data-goto="exam" data-i18n="nav.exams_mocks">Examens blancs</button>
             <button data-goto="exams-sujets" data-i18n="nav.exams_subjects">Mes sujets</button>
           </div>
@@ -2703,19 +2819,22 @@
         </div>
 
         <div class="mainnav-item" data-nav="progress">
-          <button class="mainnav-link" data-menu-toggle="progress"><span data-i18n="nav.progress">Progression</span> <span class="caret">▾</span></button>
+          <button class="mainnav-link" data-menu-toggle="progress"><span data-i18n="nav.progress">Progression</span> <svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="dropdown-menu" id="menu-progress">
             <button data-goto="progress" data-i18n="nav.progress_global">Vue globale</button>
             <button data-goto="progress" data-i18n="nav.progress_bysubject">Progression par matière</button>
             <button data-goto="library" data-i18n="nav.progress_bychapter">Progression par chapitre</button>
-            <button data-goto="smart" data-i18n="nav.smart_revision">🧠 Révision intelligente</button>
-            <button data-goto="stats" data-i18n="nav.statistics">📊 Mes statistiques</button>
+            <button data-goto="smart" data-i18n="nav.smart_revision">Révision intelligente</button>
+            <button data-goto="stats" data-i18n="nav.statistics">Mes statistiques</button>
           </div>
         </div>
 
-        <div class="mainnav-item" data-nav="lang">
-          <button class="mainnav-link" data-menu-toggle="lang" id="lang-trigger-btn" aria-label="Langue de l'interface" data-i18n-attr="aria-label:lang.selector_label">
-            <span id="lang-trigger-code">FR</span> <span class="caret">▾</span>
+      </nav>
+
+      <div class="topbar-right">
+        <div class="mainnav-item topbar-lang" data-nav="lang">
+          <button class="lang-btn" data-menu-toggle="lang" id="lang-trigger-btn" aria-label="Langue de l'interface" data-i18n-attr="aria-label:lang.selector_label">
+            <span id="lang-trigger-code">FR</span><svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <div class="dropdown-menu" id="menu-lang" role="menu">
             <button type="button" data-set-lang="fr" role="menuitemradio"><span aria-hidden="true">🇫🇷</span> <span data-i18n="lang.fr">Français</span></button>
@@ -2725,15 +2844,19 @@
             <button type="button" data-set-lang="it" role="menuitemradio"><span aria-hidden="true">🇮🇹</span> <span data-i18n="lang.it">Italiano</span></button>
           </div>
         </div>
-      </nav>
-
-      <div class="topbar-right">
         <div class="topbar-divider"></div>
         <button class="profile-chip" id="profile-chip-btn" data-goto="myspace">
           <span class="profile-avatar" id="profile-avatar">?</span>
           <span class="profile-label" id="profile-label">Bonjour</span>
         </button>
-        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" data-i18n-attr="aria-label:nav.menu_aria">☰</button>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" data-i18n-attr="aria-label:nav.menu_aria" aria-expanded="false" aria-controls="mainnav">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="icon-menu">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="icon-close">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -2743,13 +2866,11 @@
 <div id="course-modal-root"></div>
 <div id="account-modal-root"></div>
 
-<button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant IA" title="Assistant IA">
+<button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant de révision" title="Assistant de révision" data-label="Assistant" data-i18n-attr="aria-label:nav.ai_open_aria,title:nav.ai_open_aria,data-label:nav.ai_short">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="4" y="8" width="16" height="12" rx="4" fill="#fff"/>
-    <rect x="10" y="2" width="4" height="5" rx="2" fill="#fff"/>
-    <circle cx="9" cy="14" r="1.6" fill="var(--red-dark)"/>
-    <circle cx="15" cy="14" r="1.6" fill="var(--red-dark)"/>
-    <path d="M9 18h6" stroke="var(--red-dark)" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M4.5 5.5h15a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-7.2L8 19v-3.5H4.5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z"
+          stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M7.5 9.5h9M7.5 12h5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
   </svg>
 </button>
 
@@ -6307,7 +6428,7 @@ const COURSE_CHUNK_CHARS = 9000;
 /* ---- fichiers PDF originaux : trop volumineux pour localStorage, stockés dans IndexedDB,
    indexés par l'identifiant du chapitre (les métadonnées légères restent dans le chapitre
    lui-même, sauvegardé normalement via localStorage). ---- */
-const COURSE_FILES_DB_NAME = "em-lyon-revision-files";
+const COURSE_FILES_DB_NAME = "rev-em-files";
 const COURSE_FILES_STORE = "pdfs";
 let courseFilesDBPromise = null;
 function openCourseFilesDB(){
@@ -7139,7 +7260,7 @@ async function courseImportRunAllSteps(item, signal){
       if(!item.failedSteps.includes(steps[i].key)) item.failedSteps.push(steps[i].key);
       const classified = classifyGenerationError(e);
       item.lastStepError = classified;
-      console.error("[EM Lyon Révision · IA] Erreur de génération :", steps[i].key, e);
+      console.error("[REV-EM · IA] Erreur de génération :", steps[i].key, e);
     }
   }
   item.genStepIndex = -1;
@@ -7164,7 +7285,7 @@ async function courseImportRetryStep(index, key){
   }catch(e){
     if(!item.failedSteps.includes(key)) item.failedSteps.push(key);
     item.lastStepError = classifyGenerationError(e);
-    console.error("[EM Lyon Révision · IA] Erreur de génération :", key, e);
+    console.error("[REV-EM · IA] Erreur de génération :", key, e);
   }
   item.genStepIndex = -1;
   ci.busy = false;
@@ -7333,7 +7454,7 @@ function renderImportCancelled(item){
 function renderImportPick(){
   const ci = state.courseImport;
   let html = `<h1 class="page-title">Importer un cours</h1>
-  <p class="ai-intro">Dépose un fichier ou colle ton cours : EM Lyon Révision génère automatiquement une fiche structurée, un résumé, un quiz, des flashcards et des questions de révision — sans rien remplir à la main.</p>`;
+  <p class="ai-intro">Dépose un fichier ou colle ton cours : REV-EM génère automatiquement une fiche structurée, un résumé, un quiz, des flashcards et des questions de révision — sans rien remplir à la main.</p>`;
 
   html += `<div class="import-dropzone ${ci.dragOver ? "is-dragover" : ""}" id="import-dropzone" role="button" tabindex="0" aria-label="Importer un fichier de cours">
     <div class="import-dropzone-icon">📥</div>
@@ -10524,7 +10645,7 @@ function buildAiDiagnostic(stage, raw){
       stageLabel: "Pendant l'initialisation du moteur (adaptateur et périphérique GPU étaient pourtant réels)",
       typeLabel: "Le modèle n'a pas pu être initialisé",
       message: raw && raw.message ? raw.message : "Erreur inconnue pendant l'initialisation.",
-      cause: "Le téléchargement a pu aboutir, mais l'initialisation a échoué après coup. Causes possibles à vérifier une par une : mémoire GPU insuffisante pour ce modèle précis (essaie le modèle léger) ; version de @mlc-ai/web-llm incompatible avec l'identifiant de modèle demandé (le CDN sert la dernière version, qui peut avoir retiré/renommé ce modèle) ; cache navigateur corrompu par un téléchargement précédent interrompu (utilise « Réinitialiser le cache IA » ci-dessous) ; message postMessage malformé entre la page et ai-worker.js (visible dans la console via les logs « [EM Lyon Révision · IA] »).",
+      cause: "Le téléchargement a pu aboutir, mais l'initialisation a échoué après coup. Causes possibles à vérifier une par une : mémoire GPU insuffisante pour ce modèle précis (essaie le modèle léger) ; version de @mlc-ai/web-llm incompatible avec l'identifiant de modèle demandé (le CDN sert la dernière version, qui peut avoir retiré/renommé ce modèle) ; cache navigateur corrompu par un téléchargement précédent interrompu (utilise « Réinitialiser le cache IA » ci-dessous) ; message postMessage malformé entre la page et ai-worker.js (visible dans la console via les logs « [REV-EM · IA] »).",
       solution: "1) Réinitialise le cache IA, 2) réessaie avec le modèle léger, 3) si ça persiste, regarde la console (F12) pour le message exact juste avant cette erreur.",
     });
   }
@@ -10553,7 +10674,7 @@ function aiTeardownEngine(){
    le chargement du moteur IA (utile en console pendant un débogage — ne
    change rien à l'interface). */
 function aiLog(step, detail){
-  console.log("[EM Lyon Révision · IA]", step, detail !== undefined ? detail : "");
+  console.log("[REV-EM · IA]", step, detail !== undefined ? detail : "");
 }
 
 async function aiLoadModel(modelId){
@@ -13927,9 +14048,9 @@ function downloadJSON(obj, filename){
 
 function exportUserCourses(){
   downloadJSON({
-    app: "EM Lyon Révision", type: "courses-export", exportedAt: new Date().toISOString(),
+    app: "REV-EM", type: "courses-export", exportedAt: new Date().toISOString(),
     subjects: state.userSubjects, chapters: state.userChapters,
-  }, "em-lyon-revision-mes-cours-" + todayKey() + ".json");
+  }, "rev-em-mes-cours-" + todayKey() + ".json");
 }
 
 async function importUserCoursesFromFile(file){
@@ -13943,7 +14064,7 @@ async function importUserCoursesFromFile(file){
     throw new Error("Ce fichier n'est pas une sauvegarde JSON. Utilise « Importer un cours » (dans Mes matières) pour importer un document (PDF, DOCX, TXT, Markdown).");
   }
   if(!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.subjects) && !Array.isArray(parsed.chapters))){
-    throw new Error("Ce fichier n'est pas reconnu comme une sauvegarde EM Lyon Révision. Utilise « Importer un cours » pour importer un document.");
+    throw new Error("Ce fichier n'est pas reconnu comme une sauvegarde REV-EM. Utilise « Importer un cours » pour importer un document.");
   }
   const subjects = Array.isArray(parsed.subjects) ? parsed.subjects : [];
   const chapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
@@ -13971,8 +14092,8 @@ function exportAllData(){
     }
   }
   downloadJSON({
-    app: "EM Lyon Révision", type: "full-backup", exportedAt: new Date().toISOString(), data,
-  }, "em-lyon-revision-sauvegarde-" + todayKey() + ".json");
+    app: "REV-EM", type: "full-backup", exportedAt: new Date().toISOString(), data,
+  }, "rev-em-sauvegarde-" + todayKey() + ".json");
 }
 
 async function importAllDataFromFile(file){
@@ -16630,7 +16751,7 @@ function updateNavDynamic(){
   const listEl = document.getElementById("menu-library-subjects");
   if(listEl){
     listEl.innerHTML = allSubjects().map(s =>
-      `<button data-goto="library-subject" data-subject-id="${s.id}">${s.icon||"📘"} ${escapeHtml(s.name)}</button>`
+      `<button data-goto="library-subject" data-subject-id="${s.id}">${escapeHtml(s.name)}</button>`
     ).join("");
   }
 
@@ -16707,6 +16828,8 @@ function updateNavMenuState(){
     el.classList.toggle("open", el.dataset.nav === state.openMenu);
   });
   document.body.classList.toggle("mobile-nav-open", state.mobileMenuOpen);
+  const ham = document.getElementById("hamburger-btn");
+  if(ham) ham.setAttribute("aria-expanded", state.mobileMenuOpen ? "true" : "false");
 }
 
 function closeAllNavMenus(){
@@ -16750,7 +16873,10 @@ function handleNavGoto(ds){
 }
 
 function attachMainNavEvents(){
-  const nav = document.getElementById("mainnav");
+  /* Délégation depuis la barre entière et non depuis #mainnav : le sélecteur
+     de langue a rejoint les actions secondaires, à droite. Les gestionnaires
+     ci-dessous (data-set-lang, data-goto) restent strictement identiques. */
+  const nav = document.querySelector(".topbar");
 
   document.querySelectorAll("[data-menu-toggle]").forEach(btn=>{
     btn.addEventListener("click", (e)=>{
@@ -16872,6 +16998,10 @@ function setAIFabSideY(side, y, persist){
   state.aiBubble.side = s;
   state.aiBubble.y = cy;
   applyAIFabPosition(aiFabXForSide(s), cy);
+  /* Le côté est reflété dans le DOM pour que le libellé au survol s'ouvre du
+     bon côté après un déplacement — sinon il sortirait de l'écran. */
+  const el = document.getElementById("ai-bubble");
+  if(el) el.setAttribute("data-side", s);
   if(persist !== false) saveAIBubblePos();
 }
 

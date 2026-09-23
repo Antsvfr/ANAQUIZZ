@@ -1,5 +1,5 @@
 /* ============================================================================
-   Lyon Révision — moteur de planification de révision (couche métier, sans UI)
+   REV-EM — moteur de planification de révision (couche métier, sans UI)
    ------------------------------------------------------------------------
    Fichier autonome, chargé comme smart-revision.js/statistics.js (voir
    index.html) : window.LyonPlanning n'a AUCUNE dépendance au DOM, à l'état

@@ -1,5 +1,5 @@
 /* ============================================================================
-   auth.js — Lyon Révision : compte utilisateur (Supabase Auth)
+   auth.js — REV-EM : compte utilisateur (Supabase Auth)
    ----------------------------------------------------------------------------
    Responsabilité unique : connexion / inscription / déconnexion / session /
    profil (voir découpage "AUTH / DATA / SYNC / UI / AI" demandé). Ne touche

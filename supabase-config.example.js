@@ -1,5 +1,5 @@
 /* ============================================================================
-   Lyon Révision — configuration Supabase (frontend)
+   REV-EM — configuration Supabase (frontend)
    ------------------------------------------------------------------------
    1. Copie ce fichier en "supabase-config.js" (même dossier, à côté de
       index.html).
