@@ -463,17 +463,21 @@
     .ai-fab::after{ display:none; }
   }
 
-  /* ===== STAT BAR ===== */
+  /* ===== STAT BAR =====
+     Les trois tuiles chiffrées historiques. La boîte appartient à la BARRE,
+     pas au chiffre : .stat seul est le composant « chiffre clé » du système
+     (déclaré plus bas), qui n'a volontairement aucune boîte. Sans ce
+     cloisonnement, les deux définitions se superposeraient. */
   .statbar{ display:grid; grid-template-columns: repeat(3,1fr); gap: 13px; margin: 28px 0 24px; }
-  .stat{
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-    padding: 17px 19px; box-shadow: var(--shadow-sm);
+  .statbar > .stat{
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg); box-shadow: var(--shadow-subtle);
     transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease), border-color 0.2s var(--ease);
   }
-  .stat:hover{ box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border-strong); }
-  .stat .num{ font-size: 26px; font-weight: 800; color: var(--ink); line-height:1; font-variant-numeric: tabular-nums; letter-spacing:-0.02em; }
-  .stat .num.accent{ color: var(--red); }
-  .stat .lbl{ font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; margin-top: 7px; }
+  .statbar > .stat:hover{ box-shadow: var(--shadow-elevated); transform: translateY(-2px); border-color: var(--border-strong); }
+  .stat .num{ font-family: var(--font-data); font-size: var(--text-data); font-weight: var(--weight-medium); color: var(--text-primary); line-height:1; font-variant-numeric: tabular-nums; letter-spacing:0; }
+  .stat .num.accent{ color: var(--accent); }
+  .stat .lbl{ font-family: var(--font-data); font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-muted); font-weight: var(--weight-medium); margin-top: var(--space-xs); }
 
   /* ===== HERO / MIX ALL ===== */
   .hero-mix{
@@ -593,23 +597,23 @@
   .btn:active{ transform: translateY(1px); }
 
   /* — primaire — */
-  .btn.red{ background: var(--accent); color: var(--text-on-accent); }
-  .btn.red:hover{ background: var(--accent-hover); }
-  .btn.red:active{ background: var(--accent-active); transform: translateY(1px); }
+  .btn.red, .btn.btn--primary{ background: var(--accent); color: var(--text-on-accent); }
+  .btn.red:hover, .btn.btn--primary:hover{ background: var(--accent-hover); }
+  .btn.red:active, .btn.btn--primary:active{ background: var(--accent-active); transform: translateY(1px); }
 
   /* — secondaire — */
-  .btn.outline{
+  .btn.outline, .btn.btn--secondary{
     background: var(--surface); color: var(--text-primary);
     border-color: var(--border-strong); box-shadow: none;
   }
-  .btn.outline:hover{ background: var(--surface-sunken); border-color: var(--text-muted); color: var(--text-primary); }
-  .btn.outline:active{ background: var(--surface-sunken); transform: translateY(1px); }
+  .btn.outline:hover, .btn.btn--secondary:hover{ background: var(--surface-sunken); border-color: var(--text-muted); color: var(--text-primary); }
+  .btn.outline:active, .btn.btn--secondary:active{ background: var(--surface-sunken); transform: translateY(1px); }
 
   /* — destructive : l'aplat rouge n'apparaît qu'en confirmation, dans une modale — */
-  .btn.danger{ background: transparent; color: var(--error); border-color: var(--border-strong); }
-  .btn.danger:hover{ background: var(--error-wash); border-color: var(--error); }
-  .btn.danger.solid{ background: var(--error); color: var(--text-on-accent); border-color: transparent; }
-  .btn.danger.solid:hover{ background: #94201A; }
+  .btn.danger, .btn.btn--destructive{ background: transparent; color: var(--error); border-color: var(--border-strong); }
+  .btn.danger:hover, .btn.btn--destructive:hover{ background: var(--error-wash); border-color: var(--error); }
+  .btn.danger.solid, .btn.btn--destructive.solid{ background: var(--error); color: var(--text-on-accent); border-color: transparent; }
+  .btn.danger.solid:hover, .btn.btn--destructive.solid:hover{ background: #94201A; }
 
   /* — succès (usage historique conservé) — */
   .btn.green{ background: var(--success); color: var(--text-on-accent); }
@@ -635,11 +639,12 @@
     color: var(--text-on-accent);
     animation: ds-spin 0.7s linear infinite;
   }
-  .btn.outline.is-loading::after, .btn-text.is-loading::after{ color: var(--text-secondary); }
+  .btn.outline.is-loading::after, .btn.btn--secondary.is-loading::after,
+  .btn-text.is-loading::after, .btn.btn--tertiary.is-loading::after{ color: var(--text-secondary); }
   @keyframes ds-spin{ to{ transform: rotate(360deg); } }
 
   /* — tertiaire — */
-  .btn-text{
+  .btn-text, .btn.btn--tertiary{
     display: inline-flex; align-items: center; gap: var(--space-2xs);
     background: none; border: none; color: var(--text-secondary);
     font-family: var(--font-ui); font-size: var(--text-small); font-weight: var(--weight-medium);
@@ -647,13 +652,15 @@
     border-bottom: 1px solid transparent;
     transition: color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
   }
-  .btn-text:hover{ color: var(--text-primary); border-color: var(--border-strong); }
-  .btn-text.active{ color: var(--accent); border-color: var(--accent); }
-  .btn-text:disabled{ color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+  .btn-text:hover, .btn.btn--tertiary:hover{ color: var(--text-primary); border-color: var(--border-strong); }
+  .btn-text.active, .btn.btn--tertiary.active{ color: var(--accent); border-color: var(--accent); }
+  .btn-text:disabled, .btn.btn--tertiary:disabled{ color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
 
   /* Cible tactile : 44px minimum dès que le pointeur est grossier. */
   @media (pointer: coarse){
-    .btn, .btn.small, .btn-text{ min-height: 44px; }
+    .btn, .btn.small, .btn-text, .btn.btn--tertiary{ min-height: 44px; }
+    /* Un .link posé seul (hors phrase) reçoit aussi une cible de 44px. */
+    .block--action > .link, .modal-foot > .link{ min-height: 44px; display: inline-flex; align-items: center; }
   }
 
   /* ===== MON COMPTE / MON ESPACE (V2 premium) ===== */
@@ -1078,6 +1085,480 @@
      « carte dans une carte dans une carte »). */
   .dash-section .card, .card .card{ box-shadow: none; background: var(--surface-2); }
 
+  /* ==========================================================================
+     ÉTAPE 5 — BIBLIOTHÈQUE DE COMPOSANTS
+     --------------------------------------------------------------------------
+     Ce bloc PROLONGE les primitives ci-dessus ; il n'ouvre pas un second
+     système. Les composants déjà posés à l'étape 3 (.card, .section-head,
+     .callout, .empty, .skeleton, .stat, .segmented, .status, .meter) ne sont
+     pas redéfinis : ils sont ici classés, complétés, et reçoivent leurs noms
+     canoniques. Les classes historiques restent valides — elles sont
+     ajoutées aux sélecteurs, jamais remplacées.
+
+     QUATRE CATÉGORIES DE SURFACES, et rien d'autre :
+
+       1. SURFACE PRINCIPALE  .surface
+          Le fond de l'écran. Aucune bordure, aucune ombre, aucun rayon.
+          C'est l'ivoire. Une page n'est PAS une carte.
+
+       2. FEATURE BLOCK       .block.block--feature   (alias : .card)
+          Une unité fonctionnelle autonome : un formulaire, un lecteur de
+          quiz, un importateur, un objet manipulable (une matière, une
+          séance). Surface blanche, filet, rayon de surface.
+          → une carte représente une VRAIE unité logique, jamais un
+            paragraphe, jamais un bouton isolé, jamais un chiffre seul.
+
+       3. INFORMATION BLOCK   .block.block--info
+          De l'information à lire. PAS de boîte : typographie et espace.
+          C'est le remplaçant par défaut de la carte décorative.
+
+       4. ACTION BLOCK        .block.block--action
+          Un regroupement d'actions (barre de bas de formulaire, barre de
+          sélection). Aplat creusé, pas d'ombre. Les actions ne se mélangent
+          jamais au corps de l'information : elles se posent dans ce bloc.
+
+     Les cartes ne s'imbriquent pas : voir §« garde-fou » en fin de bloc.
+     ========================================================================== */
+
+  /* ── 1. SURFACE PRINCIPALE ───────────────────────────────────────────── */
+  .surface{
+    background: var(--background);
+    border: none; box-shadow: none; border-radius: 0; padding: 0;
+  }
+  /* Rythme vertical d'une page : l'espace fait le regroupement, pas la boîte. */
+  .surface > * + *{ margin-top: var(--space-lg); }
+  .surface > .section-head + *{ margin-top: var(--space-md); }
+
+  /* ── 2/3/4. BLOCS ────────────────────────────────────────────────────── */
+  .block{ display: block; }
+
+  .block--feature,
+  .card{
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: var(--space-lg);
+    box-shadow: var(--shadow-subtle);
+  }
+  .block--feature.is-interactive{
+    cursor: pointer;
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                box-shadow var(--motion-micro) var(--ease-enter),
+                transform var(--motion-micro) var(--ease-enter);
+  }
+  .block--feature.is-interactive:hover{
+    border-color: var(--border-strong); box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
+  }
+  .block--feature.is-selected{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+  /* Information : aucune boîte. Un filet de gauche est permis QUAND le bloc
+     est une mise à l'écart du flux principal (.block--info.is-aside). */
+  .block--info{
+    background: none; border: none; box-shadow: none;
+    padding: 0; max-width: var(--width-read);
+    color: var(--text-secondary); font-size: var(--text-small);
+    line-height: var(--leading-small);
+  }
+  .block--info.is-aside{
+    border-left: 2px solid var(--border); padding-left: var(--space-md);
+  }
+
+  /* Action : ce qui se clique, rassemblé et séparé de ce qui se lit. */
+  .block--action{
+    display: flex; align-items: center; gap: var(--space-sm);
+    flex-wrap: wrap;
+    background: var(--surface-sunken); border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+  }
+  .block--action.is-bare{ background: none; padding: 0; }
+  .block--action.is-end{ justify-content: flex-end; }
+  .block--action.is-between{ justify-content: space-between; }
+  /* Dans une barre d'actions, l'action principale est à droite sur desktop :
+     c'est le dernier point de lecture. */
+  .block--action > .is-spacer{ flex: 1; }
+
+  /* ==========================================================================
+     TITRES — quatre niveaux, un rôle chacun. Au-delà, c'est que la page a
+     besoin d'être découpée, pas d'un cinquième niveau.
+     ========================================================================== */
+  .t-page{
+    font-family: var(--font-display); font-size: var(--text-h1);
+    line-height: var(--leading-h1); font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight); color: var(--text-primary);
+    margin: 0 0 var(--space-xs);
+  }
+  .t-section{
+    font-family: var(--font-display); font-size: var(--text-h2);
+    line-height: var(--leading-h2); font-weight: var(--weight-semibold);
+    color: var(--text-primary); margin: 0 0 var(--space-xs);
+  }
+  .t-block{
+    font-family: var(--font-ui); font-size: var(--text-h3);
+    line-height: var(--leading-h3); font-weight: var(--weight-semibold);
+    color: var(--text-primary); margin: 0 0 var(--space-2xs);
+  }
+  /* Sous-titre : il explique le titre, il ne le répète pas. */
+  .t-sub{
+    font-family: var(--font-ui); font-size: var(--text-small);
+    line-height: var(--leading-small); font-weight: var(--weight-regular);
+    color: var(--text-secondary); margin: 0; max-width: 64ch;
+  }
+  /* Sur-titre : la catégorie, en chasse fixe. Jamais deux par écran au même
+     niveau — c'est un repère, pas une décoration. */
+  .eyebrow,
+  .section-head > .section-head-label{
+    font-family: var(--font-data); font-size: var(--text-label);
+    font-weight: var(--weight-medium); letter-spacing: var(--tracking-label);
+    text-transform: uppercase; color: var(--text-muted);
+    display: block; margin: 0 0 var(--space-2xs);
+  }
+  .section-head > .section-head-label{ margin: 0; white-space: nowrap; }
+  /* En-tête de page : sur-titre, titre, sous-titre, et rien d'autre. */
+  .page-head{ margin: 0 0 var(--space-xl); max-width: var(--width-read); }
+  .page-head .t-sub{ margin-top: var(--space-2xs); }
+
+  /* ==========================================================================
+     ACTIONS — CINQ NIVEAUX. Aucun sixième.
+     --------------------------------------------------------------------------
+       PRIMARY      .btn.btn--primary     (= .btn.red)      une seule par écran
+       SECONDARY    .btn.btn--secondary   (= .btn.outline)
+       TERTIARY     .btn.btn--tertiary    (= .btn-text)
+       LINK         .link                                   navigation légère
+       DESTRUCTIVE  .btn.btn--destructive (= .btn.danger)
+     Les classes historiques restent en service : les noms canoniques sont
+     AJOUTÉS aux sélecteurs existants plus haut, ils ne les remplacent pas.
+     ========================================================================== */
+  /* LINK — un lien navigue, il n'agit pas. S'il agit, c'est un bouton. */
+  .link{
+    color: var(--text-primary); text-decoration: none;
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 1px; background: none; border-left: none;
+    border-right: none; border-top: none; cursor: pointer;
+    font-family: inherit; font-size: inherit; font-weight: var(--weight-medium);
+    transition: color var(--motion-micro) var(--ease-enter),
+                border-color var(--motion-micro) var(--ease-enter);
+  }
+  .link:hover{ color: var(--accent); border-color: var(--accent); }
+  .link.link--quiet{ color: var(--text-secondary); border-color: transparent; }
+  .link.link--quiet:hover{ color: var(--text-primary); border-color: var(--border-strong); }
+  .link[aria-current="page"]{ color: var(--accent); border-color: var(--accent); }
+  /* Lien sortant : l'utilisateur doit savoir qu'il quitte REV-EM. */
+  .link--external::after{
+    content: ""; display: inline-block; width: 9px; height: 9px;
+    margin-left: 5px; vertical-align: 1px;
+    border-top: 1.5px solid currentColor; border-right: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-1px, 1px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+
+  /* ==========================================================================
+     BADGES ET STATUTS — deux composants distincts, souvent confondus.
+       .badge  → CLASSE l'objet    (niveau, matière, type, nombre)  — stable
+       .status → dit son ÉTAT      (à réviser, terminé, en erreur)  — évolue
+     Un objet peut porter les deux ; il ne porte jamais deux statuts.
+     ========================================================================== */
+  .badge{
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    font-family: var(--font-data); font-size: var(--text-label);
+    font-weight: var(--weight-medium); letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    padding: 2px var(--space-xs); border-radius: var(--radius-sm);
+    background: var(--surface-sunken); color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .badge--outline{ background: none; border: 1px solid var(--border); }
+  .badge--accent{ background: var(--accent-wash); color: var(--accent); }
+  /* Compteur : chiffre seul, tabulaire, sans majuscules forcées. */
+  .badge--count{
+    font-variant-numeric: tabular-nums; text-transform: none;
+    letter-spacing: 0; min-width: 20px; justify-content: center;
+  }
+
+  /* ==========================================================================
+     SÉPARATEURS — un filet sépare deux choses de MÊME nature. Entre deux
+     natures différentes, c'est l'espace qui sépare, pas le trait.
+     ========================================================================== */
+  .divider{ height: 1px; background: var(--border); border: none; margin: var(--space-lg) 0; }
+  .divider--tight{ margin: var(--space-sm) 0; }
+  .divider--vertical{
+    width: 1px; height: auto; align-self: stretch; margin: 0 var(--space-sm);
+    background: var(--border);
+  }
+  /* Liste séparée par des filets : le filet est entre les lignes, jamais
+     au-dessus de la première ni sous la dernière. */
+  .list-ruled > * + *{ border-top: 1px solid var(--border); }
+
+  /* ==========================================================================
+     CHAMPS — libellé, champ, aide, erreur. Toujours dans cet ordre.
+     Le libellé est au-dessus : jamais un placeholder à la place d'un libellé.
+     ========================================================================== */
+  .field{ display: flex; flex-direction: column; gap: var(--space-2xs); margin-bottom: var(--space-md); }
+  .field-label{
+    font-family: var(--font-ui); font-size: var(--text-metadata);
+    font-weight: var(--weight-medium); color: var(--text-primary);
+  }
+  .field-label .is-optional{ color: var(--text-muted); font-weight: var(--weight-regular); }
+  .field-hint{ font-size: var(--text-metadata); color: var(--text-muted); line-height: var(--leading-meta); }
+  .field-error{
+    font-size: var(--text-metadata); color: var(--error); line-height: var(--leading-meta);
+    display: flex; align-items: flex-start; gap: var(--space-2xs);
+  }
+
+  .input, .select, .textarea,
+  .ai-select, .ai-textarea{
+    width: 100%; box-sizing: border-box;
+    font-family: var(--font-ui); font-size: var(--text-small);
+    color: var(--text-primary); background: var(--surface);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    padding: 0 var(--space-sm); min-height: 40px;
+    box-shadow: none;
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                box-shadow var(--motion-micro) var(--ease-enter);
+  }
+  .textarea, .ai-textarea{
+    padding: var(--space-sm); min-height: 112px;
+    line-height: var(--leading-body); resize: vertical;
+  }
+  /* Le chevron ne vaut que pour un vrai <select> : .ai-select est aussi posée
+     sur des <input> dans la bibliothèque — leur coller une flèche de liste
+     déroulante serait un mensonge visuel. */
+  .select, select.ai-select{
+    padding-right: var(--space-xl); appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238A8A93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right var(--space-sm) center;
+    background-size: 12px 12px;
+  }
+  .input:hover, .select:hover, .textarea:hover,
+  .ai-select:hover, .ai-textarea:hover{ border-color: var(--text-muted); }
+  .input:focus, .select:focus, .textarea:focus,
+  .ai-select:focus, .ai-textarea:focus{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .input:disabled, .select:disabled, .textarea:disabled{
+    background: var(--surface-sunken); color: var(--text-muted); cursor: not-allowed;
+  }
+  .input::placeholder, .textarea::placeholder{ color: var(--text-muted); }
+  /* Erreur : la bordure NE porte jamais l'information seule — .field-error
+     l'écrit, et aria-invalid la dit aux technologies d'assistance. */
+  .input.is-invalid, .select.is-invalid, .textarea.is-invalid,
+  .input[aria-invalid="true"], .select[aria-invalid="true"], .textarea[aria-invalid="true"]{
+    border-color: var(--error);
+  }
+  .input.is-invalid:focus, .input[aria-invalid="true"]:focus{ box-shadow: 0 0 0 3px var(--error-wash); }
+  /* Deux champs côte à côte : ils retombent l'un sous l'autre en compact. */
+  .field-row{ display: flex; gap: var(--space-md); flex-wrap: wrap; }
+  .field-row > .field{ flex: 1 1 200px; min-width: 0; }
+
+  /* Case à cocher / bouton radio : la cible cliquable est le libellé entier. */
+  .choice{
+    display: flex; align-items: flex-start; gap: var(--space-xs);
+    font-size: var(--text-small); color: var(--text-primary);
+    cursor: pointer; padding: var(--space-2xs) 0; min-height: 28px;
+  }
+  .choice > input{ accent-color: var(--accent); width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+
+  /* ==========================================================================
+     MODALE — une seule famille. Le survol de page a un rayon de 16, une ombre
+     de modale, et un fond qui assombrit sans flouter (pas de glassmorphism).
+     ========================================================================== */
+  .modal-backdrop,
+  .cal-modal-backdrop{
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(22,22,26,0.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--space-lg);
+    animation: ds-fade var(--motion-enter) var(--ease-enter);
+  }
+  .modal,
+  .cal-modal{
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-modal);
+    width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto;
+    padding: var(--space-lg);
+    animation: ds-rise var(--motion-enter) var(--ease-enter);
+  }
+  .modal--wide{ max-width: 640px; }
+  .modal-head{
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: var(--space-md); margin-bottom: var(--space-md);
+  }
+  .modal-title{
+    font-family: var(--font-display); font-size: var(--text-h2);
+    line-height: var(--leading-h2); font-weight: var(--weight-semibold);
+    color: var(--text-primary); margin: 0;
+  }
+  .modal-body{ font-size: var(--text-small); line-height: var(--leading-small); color: var(--text-secondary); }
+  .modal-body > * + *{ margin-top: var(--space-sm); }
+  .modal-foot{
+    display: flex; justify-content: flex-end; align-items: center;
+    gap: var(--space-sm); margin-top: var(--space-lg); flex-wrap: wrap;
+  }
+  .modal-close{
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-sm);
+    border: none; background: none; color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter);
+  }
+  .modal-close:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .modal-close svg{ width: 16px; height: 16px; }
+  @keyframes ds-fade{ from{ opacity: 0; } to{ opacity: 1; } }
+  @keyframes ds-rise{ from{ opacity: 0; transform: translateY(8px); } to{ opacity: 1; transform: none; } }
+
+  /* CONFIRMATION — variante de modale. Elle nomme la conséquence, pas
+     l'action : « Supprimer 12 flashcards ? », pas « Êtes-vous sûr ? ». */
+  .modal--confirm{ max-width: 400px; }
+  .modal--confirm .modal-title{ font-size: var(--text-h3); font-family: var(--font-ui); }
+  .modal--confirm .modal-foot{ margin-top: var(--space-md); }
+
+  /* ==========================================================================
+     TOAST — un fait accompli, brièvement. Jamais une question, jamais une
+     erreur bloquante (celle-là reste dans la page).
+     ========================================================================== */
+  .toast,
+  .app-toast{
+    position: fixed; left: 50%; bottom: var(--space-lg);
+    transform: translateX(-50%) translateY(10px);
+    display: flex; align-items: center; gap: var(--space-xs);
+    background: var(--text-primary); color: var(--text-on-accent);
+    font-family: var(--font-ui); font-size: var(--text-metadata);
+    font-weight: var(--weight-medium); line-height: var(--leading-meta);
+    padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-modal);
+    opacity: 0; pointer-events: none; z-index: 500;
+    max-width: min(440px, calc(100vw - 32px));
+    transition: opacity var(--motion-enter) var(--ease-enter),
+                transform var(--motion-enter) var(--ease-enter);
+  }
+  .toast.show, .app-toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast::before, .app-toast::before{ content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; opacity: 0.6; }
+  .toast.toast--success::before{ background: #7FD4AE; opacity: 1; }
+  .toast.toast--error::before{   background: #F19A94; opacity: 1; }
+
+  /* ==========================================================================
+     MENU DÉROULANT — même famille que les menus de l'en-tête.
+     ========================================================================== */
+  .menu{
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-elevated);
+    padding: var(--space-2xs); min-width: 200px;
+  }
+  .menu-label{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); padding: var(--space-xs) var(--space-sm) var(--space-2xs);
+  }
+  .menu-item{
+    display: flex; align-items: center; gap: var(--space-xs);
+    width: 100%; text-align: left; border: none; background: none;
+    font-family: var(--font-ui); font-size: var(--text-small);
+    color: var(--text-secondary); cursor: pointer;
+    padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm);
+    min-height: 36px;
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter);
+  }
+  .menu-item:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .menu-item[aria-current="true"]{ color: var(--text-primary); font-weight: var(--weight-medium); }
+  .menu-sep{ height: 1px; background: var(--border); margin: var(--space-2xs) 0; border: none; }
+
+  /* ==========================================================================
+     CHARGEMENT — trois formes, trois durées.
+       squelette (.skeleton)  → on connaît la forme du contenu attendu
+       .spinner               → attente courte et localisée
+       .loading-line          → attente longue, avec ce qui se passe écrit
+     ========================================================================== */
+  .spinner{
+    display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border-strong); border-top-color: var(--text-secondary);
+    animation: ds-spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  .spinner.spinner--sm{ width: 12px; height: 12px; border-width: 1.5px; }
+  .spinner.spinner--lg{ width: 24px; height: 24px; border-width: 2.5px; }
+  .loading-line{
+    display: flex; align-items: center; gap: var(--space-xs);
+    font-size: var(--text-small); color: var(--text-secondary);
+    padding: var(--space-sm) 0;
+  }
+
+  /* ==========================================================================
+     ÉTATS VIDES ET ERREURS — même ossature, deux tons.
+       .empty           → il n'y a rien ENCORE : on dit quoi faire
+       .empty.is-error  → quelque chose a échoué : on dit quoi, et on réessaie
+     Une erreur ne dit jamais seulement « une erreur est survenue ».
+     ========================================================================== */
+  .empty.is-error .empty-icon{ color: var(--error); }
+  .empty.is-error .empty-title{ color: var(--text-primary); }
+  /* Variante compacte : dans un bloc, pas sur une page entière. */
+  .empty.empty--inline{
+    min-height: 0; padding: var(--space-lg) var(--space-md);
+    align-items: flex-start; text-align: left;
+  }
+  .empty.empty--inline .empty-actions{ justify-content: flex-start; }
+  /* Erreur de champ / de ligne, dans le flux : c'est .callout.error. */
+
+  /* ==========================================================================
+     GARDE-FOU — CARTES IMBRIQUÉES
+     --------------------------------------------------------------------------
+     Un feature block posé dans un feature block perd son relief : il ne reste
+     que sa bordure. Au troisième niveau, il perd aussi sa boîte — à ce
+     stade, le regroupement doit se faire par l'espace et la typographie.
+     ========================================================================== */
+  .block--feature .block--feature,
+  .block--feature .card,
+  .card .block--feature,
+  .dash-section .block--feature{
+    box-shadow: none; background: var(--surface-sunken);
+  }
+  .block--feature .block--feature .block--feature,
+  .card .card .card{
+    background: none; border: none; padding: 0; box-shadow: none;
+  }
+
+  /* ==========================================================================
+     RESPONSIVE DES COMPOSANTS
+     --------------------------------------------------------------------------
+     Deux seuils seulement, ceux du système : 1024 (tablette) et 640 (compact).
+     ========================================================================== */
+  @media (max-width: 1024px){
+    .block--feature, .card{ padding: var(--space-md); }
+    .stat-row{ gap: var(--space-lg); }
+    .stat-row > .stat + .stat{ padding-left: var(--space-lg); }
+  }
+  @media (max-width: 640px){
+    .t-page{ font-size: var(--text-h2); }
+    .t-section{ font-size: var(--text-h3); }
+    .page-head{ margin-bottom: var(--space-lg); }
+    .block--feature, .card{ padding: var(--space-md); border-radius: var(--radius-sm); }
+    /* En compact, une barre d'actions empile ses boutons sur toute la largeur :
+       viser un bouton de 40px au pouce, côte à côte, ne marche pas. */
+    .block--action{ flex-direction: column; align-items: stretch; }
+    .block--action > .btn{ width: 100%; }
+    .block--action > .is-spacer{ display: none; }
+    .modal-foot{ flex-direction: column-reverse; align-items: stretch; }
+    .modal-foot > .btn{ width: 100%; }
+    .modal-backdrop, .cal-modal-backdrop{ padding: var(--space-sm); align-items: flex-end; }
+    .modal, .cal-modal{ max-height: 92vh; }
+    .stat-row{ gap: var(--space-md); }
+    .stat-row > .stat + .stat{ border-left: none; padding-left: 0; }
+    .field-row{ gap: var(--space-sm); }
+    .toast, .app-toast{ left: var(--space-sm); right: var(--space-sm); bottom: var(--space-sm); transform: translateY(10px); max-width: none; }
+    .toast.show, .app-toast.show{ transform: translateY(0); }
+  }
+
+  /* Cibles tactiles des composants déclarés ci-dessus : la règle doit venir
+     APRÈS eux, sinon leur hauteur au repos l'emporterait. */
+  @media (pointer: coarse){
+    .menu-item{ min-height: 44px; }
+    .choice{ min-height: 44px; align-items: center; }
+  }
+
+  /* Mouvement réduit : les composants restent, leurs animations partent. */
+  @media (prefers-reduced-motion: reduce){
+    .modal-backdrop, .cal-modal-backdrop, .modal, .cal-modal{ animation: none; }
+    .spinner, .skeleton{ animation-duration: 0.01ms; animation-iteration-count: 1; }
+    .toast, .app-toast{ transition-duration: 0.01ms; }
+  }
+
+
   .progress-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 17px; gap:10px; }
   .progress-row .label{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
   .progress-row .score{ font-size: 13.5px; color: var(--red); font-weight: 800; flex-shrink:0; font-variant-numeric: tabular-nums; }
@@ -1392,15 +1873,16 @@
   .ai-notice b{ color: var(--ink); }
 
   .ai-field{ margin-bottom: 18px; }
-  .ai-field label{ display:block; font-size: 11.5px; font-weight: 800; color: var(--ink); margin-bottom: 7px; text-transform:uppercase; letter-spacing:0.05em; }
-  .ai-select, .ai-textarea{
-    width:100%; border: 1.5px solid var(--border-strong); border-radius: var(--radius-md);
-    font-family: "Inter", sans-serif; font-size: 14px; color: var(--ink); background:#fff;
-    padding: 12px 14px; outline:none; transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  /* Le libellé d'un champ IA est un .field-label : même rôle, même graisse. */
+  .ai-field label{
+    display:block; font-family: var(--font-ui); font-size: var(--text-metadata);
+    font-weight: var(--weight-medium); color: var(--text-primary);
+    margin-bottom: var(--space-2xs); text-transform:none; letter-spacing:0;
   }
-  .ai-select:focus, .ai-textarea:focus{ border-color: var(--red); box-shadow: 0 0 0 3.5px var(--ring); }
-  .ai-textarea{ resize: vertical; min-height: 112px; line-height:1.6; }
-  .ai-hint{ font-size: 11px; color: var(--muted); margin-top: 5px; }
+  /* .ai-select / .ai-textarea sont désormais servis par la famille .select /
+     .textarea déclarée plus haut — aucune redéfinition ici, sinon le système
+     se dédoublerait. */
+  .ai-hint{ font-size: var(--text-metadata); color: var(--text-muted); margin-top: var(--space-2xs); }
 
   .ai-filezone{
     border: 1.5px dashed var(--border-strong); border-radius: var(--radius-md); padding: 18px;
@@ -1430,17 +1912,8 @@
   .ai-spinner{ width:17px; height:17px; border-radius:50%; border: 2.5px solid var(--border); border-top-color: var(--red); animation: ai-spin 0.7s linear infinite; }
   @keyframes ai-spin{ to{ transform: rotate(360deg); } }
 
-  /* Toast discret : pour signaler un échec ponctuel (régénération, génération…)
-     sans laisser de gros bloc rouge permanent dans la page. */
-  .app-toast{
-    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(14px);
-    background: var(--ink); color:#fff; font-size:13px; font-weight:600; line-height:1.4;
-    padding:12px 18px; border-radius:999px; box-shadow: var(--shadow-md);
-    opacity:0; pointer-events:none; transition: opacity 0.22s ease, transform 0.22s ease;
-    z-index: 500; max-width: min(420px, calc(100vw - 32px)); text-align:center;
-  }
-  .app-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-  @media (max-width:560px){ .app-toast{ bottom:18px; font-size:12.5px; padding:11px 16px; } }
+  /* Le toast historique (.app-toast) est le composant .toast : il est déclaré
+     avec lui plus haut. showToast() pose les deux classes. */
 
   .ai-result{ margin-top: 24px; animation: content-in 0.3s var(--ease); }
   .ai-result-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 13px; gap: 10px; flex-wrap:wrap; }
@@ -2556,8 +3029,8 @@
   }
   .cal-more{ border:none; background:none; font-size:9.5px; color: var(--muted); font-weight:700; cursor:pointer; padding:0; }
 
-  .cal-modal-backdrop{ position:fixed; inset:0; background:rgba(20,21,26,0.55); z-index:300; display:flex; align-items:center; justify-content:center; padding:20px; }
-  .cal-modal{ background: var(--surface); border-radius: var(--radius-lg); max-width:420px; width:100%; max-height:85vh; overflow-y:auto; padding:22px; box-shadow: var(--shadow-lg); }
+  /* .cal-modal-backdrop / .cal-modal appartiennent à la famille .modal-backdrop
+     / .modal déclarée plus haut : seule la largeur large leur est propre. */
   .cal-modal-wide{ max-width:560px; }
 
   .cw-toprow{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px; }
@@ -4032,19 +4505,96 @@ let lastActionTs = null;
 /* Toast discret et éphémère — jamais de détails techniques, un message humain
    court qui disparaît tout seul. Ne dépend pas de #content (survit à un render()). */
 let toastHideTimer = null;
-function showToast(message){
+/* ============================================================================
+   TOAST — composant du système (voir COMPOSANTS.md §Toast).
+   Un toast annonce un FAIT ACCOMPLI, brièvement. Il ne pose jamais de
+   question et ne porte jamais une erreur bloquante : celle-là reste dans la
+   page (.callout.error ou .empty.is-error).
+     showToast(message)                     → ton neutre (compatibilité)
+     showToast(message, "success"|"error")  → ton explicite
+   ========================================================================== */
+function showToast(message, tone){
   let el = document.getElementById("app-toast");
   if(!el){
     el = document.createElement("div");
     el.id = "app-toast";
-    el.className = "app-toast";
     el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
     document.body.appendChild(el);
   }
+  /* Les deux noms cohabitent : .toast est le nom du système, .app-toast le
+     nom historique conservé pour ne casser aucun sélecteur existant. */
+  el.className = "toast app-toast"
+    + (tone === "success" ? " toast--success" : tone === "error" ? " toast--error" : "");
   el.textContent = message;
+  /* Forcer un reflow pour que la transition rejoue si le toast est déjà visible. */
+  void el.offsetWidth;
   el.classList.add("show");
   clearTimeout(toastHideTimer);
   toastHideTimer = setTimeout(()=>{ el.classList.remove("show"); }, 3400);
+}
+
+/* ============================================================================
+   CONFIRMATION — composant du système (voir COMPOSANTS.md §Confirmation).
+   Remplace window.confirm() pour les actions destructives : une modale
+   accessible (rôle alertdialog, focus piégé, Échap, clic sur le fond),
+   dont le titre nomme la CONSÉQUENCE et non l'action.
+
+   Renvoie une promesse : dsConfirm({...}).then(ok => ...).
+   Les appels synchrones existants à confirm() restent valides tant qu'ils
+   n'ont pas été migrés — les deux mécanismes ne se gênent pas.
+   ========================================================================== */
+function dsConfirm(opts){
+  const o = opts || {};
+  const destructive = o.tone === "destructive";
+  return new Promise(function(resolve){
+    const previousFocus = document.activeElement;
+    const back = document.createElement("div");
+    back.className = "modal-backdrop";
+    back.innerHTML =
+      '<div class="modal modal--confirm" role="alertdialog" aria-modal="true" aria-labelledby="ds-confirm-title">'
+      +   '<div class="modal-head">'
+      +     '<h2 class="modal-title" id="ds-confirm-title"></h2>'
+      +   '</div>'
+      +   '<div class="modal-body"><p class="ds-confirm-body"></p></div>'
+      +   '<div class="modal-foot">'
+      +     '<button type="button" class="btn btn--tertiary" data-ds-confirm="no"></button>'
+      +     '<button type="button" class="btn ' + (destructive ? 'btn--destructive solid' : 'btn--primary') + '" data-ds-confirm="yes"></button>'
+      +   '</div>'
+      + '</div>';
+    /* Le texte passe par textContent : jamais d'HTML injecté ici. */
+    back.querySelector(".modal-title").textContent = o.title || "Confirmer";
+    const bodyEl = back.querySelector(".ds-confirm-body");
+    if(o.body){ bodyEl.textContent = o.body; } else { bodyEl.remove(); }
+    const noBtn  = back.querySelector('[data-ds-confirm="no"]');
+    const yesBtn = back.querySelector('[data-ds-confirm="yes"]');
+    noBtn.textContent  = o.cancelLabel  || "Annuler";
+    yesBtn.textContent = o.confirmLabel || "Confirmer";
+
+    function close(answer){
+      document.removeEventListener("keydown", onKey, true);
+      back.remove();
+      if(previousFocus && previousFocus.focus) { try{ previousFocus.focus(); }catch(e){} }
+      resolve(answer);
+    }
+    function onKey(e){
+      if(e.key === "Escape"){ e.preventDefault(); close(false); return; }
+      if(e.key !== "Tab") return;
+      /* Piège à focus : le clavier ne sort pas de la modale. */
+      const focusables = back.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+      if(!focusables.length) return;
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    }
+    back.addEventListener("click", function(e){ if(e.target === back) close(false); });
+    noBtn.addEventListener("click", function(){ close(false); });
+    yesBtn.addEventListener("click", function(){ close(true); });
+    document.addEventListener("keydown", onKey, true);
+    document.body.appendChild(back);
+    /* Le focus part sur l'action la moins risquée. */
+    (destructive ? noBtn : yesBtn).focus();
+  });
 }
 
 function shuffle(arr){
@@ -5912,9 +6462,17 @@ function attachLibraryEvents(){
     const editS = document.getElementById("lib-edit-subject-btn");
     if(editS) editS.addEventListener("click", ()=> libGoto("subjectForm", {editingSubjectId: lib.subjectId}));
     const delS = document.getElementById("lib-delete-subject-btn");
-    if(delS) delS.addEventListener("click", ()=>{
+    if(delS) delS.addEventListener("click", async ()=>{
       const chs = chaptersOfSubject(lib.subjectId);
-      if(!confirm("Supprimer cette matière" + (chs.length? " et ses "+chs.length+" chapitre(s)" : "") + " ? Cette action est définitive.")) return;
+      const subj = findSubject(lib.subjectId);
+      const ok = await dsConfirm({
+        title: chs.length
+          ? "Supprimer « " + (subj ? subj.name : "cette matière") + " » et ses " + chs.length + " chapitre" + (chs.length>1?"s":"") + " ?"
+          : "Supprimer « " + (subj ? subj.name : "cette matière") + " » ?",
+        body: "Les fiches, quiz, flashcards et l'historique de révision de cette matière seront perdus. Cette action est définitive.",
+        confirmLabel: "Supprimer la matière", cancelLabel: "Garder", tone: "destructive",
+      });
+      if(!ok) return;
       state.userSubjects = state.userSubjects.filter(x=>x.id!==lib.subjectId);
       state.userChapters = state.userChapters.filter(x=>x.subjectId!==lib.subjectId);
       saveUserSubjects(); saveUserChapters();
@@ -5938,8 +6496,13 @@ function attachLibraryEvents(){
       const editBtn = document.getElementById("lib-edit-chapter-btn");
       if(editBtn) editBtn.addEventListener("click", ()=> libGoto("chapterForm", {subjectId: ch.subjectId, editingChapterId: ch.id}));
       const delBtn = document.getElementById("lib-delete-chapter-btn");
-      if(delBtn) delBtn.addEventListener("click", ()=>{
-        if(!confirm("Supprimer ce chapitre ? Cette action est définitive.")) return;
+      if(delBtn) delBtn.addEventListener("click", async ()=>{
+        const ok = await dsConfirm({
+          title: "Supprimer « " + (ch.title || "ce chapitre") + " » ?",
+          body: "La fiche, le quiz, les flashcards et l'historique de révision de ce chapitre seront perdus. Cette action est définitive.",
+          confirmLabel: "Supprimer le chapitre", cancelLabel: "Garder", tone: "destructive",
+        });
+        if(!ok) return;
         const subjId = ch.subjectId;
         if(ch.hasOriginalFile) deleteCourseFileBlob(ch.id).catch(()=>{});
         state.userChapters = state.userChapters.filter(c=>c.id!==ch.id);
@@ -6017,8 +6580,13 @@ function attachLibraryEvents(){
         });
       });
       document.querySelectorAll("[data-card-delete]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          if(!confirm("Supprimer cette flashcard ?")) return;
+        btn.addEventListener("click", async ()=>{
+          const ok = await dsConfirm({
+            title: "Supprimer cette flashcard ?",
+            body: "Elle disparaîtra du paquet, ainsi que son historique de révision.",
+            confirmLabel: "Supprimer", cancelLabel: "Garder", tone: "destructive",
+          });
+          if(!ok) return;
           libDeleteFlashcard(ch, parseInt(btn.dataset.cardDelete));
           render();
         });
@@ -6047,8 +6615,13 @@ function attachLibraryEvents(){
         });
       });
       document.querySelectorAll("[data-q-delete]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          if(!confirm("Supprimer cette question ?")) return;
+        btn.addEventListener("click", async ()=>{
+          const ok = await dsConfirm({
+            title: "Supprimer cette question ?",
+            body: "Elle disparaîtra du quiz, ainsi que ton historique de réponses sur cette question.",
+            confirmLabel: "Supprimer", cancelLabel: "Garder", tone: "destructive",
+          });
+          if(!ok) return;
           libDeleteQuizQuestion(ch, parseInt(btn.dataset.qDelete));
           render();
         });
