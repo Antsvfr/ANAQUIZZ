@@ -5,81 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EM Lyon Révision</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Trois familles, trois rôles exclusifs (voir DIRECTION_ARTISTIQUE.md §1) :
+     Newsreader = titres et lecture · Public Sans = interface · IBM Plex Mono = chiffres.
+     Un seul appel, graisses strictement limitées, display=swap : le texte
+     reste lisible pendant le chargement plutôt que de disparaître. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ==========================================================================
+     DESIGN SYSTEM REV-EM — SOURCE UNIQUE DES VALEURS
+     --------------------------------------------------------------------------
+     Toute valeur de couleur, de taille, d'espace, de forme, d'ombre ou de durée
+     vient d'ici. Aucune valeur arbitraire ailleurs.
+
+     Le bloc est en deux parties :
+       1. les TOKENS CANONIQUES — les seuls à utiliser dans du code nouveau ;
+       2. les ALIAS HISTORIQUES — les anciens noms, conservés et redirigés vers
+          les canoniques. Ils existent pour que les ~500 usages déjà en place
+          héritent automatiquement du nouveau système SANS créer un second
+          système parallèle. Ils sont destinés à disparaître au fil des
+          migrations d'écrans, jamais à être réutilisés.
+
+     Référence : DIRECTION_ARTISTIQUE.md
+     ========================================================================== */
   :root{
     color-scheme: light;
-    --bg:#F8F9FB;
-    --surface:#FFFFFF;
-    --surface-2:#FCFCFD;
-    --border:#E9EAF0;
-    --border-strong:#DADCE5;
-    --ink:#14151A;
-    --ink-soft:#5A5C68;
-    --muted:#787A87;
-    --navy:#0F1F3D;
-    --navy-dark:#0A1630;
-    --navy-tint:#EAEEF6;
-    --red:#E31C3D;
-    --red-dark:#B4152F;
-    --red-tint:#FDECEF;
-    --red-tint-strong:#FBD9DF;
-    --amber:#B4740E;
-    --amber-tint:#FBF0DC;
-    --amber-strong:#F0D8A8;
-    --green:#1B7A54;
-    --green-tint:#E6F5EE;
-    --green-strong:#BFE5D3;
-    --blue:#2C5FA8;
-    --blue-tint:#E8EFF9;
-    --ring: rgba(227,28,61,0.35);
 
-    /* Alias centralisés (couleurs + typographie) — à ajuster ici pour changer tout le site */
-    --font-main: "Inter", Arial, Helvetica, sans-serif;
-    --font-heading: "Inter", Arial, Helvetica, sans-serif;
-    --color-primary: var(--red);
-    --color-primary-dark: var(--red-dark);
-    --color-background: var(--bg);
-    --color-surface: var(--surface);
-    --color-text: var(--ink);
-    --color-muted: var(--muted);
-    --color-border: var(--border);
-    --color-accent: var(--blue);
-    --color-success: var(--green);
+    /* ── COULEURS ─────────────────────────────────────────────────────────
+       Base ivoire / encre. Le rouge est une SIGNATURE : action primaire,
+       onglet actif, marque. Trois occurrences par écran au maximum. */
+    --background:       #FBFAF8;   /* ivoire chaud — jamais un gris bleuté */
+    --surface:          #FFFFFF;
+    --surface-sunken:   #F4F2EE;   /* survol de ligne, en-tête de tableau */
 
-    /* ---- Échelle typographique (§3) ----
-       Une vraie échelle, à la place des ~24 tailles ad hoc (9 → 22px) qui
-       coexistaient en style inline. Chaque niveau a un rôle, pas juste une
-       taille : voir .page-title / .section-title / .meta plus bas. */
-    --text-display:26px;  /* hero du dashboard uniquement */
-    --text-h1:22px;       /* titre de page (niveau 1) */
-    --text-h2:15.5px;     /* titre de section (niveau 2) */
-    --text-h3:13.5px;     /* titre de bloc/carte (niveau 3) */
-    --text-body:13px;     /* texte principal */
-    --text-sm:12.5px;     /* texte secondaire */
-    --text-xs:11.5px;     /* metadata, légendes */
-    --text-2xs:10.5px;    /* eyebrow, micro-label */
+    --text-primary:     #16161A;   /* encre — jamais #000 */
+    --text-secondary:   #4A4A52;
+    --text-muted:       #8A8A93;
+    --text-on-accent:   #FFFFFF;
 
-    /* ---- Échelle d'espacement (§15/§38) ----
-       L'espace exprime la hiérarchie : plus le niveau est élevé, plus
-       l'espace qui l'entoure est grand. */
-    --space-2xs:4px;
-    --space-xs:6px;
-    --space-sm:10px;
-    --space-md:14px;
-    --space-lg:18px;
-    --space-xl:22px;
-    --space-2xl:28px;
+    --border:           #E8E5E0;   /* filet standard */
+    --border-strong:    #D6D2CB;   /* survol, champ au focus */
 
-    --radius-xl:18px;
-    --radius-lg:14px;
-    --radius-md:10px;
-    --radius-sm:7px;
-    --shadow-xs: 0 1px 2px rgba(20,21,26,0.05);
-    --shadow-sm: 0 1px 3px rgba(20,21,26,0.06), 0 1px 2px rgba(20,21,26,0.04);
-    --shadow-md: 0 4px 14px rgba(20,21,26,0.07), 0 1px 3px rgba(20,21,26,0.05);
-    --shadow-lg: 0 12px 28px rgba(20,21,26,0.10), 0 2px 6px rgba(20,21,26,0.05);
-    --ease: cubic-bezier(.22,.9,.32,1);
+    --accent:           #E31C3D;   /* rouge emlyon */
+    --accent-hover:     #C4162F;
+    --accent-active:    #B4152F;
+    --accent-wash:      #FDF2F4;
+
+    /* Fonctionnelles : trois, chacune avec un rôle unique. Jamais en fond de
+       bouton, sauf --error en confirmation destructive. */
+    --success:          #1F6B4D;
+    --success-wash:     #ECF4F0;
+    --warning:          #8F5C00;   /* 5.14:1 sur son aplat — l'ocre d'origine
+                                      (#A66A00) plafonnait à 4.06:1, sous AA */
+    --warning-wash:     #FAF3E6;
+    --error:            #B3261E;
+    --error-wash:       #FBEEED;
+    --info:             #2C5FA8;
+    --info-wash:        #EDF2FA;
+
+    /* Données : une rampe graphite unique. Les graphiques n'emploient aucune
+       couleur — la rampe porte la quantité, le rouge marque la période courante. */
+    --data-1:           #EDEAE5;
+    --data-2:           #C9C5BE;
+    --data-3:           #9A958C;
+    --data-4:           #5C5850;
+    --data-5:           #2A2721;
+
+    /* ── TYPOGRAPHIE ──────────────────────────────────────────────────────
+       Trois familles, trois rôles exclusifs. Une famille ne sort jamais
+       de son rôle. */
+    --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-ui:      "Public Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    --font-data:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --text-display:   40px;   --leading-display: 1.15;
+    --text-h1:        30px;   --leading-h1:      1.2;
+    --text-h2:        20px;   --leading-h2:      1.3;
+    --text-h3:        16px;   --leading-h3:      1.4;
+    --text-body:      16px;   --leading-body:    1.6;
+    --text-small:     14px;   --leading-small:   1.55;
+    --text-metadata:  13px;   --leading-meta:    1.4;
+    --text-label:     11px;   --leading-label:   1.2;
+    --text-data-xl:   40px;
+    --text-data:      20px;
+
+    --weight-regular:  400;
+    --weight-medium:   500;
+    --weight-semibold: 600;   /* plafond : ni 700 ni 800 */
+    --tracking-label:  0.08em;
+    --tracking-tight: -0.011em;
+
+    /* ── ESPACEMENT — grille de 8 ─────────────────────────────────────────
+       L'espace AU-DESSUS d'un élément est toujours plus grand que l'espace
+       à l'intérieur du groupe auquel il appartient. C'est ce qui regroupe,
+       sans aucune bordure. */
+    --space-2xs:  4px;
+    --space-xs:   8px;
+    --space-sm:  12px;
+    --space-md:  16px;
+    --space-lg:  24px;
+    --space-xl:  32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+    --space-4xl: 96px;
+
+    /* ── FORMES ───────────────────────────────────────────────────────────
+       Trois rayons, un par nature d'objet. Pas de quatrième. */
+    --radius-sm:   8px;    /* contrôles : boutons, champs, chips */
+    --radius-md:  12px;    /* surfaces : cartes, panneaux */
+    --radius-lg:  16px;    /* survols de page : modales, feuilles */
+    --radius-pill: 999px;  /* pastille de statut — usage unique */
+
+    /* ── OMBRES — très légères, jamais décoratives ────────────────────────── */
+    --shadow-subtle:   0 1px 2px rgba(22,22,26,0.04);
+    --shadow-elevated: 0 2px 8px rgba(22,22,26,0.06), 0 1px 2px rgba(22,22,26,0.04);
+    --shadow-modal:    0 16px 48px rgba(22,22,26,0.14), 0 2px 8px rgba(22,22,26,0.06);
+
+    /* ── MOUVEMENT ────────────────────────────────────────────────────────
+       Quatre durées, deux courbes. Tout effet qui n'informe pas est retiré. */
+    --motion-micro: 120ms;   /* survol, focus, pression */
+    --motion-state: 180ms;   /* changement d'état, sortie */
+    --motion-enter: 240ms;   /* modale, panneau, toast */
+    --motion-flip:  420ms;   /* retournement de flashcard — seule exception */
+    --ease-enter: cubic-bezier(.2,.8,.2,1);
+    --ease-exit:  cubic-bezier(.4,0,.6,1);
+
+    /* ── LARGEURS & POINTS DE RUPTURE ─────────────────────────────────────
+       Deux largeurs, deux intentions : on lit / on travaille.
+       Trois seuils : <=640 (compact) · <=1024 (tablette) · >1024 (bureau). */
+    --width-read:  680px;
+    --width-work: 1200px;
+
+    /* ── FOCUS ────────────────────────────────────────────────────────────── */
+    --focus-ring:  var(--accent);
+    --focus-width: 2px;
+    --focus-offset: 2px;
+
+    /* ======================================================================
+       ALIAS HISTORIQUES — ne pas utiliser dans du code nouveau
+       ====================================================================== */
+    --bg:               var(--background);
+    --surface-2:        var(--surface-sunken);
+    --ink:              var(--text-primary);
+    --ink-soft:         var(--text-secondary);
+    --muted:            var(--text-muted);
+    --border-color:     var(--border);
+
+    --red:              var(--accent);
+    --red-dark:         var(--accent-active);
+    --red-tint:         var(--accent-wash);
+    --red-tint-strong:  #FBD9DF;
+    --amber:            var(--warning);
+    --amber-tint:       var(--warning-wash);
+    --amber-strong:     #F0D8A8;
+    --green:            var(--success);
+    --green-tint:       var(--success-wash);
+    --green-strong:     #BFE5D3;
+    --blue:             var(--info);
+    --blue-tint:        var(--info-wash);
+    --navy:             #17253F;
+    --navy-dark:        #101B2E;
+    --navy-tint:        #EDEFF4;
+    --ring:             rgba(227,28,61,0.32);
+
+    --font-main:        var(--font-ui);
+    --font-heading:     var(--font-display);
+
+    --text-sm:          var(--text-small);
+    --text-xs:          var(--text-metadata);
+    --text-2xs:         var(--text-label);
+
+    --radius-xl:        var(--radius-lg);
+
+    --shadow-xs:        var(--shadow-subtle);
+    --shadow-sm:        var(--shadow-subtle);
+    --shadow-md:        var(--shadow-elevated);
+    --shadow-lg:        var(--shadow-modal);
+
+    --ease:             var(--ease-enter);
+
+    --color-primary:      var(--accent);
+    --color-primary-dark: var(--accent-active);
+    --color-background:   var(--background);
+    --color-surface:      var(--surface);
+    --color-text:         var(--text-primary);
+    --color-muted:        var(--text-muted);
+    --color-border:       var(--border);
+    --color-accent:       var(--info);
+    --color-success:      var(--success);
   }
 
   * { box-sizing: border-box; }
@@ -87,27 +200,53 @@
   html{ scroll-behavior:smooth; }
 
   body{
-    background: var(--color-background);
-    color: var(--color-text);
-    font-family: var(--font-main);
+    background: var(--background);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-body);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-body);
     min-height:100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.5;
-    letter-spacing: -0.003em;
   }
 
-  ::selection{ background: var(--red-tint-strong); color: var(--red-dark); }
+  ::selection{ background: var(--accent-wash); color: var(--accent-active); }
 
-  a, button{ font-family: inherit; }
-  h1, h2, h3, h4{ font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.015em; }
+  a, button, input, textarea, select{ font-family: inherit; }
 
+  /* Les titres sont en police d'interface par défaut ; le sérif est réservé au
+     display et aux titres de PAGE (.page-title), à la question de quiz et aux
+     titres dans les fiches. Une famille ne sort jamais de son rôle. */
+  h1, h2, h3, h4{
+    font-family: var(--font-ui);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  /* Chiffres tabulaires partout où une valeur est comparée ou change en direct :
+     sans cela les pourcentages « dansent » à chaque mise à jour. */
+  .u-data{ font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+  /* ── FOCUS CLAVIER ────────────────────────────────────────────────────────
+     Anneau rouge doublé d'un halo clair : reste visible sur ivoire, sur blanc
+     ET sur fond encre (en-tête de quiz, hero du dashboard). */
   :focus-visible{
-    outline: 2.5px solid var(--red);
-    outline-offset: 2px;
-    border-radius: 6px;
+    outline: var(--focus-width) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 calc(var(--focus-width) + var(--focus-offset)) rgba(255,255,255,0.9);
   }
   button:focus:not(:focus-visible){ outline:none; }
+
+  /* Saut au contenu : première tabulation de la page. */
+  .skip-link{
+    position:absolute; left:-9999px; top:0; z-index:1000;
+    background: var(--text-primary); color: var(--surface);
+    padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm);
+    font-size: var(--text-small); font-weight: var(--weight-medium);
+  }
+  .skip-link:focus{ left: var(--space-md); top: var(--space-md); }
 
   .wrap{ max-width: 920px; margin: 0 auto; padding: 0 22px 90px; }
   .quizwrap{ max-width: 620px; margin: 0 auto; padding: 34px 20px 70px; }
@@ -120,44 +259,54 @@
   }
 
   /* ===== TOPBAR ===== */
+  /* L'aplat rouge pleine largeur disparaît : c'était l'élément le plus visible
+     du produit et il confisquait la couleur signature. Fond surface, filet bas,
+     ombre uniquement au défilement. Deux rouges au maximum : la marque et
+     l'onglet actif. */
   .topbar{
     position: sticky;
     top: 0;
     z-index: 100;
-    background: linear-gradient(115deg, var(--red) 0%, var(--red-dark) 100%);
-    box-shadow: 0 2px 10px rgba(180,21,47,0.25);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: box-shadow var(--motion-state) var(--ease-enter);
   }
-  .topbar-inner{ max-width: 1120px; margin:0 auto; padding: 0 22px; }
+  .topbar.is-scrolled{ box-shadow: var(--shadow-subtle); }
+  .topbar-inner{ max-width: var(--width-work); margin:0 auto; padding: 0 22px; }
   .brandrow{ display:flex; align-items:center; justify-content:space-between; gap: 18px; min-height: 62px; }
   .brand-text{ display:flex; align-items:center; gap: 11px; flex-shrink:0; }
   .brand-mark{
-    width: 36px; height: 36px; flex-shrink:0; border-radius: 10px;
-    background: var(--red-dark);
-    border: 1.5px solid rgba(255,255,255,0.55);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
-    color: #fff; font-family: var(--font-heading); font-weight:800; font-size:14px;
+    width: 34px; height: 34px; flex-shrink:0; border-radius: var(--radius-sm);
+    background: var(--accent); border: none; box-shadow: none;
+    color: var(--text-on-accent); font-family: var(--font-display);
+    font-weight: var(--weight-semibold); font-size: var(--text-small);
     display:flex; align-items:center; justify-content:center;
   }
-  .brand-text h1{ font-size: 17px; font-weight: 800; margin: 0; letter-spacing:-0.01em; line-height:1.2; color:#fff; }
+  .brand-text h1{
+    font-family: var(--font-display); font-size: 19px; font-weight: var(--weight-semibold);
+    margin: 0; letter-spacing: var(--tracking-tight); line-height:1.2; color: var(--text-primary);
+  }
 
   /* ===== NAVIGATION PRINCIPALE ===== */
-  .mainnav{ display:flex; align-items:stretch; gap: 2px; flex:1; justify-content:center; }
+  .mainnav{ display:flex; align-items:stretch; gap: 2px; flex:1; min-width:0; justify-content:center; }
   .mainnav-item{ position:relative; display:flex; }
   .mainnav-link{
     border:none; background:none; padding: 0 13px; height:62px; border-radius:0;
-    font-family: var(--font-main); font-weight: 600; font-size: 13.5px; color: rgba(255,255,255,0.88); cursor:pointer;
+    font-family: var(--font-ui); font-weight: var(--weight-medium); font-size: var(--text-small);
+    color: var(--text-secondary); cursor:pointer;
     display:flex; align-items:center; gap:5px; white-space: nowrap;
     transition: background 0.16s var(--ease), color 0.16s var(--ease);
     position:relative;
   }
   .mainnav-link .caret{ font-size:9px; opacity:0.8; transition: transform 0.16s var(--ease); }
-  .mainnav-link:hover{ background: rgba(255,255,255,0.10); color:#fff; }
-  .mainnav-item.active-group > .mainnav-link{ color:#fff; }
+  .mainnav-link:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .mainnav-item.active-group > .mainnav-link{ color: var(--text-primary); font-weight: var(--weight-semibold); }
+  /* Le soulignement rouge de l'onglet actif est le seul rouge de la navigation. */
   .mainnav-item.active-group > .mainnav-link::after{
-    content:""; position:absolute; left:14px; right:14px; bottom:8px; height:3px;
-    background:#fff; border-radius:2px;
+    content:""; position:absolute; left:13px; right:13px; bottom:0; height:2px;
+    background: var(--accent); border-radius:0;
   }
-  .mainnav-item.open > .mainnav-link{ background: rgba(255,255,255,0.14); color:#fff; }
+  .mainnav-item.open > .mainnav-link{ background: var(--surface-sunken); color: var(--text-primary); }
   .mainnav-item.open > .mainnav-link .caret{ transform: rotate(180deg); }
 
   .dropdown-menu{
@@ -175,7 +324,7 @@
     padding: 9px 10px; border-radius: var(--radius-sm); font-size:13.5px; font-weight:600; color: var(--ink);
     font-family: var(--font-main); text-decoration:none;
   }
-  .dropdown-menu button:hover, .dropdown-menu a:hover{ background: var(--red-tint); color: var(--red-dark); }
+  .dropdown-menu button:hover, .dropdown-menu a:hover{ background: var(--surface-sunken); color: var(--text-primary); }
   .dropdown-menu hr{ border:none; border-top:1px solid var(--border); margin: 6px 2px; }
   .dropdown-menu .dd-add{ color: var(--red); font-weight:800; }
   .dropdown-menu button[aria-current="true"]{ background: var(--red-tint); color: var(--red-dark); }
@@ -183,21 +332,28 @@
   #lang-trigger-code{ font-weight:800; letter-spacing:0.03em; }
 
   .topbar-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
-  .topbar-divider{ width:1px; height:28px; background: rgba(255,255,255,0.28); }
+  .topbar-divider{ width:1px; height:24px; background: var(--border); }
   .profile-chip{
-    display:flex; align-items:center; gap:8px; color:#fff; font-size:13.5px; font-weight:600;
-    background:none; border:none; cursor:pointer; padding:6px 4px; font-family: var(--font-main);
+    display:flex; align-items:center; gap:8px; color: var(--text-secondary);
+    font-size: var(--text-small); font-weight: var(--weight-medium);
+    background:none; border:none; cursor:pointer; padding:6px 4px; font-family: var(--font-ui);
+    border-radius: var(--radius-sm);
+    transition: color var(--motion-micro) var(--ease-enter), background var(--motion-micro) var(--ease-enter);
   }
+  .profile-chip:hover{ color: var(--text-primary); background: var(--surface-sunken); }
   .profile-avatar{
-    width:28px; height:28px; border-radius:50%; background: rgba(255,255,255,0.22);
-    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:#fff;
+    width:28px; height:28px; border-radius:50%; background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-weight: var(--weight-semibold); font-size: var(--text-metadata); color: var(--text-secondary);
   }
   .profile-avatar.has-photo{ background-size:cover; background-position:center; }
   .hamburger-btn{
-    display:none; border:none; background:none; color:#fff; font-size:22px; cursor:pointer;
-    width:38px; height:38px; align-items:center; justify-content:center; border-radius:8px; flex-shrink:0;
+    display:none; border:none; background:none; color: var(--text-primary); font-size:20px; cursor:pointer;
+    width:44px; height:44px; align-items:center; justify-content:center;
+    border-radius: var(--radius-sm); flex-shrink:0;
   }
-  .hamburger-btn:hover{ background: rgba(255,255,255,0.12); }
+  .hamburger-btn:hover{ background: var(--surface-sunken); }
 
   /* ===== BULLE ASSISTANT IA (flottante, déplaçable librement) =====
      Nom de classe distinct de .ai-bubble (utilisée par les messages du
@@ -324,31 +480,97 @@
   .lib-editor-add input{ flex:1; min-width:160px; }
 
   /* ===== BUTTONS (unified system) ===== */
+  /* ==========================================================================
+     BOUTONS — quatre variantes, huit états. Pas de cinquième variante.
+     --------------------------------------------------------------------------
+     Les noms de classe existants sont CONSERVÉS et remappés sur le système :
+       .btn.red       → primaire     (l'action de la section, une seule)
+       .btn.outline   → secondaire   (action alternative)
+       .btn-text      → tertiaire    (action discrète, annulation)
+       .btn.danger    → destructive  (nouveau)
+       .btn.green     → succès       (conservé, 1 usage historique)
+     Aucune flèche « → » accolée, aucun emoji : voir DIRECTION_ARTISTIQUE.md §5.
+     ========================================================================== */
   .btn{
-    font-family: "Inter", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.01em;
-    padding: 12px 20px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid transparent;
-    background: var(--ink); color: #fff; white-space: nowrap;
-    transition: background 0.16s var(--ease), color 0.16s var(--ease), border-color 0.16s var(--ease),
-                transform 0.12s var(--ease), box-shadow 0.16s var(--ease);
-    box-shadow: var(--shadow-xs);
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs);
+    font-family: var(--font-ui); font-weight: var(--weight-medium);
+    font-size: var(--text-small); letter-spacing: 0;
+    min-height: 40px; padding: 0 18px;
+    border-radius: var(--radius-sm); border: 1px solid transparent;
+    background: var(--text-primary); color: var(--text-on-accent);
+    white-space: nowrap; cursor: pointer; text-decoration: none;
+    box-shadow: none;
+    transition: background var(--motion-micro) var(--ease-enter),
+                border-color var(--motion-micro) var(--ease-enter),
+                color var(--motion-micro) var(--ease-enter),
+                transform var(--motion-micro) var(--ease-enter);
   }
-  .btn:hover{ background: #26272E; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
-  .btn:active{ transform: translateY(0) scale(0.98); }
-  .btn.outline{ background: #fff; color: var(--ink); border: 1.5px solid var(--border-strong); box-shadow:none; }
-  .btn.outline:hover{ border-color: var(--red); color: var(--red-dark); background: var(--red-tint); }
-  .btn.red{ background: var(--red); }
-  .btn.red:hover{ background: var(--red-dark); }
-  .btn.green{ background: var(--green); }
-  .btn.green:hover{ background:#145E40; }
-  .btn.small{ padding: 8px 14px; font-size: 12px; }
-  .btn:disabled{ background: var(--border) !important; color: var(--muted) !important; cursor: not-allowed; box-shadow:none !important; transform:none !important; border-color: var(--border) !important; }
+  .btn:hover{ background: #2A2A31; }
+  .btn:active{ transform: translateY(1px); }
+
+  /* — primaire — */
+  .btn.red{ background: var(--accent); color: var(--text-on-accent); }
+  .btn.red:hover{ background: var(--accent-hover); }
+  .btn.red:active{ background: var(--accent-active); transform: translateY(1px); }
+
+  /* — secondaire — */
+  .btn.outline{
+    background: var(--surface); color: var(--text-primary);
+    border-color: var(--border-strong); box-shadow: none;
+  }
+  .btn.outline:hover{ background: var(--surface-sunken); border-color: var(--text-muted); color: var(--text-primary); }
+  .btn.outline:active{ background: var(--surface-sunken); transform: translateY(1px); }
+
+  /* — destructive : l'aplat rouge n'apparaît qu'en confirmation, dans une modale — */
+  .btn.danger{ background: transparent; color: var(--error); border-color: var(--border-strong); }
+  .btn.danger:hover{ background: var(--error-wash); border-color: var(--error); }
+  .btn.danger.solid{ background: var(--error); color: var(--text-on-accent); border-color: transparent; }
+  .btn.danger.solid:hover{ background: #94201A; }
+
+  /* — succès (usage historique conservé) — */
+  .btn.green{ background: var(--success); color: var(--text-on-accent); }
+  .btn.green:hover{ background: #18573E; }
+
+  /* — tailles : 32 / 40 / 48. Le 48 est réservé à l'action unique d'un état
+       vide ou du bloc focal. Pas de bouton énorme. — */
+  .btn.small{ min-height: 32px; padding: 0 12px; font-size: var(--text-metadata); }
+  .btn.large{ min-height: 48px; padding: 0 24px; font-size: var(--text-body); }
+
+  /* — désactivé : un bouton désactivé doit dire pourquoi (attribut title) — */
+  .btn:disabled, .btn[aria-disabled="true"]{
+    background: var(--surface-sunken) !important; color: var(--text-muted) !important;
+    border-color: var(--border) !important; cursor: not-allowed;
+    box-shadow: none !important; transform: none !important; opacity: 1;
+  }
+
+  /* — chargement : le libellé reste lisible, la largeur ne saute pas — */
+  .btn.is-loading{ position: relative; color: transparent !important; pointer-events: none; }
+  .btn.is-loading::after{
+    content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid currentColor; border-top-color: transparent; opacity: 0.9;
+    color: var(--text-on-accent);
+    animation: ds-spin 0.7s linear infinite;
+  }
+  .btn.outline.is-loading::after, .btn-text.is-loading::after{ color: var(--text-secondary); }
+  @keyframes ds-spin{ to{ transform: rotate(360deg); } }
+
+  /* — tertiaire — */
   .btn-text{
-    background:none; border:none; color: var(--ink-soft); font-family:"Inter",sans-serif;
-    font-size: 12.5px; font-weight: 700; cursor:pointer; padding: 6px 2px;
-    border-bottom: 1.5px solid transparent; transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    background: none; border: none; color: var(--text-secondary);
+    font-family: var(--font-ui); font-size: var(--text-small); font-weight: var(--weight-medium);
+    cursor: pointer; padding: var(--space-2xs) 0; min-height: 28px;
+    border-bottom: 1px solid transparent;
+    transition: color var(--motion-micro) var(--ease-enter), border-color var(--motion-micro) var(--ease-enter);
   }
-  .btn-text:hover{ color: var(--red); border-color: var(--red); }
-  .btn-text.active{ color: var(--red); border-color: var(--red); }
+  .btn-text:hover{ color: var(--text-primary); border-color: var(--border-strong); }
+  .btn-text.active{ color: var(--accent); border-color: var(--accent); }
+  .btn-text:disabled{ color: var(--text-muted); cursor: not-allowed; border-color: transparent; }
+
+  /* Cible tactile : 44px minimum dès que le pointeur est grossier. */
+  @media (pointer: coarse){
+    .btn, .btn.small, .btn-text{ min-height: 44px; }
+  }
 
   /* ===== MON COMPTE / MON ESPACE (V2 premium) ===== */
   .myspace-greeting{ font-size:22px; font-weight:800; letter-spacing:-0.01em; margin:28px 0 2px; }
@@ -617,7 +839,156 @@
      Ne pas imbriquer une carte dans une carte : au-delà d'un niveau, le
      regroupement doit se faire par l'espace et la typographie (§5).
      ============================================================ */
-  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 22px; box-shadow: var(--shadow-sm); }
+  /* ── CARTE — désigne un OBJET (cours, chapitre, matière), jamais un
+       regroupement. Une carte ne contient jamais une carte. ── */
+  .card{
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: var(--space-lg);
+    box-shadow: var(--shadow-subtle);
+  }
+  /* Objet cliquable : la carte l'est EN ENTIER, pas via un lien de 12px. */
+  .card.is-interactive{
+    cursor: pointer;
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                box-shadow var(--motion-micro) var(--ease-enter),
+                transform var(--motion-micro) var(--ease-enter);
+  }
+  .card.is-interactive:hover{
+    border-color: var(--border-strong); box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
+  }
+  .card.is-selected{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+  /* ==========================================================================
+     PRIMITIVES DU SYSTÈME
+     --------------------------------------------------------------------------
+     Composants nouveaux, destinés à remplacer progressivement les variantes
+     dispersées (10 états vides, 11 classes d'erreur, 25 barres…). Ils ne
+     dupliquent rien : ils sont la cible de migration des écrans à l'étape 4.
+     ========================================================================== */
+
+  /* ── SUR-TITRE DE SECTION — remplace la carte comme marqueur de section.
+       C'est le geste structurel du système : un libellé en chasse fixe, puis
+       un filet qui court jusqu'au bord. Aucune boîte. ── */
+  .section-head{
+    display: flex; align-items: center; gap: var(--space-md);
+    margin: var(--space-2xl) 0 var(--space-md);
+  }
+  .section-head:first-child{ margin-top: 0; }
+  .section-head > .section-head-label{
+    font-family: var(--font-data); font-size: var(--text-label);
+    font-weight: var(--weight-medium); letter-spacing: var(--tracking-label);
+    text-transform: uppercase; color: var(--text-muted); white-space: nowrap;
+  }
+  .section-head > .section-head-rule{ flex: 1; height: 1px; background: var(--border); }
+  .section-head > .section-head-action{ flex-shrink: 0; }
+
+  /* ── ENCADRÉ — un composant, quatre tons. Le détail technique va derrière
+       un <details>, jamais dans le flux. ── */
+  .callout{
+    display: flex; gap: var(--space-sm);
+    border-left: 2px solid var(--text-muted);
+    background: var(--surface-sunken);
+    padding: var(--space-md);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: var(--text-small); line-height: var(--leading-small);
+    color: var(--text-secondary);
+  }
+  .callout > svg, .callout > .callout-icon{ flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; }
+  .callout .callout-title{
+    font-size: var(--text-h3); font-weight: var(--weight-semibold);
+    color: var(--text-primary); margin: 0 0 var(--space-2xs);
+  }
+  .callout.info{    border-left-color: var(--info);    background: var(--info-wash); }
+  .callout.warning{ border-left-color: var(--warning); background: var(--warning-wash); }
+  .callout.success{ border-left-color: var(--success); background: var(--success-wash); }
+  .callout.error{   border-left-color: var(--error);   background: var(--error-wash); }
+
+  /* ── ÉTAT VIDE — une adresse à l'utilisateur, pas un trou.
+       Sur l'ivoire, jamais dans une carte. ── */
+  .empty{
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; min-height: 240px; padding: var(--space-2xl) var(--space-lg);
+    gap: var(--space-sm);
+  }
+  .empty-icon{ color: var(--text-muted); width: 24px; height: 24px; }
+  .empty-title{ font-size: var(--text-h3); font-weight: var(--weight-semibold); color: var(--text-primary); margin: 0; }
+  .empty-text{
+    font-size: var(--text-small); color: var(--text-secondary); margin: 0;
+    max-width: 44ch; line-height: var(--leading-small);
+  }
+  .empty-actions{ display: flex; gap: var(--space-sm); align-items: center; margin-top: var(--space-xs); flex-wrap: wrap; justify-content: center; }
+
+  /* ── SQUELETTE DE CHARGEMENT — reprend la géométrie du contenu attendu.
+       Pulsation d'opacité, pas de balayage lumineux. ── */
+  .skeleton{
+    background: var(--surface-sunken); border-radius: var(--radius-sm);
+    animation: ds-pulse 1.2s var(--ease-enter) infinite;
+  }
+  .skeleton.text{ height: 1em; margin: 0.25em 0; }
+  .skeleton.title{ height: 1.4em; width: 45%; }
+  .skeleton.block{ height: 96px; border-radius: var(--radius-md); }
+  @keyframes ds-pulse{ 0%,100%{ opacity: 1; } 50%{ opacity: 0.55; } }
+
+  /* ── CHIFFRE CLÉ — la mesure, sans boîte. ── */
+  .stat{ display: flex; flex-direction: column; gap: var(--space-2xs); }
+  .stat-label{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); font-weight: var(--weight-medium);
+  }
+  .stat-value{
+    font-family: var(--font-data); font-size: var(--text-data-xl);
+    font-variant-numeric: tabular-nums; font-weight: var(--weight-regular);
+    color: var(--text-primary); line-height: 1;
+  }
+  .stat-value.sm{ font-size: var(--text-data); font-weight: var(--weight-medium); }
+  .stat-row{ display: flex; gap: var(--space-xl); flex-wrap: wrap; }
+  .stat-row > .stat + .stat{ border-left: 1px solid var(--border); padding-left: var(--space-xl); }
+
+  /* ── CONTRÔLE SEGMENTÉ — remplace les pastilles à emoji. ── */
+  .segmented{
+    display: inline-flex; background: var(--surface-sunken);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px; gap: 2px;
+  }
+  .segmented > button{
+    border: none; background: none; cursor: pointer;
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    font-weight: var(--weight-medium); color: var(--text-secondary);
+    padding: var(--space-xs) var(--space-sm); border-radius: 6px; min-height: 32px;
+    transition: background var(--motion-micro) var(--ease-enter), color var(--motion-micro) var(--ease-enter);
+  }
+  .segmented > button:hover{ color: var(--text-primary); }
+  .segmented > button[aria-selected="true"], .segmented > button.active{
+    background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-subtle);
+  }
+
+  /* ── PASTILLE DE STATUT — seul usage du rayon pill. La couleur ne porte
+       jamais seule l'information : le libellé la double toujours. ── */
+  .status{
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    font-size: var(--text-metadata); font-weight: var(--weight-medium);
+    padding: 3px var(--space-sm); border-radius: var(--radius-pill);
+    background: var(--surface-sunken); color: var(--text-secondary);
+  }
+  .status::before{ content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status.success{ background: var(--success-wash); color: var(--success); }
+  .status.warning{ background: var(--warning-wash); color: var(--warning); }
+  .status.error{   background: var(--error-wash);   color: var(--error); }
+  .status.neutral{ background: var(--surface-sunken); color: var(--text-secondary); }
+
+  /* ── JAUGE — une seule famille pour toutes les progressions. ── */
+  .meter{ height: 2px; background: var(--border); border-radius: var(--radius-pill); overflow: hidden; }
+  .meter > .meter-fill{
+    height: 100%; background: var(--data-4); border-radius: inherit;
+    transition: width 400ms var(--ease-enter);
+  }
+  .meter.accent > .meter-fill{ background: var(--accent); }
+
+  /* ── LARGEURS DE COLONNE — on lit / on travaille. ── */
+  .u-read{ max-width: var(--width-read); }
+  .u-work{ max-width: var(--width-work); }
   /* Une carte posée à l'intérieur d'une autre surface ne réaffiche ni ombre
      ni relief : elle se distingue par sa bordure seule (évite l'effet
      « carte dans une carte dans une carte »). */
@@ -1902,10 +2273,14 @@
   .page-head{ margin: var(--space-2xl) 0 var(--space-xl); }
   .page-head .page-title{ margin: 0; }
   .page-head .page-subtitle{ margin: var(--space-xs) 0 0; }
+  /* Titre de PAGE : le seul endroit, avec le display, où le sérif apparaît
+     hors contenu rédactionnel. Un seul par écran. */
   .page-title{
-    font-size: var(--text-h1); font-weight: 800; line-height:1.25;
-    letter-spacing:-0.015em; color: var(--ink);
-    margin: var(--space-2xl) 0 var(--space-2xs);
+    font-family: var(--font-display);
+    font-size: var(--text-h1); font-weight: var(--weight-semibold);
+    line-height: var(--leading-h1); letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+    margin: var(--space-2xl) 0 var(--space-xs);
   }
   /* Titre de page dans un contexte déjà introduit (fil d'ariane, retour) :
      l'espace au-dessus est déjà fourni par l'élément précédent. */
@@ -1914,18 +2289,18 @@
      puisqu'aucun .page-subtitle ne viendra le faire. */
   .page-title.solo{ margin-bottom: var(--space-lg); }
   .page-subtitle{
-    font-size: var(--text-body); color: var(--ink-soft); font-weight: 400;
+    font-size: var(--text-body); color: var(--text-secondary); font-weight: var(--weight-regular);
     margin: 0 0 var(--space-xl); max-width: 560px; line-height:1.65;
   }
 
   /* --- Niveau 2 : titre de section --- */
-  .section-title{ font-size: var(--text-h2); font-weight: 800; margin-bottom: var(--space-md); letter-spacing:-0.005em; }
+  .section-title{ font-size: var(--text-h2); font-weight: var(--weight-semibold); margin-bottom: var(--space-md); letter-spacing: var(--tracking-tight); color: var(--text-primary); }
   /* Titre de section aligné avec une action sur la même ligne (en-tête de
      section) : la marge basse est portée par le conteneur flex, pas par le
      titre. Remplace 13 style="margin-bottom:0;" identiques. */
   .section-title.inline{ margin-bottom: 0; }
   /* Sous-titre de section : explique la section sans la transformer en page. */
-  .section-sub{ font-size: var(--text-sm); color: var(--ink-soft); font-weight:400; margin: calc(-1 * var(--space-sm)) 0 var(--space-md); line-height:1.6; }
+  .section-sub{ font-size: var(--text-small); color: var(--text-secondary); font-weight: var(--weight-regular); margin: calc(-1 * var(--space-sm)) 0 var(--space-md); line-height:1.6; }
 
   /* --- Niveau 4 : information secondaire (§10) ---
      Moins de contraste et de poids, jamais illisible pour autant. */
@@ -2216,7 +2591,9 @@
     .wrap{ padding: 0 18px 80px; }
   }
 
-  @media (max-width: 680px){
+  /* La navigation débordait entre 681px et ~1000px (« Planning » coupé, compte
+     hors écran). Elle bascule désormais en feuille dès la tablette. */
+  @media (max-width: 1024px){
     .topbar-inner{ padding: 0 16px; }
     .brandrow{ min-height:56px; }
     .brand-text h1{ font-size: 15px; }
@@ -2266,6 +2643,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#content">Aller au contenu</a>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -16403,6 +16781,20 @@ function attachMainNavEvents(){
     closeAllNavMenus();
     switchTab("myspace");
   });
+
+  /* L'en-tête ne porte son ombre qu'une fois la page défilée : au repos, un
+     simple filet suffit. Écouteur passif, un seul appel de classe par seuil. */
+  (function(){
+    const bar = document.querySelector(".topbar");
+    if(!bar) return;
+    let scrolled = false;
+    const onScroll = () => {
+      const next = window.scrollY > 8;
+      if(next !== scrolled){ scrolled = next; bar.classList.toggle("is-scrolled", next); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  })();
 
   document.getElementById("hamburger-btn").addEventListener("click", (e)=>{
     e.stopPropagation();
