@@ -343,9 +343,19 @@ filet là où 32px de vide suffisent.
 
 # 9. Icônes
 
-Un seul jeu : **Lucide** — tracé 1,5px, grille 24, extrémités arrondies.
-Intégration sans build : un sprite SVG unique en haut du document, appelé par
-`<use>`. **Une trentaine d'icônes au maximum.**
+Un seul jeu, **dessiné dans le produit** : `DASH_ICONS` / `dashIcon(name)`
+dans `index.html` — tracé 1,6px, grille 24, extrémités arrondies, aucune
+surface pleine. Pas de sprite ni de dépendance : douze icônes suffisent
+aujourd'hui, et une icône inconnue ne rend rien plutôt que d'injecter quoi
+que ce soit. **Plafond : une trentaine.**
+
+*(La note précédente annonçait Lucide via un sprite `<use>` ; ce n'a jamais
+été intégré, et un jeu maison de douze tracés évite une dépendance pour un
+besoin de cette taille. Le geste visé reste celui de Lucide.)*
+
+Elles sont **toujours décoratives** : le libellé à côté porte le sens,
+l'icône le confirme. D'où `aria-hidden="true"` systématique — sans quoi un
+lecteur d'écran annoncerait deux fois la même chose.
 
 - Tailles : 16 (dans le texte), 20 (boutons, navigation), 24 (états vides).
 - Couleur : toujours `currentColor`. Jamais de remplissage, jamais deux tons.
@@ -474,13 +484,28 @@ fais maintenant ? ».
 >    **timeline verticale** (colonne d'heures, rail continu, un point par
 >    cours à sa couleur, les pauses dites, et le trait rouge de l'heure à sa
 >    place réelle) ;
-> 3. **« Révision »** — priorité et progression, deux panneaux ;
-> 4. **« Activité »** — journal et cours récents ;
+> 3. **« Révision »** — la priorité du moteur, la reprise, les cours récents ;
+> 4. **« Ma progression »** — la maîtrise, les quatre mesures, le journal
+>    d'activité (« Activité » n'est plus une section à part : les chiffres et
+>    ce qu'on vient de faire répondent à la même question) ;
 > 5. **« Accès rapides »** — matières puis destinations.
 >
-> Les sections ne sont **pas** des cartes : un titre, un filet de niveau 2, de
-> l'espace. Les cartes sont réservées aux objets manipulables *à l'intérieur*
-> d'une section (panneaux, cartes de matière, lignes cliquables).
+> **Une section EST une carte** : fond blanc, filet, rayon, ombre légère, et
+> un en-tête toujours composé de la même façon — icône, titre, sous-titre
+> d'une ligne, action à droite.
+>
+> Ce qui évite le « mur de cartes », ce n'est pas d'en mettre moins, c'est
+> qu'elles **ne pèsent pas le même poids** : la bannière domine, le planning
+> prend toute la largeur, révision et progression se partagent une ligne (la
+> révision plus large, parce qu'elle porte l'action), les accès ferment.
+> Quatre rangs, pas une grille.
+>
+> **Règle qui en découle : à l'intérieur d'une carte, plus de carte.** Les
+> sous-blocs se séparent par un filet, un aplat ou de l'espace. Le panneau
+> prioritaire et le cours en cours sont tenus par un filet accent **à gauche**
+> — un seul côté, donc un repère et non une seconde boîte. C'est vérifié à
+> chaque exécution par `tests/detail.test.mjs`, qui refuse toute boîte fermée
+> sur ses quatre côtés à l'intérieur d'une autre.
 
 ```
 ┌ MERCREDI 23 SEPTEMBRE                    ← label mono

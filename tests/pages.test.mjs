@@ -172,7 +172,11 @@ try {
       };
       return {
         n1_onglet: bg(".mainnav-item.active-group > .mainnav-link", "::after"),
-        n1_priorite: getComputedStyle(document.querySelector(".dash-panel--priority")).borderTopColor,
+        /* Le filet accent du panneau prioritaire est passé du HAUT à la
+           GAUCHE : depuis que la section est une carte, un encadrement
+           complet ferait une boîte dans une boîte. Le niveau de la gamme,
+           lui, est inchangé — c'est le ton qui porte le sens, pas le côté. */
+        n1_priorite: getComputedStyle(document.querySelector(".dash-panel--priority")).borderLeftColor,
         n1_action: bg(".dashboard .btn--primary"),
         n3_panneau: bg(".dash-panel-label", "::before"),
       };

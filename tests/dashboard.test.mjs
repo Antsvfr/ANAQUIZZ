@@ -130,19 +130,40 @@ try {
         blockCount: blocks.length,
         titles: sectionTitles.map(e => e.textContent.trim()),
         titleTags: [...new Set(sectionTitles.map(e => e.tagName))],
-        /* Une section n'est PAS une carte : ni fond, ni filet, ni ombre. */
+        /* Une section EST une carte : même fond, même filet, même rayon,
+           même ombre — une seule forme pour toutes. */
         blockShapes: [...new Set(blocks.map(b =>
-          `${cs(b).backgroundColor}|${cs(b).borderTopWidth}|${cs(b).boxShadow}`))],
+          `${cs(b).backgroundColor}|${cs(b).borderTopWidth}|${cs(b).borderTopLeftRadius}|${cs(b).boxShadow}`))],
+        /* …et AUCUNE carte dans une carte : c'est ce qui distingue une
+           composition hiérarchisée d'un empilement de boîtes. */
+        nestedCards: root.querySelectorAll(".dash-section-block .dash-section-block").length,
+        /* Chaque en-tête porte son icône, du même jeu de traits. */
+        heads: root.querySelectorAll(".dash-section-head").length,
+        icons: [...root.querySelectorAll(".dash-section-icon svg")].map(sv => sv.getAttribute("stroke-width")),
+        iconsHidden: [...root.querySelectorAll(".dash-section-icon svg")]
+          .every(sv => sv.getAttribute("aria-hidden") === "true"),
+        subs: root.querySelectorAll(".dash-section-sub").length,
+        /* Les deux cartes de même rang commencent et finissent ensemble. */
+        pair: (() => {
+          const c = [...root.querySelectorAll(".dash-cardrow--pair > .dash-section-block")];
+          if (c.length !== 2) return { n: c.length };
+          const r = c.map(x => x.getBoundingClientRect());
+          return { n: 2, memeHaut: Math.abs(r[0].top - r[1].top) < 2,
+                   memeHauteur: Math.abs(r[0].height - r[1].height) < 2,
+                   plusLarge: r[0].width > r[1].width };
+        })(),
         /* Le planning vient juste après la bannière. */
         bannerBeforePlan: top(banner) < top(document.getElementById("dash-schedule-card")),
         planBeforeRevision: top(document.getElementById("dash-schedule-card"))
                           < top(root.querySelector(".dash-panel--priority")),
         /* Une seule action primaire sur toute la page. */
         primaries: root.querySelectorAll(".btn--primary").length,
-        /* Le repère de niveau 2 devant chaque titre de section. */
-        sectionMark: sectionTitles.length
-          ? getComputedStyle(sectionTitles[0], "::before").backgroundColor : null,
+        /* Le repère de niveau 3 subsiste sur les libellés de groupe ; celui
+           de niveau 2 a cédé la place à l'icône teintée — deux marques pour
+           la même chose feraient du bruit. */
         panelMark: getComputedStyle(root.querySelector(".dash-panel-label"), "::before").backgroundColor,
+        titleMark: sectionTitles.length
+          ? getComputedStyle(sectionTitles[0], "::before").content : null,
         h1: root.querySelectorAll("h1").length,
       };
     });
@@ -150,13 +171,26 @@ try {
     eq("la bannière ouvre la page", h.firstChild, "dash-banner");
     check("quatre grandes sections structurent la page", h.blockCount === 4, h.blockCount);
     eq("leurs titres sont des h2", h.titleTags, ["H2"]);
-    check("une section n'est pas une carte : ni fond, ni filet, ni ombre",
-      h.blockShapes.every(s => /^rgba\(0, 0, 0, 0\)\|0px\|none$/.test(s)), h.blockShapes);
+    eq("une section est une carte, et toutes ont la même forme", h.blockShapes.length, 1);
+    check("fond, filet, rayon et ombre",
+      /^rgb\(255, 255, 255\)\|1px\|\d+px\|rgba/.test(h.blockShapes[0]), h.blockShapes);
+    eq("mais jamais une carte dans une carte", h.nestedCards, 0);
+    eq("chaque carte a son en-tête", h.heads, 4);
+    eq("chaque en-tête porte son icône", h.icons.length, 4);
+    eq("toutes du même jeu de traits", [...new Set(h.icons)], ["1.6"]);
+    check("et toutes cachées aux lecteurs d'écran, car décoratives", h.iconsHidden, h.icons);
+    eq("chaque carte dit en une ligne ce qu'elle répond", h.subs, 4);
     check("le planning suit immédiatement la bannière", h.bannerBeforePlan, h);
     check("puis vient la révision", h.planBeforeRevision, h);
     eq("une seule action primaire sur la page", h.primaries, 1);
-    eq("le repère de section est le rouge de niveau 2", h.sectionMark, "rgb(234, 82, 108)");
-    eq("celui d'un panneau est le rouge de niveau 3", h.panelMark, "rgb(240, 137, 154)");
+    eq("le repère d'un groupe reste le rouge de niveau 3", h.panelMark, "rgb(240, 137, 154)");
+    eq("et le titre de section n'en porte plus un second", h.titleMark, "none");
+    /* La hiérarchie, mesurée : deux cartes de même rang s'alignent, et celle
+       qui porte l'action est la plus large. C'est ce qui empêche la page de
+       se lire comme une grille de cartes identiques. */
+    eq("les deux cartes du rang 3 sont alignées",
+      [h.pair.n, h.pair.memeHaut, h.pair.memeHauteur], [2, true, true]);
+    check("et la révision, qui porte l'action, est la plus large", h.pair.plusLarge, h.pair);
     eq("un seul h1 dans la page", h.h1, 1);
     eq("aucune erreur JavaScript", errors, []);
     await page.close();
@@ -743,7 +777,10 @@ try {
         subjectRule: cs(root.querySelector(".dash-subject")).borderLeftColor,
         subjectVar: root.querySelector(".dash-subject").style.getPropertyValue("--course-color"),
         prioBg: cs(root.querySelector(".dash-panel--priority")).backgroundColor,
-        prioRule: cs(root.querySelector(".dash-panel--priority")).borderTopColor,
+        prioRule: cs(root.querySelector(".dash-panel--priority")).borderLeftColor
+                + " " + cs(root.querySelector(".dash-panel--priority")).borderLeftWidth,
+        prioSides: ["Top", "Right", "Bottom"].map(sd =>
+          cs(root.querySelector(".dash-panel--priority"))["border" + sd + "Width"]),
         plainBg: cs(root.querySelector(".dash-panel:not(.dash-panel--priority)")).backgroundColor,
         dot: cs(root.querySelector(".dash-row-dot")).backgroundColor,
         /* La gamme de rouges, du niveau 1 (écran) au niveau 4 (information). */
@@ -754,8 +791,9 @@ try {
     eq("une carte de matière porte le filet de sa couleur", c.subjectRule, "rgb(227, 28, 61)");
     check("posée par variable, pas par trois styles en ligne", /^#/.test(c.subjectVar), c.subjectVar);
     eq("la carte priorité est sur lavis", c.prioBg, "rgb(253, 242, 244)");
-    eq("et coiffée du rouge de niveau 1", c.prioRule, "rgb(227, 28, 61)");
-    eq("les autres panneaux restent blancs", c.plainBg, "rgb(255, 255, 255)");
+    eq("et tenue à gauche par le rouge de niveau 1", c.prioRule, "rgb(227, 28, 61) 3px");
+    eq("sur un seul côté : un repère, pas une seconde boîte", c.prioSides, ["0px", "0px", "0px"]);
+    eq("les autres panneaux n'ont plus de fond propre", c.plainBg, "rgba(0, 0, 0, 0)");
     check("les listes portent un point de couleur", c.dot !== null, c);
     eq("la gamme de rouges est complète et dans l'ordre",
       c.ramp, ["#E31C3D", "#EA526C", "#F0899A", "#F5ADB9", "#FDF2F4"]);
@@ -796,8 +834,12 @@ try {
         tags: [...document.querySelectorAll(".dash-row-tags")].map(e => e.textContent.replace(/\s+/g, " ").trim()),
         states: [...document.querySelectorAll(".dash-row--stack .status")].map(e => e.textContent.trim()),
         feed: document.querySelectorAll(".dash-log-item").length,
-        /* Le temps total est repris en note de section — même valeur. */
-        note: document.querySelector("#dash-recent-activity .dash-section-note").textContent.trim(),
+        /* Le temps total n'apparaît QU'UNE FOIS : la ligne « Temps de
+           révision » de la mesure. Il était aussi en note d'en-tête, ce qui
+           donnait deux endroits pour un seul chiffre. */
+        tempsAffiche: [...document.querySelectorAll(".dashboard *")]
+          .filter(el => el.children.length === 0
+                     && el.textContent.trim() === fmtDuration(state.dash.timeSpentSeconds)).length,
       };
     });
 
@@ -806,8 +848,7 @@ try {
     eq("les quatre mesures sont toujours là", m.vals.length, 4);
     check("questions travaillées : même valeur qu'avant", m.vals.includes(m.expectedQuestions), m);
     check("temps de révision : même valeur qu'avant", m.vals.includes(m.expectedTime), m);
-    check("et la note d'activité reprend le même temps",
-      m.note.startsWith(m.expectedTime), m);
+    eq("le temps de révision n'est affiché qu'une fois", m.tempsAffiche, 1);
     eq("une mesure n'est pas encadrée", m.statBoxed, "0px");
     check("les contenus disponibles d'un cours sont annoncés",
       m.tags.some(x => /Quiz/.test(x) && /Flashcards/.test(x) && /Questions/.test(x)), m.tags);
@@ -903,7 +944,7 @@ try {
         /* Le sélecteur de vue reste utilisable au doigt. */
         viewBtnH: Math.round(root.querySelector('[data-plan-view="day"]').getBoundingClientRect().height),
         stepH: Math.round(root.querySelector('[data-plan-step="1"]').getBoundingClientRect().height),
-        splitCols: cols(root.querySelector(".dash-grid--split")),
+        pairCols: cols(root.querySelector(".dash-cardrow--pair")),
         actionCols: cols(root.querySelector(".dash-actions")),
         bannerTitle: parseFloat(cs(root.querySelector(".dash-banner-title")).fontSize),
         bannerPad: cs(root.querySelector(".dash-banner")).paddingTop,
@@ -924,7 +965,7 @@ try {
     check(`[${vp.name}] les flèches de navigation aussi`, r.stepH >= 32, r.stepH);
 
     if (vp.width <= 640) {
-      eq(`[${vp.name}] une seule colonne pour les paires de panneaux`, r.splitCols, 1);
+      eq(`[${vp.name}] les deux cartes de même rang s'empilent`, r.pairCols, 1);
       eq(`[${vp.name}] une action par ligne`, r.actionCols, 1);
       check(`[${vp.name}] la salutation est réduite`, r.bannerTitle <= 34, r.bannerTitle);
       eq(`[${vp.name}] la bannière respire moins`, r.bannerPad, "24px");
@@ -961,9 +1002,9 @@ try {
       check(`[${vp.name}] et ses jours restent touchables (≥ 44px)`, mo.h >= 44, mo.h);
       eq(`[${vp.name}] le mois ne déborde pas`, mo.over, []);
     } else if (vp.width <= 1024) {
-      eq(`[${vp.name}] les paires de panneaux passent l'une sous l'autre`, r.splitCols, 1);
+      eq(`[${vp.name}] les deux cartes de même rang passent l'une sous l'autre`, r.pairCols, 1);
     } else {
-      eq(`[${vp.name}] les paires de panneaux sont côte à côte`, r.splitCols, 2);
+      eq(`[${vp.name}] les deux cartes de même rang sont côte à côte`, r.pairCols, 2);
     }
     eq(`[${vp.name}] aucune erreur JavaScript`, errors, []);
     await page.close();
