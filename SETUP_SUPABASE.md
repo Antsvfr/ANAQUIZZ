@@ -188,11 +188,79 @@ ni dans `index.html`.
 
 ---
 
-## Ce que ce document ne couvre pas encore
+## 12. Persistance multi-appareils — ce qu'il reste à faire à la main
 
-Ce guide documente la préparation Supabase (schéma, policies, Auth). Le
-branchement effectif du frontend (écrans de connexion/inscription, code
-`auth.js`/`sync.js`, migration des données locales existantes) fait l'objet
-des étapes suivantes du chantier, décrites et suivies séparément — voir le
-rapport d'audit fourni dans la conversation pour le détail de l'architecture
-prévue.
+Cette section remplace l'ancien « ce que ce document ne couvre pas encore » :
+le branchement du frontend est fait (voir `user-data.js` et
+`SYNC_UTILISATEUR.md`). Il reste trois choses à faire **dans le dashboard
+Supabase**, que le code ne peut pas faire à ta place.
+
+### 12.1 Appliquer les migrations, dans l'ordre
+
+SQL Editor → coller et exécuter, l'un après l'autre :
+
+| Fichier | Ce qu'il fait |
+|---|---|
+| `supabase/schema.sql` | les 13 tables de base, RLS, bucket `avatars` |
+| `supabase/migrations/001_brightspace.sql` | provenance des contenus importés |
+| `supabase/migrations/002_centralisation.sql` | `user_stats`, `daily_stats`, `activities`, `chapter_visits`, `study_plans` |
+| `supabase/migrations/003_sync_layer.sql` | index d'import non partiels, journal |
+| `supabase/migrations/004_oauth_hardening.sql` | durcissement OAuth |
+| **`supabase/migrations/005_user_sync.sql`** | **les clés naturelles qui rendent l'écriture multi-appareils idempotente** |
+
+Toutes sont idempotentes et non destructives : tu peux les relancer.
+
+Puis, pour vérifier que tout est en place, exécute ces trois fichiers de test —
+chacun doit afficher `0 FAIL` sur sa ligne `RÉSUMÉ` :
+
+```
+supabase/tests/user_sync_tests.sql          18 vérifications
+supabase/tests/rls_tests.sql               338 vérifications
+supabase/tests/sync_idempotency_tests.sql   18 vérifications
+```
+
+Ils créent deux comptes de test aux UUID sentinelles et les suppriment à la
+fin, y compris en cas d'échec. Aucune donnée réelle n'est lue ni touchée.
+
+### 12.2 Activer la confirmation d'e-mail
+
+**Authentication → Sign In / Providers → Email** :
+
+- **Confirm email** : activé. C'est ce qui déclenche l'envoi du lien de
+  confirmation à l'inscription. Sans lui, `signUp()` ouvre directement une
+  session et l'écran « Vérifie ta boîte mail » ne s'affiche jamais.
+- **Secure email change** : activé si tu veux qu'un changement d'adresse
+  exige une confirmation sur l'ANCIENNE **et** la nouvelle. REV-EM gère les
+  deux configurations sans changement de code.
+
+### 12.3 Déclarer les URL de redirection
+
+**Authentication → URL Configuration** :
+
+- **Site URL** : `https://antsvfr.github.io/REV-EM/`
+- **Redirect URLs** : la même, plus celles depuis lesquelles tu testes
+  (`http://localhost:9109/index.html`, par exemple).
+
+C'est **indispensable** : REV-EM passe `emailRedirectTo` à chaque envoi
+(inscription, renvoi, changement d'adresse, mot de passe oublié) pour que le
+lien ramène là où l'utilisateur était. Supabase refuse toute URL non déclarée,
+et le lien retombe alors sur la Site URL — voire échoue.
+
+### 12.4 Les modèles d'e-mail (facultatif)
+
+**Authentication → Email Templates** : les modèles par défaut fonctionnent.
+Si tu les personnalises, garde `{{ .ConfirmationURL }}` — c'est le lien que
+REV-EM sait interpréter au retour.
+
+---
+
+## Ce que ce document ne couvre toujours pas
+
+- **La délivrabilité réelle des e-mails.** Le SMTP par défaut de Supabase est
+  limité en volume et destiné aux tests. Pour un usage réel, configure un SMTP
+  personnalisé (Authentication → SMTP Settings). Aucun test automatisé ne peut
+  établir qu'un e-mail arrive : seul un envoi réel le dira.
+- **La suppression de compte par l'utilisateur.** Elle exige une Edge Function
+  avec la `service_role key` (le navigateur n'a pas le droit de supprimer un
+  compte). Le bouton existe et annonce honnêtement que ce n'est pas encore
+  disponible.

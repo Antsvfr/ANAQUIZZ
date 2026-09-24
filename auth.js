@@ -19,6 +19,53 @@
 window.LyonAuth = (function(){
   "use strict";
 
+  /* ── LE RETOUR D'UN LIEN REÇU PAR E-MAIL ────────────────────────────────
+     Lu AVANT createClient(), et c'est délibéré : le SDK Supabase, avec
+     `detectSessionInUrl` (actif par défaut), consomme le fragment `#...` de
+     l'URL pour établir la session, puis l'efface. Lire après lui ne
+     retournerait rien, et on ne saurait jamais dire à l'utilisateur ce qui
+     vient de se passer — « compte confirmé », « lien expiré », « nouveau mot
+     de passe à choisir ».
+
+     On ne fait que LIRE ici : établir la session reste le travail du SDK. */
+  const emailLink = (function(){
+    if(typeof window === "undefined" || !window.location) return null;
+    const out = {};
+    const take = (src) => {
+      if(!src) return;
+      const p = new URLSearchParams(src.replace(/^[#?]/, ""));
+      ["type", "error", "error_code", "error_description", "message"].forEach(k=>{
+        const v = p.get(k);
+        if(v && !out[k]) out[k] = v;
+      });
+      /* Présence d'un jeton/code = le lien vient bien d'un e-mail Supabase,
+         même quand `type` est absent (selon le flux configuré). */
+      if(p.get("access_token") || p.get("code") || p.get("token_hash")) out.hasToken = true;
+    };
+    take(window.location.hash);
+    take(window.location.search);
+    return Object.keys(out).length ? out : null;
+  })();
+
+  /* L'URL vers laquelle les liens d'e-mail ramènent : la page elle-même, sans
+     fragment ni paramètre (sinon le lien précédent serait réinjecté dans le
+     suivant). Doit figurer dans « Redirect URLs » du projet Supabase —
+     voir SETUP_SUPABASE.md. */
+  function siteRedirectUrl(){
+    if(typeof window === "undefined" || !window.location) return undefined;
+    return window.location.href.split("#")[0].split("?")[0];
+  }
+
+  /* Efface les paramètres du lien de l'URL, sans recharger la page et sans
+     toucher à l'historique : un jeton de confirmation n'a pas à rester dans
+     la barre d'adresse, ni à repartir dans un copier-coller. */
+  function clearEmailLinkFromUrl(){
+    try{
+      if(typeof window === "undefined" || !window.history || !window.history.replaceState) return;
+      window.history.replaceState({}, document.title, siteRedirectUrl());
+    }catch(e){ /* non bloquant */ }
+  }
+
   const cfg = window.SUPABASE_CONFIG || null;
   const configLooksReal = !!(cfg && cfg.url && cfg.anonKey &&
     !/REMPLACE_MOI/.test(cfg.url) && !/REMPLACE_MOI/.test(cfg.anonKey));
@@ -243,7 +290,13 @@ window.LyonAuth = (function(){
       const { data, error } = await client.auth.signUp({
         email: String(email || "").trim(),
         password: String(password || ""),
-        options: { data: { display_name: String(displayName || "").trim() } },
+        options: {
+          data: { display_name: String(displayName || "").trim() },
+          /* Sans cela, Supabase renvoie vers l'URL du site configurée par
+             défaut dans le projet — qui n'est pas forcément celle d'où
+             l'inscription est partie. */
+          emailRedirectTo: siteRedirectUrl(),
+        },
       });
       if(error) return { error: humanError(error) };
       // data.session est null si la confirmation par email est activée côté
@@ -287,10 +340,70 @@ window.LyonAuth = (function(){
     }
   }
 
+  /* Renvoyer l'e-mail de confirmation. Supabase applique ses propres limites
+     de fréquence : on les traduit en message humain plutôt qu'en erreur
+     technique, parce que « réessaie dans une minute » est une information
+     utile, pas un échec. */
+  async function resendConfirmation(email){
+    if(!available) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email: String(email || "").trim(),
+        options: { emailRedirectTo: siteRedirectUrl() },
+      });
+      if(error) return { error: humanError(error) };
+      return { ok: true };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
+  }
+
+  /* Changement d'adresse e-mail. Supabase envoie une confirmation à la
+     NOUVELLE adresse (et, selon la configuration du projet, à l'ancienne) :
+     l'adresse ne change réellement qu'une fois le lien cliqué. On ne prétend
+     donc jamais que c'est fait. */
+  async function changeEmail(newEmail){
+    if(!available || !state.user) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const { error } = await client.auth.updateUser(
+        { email: String(newEmail || "").trim() },
+        { emailRedirectTo: siteRedirectUrl() }
+      );
+      if(error) return { error: humanError(error) };
+      return { ok: true, pending: true };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
+  }
+
+  /* Choix d'un nouveau mot de passe, après un lien de récupération. Le mot de
+     passe n'est jamais manipulé par nous : Supabase Auth le hache et le
+     stocke, aucune colonne de notre schéma n'en contient. */
+  async function updatePassword(newPassword){
+    if(!available) return { error: humanError(null) };
+    state.busy = true; notify();
+    try{
+      const { error } = await client.auth.updateUser({ password: String(newPassword || "") });
+      if(error) return { error: humanError(error) };
+      return { ok: true };
+    }catch(e){
+      return { error: humanError(e) };
+    }finally{
+      state.busy = false; notify();
+    }
+  }
+
   async function resetPassword(email){
     if(!available) return { error: humanError(null) };
     try{
-      const redirectTo = window.location.href.split("#")[0].split("?")[0];
+      const redirectTo = siteRedirectUrl();
       const { error } = await client.auth.resetPasswordForEmail(String(email || "").trim(), { redirectTo });
       if(error) return { error: humanError(error) };
       return { ok: true };
@@ -340,6 +453,10 @@ window.LyonAuth = (function(){
     available, state, init, onChange,
     signUp, signIn, signOut, resetPassword, refreshProfile, humanError,
     updateProfile, uploadAvatar, removeAvatar,
+    resendConfirmation, changeEmail, updatePassword,
+    /* Ce que le lien cliqué dans l'e-mail disait, capturé avant que le SDK ne
+       nettoie l'URL. `null` en navigation normale. */
+    emailLink, clearEmailLinkFromUrl, siteRedirectUrl,
     get client(){ return client; },
   };
 })();
