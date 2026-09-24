@@ -1022,7 +1022,7 @@
      pas des tâches. */
   .fiche-keypoints-list li::before{
     content:""; position:absolute; left:0; top:0.65em;
-    width: 10px; height: 2px; background: var(--accent); border-radius:1px;
+    width: 10px; height: 2px; background: var(--accent); border-radius: 2px;
   }
   @media (max-width:560px){
     .fiche-notion-example{ padding-left:8px; }
@@ -2558,12 +2558,10 @@
 
   .dash-empty{ font-size: var(--text-metadata); color:var(--muted); margin:0; }
 
-  .dash-timeline{ display:flex; flex-direction:column; gap:2px; }
-  .dash-timeline-item{ display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--bg); }
-  .dash-timeline-item:last-child{ border-bottom:none; }
-  .dash-timeline-icon{ font-size: var(--text-body); flex-shrink:0; margin-top:1px; }
-  .dash-timeline-label{ font-size: var(--text-metadata); font-weight: var(--weight-semibold); color:var(--ink); line-height:1.4; }
-  .dash-timeline-meta{ font-size: var(--text-label); color:var(--muted); margin-top:2px; font-weight: var(--weight-semibold); }
+  /* .dash-timeline-* : ancienne liste d'activité, plus aucun markup ne s'en
+     sert. Supprimée parce qu'elle n'était pas seulement morte — son
+     « display:flex » retombait sur la timeline du planning, qui porte le même
+     nom de classe et s'écrit en grille. */
 
   .dash-chapterlist{ display:flex; flex-direction:column; gap:8px; }
   .dash-chapterchip{
@@ -2647,86 +2645,450 @@
   }
 
 
-  /* ==========================================================================
-     TABLEAU DE BORD — PANNEAUX (étape 10)
-     --------------------------------------------------------------------------
-     L'accueil revient à des CARTES clairement séparées. Elles ne reviennent
-     pas comme avant : ce sont les panneaux du système (même filet, même
-     rayon, même ombre que .card et .block--feature), disposés en une grille
-     qui répond toujours aux trois questions — où suis-je, qu'est-ce qui
-     compte, que dois-je faire.
 
-     Ce qui NE revient pas : la bannière en dégradé, les emojis, les six
-     tuiles identiques, et la boîte dans la boîte. Un panneau ne contient
-     jamais un autre panneau encadré ; ce qu'il contient se distingue par
-     l'aplat creusé ou par un filet d'accent.
+  /* ==========================================================================
+     TABLEAU DE BORD — COMPOSITION ÉDITORIALE (étape 11)
+     --------------------------------------------------------------------------
+     La page répond à six questions, dans cet ordre, et chaque réponse est une
+     SECTION identifiable sans lire son contenu :
+
+       bannière ......... où je suis, qui je suis, ce qui m'attend
+       aujourd'hui ...... mon planning, en détail
+       révision ......... ce que je dois réviser, et où j'en suis
+       activité ......... ce que j'ai fait
+       accès rapides .... où aller
+
+     Une section n'est PAS une carte : c'est un titre, un contenu et de
+     l'espace. Les cartes ne servent qu'aux objets manipulables à l'intérieur
+     d'une section.
      ========================================================================== */
   .dashboard{ max-width: var(--width-work); margin: 0 auto; padding-bottom: var(--space-4xl); }
-  .dashboard > *{ margin-top: var(--space-lg); }
-  .dashboard > *:first-child{ margin-top: 0; }
 
-  /* ── 1. OÙ SUIS-JE — l'accroche éditoriale. Pas de bannière, pas de
-       dégradé : la page commence par du texte, et elle est la seule zone
-       de l'accueil à ne pas être une carte. ── */
-  .dash-lede{ padding: var(--space-2xl) 0 var(--space-xs); max-width: var(--width-read); }
-  .dash-lede-date{
+  /* Une grande section : son titre, son contenu, et l'air qui la sépare de la
+     suivante. Le filet est fin et neutre — c'est l'espace qui sépare. */
+  .dash-section-block{ margin-top: var(--space-3xl); }
+  .dash-section-block:first-child{ margin-top: 0; }
+  .dash-section-head{
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--space-md); flex-wrap: wrap;
+    padding-bottom: var(--space-sm); margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border);
+  }
+  .dash-section-title{
+    display: flex; align-items: baseline; gap: var(--space-sm);
+    font-family: var(--font-ui); font-size: var(--text-h3);
+    font-weight: var(--weight-semibold); color: var(--text-primary); margin: 0;
+  }
+  /* Le repère de niveau 2 : une section de la page. */
+  .dash-section-title::before{
+    content: ""; width: 14px; height: 2px; background: var(--accent-2);
+    border-radius: 2px; flex-shrink: 0; align-self: center;
+  }
+  .dash-section-note{
     font-family: var(--font-data); font-size: var(--text-label);
     letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted); display: block;
-  }
-  .dash-lede-title{
-    font-family: var(--font-display); font-size: var(--text-display);
-    line-height: var(--leading-display); font-weight: var(--weight-regular);
-    letter-spacing: var(--tracking-tight); color: var(--text-primary);
-    margin: var(--space-sm) 0 var(--space-xs);
-  }
-  .dash-lede-sub{
-    font-size: var(--text-body); line-height: var(--leading-body);
-    color: var(--text-secondary); margin: 0; max-width: 52ch;
+    color: var(--text-muted); font-variant-numeric: tabular-nums;
   }
 
-  /* Deux colonnes inégales : ce qui compte prend la place. */
+  /* ==========================================================================
+     LA BANNIÈRE
+     --------------------------------------------------------------------------
+     Le seul dégradé du produit, et il est construit : quatre arrêts, du
+     bordeaux profond au rouge emlyon, sur une diagonale. Pas un
+     #FF0000 → #990000. Par-dessus, deux voiles radiaux très faibles donnent la
+     profondeur, et une trame de points donne la texture « produit numérique »
+     — le tout en CSS pur, sans image, sans flou, sans filtre : zéro coût de
+     rendu.
+
+     La clarté du dégradé est PLAFONNÉE, et ce n'est pas un choix esthétique :
+     le texte de la bannière est blanc, et le contraste WCAG du blanc tombe
+     sous 4,5:1 dès que le fond devient plus clair que le rouge emlyon
+     (#E31C3D, luminance 0,175). La version précédente montait jusqu'à un rouge
+     chaud (#F2566B) : mesuré sur les pixels réellement peints, le sous-titre
+     tombait à 3,4:1 et les étiquettes à 2,3:1. Toute retouche du dégradé, du
+     voile clair ou de la trame doit être re-mesurée —
+     tests/dashboard.test.mjs le fait à chaque exécution.
+     ========================================================================== */
+  .dash-banner{
+    position: relative; overflow: hidden; isolation: isolate;
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    color: #fff;
+    background:
+      radial-gradient(120% 140% at 88% 8%,  rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 52%),
+      radial-gradient(90% 120% at 4% 96%,   rgba(0,0,0,.26) 0%,       rgba(0,0,0,0) 60%),
+      linear-gradient(118deg, #5E0A18 0%, #8E1128 30%, #B81430 62%, #D8193A 100%);
+  }
+  /* La trame : des points d'un pixel, espacés de 22px, à peine visibles.
+     C'est ce qui distingue un fond dégradé d'un fond de produit. Leur
+     opacité est basse pour la même raison que le plafond du dégradé : un
+     point clair sous une lettre, c'est du contraste en moins. */
+  .dash-banner::before{
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,.13) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: .5;
+    mask-image: linear-gradient(105deg, transparent 38%, #000 100%);
+    -webkit-mask-image: linear-gradient(105deg, transparent 38%, #000 100%);
+  }
+  /* Deux arcs très discrets, repris de la marque (les barres croissantes). */
+  .dash-banner::after{
+    content: ""; position: absolute; z-index: -1; pointer-events: none;
+    right: -80px; top: -120px; width: 380px; height: 380px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.16);
+    box-shadow: 0 0 0 44px rgba(255,255,255,.05);
+  }
+  .dash-banner-inner{
+    position: relative; display: flex; align-items: flex-end;
+    justify-content: space-between; gap: var(--space-xl); flex-wrap: wrap;
+  }
+  .dash-banner-main{ min-width: 0; flex: 1 1 340px; }
+  /* Sur le dégradé, la hiérarchie se fait par la TYPOGRAPHIE — taille,
+     graisse, chasse, capitales — et non par des blancs translucides : un
+     blanc à 66 % sur ce rouge, c'est 2,3:1, donc illisible. Une opacité sur
+     le texte reviendrait exactement au même (et masquerait le problème aux
+     audits, qui lisent la couleur calculée). Tout est donc blanc plein. */
+  .dash-banner-date{
+    display: block; font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: #fff;
+  }
+  .dash-banner-title{
+    font-family: var(--font-display); font-size: var(--text-display);
+    line-height: var(--leading-display); font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-tight); color: #fff;
+    margin: var(--space-sm) 0 var(--space-xs);
+  }
+  .dash-banner-sub{
+    font-size: var(--text-body); line-height: var(--leading-body);
+    color: #fff; margin: 0; max-width: 46ch;
+  }
+  /* Les chiffres du jour, alignés à droite : trois mesures, pas une de plus. */
+  .dash-banner-stats{
+    display: flex; gap: var(--space-xl); flex-shrink: 0; flex-wrap: wrap;
+  }
+  .dash-banner-stat{ display: flex; flex-direction: column; gap: 2px; }
+  .dash-banner-stat b{
+    font-family: var(--font-data); font-size: var(--text-data);
+    font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); color: #fff;
+  }
+  .dash-banner-stat span{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: #fff; white-space: nowrap;
+  }
+
+  /* ==========================================================================
+     PLANNING — LA SECTION MAJEURE
+     ========================================================================== */
+  .dash-plan-bar{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-lg);
+  }
+  .dash-plan-nav{ display: flex; align-items: center; gap: var(--space-2xs); }
+  .dash-plan-step{
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text-secondary); cursor: pointer;
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                color var(--motion-micro) var(--ease-enter);
+  }
+  .dash-plan-step:hover{ border-color: var(--border-strong); color: var(--text-primary); }
+  .dash-plan-step svg{ width: 12px; height: 12px; }
+  .dash-plan-label{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--text-primary); min-width: 168px; text-align: center;
+    text-transform: capitalize; font-variant-numeric: tabular-nums;
+  }
+  .dash-plan-today{
+    font-family: var(--font-ui); font-size: var(--text-metadata);
+    font-weight: var(--weight-medium); color: var(--accent);
+    background: none; border: none; cursor: pointer; padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--radius-sm);
+  }
+  .dash-plan-today:hover{ background: var(--accent-wash); }
+  .dash-plan-today[disabled]{ color: var(--text-muted); cursor: default; background: none; }
+
+  /* ── L'ÉVÉNEMENT EN COURS ───────────────────────────────────────────────
+     Le seul bloc encadré de la section. Filet accent à gauche, aplat lavis :
+     il se voit sans clignoter. ── */
+  .dash-live{
+    border: 1px solid var(--accent-4); border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md); background: var(--accent-wash);
+    padding: var(--space-lg); margin-bottom: var(--space-md);
+  }
+  .dash-live-top{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-xs);
+  }
+  .dash-live-badge{
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--accent); font-weight: var(--weight-medium);
+  }
+  .dash-live-badge::before{
+    content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  }
+  .dash-live-remaining{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  }
+  .dash-live-title{ margin: 0 0 var(--space-2xs); min-width: 0; }
+  .dash-live-title button{
+    border: none; background: none; padding: 0; cursor: pointer; text-align: left;
+    font-family: var(--font-ui); font-size: var(--text-h2);
+    font-weight: var(--weight-semibold); color: var(--text-primary);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--motion-micro) var(--ease-enter);
+  }
+  .dash-live-title button:hover{ border-color: var(--accent); }
+  .dash-live-meta{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--text-muted); margin: 0 0 var(--space-md);
+  }
+  .dash-live-actions{ margin-top: var(--space-md); }
+
+  /* ── LE PROCHAIN ────────────────────────────────────────────────────── */
+  .dash-next{
+    display: flex; align-items: center; gap: var(--space-md);
+    width: 100%; text-align: left; cursor: pointer;
+    background: none; border: none; border-left: 3px solid var(--course-color, var(--border-strong));
+    padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-lg);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    transition: background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-next:hover{ background: var(--surface-sunken); }
+  .dash-next-when{
+    font-family: var(--font-data); font-size: var(--text-data);
+    font-variant-numeric: tabular-nums; color: var(--text-primary); flex-shrink: 0;
+  }
+  .dash-next-body{ flex: 1; min-width: 0; }
+  .dash-next-label{
+    display: block; font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted);
+  }
+  .dash-next-title{
+    display: block; font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-next-in{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    color: var(--accent); flex-shrink: 0; font-variant-numeric: tabular-nums;
+  }
+
+  /* ── LA TIMELINE VERTICALE ──────────────────────────────────────────────
+     Une colonne d'heures, un rail, et les cours accrochés dessus. Le trait
+     de l'heure traverse le rail à sa position réelle. ── */
+  .dash-timeline{ position: relative; }
+  .dash-tl-row{
+    display: grid; grid-template-columns: 56px 20px 1fr;
+    align-items: start; column-gap: var(--space-sm);
+    width: 100%; text-align: left; background: none; border: none;
+    padding: 0 0 var(--space-lg); cursor: pointer;
+  }
+  .dash-tl-row:last-child{ padding-bottom: 0; }
+  .dash-tl-time{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+    padding-top: 1px; white-space: nowrap;
+  }
+  /* Le rail : un trait continu, un point par cours. */
+  .dash-tl-rail{ position: relative; align-self: stretch; }
+  .dash-tl-rail::before{
+    content: ""; position: absolute; left: 50%; top: 0; bottom: calc(-1 * var(--space-lg));
+    width: 1px; background: var(--border); transform: translateX(-50%);
+  }
+  .dash-tl-row:last-child .dash-tl-rail::before{ bottom: 50%; }
+  .dash-tl-dot{
+    position: relative; display: block; width: 9px; height: 9px; margin: 4px auto 0;
+    border-radius: 50%; background: var(--surface);
+    border: 2px solid var(--course-color, var(--border-strong));
+  }
+  .dash-tl-body{ min-width: 0; padding-bottom: var(--space-2xs); }
+  .dash-tl-title{
+    display: block; font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-tl-meta{
+    display: flex; align-items: center; gap: var(--space-xs); flex-wrap: wrap;
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); margin-top: 3px;
+  }
+  .dash-tl-row:hover .dash-tl-title{ color: var(--accent); }
+  /* Un cours passé s'efface, il ne disparaît pas. */
+  .dash-tl-row.is-past .dash-tl-title,
+  .dash-tl-row.is-past .dash-tl-time{ color: var(--text-muted); }
+  .dash-tl-row.is-past .dash-tl-dot{ background: var(--border); border-color: var(--border); }
+  .dash-tl-row.is-current .dash-tl-dot{
+    background: var(--course-color, var(--accent)); border-color: var(--course-color, var(--accent));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--course-color, var(--accent)) 18%, transparent);
+  }
+  /* L'intercalaire de pause : une respiration lue, pas un trou. */
+  .dash-tl-gap{
+    display: grid; grid-template-columns: 56px 20px 1fr;
+    column-gap: var(--space-sm); padding-bottom: var(--space-lg);
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted);
+  }
+  .dash-tl-gap .dash-tl-rail::before{ border-left: 1px dashed var(--border); background: none; width: 0; }
+
+  /* Le trait de l'heure : il traverse toute la ligne, et il bouge. */
+  .dash-tl-now{
+    display: grid; grid-template-columns: 56px 1fr; align-items: center;
+    column-gap: var(--space-sm); padding-bottom: var(--space-lg);
+  }
+  .dash-tl-now-time{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--accent);
+    font-weight: var(--weight-medium); white-space: nowrap;
+  }
+  .dash-tl-now-line{ position: relative; height: 2px; background: var(--accent); border-radius: 2px; }
+  .dash-tl-now-line::before{
+    content: ""; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  }
+
+  /* ── VUE SEMAINE ────────────────────────────────────────────────────── */
+  .dash-week{ display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2xs); }
+  .dash-week-col{ min-width: 0; }
+  .dash-week-head{
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: var(--space-xs) 0; border-bottom: 1px solid var(--border); margin-bottom: var(--space-xs);
+  }
+  .dash-week-wd{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted);
+  }
+  .dash-week-num{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  }
+  .dash-week-col.is-today .dash-week-head{ border-bottom-color: var(--accent); }
+  .dash-week-col.is-today .dash-week-num{ color: var(--accent); font-weight: var(--weight-semibold); }
+  .dash-week-ev{
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: color-mix(in srgb, var(--course-color, var(--data-3)) 14%, transparent);
+    border: none; border-left: 3px solid var(--course-color, var(--data-4));
+    border-radius: 0 3px 3px 0; padding: var(--space-2xs) var(--space-xs);
+    margin-bottom: 3px; min-height: 34px;
+    transition: background var(--motion-micro) var(--ease-enter);
+  }
+  .dash-week-ev:hover{ background: color-mix(in srgb, var(--course-color, var(--data-3)) 28%, transparent); }
+  .dash-week-ev.is-past{ opacity: .55; }
+  .dash-week-ev-h{
+    display: block; font-family: var(--font-data); font-size: var(--text-label);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  }
+  .dash-week-ev-t{
+    display: block; font-size: var(--text-label); color: var(--text-primary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3;
+  }
+  .dash-week-empty{ min-height: 8px; }
+
+  /* ── VUE MOIS ───────────────────────────────────────────────────────── */
+  .dash-month{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .dash-month-wd{
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted); text-align: center; padding-bottom: var(--space-2xs);
+  }
+  .dash-month-day{
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: 3px; min-height: 52px; padding: var(--space-2xs) 0;
+    border: 1px solid transparent; border-radius: var(--radius-sm);
+    background: none; cursor: pointer;
+    transition: background var(--motion-micro) var(--ease-enter),
+                border-color var(--motion-micro) var(--ease-enter);
+  }
+  .dash-month-day:hover{ background: var(--surface-sunken); }
+  .dash-month-day.is-out{ opacity: .32; }
+  .dash-month-day.is-today{ border-color: var(--accent); }
+  .dash-month-num{
+    font-family: var(--font-data); font-size: var(--text-metadata);
+    font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  }
+  .dash-month-day.is-today .dash-month-num{ color: var(--accent); font-weight: var(--weight-semibold); }
+  .dash-month-dots{ display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; max-width: 34px; }
+  .dash-month-dot{ width: 4px; height: 4px; border-radius: 50%; }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────────────── */
+  @media (max-width: 1024px){
+    .dash-grid--split, .dash-grid--even{ grid-template-columns: 1fr; }
+    .dash-banner{ padding: var(--space-xl); }
+    .dash-week-ev-t{ font-size: 10px; }
+  }
+  @media (max-width: 640px){
+    .dash-section-block{ margin-top: var(--space-2xl); }
+    .dash-banner{ padding: var(--space-lg); border-radius: var(--radius-md); }
+    .dash-banner-title{ font-size: var(--text-h1); }
+    .dash-banner-sub{ font-size: var(--text-small); }
+    .dash-banner-inner{ align-items: flex-start; }
+    .dash-banner-stats{ gap: var(--space-lg); width: 100%; padding-top: var(--space-md); border-top: 1px solid rgba(255,255,255,.2); }
+    .dash-banner::after{ display: none; }
+
+    /* La barre du planning tient sur deux lignes plutôt que de se serrer. */
+    .dash-plan-bar{ gap: var(--space-sm); }
+    .dash-plan-bar > .segmented{ width: 100%; display: flex; }
+    .dash-plan-bar > .segmented > button{ flex: 1; }
+    .dash-plan-nav{ width: 100%; justify-content: space-between; }
+    .dash-plan-label{ min-width: 0; flex: 1; }
+
+    /* La timeline garde sa colonne d'heures : c'est elle qui rend la journée
+       lisible au doigt. On rétrécit seulement la gouttière. */
+    .dash-tl-row, .dash-tl-gap{ grid-template-columns: 48px 16px 1fr; column-gap: var(--space-xs); }
+    .dash-tl-now{ grid-template-columns: 48px 1fr; column-gap: var(--space-xs); }
+    .dash-live{ padding: var(--space-md); }
+    .dash-live-title button{ font-size: var(--text-h3); }
+
+    /* Une semaine de sept colonnes ne se lit pas à 375px : elle devient une
+       liste de jours, chacun avec ses cours. */
+    .dash-week{ grid-template-columns: 1fr; gap: var(--space-md); }
+    .dash-week-head{ flex-direction: row; justify-content: flex-start; gap: var(--space-xs); }
+    .dash-week-ev-t{ font-size: var(--text-metadata); }
+    .dash-week-col.is-empty{ display: none; }
+
+    .dash-month-day{ min-height: 44px; }
+  }
+
+  /* ==========================================================================
+     LES PANNEAUX DES SECTIONS « RÉVISION » ET « ACTIVITÉ »
+     --------------------------------------------------------------------------
+     Une section est faite d'espace et d'un titre ; à l'intérieur, ce qui est
+     un objet manipulable prend une carte. Ces panneaux sont exactement la
+     carte du système : même filet, même rayon, même ombre.
+     ========================================================================== */
   .dash-grid{ display: grid; gap: var(--space-lg); align-items: start; }
   .dash-grid--split{ grid-template-columns: 1.55fr 1fr; }
   .dash-grid--even{ grid-template-columns: 1fr 1fr; }
 
-  /* Le panneau : exactement la carte du système, rien de plus. */
   .dash-panel{
     display: flex; flex-direction: column;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: var(--space-lg);
     box-shadow: var(--shadow-subtle);
   }
-  .dash-panel-head{
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-md);
-  }
   .dash-panel-label{
     display: flex; align-items: center; gap: var(--space-xs);
     font-family: var(--font-data); font-size: var(--text-label);
     letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted); margin: 0;
+    color: var(--text-muted); margin: 0 0 var(--space-md);
   }
-  /* Le même repère accent que partout ailleurs dans l'application. */
-  /* Niveau 3 — LE GROUPE : un panneau est un groupe dans un écran. */
+  /* Niveau 3 de la gamme : un panneau est un groupe dans une section. */
   .dash-panel-label::before{
     content: ""; width: 10px; height: 2px; background: var(--accent-3);
-    border-radius: 1px; flex-shrink: 0;
+    border-radius: 2px; flex-shrink: 0;
   }
-  /* Le pied d'un panneau : les actions discrètes, poussées en bas quand la
-     grille étire le panneau à la hauteur de son voisin. */
   .dash-panel-foot{
     display: flex; align-items: center; gap: var(--space-lg);
     flex-wrap: wrap; margin-top: auto; padding-top: var(--space-md);
   }
 
-  /* ── PRIORITÉ — le panneau le plus fort de la page ───────────────────── */
-  /* La carte priorité est le SEUL fond coloré de l'accueil. Un lavis, pas un
-     aplat : le texte garde son contraste, et le bloc se voit de loin. */
+  /* ── PRIORITÉ ────────────────────────────────────────────────────────── */
   .dash-panel--priority{
     background: var(--accent-wash);
-    /* L'ordre compte : border-color d'abord (les quatre côtés), le filet de
-       coiffe ensuite — sinon il retomberait au ton du contour. */
     border-color: var(--accent-4);
     border-top: 2px solid var(--accent);
   }
@@ -2750,13 +3112,11 @@
     display: flex; align-items: center; gap: var(--space-lg);
     flex-wrap: wrap; margin-top: var(--space-lg);
   }
-  /* La reprise : une seconde piste, jamais un second bouton rouge. */
   .dash-resume{
     display: flex; align-items: baseline; gap: var(--space-xs);
     margin-top: var(--space-md); padding-top: var(--space-md);
-    border-top: 1px solid var(--border);
-    font-size: var(--text-small); color: var(--text-secondary);
-    flex-wrap: wrap;
+    border-top: 1px solid var(--accent-4);
+    font-size: var(--text-small); color: var(--text-secondary); flex-wrap: wrap;
   }
   .dash-resume-label{
     font-family: var(--font-data); font-size: var(--text-label);
@@ -2764,7 +3124,7 @@
     color: var(--text-muted);
   }
 
-  /* ── PROGRESSION — un chiffre, une jauge, quatre mesures ─────────────── */
+  /* ── PROGRESSION ─────────────────────────────────────────────────────── */
   .dash-progress-value{
     font-family: var(--font-data); font-size: var(--text-data-xl);
     font-variant-numeric: tabular-nums; font-weight: var(--weight-regular);
@@ -2779,8 +3139,6 @@
   .dash-progress-trend.is-down{ color: var(--warning); }
   .dash-progress-trend.is-flat{ color: var(--text-muted); }
   .dash-panel .meter{ margin: var(--space-sm) 0 var(--space-lg); }
-  /* Les mesures : deux colonnes de lignes, séparées par des filets, jamais
-     par quatre petites boîtes. */
   .dash-measures{ display: flex; flex-direction: column; }
   .dash-measure{
     display: flex; align-items: baseline; justify-content: space-between;
@@ -2793,168 +3151,12 @@
     font-weight: var(--weight-medium); color: var(--text-primary);
   }
 
-  /* ── LA COULEUR DES MATIÈRES ──────────────────────────────────────────
-     Chaque matière porte une couleur, choisie par l'utilisateur parmi les
-     huit du produit. C'est la seule couleur de l'interface qui ne vient pas
-     de la marque — et c'est la plus utile : elle rend une matière
-     reconnaissable sans la lire. On l'applique par un FILET et une JAUGE,
-     jamais par un aplat : huit aplats saturés sur un écran, c'est un
-     tableau de bord générique.
-     Elle arrive par --course-color, posée en ligne au rendu. */
-  /* ── EMPLOI DU TEMPS ─────────────────────────────────────────────────── */
-  /* Le cours en cours n'est PAS une carte dans une carte : un filet accent à
-     gauche et un aplat creusé suffisent à le détacher. */
-  .dash-now{
-    background: var(--surface-sunken); border-left: 3px solid var(--course-color, var(--accent-4));
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: var(--space-md); margin-bottom: var(--space-sm);
-  }
-  .dash-now-head{
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-2xs);
-  }
-  .dash-now-heading{ margin: 0; min-width: 0; }
-  .dash-now-title{
-    border: none; background: none; padding: 0; cursor: pointer; text-align: left;
-    font-family: var(--font-ui); font-size: var(--text-h3);
-    font-weight: var(--weight-semibold); color: var(--text-primary);
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--motion-micro) var(--ease-enter);
-  }
-  .dash-now-title:hover{ border-color: var(--border-strong); }
-  .dash-now-meta{
-    font-family: var(--font-data); font-size: var(--text-metadata);
-    color: var(--text-muted); margin: 0 0 var(--space-sm);
-  }
-  .dash-now-remaining{
-    font-family: var(--font-data); font-size: var(--text-metadata);
-    color: var(--text-secondary); margin: var(--space-xs) 0 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .dash-now-actions{ margin-top: var(--space-sm); }
-
-  .dash-agenda{ display: flex; flex-direction: column; }
-  .dash-agenda-row{
-    display: grid; grid-template-columns: 104px 1fr auto;
-    align-items: baseline; gap: var(--space-md);
-    width: 100%; text-align: left; border: none; background: none; cursor: pointer;
-    padding: var(--space-sm); margin: 0 calc(var(--space-sm) * -1);
-    /* Le filet de couleur vient APRÈS `border: none`, sinon il est annulé. */
-    border-left: 3px solid var(--course-color, transparent);
-    border-radius: var(--radius-sm);
-    transition: background var(--motion-micro) var(--ease-enter);
-  }
-  .dash-agenda-row + .dash-agenda-row{ border-top: 1px solid var(--border); }
-  .dash-agenda-row:hover{ background: var(--surface-sunken); }
-  .dash-agenda-time{
-    font-family: var(--font-data); font-size: var(--text-metadata);
-    font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap;
-  }
-  .dash-agenda-title{
-    font-size: var(--text-small); font-weight: var(--weight-medium);
-    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .dash-agenda-state{
-    font-family: var(--font-data); font-size: var(--text-label);
-    letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted); white-space: nowrap;
-  }
-  .dash-agenda-row.is-past .dash-agenda-time,
-  .dash-agenda-row.is-past .dash-agenda-title{ color: var(--text-muted); }
-  .dash-agenda-row.is-current .dash-agenda-state{ color: var(--success); }
-  /* L'heure qu'il est, en tête de la journée : le repère temporel que
-     demande un emploi du temps. */
-  .dash-clock{
-    font-family: var(--font-data); font-size: var(--text-label);
-    letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted); font-variant-numeric: tabular-nums;
-  }
-
-  /* ── LA SEMAINE, CLIQUABLE ────────────────────────────────────────────
-     Sept jours, un point par cours à la couleur de sa matière : on voit sa
-     semaine sans la lire, et on change de jour sans quitter l'accueil. ── */
-  .dash-days{
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2xs);
-    margin-bottom: var(--space-md);
-  }
-  .dash-day{
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: var(--space-xs) var(--space-2xs); min-height: 56px;
-    border: 1px solid transparent; border-radius: var(--radius-sm);
-    background: none; cursor: pointer;
-    transition: background var(--motion-micro) var(--ease-enter),
-                border-color var(--motion-micro) var(--ease-enter);
-  }
-  .dash-day:hover{ background: var(--surface-sunken); }
-  .dash-day-wd{
-    font-family: var(--font-data); font-size: var(--text-label);
-    letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .dash-day-num{
-    font-family: var(--font-data); font-size: var(--text-metadata);
-    font-variant-numeric: tabular-nums; color: var(--text-secondary);
-  }
-  /* Aujourd'hui est repéré par son chiffre en accent ; le jour CHOISI est
-     repéré par son cadre. Les deux repères ne disent pas la même chose et ne
-     doivent donc pas se confondre. */
-  .dash-day.is-today .dash-day-num{ color: var(--accent); font-weight: var(--weight-semibold); }
-  .dash-day.is-selected{ background: var(--surface-sunken); border-color: var(--border-strong); }
-  .dash-day-dots{ display: flex; gap: 2px; align-items: center; min-height: 6px; margin-top: 2px; }
-  .dash-day-dot{ width: 4px; height: 4px; border-radius: 50%; }
-  .dash-day-more{
-    font-family: var(--font-data); font-size: 9px; color: var(--text-muted); line-height: 1;
-  }
-
-  /* ── LE RAIL DE LA JOURNÉE ────────────────────────────────────────────
-     La journée en une ligne, à l'échelle des heures. Chaque cours est à sa
-     place réelle, à la couleur de sa matière ; le trait rouge est l'heure
-     qu'il est. C'est le seul endroit du produit où la couleur porte une
-     position, pas un état. ── */
-  .dash-rail{ margin-bottom: var(--space-md); }
-  .dash-rail-track{
-    position: relative; height: 34px;
-    background: var(--surface-sunken); border-radius: var(--radius-sm);
-    overflow: hidden;
-  }
-  .dash-rail-block{
-    position: absolute; top: 4px; bottom: 4px;
-    border: none; border-radius: 2px; cursor: pointer;
-    background: color-mix(in srgb, var(--course-color, var(--data-3)) 22%, transparent);
-    border-left: 3px solid var(--course-color, var(--data-4));
-    padding: 0 var(--space-2xs); overflow: hidden; text-align: left;
-    transition: background var(--motion-micro) var(--ease-enter);
-  }
-  .dash-rail-block > span{
-    display: block; font-size: var(--text-label); line-height: 26px;
-    color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .dash-rail-block:hover{ background: color-mix(in srgb, var(--course-color, var(--data-3)) 38%, transparent); }
-  .dash-rail-block.is-past{ opacity: 0.5; }
-  /* Le trait de l'heure : le seul rouge plein du rail, et il bouge. */
-  .dash-rail-now{
-    position: absolute; top: 0; bottom: 0; width: 2px;
-    background: var(--accent); pointer-events: none; z-index: 2;
-    /* Pas de transition sur `left` : c'est une propriété de reflow, et le
-       trait n'avance que d'une fraction de pixel par seconde. */
-  }
-  .dash-rail-now::before{
-    content: ""; position: absolute; top: 0; left: -2px;
-    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-  }
-  .dash-rail-axis{ position: relative; height: 14px; margin-top: 2px; }
-  .dash-rail-tick{
-    position: absolute; transform: translateX(-50%);
-    font-family: var(--font-data); font-size: var(--text-label);
-    color: var(--text-muted); white-space: nowrap;
-  }
-
-  /* La matière d'un cours, sous son intitulé. */
-  .dash-agenda-body{ min-width: 0; }
-  .dash-agenda-subject{
-    display: block; font-family: var(--font-data); font-size: var(--text-label);
-    letter-spacing: var(--tracking-label); text-transform: uppercase;
-    color: var(--text-muted); margin-top: 2px;
+  @media (max-width: 640px){
+    .dash-panel{ padding: var(--space-md); }
+    .dash-priority-title{ font-size: var(--text-h2); }
+    .dash-priority-reason{ font-size: var(--text-small); }
+    .dash-priority-actions{ flex-direction: column; align-items: stretch; gap: var(--space-sm); }
+    .dash-priority-actions > .btn{ width: 100%; }
   }
 
   /* ── MES MATIÈRES — des cartes compactes, sur l'ivoire ───────────────── */
@@ -3420,7 +3622,7 @@
      bord, à la même place, sur les quinze écrans. */
   .page-title::before{
     content: ""; display: block; width: 40px; height: 2px;
-    background: var(--accent); margin-bottom:var(--space-md); border-radius: 1px;
+    background: var(--accent); margin-bottom:var(--space-md); border-radius: 2px;
   }
   /* Titre de page dans un contexte déjà introduit (fil d'ariane, retour) :
      l'espace au-dessus est déjà fourni par l'élément précédent. */
@@ -3446,7 +3648,7 @@
   .section-title::before{
     content: ""; display: inline-block; vertical-align: middle;
     width: 14px; height: 2px; background: var(--accent-2);
-    margin-right:var(--space-sm); border-radius: 1px;
+    margin-right:var(--space-sm); border-radius: 2px;
   }
   /* Niveau 2 aussi : un .section-head découpe la PAGE en sections, comme un
      .section-title — seule sa forme diffère (libellé en chasse fixe et
@@ -3454,7 +3656,7 @@
   .section-head > .section-head-label::before{
     content: ""; display: inline-block; vertical-align: middle;
     width: 10px; height: 2px; background: var(--accent-2);
-    margin-right:var(--space-xs); border-radius: 1px;
+    margin-right:var(--space-xs); border-radius: 2px;
   }
   /* Titre de section aligné avec une action sur la même ligne (en-tête de
      section) : la marge basse est portée par le conteneur flex, pas par le
@@ -5202,6 +5404,11 @@ let state = {
   // --- aperçu du planning sur le dashboard : "today" | "tomorrow" ---
   dashSchedulePreview: "today",
   dashScheduleOffset: 0,
+  /* Le planning de l'accueil : sa vue (jour/semaine/mois) et le jour affiché.
+     Indépendants de state.planning.calView/anchorDate, qui pilotent la PAGE
+     Planning — naviguer sur l'accueil ne doit pas déplacer la page. */
+  dashPlanView: "day",
+  dashPlanDay: null,
 
   // --- espace de travail par cours : notes, résumé, questions, checklist, favori, révision ---
   courseData: {},   // { [eventId]: {notes, summary, questions, checklist:{...}, favorite, revisionStatus} }
@@ -6558,84 +6765,410 @@ function continueRevision(){
    7ter. DASHBOARD — RENDU
    ============================================================ */
 /* ============================================================================
-   TABLEAU DE BORD — panneaux (étape 10)
+   TABLEAU DE BORD — composition éditoriale (étape 11)
    ----------------------------------------------------------------------------
-   Refonte VISUELLE. Aucune donnée n'est inventée : chaque chiffre affiché ici
-   vient d'une fonction qui existait déjà.
+   Cinq sections, dans l'ordre des questions qu'on se pose en arrivant :
 
-     priorité ............ getSmartRevisionRecommendations()  (smart-revision.js)
-     erreurs récentes .... poolWrong()          — questions dont la dernière
-                           réponse est fausse, plus les chapitres utilisateur
-     maîtrise ............ globalMetrics().mastery
-     progression récente . LyonStatistics.computeComparison() sur les 7 jours
-                           glissants contre les 7 précédents  (statistics.js)
-     mesures ............. subjectProgress(), masteredChaptersCount(),
-                           globalMetrics(), state.dash.timeSpentSeconds
-     emploi du temps ..... state.planning.events + getCurrentCourse()
-     matières ............ recentSubjectsPreview() + subjectProgress()
-     cours récents ....... state.userChapters
+     BANNIÈRE ........ où je suis, qui je suis, ce qui m'attend aujourd'hui
+     AUJOURD'HUI ..... mon planning, en détail : jour / semaine / mois
+     RÉVISION ........ ce que je dois réviser, et où j'en suis
+     ACTIVITÉ ........ ce que j'ai fait
+     ACCÈS RAPIDES ... où aller
 
-   Quand une donnée n'existe pas, on le dit (un tiret, une phrase) — on ne
-   remplit pas l'interface avec un chiffre plausible.
-
-   Ordre de lecture, inchangé depuis l'étape 6 :
-     1. Où suis-je ?            l'accroche
-     2. Qu'est-ce qui compte ?  priorité + progression, puis l'emploi du temps
-     3. Que dois-je faire ?     matières, actions rapides
-   Le reste (cours récents, activité) vient après.
+   AUCUNE DONNÉE N'EST INVENTÉE. Chaque chiffre vient d'une fonction qui
+   existait déjà :
+     planning ........ state.planning.events, getCurrentCourse(),
+                       getCourseStatus(), fmtEventTimeRange(), getCourseData()
+     priorité ........ getSmartRevisionRecommendations()  (smart-revision.js)
+     erreurs ......... poolWrong()
+     maîtrise ........ globalMetrics()
+     tendance ........ LyonStatistics.computeComparison() sur 7 jours glissants
+     matières ........ subjectProgress(), chaptersOfSubject()
+   Quand une donnée manque, on le dit — on ne comble pas.
    ========================================================================== */
 function renderDashboard(){
-  const d = state.dash;
   const subjects = allSubjects();
-  const greetName = getCurrentUserDisplayName();
-
-  const rc = d.recentChapters && d.recentChapters[0];
-  const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
-  const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
-
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-  const greeting = greetName ? t("greeting.hello_name_plain", {name: escapeHtml(greetName)}) : t("greeting.hello_plain");
-
   let html = `<div class="dashboard">`;
-
-  /* ---------- 1. OÙ SUIS-JE ---------- */
-  html += `<header class="dash-lede">
-    <span class="dash-lede-date">${dateLabel}</span>
-    <h1 class="dash-lede-title">${greeting}</h1>
-    <p class="dash-lede-sub">${t("dashboard.subtitle")}</p>
-  </header>`;
-
-  /* ---------- 2. QU'EST-CE QUI COMPTE ---------- */
-  html += `<div class="dash-grid dash-grid--split">
-    ${renderDashboardPriority(rcChapter, rcSubject, rc)}
-    ${renderDashboardProgress(subjects)}
-  </div>`;
-
-  html += renderDashboardSchedule();
-
-  /* ---------- 3. QUE DOIS-JE FAIRE ---------- */
-  html += renderDashboardSubjects(subjects);
-
-  html += `<div class="dash-grid dash-grid--split">
-    ${renderDashboardActions()}
-    ${renderDashboardRevisions()}
-  </div>`;
-
-  /* ---------- Activité récente ---------- */
-  const feed = recentFeedItems(5);
-  html += `<section id="dash-recent-activity">
-    <div class="section-head">
-      <span class="section-head-label">${t("dashboard.recent_activity")}</span>
-      <span class="section-head-rule"></span>
-    </div>`;
-  html += feed.length === 0
-    ? `<p class="dash-log-item">${t("dashboard.no_recent_activity")}</p>`
-    : `<div class="dash-log">` + feed.map(it => `<div class="dash-log-item">${it}</div>`).join("") + `</div>`;
-  html += `</section>`;
-
+  html += renderDashboardBanner();
+  html += renderDashboardToday();
+  html += renderDashboardRevisionSection(subjects);
+  html += renderDashboardActivitySection();
+  html += renderDashboardAccessSection(subjects);
   html += `<footer class="hint">${t("dashboard.storage_hint")}${storageAvailable ? "" : t("dashboard.storage_warning")}</footer>`;
   html += `</div>`;
+  return html;
+}
+
+/* ── LA BANNIÈRE ───────────────────────────────────────────────────────────
+   Salutation, date, et une information contextuelle RÉELLE : combien de cours
+   aujourd'hui, l'heure du prochain, et le nombre de notions que le moteur
+   propose de réviser. Rien de tout cela n'est fabriqué : s'il n'y a pas de
+   planning, la bannière ne montre pas de chiffre de planning. */
+function renderDashboardBanner(){
+  const greetName = getCurrentUserDisplayName();
+  const greeting = greetName ? t("greeting.hello_name", {name: escapeHtml(greetName)}) : t("greeting.hello");
+  const dateLabel = new Date().toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+
+  const todayEvents = eventsOnCalendarDay(new Date());
+  const current = getCurrentCourse();
+  const next = todayEvents.find(e => e.start > Date.now()) || null;
+  const recos = dashHasRevisionData() ? getSmartRevisionRecommendations() : [];
+
+  /* Une phrase, choisie selon ce qui est vrai en ce moment. */
+  let sub;
+  if(current) sub = t("dashboard.banner_current", {name: escapeHtml(current.summary)});
+  else if(next) sub = t("dashboard.banner_next", {time: fmtEventClock(next.start), name: escapeHtml(next.summary)});
+  else if(recos.length) sub = t("dashboard.banner_revise", {n: recos.length});
+  else sub = t("dashboard.subtitle");
+
+  /* Trois mesures, et seulement celles qui existent. */
+  const stats = [];
+  if(state.planning.events.length){
+    stats.push([String(todayEvents.length), t("dashboard.stat_courses")]);
+  }
+  if(recos.length) stats.push([String(recos.length), t("dashboard.stat_to_revise")]);
+  stats.push([globalMetrics().mastery + "%", t("dashboard.stat_mastery")]);
+
+  return `<section class="dash-banner">
+    <div class="dash-banner-inner">
+      <div class="dash-banner-main">
+        <span class="dash-banner-date">${dateLabel}</span>
+        <h1 class="dash-banner-title">${greeting}</h1>
+        <p class="dash-banner-sub">${sub}</p>
+      </div>
+      <div class="dash-banner-stats">
+        ${stats.map(([v, l]) => `<div class="dash-banner-stat"><b>${v}</b><span>${l}</span></div>`).join("")}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* A-t-on assez de données pour que le moteur de révision ait un avis ?
+   Même garde que renderSmartHome() : sans cela, tous les chapitres jamais
+   ouverts « qualifieraient » et on annoncerait un chiffre qui ne veut rien
+   dire. */
+function dashHasRevisionData(){
+  return state.dash.recentActivity.length > 0
+    || QUESTIONS.some(q => qstat(q))
+    || state.userChapters.some(ch => userChapterProgress(ch) !== null);
+}
+
+function fmtEventClock(ms){
+  return new Date(ms).toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
+}
+/* « dans 24 min », « dans 1 h 30 » — jamais « dans 0 min ». */
+function fmtCountdown(ms){
+  const min = Math.max(1, Math.round((ms - Date.now()) / 60000));
+  if(min < 60) return t("dashboard.in_minutes", {n: min});
+  const h = Math.floor(min / 60), m = min % 60;
+  return t("dashboard.in_time", {time: m ? h + " h " + String(m).padStart(2,"0") : h + " h"});
+}
+function fmtEventDuration(e){
+  const min = Math.round(((e.end || e.start) - e.start) / 60000);
+  if(min <= 0) return "";
+  if(min < 60) return t("dashboard.duration_min", {n: min});
+  const h = Math.floor(min / 60), m = min % 60;
+  return t("dashboard.duration_time", {time: m ? h + " h " + String(m).padStart(2,"0") : h + " h"});
+}
+
+/* Le jour affiché par le tableau de bord, en millisecondes (minuit). */
+function dashPlanDay(){
+  if(typeof state.dashPlanDay === "number") return state.dashPlanDay;
+  return todayMidnightMs();
+}
+function dashPlanView(){ return state.dashPlanView || "day"; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION « AUJOURD'HUI » — le planning, en grand
+   ══════════════════════════════════════════════════════════════════════════ */
+function renderDashboardToday(){
+  const view = dashPlanView();
+  const day = new Date(dashPlanDay());
+  const isToday = dashPlanDay() === todayMidnightMs();
+  const dayEvents = eventsOnCalendarDay(day);
+
+  let head = `<div class="dash-section-head">
+    <h2 class="dash-section-title">${t("dashboard.section_today")}</h2>
+    ${state.planning.events.length ? `<span class="dash-section-note">${
+      t(dayEvents.length > 1 ? "dashboard.events_count_many" : "dashboard.events_count_one", {n: dayEvents.length})
+    }</span>` : ""}
+  </div>`;
+
+  if(state.planning.events.length === 0){
+    return `<section class="dash-section-block" id="dash-schedule-card">${head}
+      <div class="empty empty--inline">
+        <p class="empty-text">${t("dashboard.no_planning")}</p>
+        <div class="empty-actions"><button class="btn btn--secondary" id="dash-schedule-setup">${t("dashboard.setup_planning")}</button></div>
+      </div>
+    </section>`;
+  }
+
+  /* La barre : navigation d'un côté, vue de l'autre. */
+  const CHEV = d => `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  let label;
+  if(view === "day") label = day.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long"});
+  else if(view === "week"){
+    const wd = planningWeekDays(dashPlanDay());
+    label = wd[0].toLocaleDateString(currentLocaleTag(), {day:"numeric", month:"short"})
+          + " – " + wd[6].toLocaleDateString(currentLocaleTag(), {day:"numeric", month:"short"});
+  } else label = day.toLocaleDateString(currentLocaleTag(), {month:"long", year:"numeric"});
+
+  let html = `<section class="dash-section-block" id="dash-schedule-card">${head}
+    <div class="dash-plan-bar">
+      <div class="dash-plan-nav">
+        <button type="button" class="dash-plan-step" data-plan-step="-1" aria-label="${t("dashboard.plan_prev")}">${CHEV("M7.5 2.5 4 6l3.5 3.5")}</button>
+        <span class="dash-plan-label">${escapeHtml(label)}</span>
+        <button type="button" class="dash-plan-step" data-plan-step="1" aria-label="${t("dashboard.plan_next")}">${CHEV("M4.5 2.5 8 6l-3.5 3.5")}</button>
+        <button type="button" class="dash-plan-today" id="dash-plan-today" ${isToday && view === "day" ? "disabled" : ""}>${t("dashboard.today")}</button>
+      </div>
+      <span class="segmented">
+        <button type="button" data-plan-view="day"   class="${view==="day"?"active":""}"   aria-pressed="${view==="day"}">${t("dashboard.view_day")}</button>
+        <button type="button" data-plan-view="week"  class="${view==="week"?"active":""}"  aria-pressed="${view==="week"}">${t("dashboard.week")}</button>
+        <button type="button" data-plan-view="month" class="${view==="month"?"active":""}" aria-pressed="${view==="month"}">${t("dashboard.view_month")}</button>
+      </span>
+    </div>`;
+
+  if(view === "week")       html += renderDashboardWeek();
+  else if(view === "month") html += renderDashboardMonth();
+  else                      html += renderDashboardDay(day, dayEvents, isToday);
+
+  html += `<div class="block block--action is-bare" style="margin-top: var(--space-lg);">
+    <button class="btn btn--tertiary" id="dash-schedule-full">${t("dashboard.view_full_planning")}</button>
+  </div></section>`;
+  return html;
+}
+
+/* ── VUE JOUR : en cours, prochain, puis la timeline verticale ─────────── */
+function renderDashboardDay(day, events, isToday){
+  const current = isToday ? getCurrentCourse() : null;
+  const next = isToday ? events.find(e => e.start > Date.now()) : null;
+  let html = "";
+
+  if(current){
+    const cd = getCourseData(current.id);
+    const total = (current.end || current.start) - current.start;
+    const pct = total > 0 ? Math.round(Math.min(total, Math.max(0, Date.now() - current.start)) / total * 100) : 0;
+    const remainMin = Math.max(0, Math.round(((current.end || current.start) - Date.now()) / 60000));
+    const remainLbl = remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min";
+    html += `<div class="dash-live" style="--course-color:${eventColor(current)};">
+      <div class="dash-live-top">
+        <span class="dash-live-badge">${t("dashboard.status_current")}</span>
+        <span class="dash-live-remaining" id="dash-ccourse-text">${pct}% · ${t("dashboard.remaining", {time: remainLbl})}</span>
+      </div>
+      <h3 class="dash-live-title"><button type="button" data-open-event="${current.id}">${escapeHtml(current.summary)}</button></h3>
+      <p class="dash-live-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}${cd.favorite ? " · ★" : ""}</p>
+      <div class="meter" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
+        <div class="meter-fill" id="dash-ccourse-fill" style="width:${pct}%;background:var(--course-color);"></div>
+      </div>
+      <div class="dash-live-actions">
+        <button class="btn btn--secondary small" data-open-event-notes="${current.id}">${t("dashboard.take_notes")}</button>
+      </div>
+    </div>`;
+  }
+
+  if(next){
+    html += `<button type="button" class="dash-next" data-open-event="${next.id}" style="--course-color:${eventColor(next)};">
+      <span class="dash-next-when">${fmtEventClock(next.start)}</span>
+      <span class="dash-next-body">
+        <span class="dash-next-label">${t("dashboard.next")}</span>
+        <span class="dash-next-title">${escapeHtml(next.summary)}</span>
+      </span>
+      <span class="dash-next-in" id="dash-next-in" data-next-start="${next.start}">${fmtCountdown(next.start)}</span>
+    </button>`;
+  }
+
+  if(!events.length){
+    return html + `<div class="empty empty--inline"><p class="empty-text">${
+      isToday ? t("dashboard.no_course_today") : t("dashboard.no_course_day")
+    }</p></div>`;
+  }
+
+  /* La timeline. Le trait de l'heure s'insère entre deux cours, à sa place
+     réelle dans la journée. */
+  const nowInserted = { done: !isToday };
+  html += `<div class="dash-timeline">`;
+  events.forEach((e, i) => {
+    if(!nowInserted.done && Date.now() < e.start){
+      html += renderDashboardNowLine();
+      nowInserted.done = true;
+    }
+    const st = getCourseStatus(e);
+    const stLabel = st === "past" ? t("dashboard.status_done")
+                  : (st === "current" ? t("dashboard.status_current") : t("dashboard.status_upcoming"));
+    const dur = fmtEventDuration(e);
+    const subj = matchEventSubject(e.summary);
+    html += `<button type="button" class="dash-tl-row is-${st}" data-open-event="${e.id}" style="--course-color:${eventColor(e)};">
+      <span class="dash-tl-time">${e.allDay ? t("dashboard.all_day") : fmtEventClock(e.start)}</span>
+      <span class="dash-tl-rail"><span class="dash-tl-dot"></span></span>
+      <span class="dash-tl-body">
+        <span class="dash-tl-title">${escapeHtml(e.summary)}</span>
+        <span class="dash-tl-meta">
+          <span>${fmtEventTimeRange(e)}</span>
+          ${dur ? `<span aria-hidden="true">·</span><span>${dur}</span>` : ""}
+          ${subj ? `<span aria-hidden="true">·</span><span>${escapeHtml(subj.name)}</span>` : ""}
+          <span aria-hidden="true">·</span><span>${stLabel}</span>
+        </span>
+      </span>
+    </button>`;
+
+    /* Une pause d'au moins 20 minutes avant le cours suivant se dit. */
+    const nx = events[i + 1];
+    if(nx && !e.allDay && !nx.allDay){
+      const gap = Math.round((nx.start - (e.end || e.start)) / 60000);
+      if(gap >= 20){
+        html += `<div class="dash-tl-gap">
+          <span></span><span class="dash-tl-rail"></span>
+          <span>${t("dashboard.gap", {time: gap < 60 ? gap + " min" : Math.floor(gap/60) + " h" + (gap%60 ? " " + String(gap%60).padStart(2,"0") : "")})}</span>
+        </div>`;
+      }
+    }
+  });
+  if(!nowInserted.done) html += renderDashboardNowLine();
+  html += `</div>`;
+  return html;
+}
+
+function renderDashboardNowLine(){
+  return `<div class="dash-tl-now" id="dash-tl-now">
+    <span class="dash-tl-now-time" id="dash-tl-now-time">${fmtEventClock(Date.now())}</span>
+    <span class="dash-tl-now-line"></span>
+  </div>`;
+}
+
+/* ── VUE SEMAINE : sept colonnes, les cours à leur couleur ─────────────── */
+function renderDashboardWeek(){
+  const days = planningWeekDays(dashPlanDay());
+  const todayMs = todayMidnightMs();
+  let any = false;
+  let html = `<div class="dash-week">`;
+  days.forEach(d => {
+    const evs = eventsOnCalendarDay(d);
+    if(evs.length) any = true;
+    const isToday = d.getTime() === todayMs;
+    html += `<div class="dash-week-col${isToday ? " is-today" : ""}${evs.length ? "" : " is-empty"}">
+      <div class="dash-week-head">
+        <span class="dash-week-wd">${escapeHtml(d.toLocaleDateString(currentLocaleTag(), {weekday:"short"}).replace(".",""))}</span>
+        <span class="dash-week-num">${d.getDate()}</span>
+      </div>
+      ${evs.length ? evs.map(e => `<button type="button" class="dash-week-ev is-${getCourseStatus(e)}" data-open-event="${e.id}"
+          style="--course-color:${eventColor(e)};" title="${escapeHtml(e.summary)} · ${fmtEventTimeRange(e)}">
+          <span class="dash-week-ev-h">${e.allDay ? t("dashboard.all_day") : fmtEventClock(e.start)}</span>
+          <span class="dash-week-ev-t">${escapeHtml(e.summary)}</span>
+        </button>`).join("") : `<span class="dash-week-empty"></span>`}
+    </div>`;
+  });
+  html += `</div>`;
+  if(!any) html += `<div class="empty empty--inline"><p class="empty-text">${t("dashboard.no_course_week")}</p></div>`;
+  return html;
+}
+
+/* ── VUE MOIS : la densité du mois, un point par cours ─────────────────── */
+function renderDashboardMonth(){
+  const anchor = new Date(dashPlanDay());
+  const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  const startIdx = (first.getDay() + 6) % 7;            // lundi = 0
+  const gridStart = new Date(first.getFullYear(), first.getMonth(), 1 - startIdx);
+  const todayMs = todayMidnightMs();
+  const wdNames = planningWeekDays(todayMs).map(d =>
+    d.toLocaleDateString(currentLocaleTag(), {weekday:"narrow"}));
+
+  let html = `<div class="dash-month">`;
+  wdNames.forEach(w => { html += `<span class="dash-month-wd">${escapeHtml(w)}</span>`; });
+  for(let i = 0; i < 42; i++){
+    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+    const evs = eventsOnCalendarDay(d);
+    const out = d.getMonth() !== anchor.getMonth();
+    html += `<button type="button" class="dash-month-day${out ? " is-out" : ""}${d.getTime() === todayMs ? " is-today" : ""}"
+      data-plan-day="${d.getTime()}"
+      aria-label="${escapeHtml(d.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long"}))} — ${evs.length}">
+      <span class="dash-month-num">${d.getDate()}</span>
+      <span class="dash-month-dots">${evs.slice(0,6).map(e =>
+        `<span class="dash-month-dot" style="background:${eventColor(e)};"></span>`).join("")}</span>
+    </button>`;
+  }
+  return html + `</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION « RÉVISION » — à réviser, et progression
+   ══════════════════════════════════════════════════════════════════════════ */
+function renderDashboardRevisionSection(subjects){
+  const rc = state.dash.recentChapters && state.dash.recentChapters[0];
+  const rcChapter = rc ? findAnyChapter(rc.chapterId) : null;
+  const rcSubject = rcChapter ? subjectOfChapter(rcChapter) : null;
+  return `<section class="dash-section-block">
+    <div class="dash-section-head">
+      <h2 class="dash-section-title">${t("dashboard.section_revision")}</h2>
+    </div>
+    <div class="dash-grid dash-grid--split">
+      ${renderDashboardPriority(rcChapter, rcSubject, rc)}
+      ${renderDashboardProgress(subjects)}
+    </div>
+  </section>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION « ACTIVITÉ »
+   ══════════════════════════════════════════════════════════════════════════ */
+function renderDashboardActivitySection(){
+  const feed = recentFeedItems(5);
+  return `<section class="dash-section-block" id="dash-recent-activity">
+    <div class="dash-section-head">
+      <h2 class="dash-section-title">${t("dashboard.section_activity")}</h2>
+      <span class="dash-section-note">${fmtDuration(state.dash.timeSpentSeconds)} ${t("dashboard.stat_total")}</span>
+    </div>
+    <div class="dash-grid dash-grid--split">
+      <div>${feed.length === 0
+        ? `<p class="dash-log-item">${t("dashboard.no_recent_activity")}</p>`
+        : `<div class="dash-log">` + feed.map(it => `<div class="dash-log-item">${it}</div>`).join("") + `</div>`}</div>
+      ${renderDashboardRevisions()}
+    </div>
+  </section>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION « ACCÈS RAPIDES » — les matières, puis les destinations
+   ══════════════════════════════════════════════════════════════════════════ */
+function renderDashboardAccessSection(subjects){
+  let html = `<section class="dash-section-block">
+    <div class="dash-section-head">
+      <h2 class="dash-section-title">${t("dashboard.quick_actions")}</h2>
+      <button class="btn btn--tertiary" id="dash-viewall-subjects">${t("dashboard.view_all_subjects")}</button>
+    </div>`;
+
+  if(subjects.length === 0){
+    html += `<div class="empty empty--inline">
+      <p class="empty-text">${t("dashboard.no_subjects")}</p>
+      <div class="empty-actions"><button class="btn btn--secondary" data-dash-add-subject>${t("dashboard.add_first_subject")}</button></div>
+    </div>`;
+  } else {
+    html += `<div class="dash-subject-grid">`;
+    recentSubjectsPreview(4).forEach(s => {
+      const chs = chaptersOfSubject(s.id);
+      const prog = subjectProgress(s.id);
+      html += `<button type="button" class="dash-subject" data-open-subject-dash="${s.id}" style="--course-color:${s.color || "#8A8A93"};">
+        <span class="dash-subject-top">
+          <span class="dash-subject-mark">${escapeHtml(subjectMark(s))}</span>
+          <span class="dash-subject-name">${escapeHtml(s.name)}</span>
+          <span class="dash-subject-pct">${prog === null ? "—" : prog + "%"}</span>
+        </span>
+        <span class="meter${prog === null ? "" : " accent"}"><span class="meter-fill" style="width:${prog === null ? 0 : prog}%;"></span></span>
+        <span class="dash-subject-meta">${t(chs.length > 1 ? "dashboard.chapter_many" : "dashboard.chapter_one", {n: chs.length})}</span>
+      </button>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="dash-actions" style="margin-top: var(--space-lg);">
+      <button class="dash-action is-primary" id="dash-start-revision">${t("dashboard.quick_start_revision")}</button>
+      <button class="dash-action" data-dash-import>${t("dashboard.quick_import")}</button>
+      <button class="dash-action" id="dash-exams-btn">${t("dashboard.quick_exam")}</button>
+      <button class="dash-action" id="dash-ai-btn">${t("dashboard.ai_assistant")}</button>
+      <button class="dash-action" id="dash-library-btn2">${t("dashboard.quick_view_subjects")}</button>
+      <button class="dash-action" data-dash-add-subject>${t("dashboard.quick_add_course")}</button>
+      <button class="dash-action" id="dash-activities-btn">${t("dashboard.quick_activity")}</button>
+      <button class="dash-action" id="dash-planning-btn">${t("dashboard.quick_planning")}</button>
+    </div></section>`;
   return html;
 }
 
@@ -6738,63 +7271,6 @@ function renderDashboardProgress(subjects){
   </section>`;
 }
 
-/* Les sept destinations de l'application, dans un panneau identifiable.
-   « Commencer une révision » porte l'accent : c'est la seule d'entre elles
-   qui lance quelque chose plutôt que d'ouvrir un écran. */
-function renderDashboardActions(){
-  return `<section class="dash-panel">
-    <h2 class="dash-panel-label">${t("dashboard.quick_actions")}</h2>
-    <div class="dash-actions">
-      <button class="dash-action is-primary" id="dash-start-revision">${t("dashboard.quick_start_revision")}</button>
-      <button class="dash-action" data-dash-import>${t("dashboard.quick_import")}</button>
-      <button class="dash-action" id="dash-exams-btn">${t("dashboard.quick_exam")}</button>
-      <button class="dash-action" id="dash-ai-btn">${t("dashboard.ai_assistant")}</button>
-      <button class="dash-action" id="dash-library-btn2">${t("dashboard.quick_view_subjects")}</button>
-      <button class="dash-action" data-dash-add-subject>${t("dashboard.quick_add_course")}</button>
-      <button class="dash-action" id="dash-activities-btn">${t("dashboard.quick_activity")}</button>
-      <button class="dash-action" id="dash-planning-btn">${t("dashboard.quick_planning")}</button>
-    </div>
-  </section>`;
-}
-
-/* « Mes matières » : des cartes compactes posées sur l'ivoire — pas dans un
-   panneau, sinon ce serait une carte dans une carte. */
-function renderDashboardSubjects(subjects){
-  let html = `<section>
-    <div class="section-head">
-      <span class="section-head-label">${t("dashboard.my_subjects")}</span>
-      <span class="section-head-rule"></span>
-      <span class="section-head-action">
-        <button class="btn btn--tertiary" id="dash-viewall-subjects">${t("dashboard.view_all_subjects")}</button>
-      </span>
-    </div>`;
-
-  if(subjects.length === 0){
-    html += `<div class="empty empty--inline">
-      <p class="empty-text">${t("dashboard.no_subjects")}</p>
-      <div class="empty-actions"><button class="btn btn--secondary" data-dash-add-subject>${t("dashboard.add_first_subject")}</button></div>
-    </div></section>`;
-    return html;
-  }
-
-  html += `<div class="dash-subject-grid">`;
-  recentSubjectsPreview(4).forEach(s=>{
-    const chs = chaptersOfSubject(s.id);
-    const prog = subjectProgress(s.id);
-    html += `<button type="button" class="dash-subject" data-open-subject-dash="${s.id}" style="--course-color:${s.color || "#8A8A93"};">
-      <span class="dash-subject-top">
-        <span class="dash-subject-mark">${escapeHtml(subjectMark(s))}</span>
-        <span class="dash-subject-name">${escapeHtml(s.name)}</span>
-        <span class="dash-subject-pct">${prog === null ? "—" : prog + "%"}</span>
-      </span>
-      <span class="meter${prog === null ? "" : " accent"}"><span class="meter-fill" style="width:${prog === null ? 0 : prog}%;"></span></span>
-      <span class="dash-subject-meta">${t(chs.length > 1 ? "dashboard.chapter_many" : "dashboard.chapter_one", {n: chs.length})}</span>
-    </button>`;
-  });
-  html += `</div></section>`;
-  return html;
-}
-
 /* « Cours récents » — mêmes données et mêmes destinations qu'avant. */
 function renderDashboardRevisions(){
   const recentChapters = state.userChapters
@@ -6866,176 +7342,6 @@ function eventColor(ev){
   let h = 0;
   for(let i = 0; i < key.length; i++){ h = (h * 31 + key.charCodeAt(i)) >>> 0; }
   return SUBJECT_COLORS[h % SUBJECT_COLORS.length];
-}
-
-/* La bande des sept jours : un jour = un bouton, avec un point par cours,
-   à la couleur de sa matière. On voit sa semaine d'un coup d'œil. */
-function renderDashboardDayStrip(offset){
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let html = `<div class="dash-days" role="tablist" aria-label="${t("dashboard.schedule_title")}">`;
-  for(let i = 0; i < 7; i++){
-    const d = new Date(today); d.setDate(d.getDate() + i);
-    const evs = eventsOnCalendarDay(d);
-    const wd = d.toLocaleDateString(currentLocaleTag(), {weekday:"short"}).replace(".", "");
-    const sel = i === offset;
-    html += `<button type="button" class="dash-day${sel ? " is-selected" : ""}${i === 0 ? " is-today" : ""}"
-      data-schedule-offset="${i}" role="tab" aria-selected="${sel}"
-      aria-label="${escapeHtml(d.toLocaleDateString(currentLocaleTag(), {weekday:"long", day:"numeric", month:"long"}))} — ${evs.length}">
-      <span class="dash-day-wd">${escapeHtml(wd)}</span>
-      <span class="dash-day-num">${d.getDate()}</span>
-      <span class="dash-day-dots">${
-        evs.slice(0, 4).map(ev => `<span class="dash-day-dot" style="background:${eventColor(ev)};"></span>`).join("")
-      }${evs.length > 4 ? `<span class="dash-day-more">+</span>` : ""}</span>
-    </button>`;
-  }
-  return html + `</div>`;
-}
-
-/* Le rail de la journée : chaque cours à sa place réelle sur l'axe des
-   heures, à la couleur de sa matière, et le trait de l'heure qu'il est.
-   Cliquer un bloc ouvre la fiche du cours. */
-function renderDashboardDayRail(events, isToday){
-  if(!events.length) return "";
-  const dayStart = new Date(events[0].start); dayStart.setHours(0,0,0,0);
-  const H = 3600000;
-  /* La fenêtre s'ajuste aux cours du jour, arrondie à l'heure, avec une
-     marge d'une heure de chaque côté — et elle englobe toujours l'heure
-     qu'il est quand on regarde aujourd'hui. */
-  let from = Math.floor((Math.min(...events.map(e => e.start)) - dayStart) / H) - 1;
-  let to   = Math.ceil((Math.max(...events.map(e => (e.end || e.start))) - dayStart) / H) + 1;
-  if(isToday){
-    const nowH = (Date.now() - dayStart) / H;
-    from = Math.min(from, Math.floor(nowH));
-    to   = Math.max(to,   Math.ceil(nowH));
-  }
-  from = Math.max(0, from); to = Math.min(24, to);
-  const span = Math.max(1, to - from);
-  const pos = ms => ((ms - dayStart) / H - from) / span * 100;
-
-  const blocks = events.map(ev => {
-    const left = Math.max(0, pos(ev.start));
-    const right = Math.min(100, pos(ev.end || (ev.start + H)));
-    const st = getCourseStatus(ev);
-    return `<button type="button" class="dash-rail-block is-${st}" data-open-event="${ev.id}"
-      style="left:${left}%;width:${Math.max(2, right - left)}%;--course-color:${eventColor(ev)};"
-      title="${escapeHtml(ev.summary)} · ${fmtEventTimeRange(ev)}"
-      aria-label="${escapeHtml(ev.summary)} — ${fmtEventTimeRange(ev)}"><span>${escapeHtml(ev.summary)}</span></button>`;
-  }).join("");
-
-  const nowMark = isToday && (Date.now() - dayStart) / H >= from && (Date.now() - dayStart) / H <= to
-    ? `<span class="dash-rail-now" id="dash-rail-now" data-rail-from="${from}" data-rail-span="${span}"
-             data-rail-day="${dayStart.getTime()}" style="left:${pos(Date.now())}%;"></span>`
-    : "";
-
-  /* Les graduations : une par tranche de deux heures, pour lire le rail. */
-  let ticks = "";
-  for(let h = from; h <= to; h += (span > 8 ? 2 : 1)){
-    ticks += `<span class="dash-rail-tick" style="left:${(h - from) / span * 100}%;">${String(h).padStart(2,"0")}h</span>`;
-  }
-
-  return `<div class="dash-rail">
-    <div class="dash-rail-track">${blocks}${nowMark}</div>
-    <div class="dash-rail-axis">${ticks}</div>
-  </div>`;
-}
-
-/* « Mon emploi du temps » — un panneau à part entière. Le cours en cours y est
-   détaché par un filet accent, pas par une seconde boîte. Les identifiants de
-   la barre vive (#dash-ccourse-*) sont inchangés : updateCurrentTimeIndicator()
-   continue de l'avancer à la seconde, sans re-rendu. */
-function renderDashboardSchedule(){
-  /* Le jour affiché : 0 = aujourd'hui … 6 = dans six jours.
-     state.dashSchedulePreview reste tenu à jour — d'autres parties du code
-     s'y réfèrent, et une sauvegarde plus ancienne ne connaît que lui. */
-  let offset = typeof state.dashScheduleOffset === "number" ? state.dashScheduleOffset : null;
-  if(offset === null) offset = state.dashSchedulePreview === "tomorrow" ? 1 : 0;
-  offset = Math.min(6, Math.max(0, offset));
-  state.dashScheduleOffset = offset;
-  state.dashSchedulePreview = offset === 1 ? "tomorrow" : "today";
-
-  const isToday = offset === 0;
-  const nowLabel = new Date().toLocaleTimeString(currentLocaleTag(), {hour:"2-digit", minute:"2-digit"});
-
-  let html = `<section class="dash-panel" id="dash-schedule-card">
-    <div class="dash-panel-head">
-      <h2 class="dash-panel-label">${t("dashboard.schedule_title")}</h2>
-      <span class="segmented">
-        <button type="button" data-schedule-offset="0" class="${offset===0?"active":""}" aria-pressed="${offset===0}">${t("dashboard.today")}</button>
-        <button type="button" data-schedule-offset="1" class="${offset===1?"active":""}" aria-pressed="${offset===1}">${t("dashboard.tomorrow")}</button>
-        <button type="button" id="dash-schedule-week">${t("dashboard.week")}</button>
-      </span>
-    </div>`;
-
-  if(state.planning.events.length === 0){
-    html += `<div class="empty empty--inline">
-      <p class="empty-text">${t("dashboard.no_planning")}</p>
-      <div class="empty-actions"><button class="btn btn--secondary" id="dash-schedule-setup">${t("dashboard.setup_planning")}</button></div>
-    </div></section>`;
-    return html;
-  }
-
-  /* La semaine, cliquable : on choisit son jour sans quitter l'accueil. */
-  html += renderDashboardDayStrip(offset);
-
-  const targetDate = new Date(); targetDate.setDate(targetDate.getDate() + offset);
-  const dayEvents = eventsOnCalendarDay(targetDate);
-  const current = isToday ? getCurrentCourse() : null;
-
-  if(isToday){
-    html += `<p class="dash-clock" id="dash-clock">${t("dashboard.now_at", {time: nowLabel})}</p>`;
-  }
-
-  /* Le rail : la journée en une ligne, à l'échelle des heures. */
-  html += renderDashboardDayRail(dayEvents, isToday);
-
-  if(current){
-    const cd = getCourseData(current.id);
-    const total = (current.end || current.start) - current.start;
-    const elapsed = Math.min(total, Math.max(0, Date.now() - current.start));
-    const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
-    const remainMin = Math.max(0, Math.round(((current.end || current.start) - Date.now()) / 60000));
-    const remainLbl = remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min";
-    html += `<div class="dash-now" style="--course-color:${eventColor(current)};">
-      <div class="dash-now-head">
-        <h3 class="dash-now-heading"><button type="button" class="dash-now-title" data-open-event="${current.id}">${escapeHtml(current.summary)}</button></h3>
-        <span class="status success">${t("dashboard.status_current")}${cd.favorite ? " · ★" : ""}</span>
-      </div>
-      <p class="dash-now-meta">${fmtEventTimeRange(current)}${current.location ? " · " + escapeHtml(current.location) : ""}</p>
-      <div class="meter" id="dash-ccourse-progress" data-ev-start="${current.start}" data-ev-end="${current.end || current.start}">
-        <div class="meter-fill" id="dash-ccourse-fill" style="width:${pct}%;background:var(--course-color);"></div>
-      </div>
-      <p class="dash-now-remaining" id="dash-ccourse-text">${pct}% · ${t("dashboard.remaining", {time: remainLbl})}</p>
-      <div class="dash-now-actions">
-        <button class="btn btn--secondary small" data-open-event-notes="${current.id}">${t("dashboard.take_notes")}</button>
-      </div>
-    </div>`;
-  }
-
-  const others = dayEvents.filter(e => !current || e.id !== current.id);
-  if(others.length){
-    html += `<div class="dash-agenda">` + others.map(e=>{
-      const st = getCourseStatus(e);
-      const stLabel = st === "past" ? t("dashboard.status_done") : (st === "current" ? t("dashboard.status_current") : t("dashboard.status_upcoming"));
-      const subj = matchEventSubject(e.summary);
-      return `<button type="button" class="dash-agenda-row is-${st}" data-open-event="${e.id}" style="--course-color:${eventColor(e)};">
-        <span class="dash-agenda-time">${fmtEventTimeRange(e)}</span>
-        <span class="dash-agenda-body">
-          <span class="dash-agenda-title">${escapeHtml(e.summary)}</span>
-          ${subj ? `<span class="dash-agenda-subject">${escapeHtml(subj.name)}</span>` : ""}
-        </span>
-        <span class="dash-agenda-state">${stLabel}</span>
-      </button>`;
-    }).join("") + `</div>`;
-  } else if(!current){
-    html += `<div class="empty empty--inline">
-      <p class="empty-text">${offset === 0 ? t("dashboard.no_course_today") : (offset === 1 ? t("dashboard.no_course_tomorrow") : t("dashboard.no_course_day"))}</p>
-    </div>`;
-  }
-
-  html += `<div class="dash-panel-foot">
-    <button class="btn btn--tertiary" id="dash-schedule-full">${t("dashboard.view_full_planning")}</button>
-  </div></section>`;
-  return html;
 }
 
 /* Matières à mettre en avant sur le dashboard : les plus récemment consultées d'abord. */
@@ -7173,20 +7479,51 @@ function attachDashboardEvents(){
   });
 
   /* ---------- Mon emploi du temps (planning en direct) ---------- */
+  /* « Voir tout le planning » ouvre la page Planning SUR CE QU'ON REGARDE :
+     même vue, même jour. C'est ce qui remplace l'ancien bouton « semaine »,
+     qui menait toujours à la vue semaine de la semaine courante — la
+     destination est conservée, elle suit simplement le sélecteur au lieu
+     d'être figée. */
   const scheduleFull = document.getElementById("dash-schedule-full");
-  if(scheduleFull) scheduleFull.addEventListener("click", ()=> switchTab("planning"));
+  if(scheduleFull) scheduleFull.addEventListener("click", ()=>{
+    state.planning.calView = dashPlanView();
+    state.planning.anchorDate = dashPlanDay();
+    switchTab("planning");
+  });
   const scheduleSetup = document.getElementById("dash-schedule-setup");
   if(scheduleSetup) scheduleSetup.addEventListener("click", ()=> switchTab("planning"));
-  /* Un jour se choisit par son décalage (0 = aujourd'hui) : la bande des
-     sept jours et les boutons Aujourd'hui/Demain pilotent le même état. */
-  document.querySelectorAll("[data-schedule-offset]").forEach(btn=>{
+  /* ---------- Planning de l'accueil : vue, navigation, jour ---------- */
+  document.querySelectorAll("[data-plan-view]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.dashPlanView = btn.dataset.planView; render(); });
+  });
+  /* Un pas de navigation vaut ce que la vue affiche : un jour, une semaine
+     ou un mois. */
+  document.querySelectorAll("[data-plan-step]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      state.dashScheduleOffset = Number(btn.dataset.scheduleOffset) || 0;
+      const dir = Number(btn.dataset.planStep) || 0;
+      const d = new Date(dashPlanDay());
+      const v = dashPlanView();
+      if(v === "week") d.setDate(d.getDate() + dir * 7);
+      else if(v === "month") d.setMonth(d.getMonth() + dir);
+      else d.setDate(d.getDate() + dir);
+      state.dashPlanDay = d.getTime();
       render();
     });
   });
-  const scheduleWeekBtn = document.getElementById("dash-schedule-week");
-  if(scheduleWeekBtn) scheduleWeekBtn.addEventListener("click", ()=>{ state.planning.calView = "week"; switchTab("planning"); });
+  const planToday = document.getElementById("dash-plan-today");
+  if(planToday) planToday.addEventListener("click", ()=>{
+    state.dashPlanDay = todayMidnightMs();
+    state.dashPlanView = "day";
+    render();
+  });
+  /* Cliquer un jour du mois ouvre ce jour. */
+  document.querySelectorAll("[data-plan-day]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.dashPlanDay = Number(btn.dataset.planDay);
+      state.dashPlanView = "day";
+      render();
+    });
+  });
   /* Ces éléments sont de vrais <button> : Entrée et Espace déclenchent déjà
      le clic. Un gestionnaire clavier en plus ouvrirait la fiche deux fois. */
   document.querySelectorAll("[data-open-event]").forEach(el=>{
@@ -18797,8 +19134,11 @@ function updateCurrentTimeIndicator(){
     if(timeEl) timeEl.textContent = label;
   });
 
-  [{wrap:"cw-progress-wrap", fill:"cw-progress-fill", text:"cw-progress-text"},
-   {wrap:"dash-ccourse-progress", fill:"dash-ccourse-fill", text:"dash-ccourse-text"}].forEach(ids=>{
+  /* Le libellé « … restantes » du tableau de bord passe par t() : sans cela,
+     la première seconde écoulée remplaçait le texte traduit par du français.
+     La fiche de cours (cw-*) garde le sien, écrit en dur à l'affichage. */
+  [{wrap:"cw-progress-wrap", fill:"cw-progress-fill", text:"cw-progress-text", i18n:false},
+   {wrap:"dash-ccourse-progress", fill:"dash-ccourse-fill", text:"dash-ccourse-text", i18n:true}].forEach(ids=>{
     const wrap = document.getElementById(ids.wrap);
     if(!wrap) return;
     const start = Number(wrap.dataset.evStart), end = Number(wrap.dataset.evEnd);
@@ -18808,20 +19148,20 @@ function updateCurrentTimeIndicator(){
     const fillEl = document.getElementById(ids.fill);
     if(fillEl) fillEl.style.width = pct + "%";
     const remainMin = Math.max(0, Math.round((end - Date.now()) / 60000));
+    const remainLbl = remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min";
     const textEl = document.getElementById(ids.text);
-    if(textEl) textEl.textContent = pct + "% · " + (remainMin >= 60 ? Math.round(remainMin/6)/10 + " h" : remainMin + " min") + " restantes";
+    if(textEl) textEl.textContent = pct + "% · "
+      + (ids.i18n ? t("dashboard.remaining", {time: remainLbl}) : remainLbl + " restantes");
   });
 
-  /* Le trait de l'heure du rail : même mise à jour à la seconde que la barre
-     du cours en cours, toujours sans re-rendu. */
-  const rail = document.getElementById("dash-rail-now");
-  if(rail){
-    const from = Number(rail.dataset.railFrom), span = Number(rail.dataset.railSpan);
-    const dayStart = Number(rail.dataset.railDay);
-    const h = (Date.now() - dayStart) / 3600000;
-    const pct = (h - from) / span * 100;
-    if(pct >= 0 && pct <= 100) rail.style.left = pct + "%";
-    else rail.style.display = "none";
+  /* L'heure de la timeline et le décompte du prochain cours : mis à jour à la
+     seconde comme la barre du cours en cours, toujours sans re-rendu. */
+  const tlNow = document.getElementById("dash-tl-now-time");
+  if(tlNow) tlNow.textContent = label;
+  const nextIn = document.getElementById("dash-next-in");
+  if(nextIn){
+    const start = Number(nextIn.dataset.nextStart);
+    if(start > Date.now()) nextIn.textContent = fmtCountdown(start);
   }
 
   const cur = getCurrentCourse();

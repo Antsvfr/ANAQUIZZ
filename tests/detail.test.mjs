@@ -78,7 +78,7 @@ const SEED = () => {
 const PROBE = () => {
   const view = document.getElementById("content");
   const px = v => Math.round(parseFloat(v) * 10) / 10;
-  const r = { sizes: [], weights: [], radii: [], shadows: [], colors: [],
+  const r = { sizes: [], weights: [], radii: [], shadows: [], rings: [], colors: [],
               gaps: [], nested: [], dead: [], headings: [], tight: [] };
 
   for (const el of view.querySelectorAll("*")) {
@@ -98,7 +98,16 @@ const PROBE = () => {
       }
     }
     if (!/%/.test(cs.borderTopLeftRadius) && px(cs.borderTopLeftRadius) > 0) r.radii.push(px(cs.borderTopLeftRadius));
-    if (cs.boxShadow !== "none") r.shadows.push(cs.boxShadow.slice(0, 48));
+    /* Une ombre PORTÉE (décalée ou floutée) pose une surface au-dessus d'une
+       autre : il n'en faut qu'une dans tout le produit. Un ANNEAU (que de
+       l'étalement, ni décalage ni flou : « 0 0 0 Npx ») ne pose rien — il
+       entoure. L'anneau de focus et le halo du cours en cours en sont ; les
+       confondre faisait compter trois « ombres » là où il n'y en a qu'une. */
+    if (cs.boxShadow !== "none") {
+      const nums = cs.boxShadow.replace(/(rgba?|color)\([^)]*\)/g, "").match(/-?[\d.]+px/g) || [];
+      const ring = nums.length >= 3 && nums.slice(0, 3).every(v => parseFloat(v) === 0);
+      (ring ? r.rings : r.shadows).push(cs.boxShadow.slice(0, 48));
+    }
     if (/^H[1-6]$/.test(el.tagName)
         && !/\b(panel-label|section-head-label|eyebrow)\b/.test(el.className.toString())) {
       r.headings.push([el.tagName, px(cs.fontSize)]);
@@ -194,8 +203,10 @@ try {
     const ALLOWED_RADII = [2, 8, 12, 16, 999];
     eq(`[${vp.n}] aucun rayon hors système`,
        uniq(all.radii).filter(x => !ALLOWED_RADII.includes(x) && x < 100), []);
-    check(`[${vp.n}] une seule ombre de surface`,
-      uniq(all.shadows).length <= 2, uniq(all.shadows));
+    eq(`[${vp.n}] une seule ombre portée dans tout le produit`,
+      uniq(all.shadows).length, 1);
+    check(`[${vp.n}] et au plus trois anneaux`,
+      uniq(all.rings).length <= 3, uniq(all.rings));
 
     /* ── COULEURS DE TEXTE : uniquement la palette ─────────────────────── */
     const PALETTE = [

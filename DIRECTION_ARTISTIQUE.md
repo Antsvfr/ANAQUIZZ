@@ -176,14 +176,48 @@ texte n'est écrit dans un ton clair.
    *(Assoupli : la gamme ci-dessus ajoute des repères structurels, qui ne
    comptent pas comme des « occurrences » — un filet de 2 px n'attire pas
    l'œil comme un aplat. La règle continue de valoir pour les APLATS.)*
-2. **Aucun dégradé**, à une exception près : un voile vertical ivoire → blanc
-   sur l'en-tête au défilement. Pas de glassmorphism, pas de néon, pas de flou
+2. **Aucun dégradé**, à deux exceptions près : un voile vertical ivoire →
+   blanc sur l'en-tête au défilement, et la bannière du tableau de bord
+   (voir ci-dessous). Pas de glassmorphism, pas de néon, pas de flou
    décoratif.
 3. **La couleur ne porte jamais seule une information** : toujours doublée d'un
    libellé, d'une icône ou d'une position. *(Aujourd'hui : badges de semestre
    gris / noir / rouge sans signification.)*
 4. Aucun gris pur : tous les neutres portent une pointe chaude.
 5. `0 %` n'est pas un avertissement. Un début se dit en neutre.
+
+### La bannière du tableau de bord — et son plafond de clarté
+
+C'est le seul aplat de marque du produit : un dégradé diagonal à quatre
+arrêts, `#5E0A18 → #8E1128 → #B81430 → #D8193A` à 118°, plus deux voiles
+radiaux (un clair très faible en haut à droite, un sombre en bas à gauche) et
+une trame de points d'un pixel tous les 22 px. Tout est en CSS : pas d'image,
+pas de flou, pas de filtre, pas de 3D — coût de rendu nul.
+
+**Le dégradé a un plafond de clarté, et ce n'est pas un choix esthétique.**
+Le texte de la bannière est blanc. Le contraste WCAG du blanc tombe sous
+4,5:1 dès que le fond dépasse une luminance relative de 0,183 — c'est-à-dire
+dès qu'il devient plus clair que le rouge de marque `#E31C3D` (0,175). Une
+version antérieure montait jusqu'à `#F2566B` : mesuré sur les pixels
+réellement peints, le sous-titre tombait à 3,4:1 et les étiquettes des
+mesures à 2,3:1.
+
+D'où trois règles :
+
+- **aucun arrêt du dégradé plus clair que `#E31C3D`** ;
+- **le voile clair et la trame comptent** : un point blanc sous une lettre,
+  c'est du contraste en moins. Ils sont volontairement à .07 et .13 ;
+- **aucun blanc translucide pour le texte.** Sur ce rouge, un blanc à 66 %
+  donne 2,3:1. Une `opacity` sur le texte revient exactement au même, en plus
+  d'échapper aux audits qui lisent la couleur calculée. La hiérarchie se fait
+  par la **typographie** — taille, graisse, chasse, capitales — jamais par
+  l'opacité.
+
+Toute retouche du dégradé, du voile ou de la trame doit être **re-mesurée** :
+`tests/dashboard.test.mjs` masque le texte, photographie le fond réellement
+peint, relève le pixel le plus clair sous chaque libellé et calcule le
+rapport. Le seuil retenu est 4,5:1 pour tout le texte de la bannière, y
+compris les grands titres auxquels WCAG n'imposerait que 3:1.
 
 ### Mode sombre
 
@@ -427,6 +461,27 @@ traductions.)*
 Doctrine : **une décision par visite.** L'écran répond à « qu'est-ce que je
 fais maintenant ? ».
 
+> **État actuel (à jour).** La composition ci-dessous est la doctrine
+> d'origine ; elle a été révisée deux fois depuis. Ce que le code rend
+> aujourd'hui :
+>
+> 1. **la bannière** (aplat de marque, cf. « plafond de clarté » plus haut) :
+>    date, salutation, une phrase de contexte vraie, trois mesures réelles ;
+> 2. **« Aujourd'hui »** — le planning, devenu la section majeure : barre de
+>    navigation (jour précédent / Aujourd'hui / jour suivant) et sélecteur
+>    Jour · Semaine · Mois ; en vue jour, le cours en cours sur lavis avec sa
+>    jauge et son temps restant, le prochain avec son décompte, puis une
+>    **timeline verticale** (colonne d'heures, rail continu, un point par
+>    cours à sa couleur, les pauses dites, et le trait rouge de l'heure à sa
+>    place réelle) ;
+> 3. **« Révision »** — priorité et progression, deux panneaux ;
+> 4. **« Activité »** — journal et cours récents ;
+> 5. **« Accès rapides »** — matières puis destinations.
+>
+> Les sections ne sont **pas** des cartes : un titre, un filet de niveau 2, de
+> l'espace. Les cartes sont réservées aux objets manipulables *à l'intérieur*
+> d'une section (panneaux, cartes de matière, lignes cliquables).
+
 ```
 ┌ MERCREDI 23 SEPTEMBRE                    ← label mono
 │ Bonjour Anton                            ← display sérif 40px
@@ -453,6 +508,11 @@ fais maintenant ? ».
 **Supprimé** : le hero en dégradé bleu→rouge ; les six tuiles « Actions
 rapides » (doublon de la navigation) ; le bouton flottant 🤖 et son animation
 de rebond ; la mention « localStorage ».
+
+*(Le dégradé est revenu, en rouge et sous condition — voir « La bannière du
+tableau de bord ». Les destinations rapides sont revenues aussi, mais en
+liste d'actions et non en tuiles : elles ne doublent plus la navigation,
+elles donnent accès à ce que la navigation ne montre pas au premier niveau.)*
 
 **Résultat** : de 8 cartes équivalentes à **1 bloc focal + 3 sections**, dont
 une seule emploie des cartes.
