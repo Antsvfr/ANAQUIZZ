@@ -31,13 +31,25 @@ description: Authentification (auth.js), session, schéma Supabase réel, et le 
 `exam_history`, `badges`, `ai_cards`, `course_notes`, `planning_events`,
 `ai_history`, `preferences`, `documents`.
 
-**Fait vérifié et important** : à ce jour, **une seule table est
-réellement lue/écrite par le frontend : `profiles`** (+ bucket Storage
-`avatars`), et uniquement depuis `auth.js`. Vérifié par recherche de
-`.from("...")` dans `index.html`/`auth.js` — aucune des 12 autres tables
-n'apparaît. Elles existent en base, prêtes pour une future synchronisation,
-mais **ne jamais présumer qu'une donnée y est synchronisée** sans avoir
-revérifié cette recherche au moment de lire ce Skill.
+**Ce n'est plus vrai que toutes les données sont locales.** Jusqu'à l'étape
+« comptes multi-appareils », une seule table était lue/écrite par le
+frontend (`profiles`, depuis `auth.js`). Depuis, **`user-data.js`
+(`window.LyonUserData`) lit et écrit les 18 tables de données
+personnelles** : Supabase est la source de vérité pour un compte connecté,
+`localStorage` est devenu un cache. Voir `SYNC_UTILISATEUR.md` pour
+l'architecture complète (domaines, stratégie de conflit, suppressions).
+
+Migrations à appliquer dans l'ordre : `schema.sql`, puis `001` → `005`.
+La `005_user_sync.sql` ajoute les **clés naturelles** (`unique (user_id,
+local_id)` sur subjects/chapters/documents/planning_events,
+`(user_id, taken_at)` sur exam_history) sans lesquelles l'écriture
+multi-appareils ne peut pas être idempotente. Index **non partiels**,
+pour la même raison qu'en 003 : `on conflict` ne sait pas utiliser un
+index partiel.
+
+**Reste local, volontairement** : le binaire des documents et les PDF
+importés (volume), et `dash.wrongQuestions` (doublon de `question_stats`
+indexé par un index positionnel — reconstruit à la lecture).
 
 ## RLS (Row Level Security)
 
@@ -49,6 +61,19 @@ user_id)`), avec des policies explicites pour `profiles`/`ai_history`/
 (`avatars_select_own`, etc.). **Toujours vérifier que RLS reste actif et
 scopé par `auth.uid()`** avant toute modification du schéma — la sécurité
 réelle repose entièrement là-dessus, jamais sur le frontend.
+
+## Le point de branchement de la synchronisation : `lsSet()`
+
+Toute écriture locale passe par `lsSet()`, et c'est **là** que la
+synchronisation est branchée (`cloudNoteLocalWrite`), pas sur les quinze
+fonctions `save*()`. Conséquence pratique : **une nouvelle donnée voyage
+dès qu'elle déclare sa clé dans `LyonUserData.DOMAINS_BY_STORAGE_KEY`** —
+il n'y a aucun appel à ajouter ailleurs, et aucun à oublier.
+
+L'hydratation réécrit le cache local avec ce qui arrive de Supabase :
+elle est encadrée par `cloudHydrating`, qui empêche le renvoi immédiat de
+ce qu'on vient de recevoir. Toute nouvelle écriture faite pendant une
+hydratation doit rester dans cet encadrement.
 
 ## Cloisonnement des données locales par compte
 

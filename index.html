@@ -413,6 +413,21 @@
   /* Compte utilisateur : dernier de la ligne, séparé des actions secondaires
      par un filet. C'est le seul élément qui parle de « moi ». */
   .topbar-right{ display:flex; align-items:center; gap:var(--space-xs); flex-shrink:0; }
+
+  /* Indicateur de synchronisation : 7 px, pas de texte, pas d'animation
+     permanente. Il dit trois choses seulement — je lis, j'écris, ça n'a pas
+     marché — et disparaît le reste du temps. Une pastille qui pulse en
+     continu serait du bruit ; une erreur muette serait un mensonge. */
+  .cloud-dot{
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--border-strong);
+    transition: background var(--motion-state) var(--ease-enter);
+  }
+  .cloud-dot.is-pulling,
+  .cloud-dot.is-pushing{ background: var(--accent-3); }
+  .cloud-dot.is-error{ background: var(--danger, #B3261E); }
+  .cloud-dot.is-partial{ background: var(--warning, #8F5C00); }
+  @media (prefers-reduced-motion: reduce){ .cloud-dot{ transition: none; } }
   .topbar-divider{ width:1px; height:20px; background: var(--border); margin:0 var(--space-2xs); }
   .profile-chip{
     display:flex; align-items:center; gap:8px; color: var(--text-secondary);
@@ -4339,6 +4354,10 @@
       </nav>
 
       <div class="topbar-right">
+        <!-- État de la synchronisation : un point, et rien de plus tant que
+             tout va bien. Caché quand il n'y a rien à dire (compte absent, ou
+             tout est enregistré) — mais jamais silencieux sur une erreur. -->
+        <span class="cloud-dot is-off" id="cloud-indicator" role="status" hidden></span>
         <div class="mainnav-item topbar-lang" data-nav="lang">
           <button class="lang-btn" data-menu-toggle="lang" id="lang-trigger-btn" aria-label="Langue de l'interface" data-i18n-attr="aria-label:lang.selector_label">
             <span id="lang-trigger-code">FR</span><svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -4423,6 +4442,13 @@
      source-adapters.js. Ajouter une source = ajouter un adaptateur, sans
      toucher ni au moteur ni à ce fichier. -->
 <script src="source-adapters.js"></script>
+<!-- Persistance des données de l'élève dans Supabase : ce qui permet de
+     retrouver son espace depuis n'importe quel appareil. À ne pas confondre
+     avec sync-engine.js ci-dessus, qui importe du contenu VENU d'un LMS ;
+     celui-ci fait voyager ce que l'élève produit DANS REV-EM. Sans compte (ou
+     sans Supabase configuré), il n'est jamais appelé et rien ne change —
+     voir user-data.js. -->
+<script src="user-data.js"></script>
 
 <script>
 /* ============================================================
@@ -5615,6 +5641,21 @@ function dsConfirm(opts){
     noBtn.textContent  = o.cancelLabel  || "Annuler";
     yesBtn.textContent = o.confirmLabel || "Confirmer";
 
+    /* Troisième issue, facultative : certains choix ne sont pas « oui ou
+       non » mais « ceci ou cela, ou plus tard ». Plutôt qu'une seconde
+       modale concurrente, la même reçoit une action secondaire, qui résout
+       la promesse avec "alt". Les appels qui ne passent pas altLabel sont
+       strictement inchangés. */
+    let altBtn = null;
+    if(o.altLabel){
+      altBtn = document.createElement("button");
+      altBtn.type = "button";
+      altBtn.className = "btn btn--secondary";
+      altBtn.setAttribute("data-ds-confirm", "alt");
+      altBtn.textContent = o.altLabel;
+      yesBtn.parentNode.insertBefore(altBtn, yesBtn);
+    }
+
     function close(answer){
       document.removeEventListener("keydown", onKey, true);
       back.remove();
@@ -5634,6 +5675,7 @@ function dsConfirm(opts){
     back.addEventListener("click", function(e){ if(e.target === back) close(false); });
     noBtn.addEventListener("click", function(){ close(false); });
     yesBtn.addEventListener("click", function(){ close(true); });
+    if(altBtn) altBtn.addEventListener("click", function(){ close("alt"); });
     document.addEventListener("keydown", onKey, true);
     document.body.appendChild(back);
     /* Le focus part sur l'action la moins risquée. */
@@ -5864,13 +5906,335 @@ function lsGet(key){
 function lsSet(key, value){
   const nsKey = currentStorageNamespace() + key;
   memoryFallback[nsKey] = value;
+  let ok = true;
   try{
     localStorage.setItem(LS_PREFIX + nsKey, JSON.stringify(value));
-    return true;
   }catch(e){
     storageAvailable = false;
-    return false;
+    ok = false;
   }
+  /* LE point de passage unique vers Supabase. Toute écriture locale passe déjà
+     par ici : brancher la synchronisation sur lsSet() plutôt que sur les
+     quinze fonctions save*() garantit qu'aucun appel n'est oublié — ni
+     aujourd'hui, ni quand une fonctionnalité sera ajoutée. L'écriture distante
+     est différée et regroupée (voir user-data.js) : terminer un quiz écrit
+     quatre clés d'affilée, ça ne doit pas faire quatre allers-retours. */
+  cloudNoteLocalWrite(key);
+  return ok;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERSISTANCE DE COMPTE — le cache local, et la source de vérité
+   ──────────────────────────────────────────────────────────────────────────
+   Pour un INVITÉ (pas de compte, ou Supabase non configuré), rien de ce bloc
+   ne s'active : localStorage reste la seule persistance, exactement comme
+   avant. C'est un état normal du produit, pas un cas dégradé.
+
+   Pour un compte CONNECTÉ, Supabase devient la source de vérité et
+   localStorage devient un cache : il donne le premier affichage sans attendre
+   le réseau, et permet de continuer à travailler hors ligne.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+let cloud = null;            // instance LyonUserData pour le compte connecté
+let cloudHydrating = false;  // vrai pendant qu'on écrit les données reçues
+let cloudState = { phase: "off", at: null, errors: [] };
+
+/* Pendant l'hydratation, on réécrit le cache local avec ce qui vient d'arriver
+   de Supabase : le renvoyer aussitôt serait un aller-retour inutile, et ferait
+   repartir des données qu'on vient de recevoir. */
+function cloudNoteLocalWrite(key){
+  if(!cloud || cloudHydrating) return;
+  const domains = window.LyonUserData && LyonUserData.DOMAINS_BY_STORAGE_KEY[key];
+  if(domains) cloud.push(domains);
+}
+
+/* L'instantané que le moteur lit. Une fonction, pas un objet figé : il est
+   relu au moment de chaque écriture, donc toujours à jour. */
+function cloudSnapshot(){
+  return {
+    subjects: state.userSubjects,
+    chapters: state.userChapters,
+    quizProgress: state.progress,
+    flashProgress: state.flashProgress,
+    qstats: state.qstats,
+    examHistory: state.exam.history,
+    badges: state.badges,
+    aiCards: state.aiCards,
+    courseData: state.courseData,
+    planning: {
+      events: state.planning.events,
+      officialUrl: state.planning.officialUrl,
+      lastSyncAt: state.planning.lastSyncAt,
+    },
+    aiHistory: state.aiHistory,
+    documents: state.documents,
+    studyPlan: state.studyPlan,
+    dash: state.dash,
+    prefs: {
+      aiBubbleSide: state.aiBubble.side,
+      aiBubbleY: state.aiBubble.y,
+      aiModelChoice: state.aiModelChoice,
+    },
+  };
+}
+
+/* Écrit dans l'état ET dans le cache local ce qui vient de Supabase.
+   Chaque tranche est appliquée SEULEMENT si elle est arrivée : un domaine en
+   erreur ne doit pas effacer ce que l'appareil avait déjà. Mieux vaut un
+   espace presque complet qu'un espace vidé par une panne réseau. */
+function cloudApplySnapshot(snap){
+  if(!snap) return;
+  const has = k => Object.prototype.hasOwnProperty.call(snap, k);
+  cloudHydrating = true;
+  try{
+    if(has("subjects")){ state.userSubjects = snap.subjects; lsSet(KEY_USER_SUBJECTS, state.userSubjects); }
+    if(has("chapters")){ state.userChapters = snap.chapters; lsSet(KEY_USER_CHAPTERS, state.userChapters); }
+    if(has("quizProgress")){ state.progress = snap.quizProgress; lsSet(KEY_QUIZ, state.progress); }
+    if(has("flashProgress")){ state.flashProgress = snap.flashProgress; lsSet(KEY_FLASH, state.flashProgress); }
+    if(has("qstats")){ state.qstats = snap.qstats; lsSet(KEY_QSTATS, state.qstats); }
+    if(has("examHistory")){ state.exam.history = snap.examHistory; lsSet(KEY_EXAM, state.exam.history); }
+    if(has("badges")){ state.badges = snap.badges; lsSet(KEY_BADGES, state.badges); }
+    if(has("aiCards")){ state.aiCards = snap.aiCards; lsSet(KEY_AICARDS, state.aiCards); }
+    if(has("courseData")){ state.courseData = snap.courseData; lsSet(KEY_COURSE_DATA, state.courseData); }
+    if(has("aiHistory")){ state.aiHistory = snap.aiHistory; lsSet(KEY_AI, state.aiHistory); }
+    if(has("documents")){ state.documents = snap.documents; lsSet(KEY_DOCUMENTS, state.documents); }
+    if(has("studyPlan")){ state.studyPlan = snap.studyPlan; lsSet(KEY_STUDY_PLAN, state.studyPlan); }
+
+    if(has("planningEvents") || has("planningOfficialUrl")){
+      if(has("planningEvents")) state.planning.events = snap.planningEvents;
+      if(has("planningOfficialUrl")) state.planning.officialUrl = snap.planningOfficialUrl;
+      if(has("planningLastSyncAt")) state.planning.lastSyncAt = snap.planningLastSyncAt;
+      savePlanning();
+    }
+
+    /* state.dash est reconstitué depuis QUATRE tables (voir migration 002) :
+       compteurs, jours, activités, chapitres ouverts. On n'écrase que les
+       champs réellement reçus. */
+    let dashTouched = false;
+    if(has("userStats")){
+      const u = snap.userStats;
+      state.dash.totalAnswered = u.totalAnswered;
+      state.dash.totalCorrect = u.totalCorrect;
+      state.dash.timeSpentSeconds = u.timeSpentSeconds;
+      state.dash.correctStreak = u.correctStreak;
+      state.dash.bestCorrectStreak = u.bestCorrectStreak;
+      state.dash.quizzesCompleted = u.quizzesCompleted;
+      state.dash.best90Achieved = u.best90Achieved;
+      state.dash.recentAdds = u.recentAdds;
+      dashTouched = true;
+    }
+    if(has("dailyStats")){
+      state.dash.dailyStats = snap.dailyStats;
+      state.dash.dailyTimeSeconds = snap.dailyTimeSeconds;
+      state.dash.activityDates = snap.activityDates;
+      dashTouched = true;
+    }
+    if(has("recentActivity")){ state.dash.recentActivity = snap.recentActivity; dashTouched = true; }
+    if(has("recentChapters")){ state.dash.recentChapters = snap.recentChapters; dashTouched = true; }
+    /* Les erreurs récentes ne sont pas stockées : elles dupliquaient
+       question_stats, et leur clé était un index positionnel dans le programme
+       (insérer une question au milieu décalait tout). On les reconstruit
+       depuis question_stats, dont la clé est un hash stable. */
+    if(has("qstats")){
+      state.dash.wrongQuestions = LyonUserData.rebuildWrongQuestions(state.qstats, QUESTION_BY_UID);
+      dashTouched = true;
+    }
+    if(dashTouched) saveDashboardStats();
+
+    if(has("prefs")){
+      const p = snap.prefs || {};
+      if(p.aiBubbleSide === "left" || p.aiBubbleSide === "right") state.aiBubble.side = p.aiBubbleSide;
+      if(typeof p.aiBubbleY === "number") state.aiBubble.y = p.aiBubbleY;
+      if(p.aiModelChoice){ state.aiModelChoice = p.aiModelChoice; lsSet(KEY_AIMODEL, p.aiModelChoice); }
+      saveAIBubblePos();
+    }
+  } finally {
+    cloudHydrating = false;
+  }
+  /* Les réussites déjà méritées par l'historique qui vient d'arriver. */
+  evaluateBadges();
+}
+
+/* ── CE QUE CET APPAREIL CONTIENT DÉJÀ ────────────────────────────────────
+   Compté sur les données réellement présentes, pour pouvoir le DIRE à
+   l'utilisateur au moment de choisir. On ne lui demande jamais d'arbitrer
+   quelque chose qu'on ne lui a pas montré. */
+function cloudLocalVolume(){
+  return state.userSubjects.length
+       + state.userChapters.length
+       + Object.keys(state.progress).length
+       + Object.keys(state.flashProgress).length
+       + Object.keys(state.qstats).length
+       + state.exam.history.length
+       + Object.keys(state.courseData).length
+       + state.planning.events.length
+       + state.documents.length
+       + (state.studyPlan ? 1 : 0)
+       + (state.dash.totalAnswered || 0 ? 1 : 0);
+}
+function cloudRemoteVolume(snap){
+  if(!snap) return 0;
+  return (snap.subjects || []).length
+       + (snap.chapters || []).length
+       + Object.keys(snap.quizProgress || {}).length
+       + Object.keys(snap.qstats || {}).length
+       + (snap.examHistory || []).length
+       + (snap.planningEvents || []).length
+       + (snap.documents || []).length
+       + (snap.studyPlan ? 1 : 0)
+       + ((snap.userStats && snap.userStats.totalAnswered) ? 1 : 0);
+}
+
+const KEY_CLOUD_CHOICE = "cloud-choice";   // namespacé par compte, comme le reste
+
+/* ── PREMIÈRE CONNEXION DE CE COMPTE SUR CET APPAREIL ─────────────────────
+   Jamais de migration silencieuse : si cet appareil contient des données que
+   le compte n'a pas encore, c'est l'utilisateur qui tranche, une fois, avec
+   les chiffres sous les yeux. Son choix est mémorisé pour ne plus le lui
+   redemander à chaque connexion.
+
+   Retourne "merge" (envoyer ce qui est ici vers le compte), "cloud" (utiliser
+   ce que le compte contient) ou "later" (ne rien synchroniser pour l'instant). */
+async function cloudDecideMigration(remoteSnapshot){
+  const already = lsGet(KEY_CLOUD_CHOICE);
+  if(already === "merge" || already === "cloud") return already;
+
+  const localCount = cloudLocalVolume();
+  const remoteCount = cloudRemoteVolume(remoteSnapshot);
+
+  /* Rien à arbitrer : cet appareil n'a rien à envoyer. */
+  if(localCount === 0){ lsSet(KEY_CLOUD_CHOICE, "cloud"); return "cloud"; }
+
+  /* Le compte est vide : envoyer est non destructif, mais on le dit quand
+     même — c'est la première fois que les données de l'élève quittent son
+     navigateur, et il a le droit de le savoir. */
+  const answer = await dsConfirm({
+    title: t("cloud.migrate_title"),
+    body: remoteCount === 0
+      ? t("cloud.migrate_body_empty", {n: localCount})
+      : t("cloud.migrate_body_merge", {n: localCount, m: remoteCount}),
+    confirmLabel: t("cloud.migrate_send"),
+    altLabel: remoteCount === 0 ? null : t("cloud.migrate_use_account"),
+    cancelLabel: t("cloud.migrate_later"),
+  });
+
+  const choice = answer === true ? "merge" : (answer === "alt" ? "cloud" : "later");
+  if(choice !== "later") lsSet(KEY_CLOUD_CHOICE, choice);
+  return choice;
+}
+
+/* ── CONNEXION ────────────────────────────────────────────────────────────
+   Ordre volontaire : on LIT d'abord (pour savoir ce que le compte contient),
+   on demande ensuite, on écrit enfin. Demander avant de lire reviendrait à
+   faire choisir à l'aveugle. */
+async function cloudStart(userId){
+  if(!window.LyonUserData) return;
+  if(!window.LyonAuth || !LyonAuth.available || !LyonAuth.client) return;
+  if(cloud && cloud.userId === userId) return;
+
+  cloud = LyonUserData.createCloud({
+    client: LyonAuth.client,
+    userId: userId,
+    snapshot: cloudSnapshot,
+    onStatus: (s)=>{
+      cloudState = { phase: s.phase, at: s.at || cloudState.at, errors: s.errors || [] };
+      updateCloudIndicator();
+    },
+  });
+  cloudState = { phase: "pulling", at: null, errors: [] };
+  updateCloudIndicator();
+
+  let pulled = null;
+  try{
+    pulled = await cloud.pullAll(cloudSnapshot());
+  }catch(e){
+    console.error("[LyonUserData] lecture initiale", e);
+    cloudState = { phase: "error", at: Date.now(), errors: [{domain: "*", error: String(e)}] };
+    updateCloudIndicator();
+    return;   // le cache local reste en place : on ne perd rien, on réessaiera
+  }
+
+  const choice = await cloudDecideMigration(pulled.snapshot);
+
+  if(choice === "later"){
+    /* Rien ne part, rien n'arrive. L'utilisateur garde exactement ce qu'il
+       avait, et on ne pousse pas non plus « par accident » à la première
+       écriture : le moteur est désactivé jusqu'à la prochaine connexion. */
+    cloud = null;
+    cloudState = { phase: "off", at: null, errors: [] };
+    updateCloudIndicator();
+    return;
+  }
+
+  if(choice === "merge"){
+    /* Fusion réelle, pas un écrasement : les compteurs prennent le maximum,
+       les journaux font l'union, les collections s'ajoutent (voir
+       user-data.js). Puis on relit, pour repartir de la vérité commune. */
+    await cloud.pushAll(cloudSnapshot());
+    try{ pulled = await cloud.pullAll(cloudSnapshot()); }
+    catch(e){ console.error("[LyonUserData] relecture après fusion", e); }
+  }
+
+  cloudApplySnapshot(pulled.snapshot);
+  if(pulled.errors && pulled.errors.length){
+    console.warn("[LyonUserData] domaines non chargés :", pulled.errors);
+  }
+  render();
+}
+
+/* ── DÉCONNEXION ──────────────────────────────────────────────────────────
+   On écrit d'abord ce qui attend, ensuite seulement on efface le cache de ce
+   compte. Purger avant d'avoir poussé perdrait la donnée pour de bon — et
+   « vider le cache à la déconnexion » n'est une bonne idée que parce que
+   Supabase la détient déjà. Si l'écriture échoue (hors ligne), on GARDE le
+   cache : perdre le travail de l'élève serait pire que le laisser sur cet
+   appareil. */
+async function cloudStop(previousUserId){
+  const c = cloud;
+  cloud = null;
+  cloudState = { phase: "off", at: null, errors: [] };
+  updateCloudIndicator();
+  if(!c || !previousUserId) return;
+
+  let flushed = { ok: false, pending: [] };
+  try{ flushed = await c.flush(); }
+  catch(e){ console.error("[LyonUserData] écriture finale", e); }
+
+  if(!flushed.ok){
+    console.warn("[LyonUserData] cache conservé : des données n'ont pas pu être envoyées", flushed.pending);
+    return;
+  }
+  cloudPurgeCache(previousUserId);
+}
+
+/* Efface les données de CE compte dans le stockage local. N'est appelée
+   qu'après une écriture confirmée vers Supabase. Ne touche ni à l'espace
+   invité, ni à celui d'un autre compte. */
+function cloudPurgeCache(userId){
+  const ns = "u." + userId + ".";
+  storageNamespacedKeys().forEach(key=>{
+    try{ localStorage.removeItem(LS_PREFIX + ns + key); }catch(e){ /* non bloquant */ }
+    delete memoryFallback[ns + key];
+  });
+  /* Le choix de migration, lui, est conservé : le redemander à chaque
+     reconnexion serait une question déjà tranchée. */
+}
+
+/* Indicateur discret : l'état de la synchronisation n'a pas à occuper
+   l'écran, mais il ne doit jamais être caché non plus. */
+function updateCloudIndicator(){
+  const el = document.getElementById("cloud-indicator");
+  if(!el) return;
+  const phase = cloudState.phase;
+  el.className = "cloud-dot is-" + phase;
+  el.hidden = (phase === "off" || phase === "idle");
+  const label = phase === "pulling" ? t("cloud.loading")
+              : phase === "pushing" ? t("cloud.saving")
+              : phase === "error"   ? t("cloud.error")
+              : phase === "partial" ? t("cloud.partial")
+              : "";
+  el.setAttribute("aria-label", label);
+  el.setAttribute("title", label);
 }
 
 /* Ancienne API de stockage (window.storage) : on l'importe une seule fois,
@@ -12963,7 +13327,12 @@ Object.assign(state, {
   // n'est qu'un cache d'affichage rechargé à chaque ouverture de session.
   brightspace: { connection: null, busy: null, progress: null, lastResult: null, error: null, check: null },
   // --- état d'interface du formulaire de compte ("Mon espace") ---
-  accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null },
+  /* linkResult : ce que le lien reçu par e-mail vient de produire
+     ("confirmed" | "recovery" | "email_changed" | "expired"), afin de le DIRE
+     à l'utilisateur au lieu de le laisser devant un écran de connexion
+     ordinaire sans savoir si son clic a servi à quelque chose. */
+  accountUI: { mode: "signin", pendingConfirmationEmail: null, editOpen: false, editDraft: null,
+               linkResult: null, resendBusy: false },
 });
 
 const AI_ACTIONS = {
@@ -16286,6 +16655,65 @@ function renderAccountSection(){
     </div>`;
   }
 
+  return renderAuthGate();
+}
+
+/* ── CE QUE LE LIEN REÇU PAR E-MAIL VIENT DE FAIRE ────────────────────────
+   Revenir sur un écran ordinaire après avoir cliqué un lien de confirmation,
+   c'est laisser l'utilisateur se demander si son clic a servi. On le lui dit,
+   qu'il soit déjà connecté ou non — d'où une fonction à part, appelée par
+   renderMySpace() avant la bascule connecté/déconnecté.
+   Retourne null quand il n'y a rien à annoncer. */
+function renderEmailLinkScreen(){
+  const lr = state.accountUI.linkResult;
+  if(!lr) return null;
+
+  if(lr === "recovery"){
+    return `<div class="auth-confirm" id="account-section">
+      <div>
+        <h2>${t("auth.new_password_title")}</h2>
+        <p>${t("auth.new_password_body")}</p>
+        <form id="account-newpass-form" style="max-width:360px;margin-top:var(--space-lg);">
+          <div class="ai-field"><label for="account-newpass">${t("auth.password")}</label>
+            <input type="password" id="account-newpass" class="ai-select" autocomplete="new-password" required></div>
+          <div class="ai-field"><label for="account-newpass2">${t("auth.password_confirm")}</label>
+            <input type="password" id="account-newpass2" class="ai-select" autocomplete="new-password" required></div>
+          <div class="actions" style="justify-content:flex-start;margin-top:16px;">
+            <button class="btn btn--primary" type="submit">${t("auth.new_password_submit")}</button>
+          </div>
+          <div id="account-form-msg"></div>
+        </form>
+      </div>
+    </div>`;
+  }
+  if(lr === "confirmed" || lr === "email_changed"){
+    return `<div class="auth-confirm" id="account-section">
+      <div>
+        <h2>${lr === "confirmed" ? t("auth.confirmed_title") : t("auth.email_changed_title")}</h2>
+        <p>${lr === "confirmed" ? t("auth.confirmed_body") : t("auth.email_changed_body")}</p>
+        <div class="actions" style="justify-content:flex-start;margin-top:var(--space-lg);">
+          <button class="btn btn--primary" id="account-continue-btn" type="button">${t("auth.confirmed_cta")}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(lr === "expired"){
+    return `<div class="auth-confirm" id="account-section">
+      <div>
+        <h2>${t("auth.link_expired_title")}</h2>
+        <p>${t("auth.link_expired_body")}</p>
+        <div class="actions" style="justify-content:flex-start;margin-top:var(--space-lg);">
+          <button class="btn btn--secondary" id="account-back-to-signin-btn" type="button">${t("auth.link_expired_cta")}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return null;
+}
+
+/* La « porte » d'authentification : attente de confirmation, connexion,
+   inscription. Affichée uniquement à un visiteur non connecté. */
+function renderAuthGate(){
   const a = LyonAuth.state;
 
   if(state.accountUI.pendingConfirmationEmail){
@@ -16293,7 +16721,13 @@ function renderAccountSection(){
       <div>
         <h2>${t("auth.check_email_title")}</h2>
         <p>${t("auth.check_email_body", {email: "<b>" + escapeHtml(state.accountUI.pendingConfirmationEmail) + "</b>"})}</p>
-        <button class="btn-text" id="account-back-to-signin-btn" type="button">${t("auth.back_to_signin")}</button>
+        <div class="actions" style="justify-content:flex-start;margin-top:var(--space-lg);">
+          <button class="btn btn--secondary" id="account-resend-btn" type="button" ${state.accountUI.resendBusy ? "disabled" : ""}>${
+            state.accountUI.resendBusy ? t("auth.resend_busy") : t("auth.resend")
+          }</button>
+          <button class="btn-text" id="account-back-to-signin-btn" type="button">${t("auth.back_to_signin")}</button>
+        </div>
+        <div id="account-form-msg"></div>
       </div>
     </div>`;
   }
@@ -16337,7 +16771,53 @@ function attachAccountEvents(){
   const backBtn = document.getElementById("account-back-to-signin-btn");
   if(backBtn) backBtn.addEventListener("click", ()=>{
     state.accountUI.pendingConfirmationEmail = null;
+    state.accountUI.linkResult = null;
     state.accountUI.mode = "signin";
+    render();
+  });
+
+  /* « Renvoyer l'e-mail » : la seule issue quand le premier n'arrive pas.
+     Supabase limite la fréquence des envois ; le message d'attente vient de
+     humanError(), en français et sans détail technique. */
+  const resendBtn = document.getElementById("account-resend-btn");
+  if(resendBtn) resendBtn.addEventListener("click", async ()=>{
+    const email = state.accountUI.pendingConfirmationEmail;
+    if(!email) return;
+    state.accountUI.resendBusy = true; render();
+    const res = await LyonAuth.resendConfirmation(email);
+    state.accountUI.resendBusy = false; render();
+    const el = document.getElementById("account-form-msg");
+    if(el){
+      el.innerHTML = `<div class="auth-msg" style="color:${res.error ? "var(--red-dark)" : "var(--green)"};"><span>${
+        escapeHtml(res.error || t("auth.resend_sent", {email: email}))
+      }</span></div>`;
+    }
+  });
+
+  /* Après confirmation : on entre dans l'application. La session est déjà
+     établie par le SDK ; il n'y a rien à ressaisir. */
+  const continueBtn = document.getElementById("account-continue-btn");
+  if(continueBtn) continueBtn.addEventListener("click", ()=>{
+    state.accountUI.linkResult = null;
+    switchTab("dashboard");
+  });
+
+  /* Nouveau mot de passe, après un lien de récupération. */
+  const newPassForm = document.getElementById("account-newpass-form");
+  if(newPassForm) newPassForm.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const setMsg = (text, isError) => {
+      const el = document.getElementById("account-form-msg");
+      if(el) el.innerHTML = `<div class="auth-msg" style="color:${isError ? "var(--red-dark)" : "var(--green)"};"><span>${escapeHtml(text)}</span></div>`;
+    };
+    const p1 = document.getElementById("account-newpass").value;
+    const p2 = document.getElementById("account-newpass2").value;
+    if(p1.length < 6){ setMsg(t("auth.password_min"), true); return; }
+    if(p1 !== p2){ setMsg(t("auth.password_mismatch"), true); return; }
+    const res = await LyonAuth.updatePassword(p1);
+    if(res.error){ setMsg(res.error, true); return; }
+    state.accountUI.linkResult = null;
+    showToast(t("auth.new_password_done"));
     render();
   });
 
@@ -16519,6 +16999,14 @@ function renderMySpace(){
   const authed = !!(window.LyonAuth && LyonAuth.available && LyonAuth.state.status === "signed-in");
   const greetName = getCurrentUserDisplayName();
 
+  /* Le retour d'un lien reçu par e-mail passe AVANT tout le reste, et avant
+     la question « connecté ou non » : après un clic sur un lien de
+     confirmation, la session est justement déjà établie. Afficher l'espace
+     personnel ordinaire laisserait l'utilisateur sans réponse à la seule
+     question qu'il se pose — est-ce que mon clic a servi ? */
+  const linkScreen = renderEmailLinkScreen();
+  if(linkScreen) return linkScreen;
+
   const g = globalMetrics();
   const subjects = allSubjects();
   const startedSubjects = subjects.filter(s => subjectProgress(s.id) !== null).length;
@@ -16675,8 +17163,13 @@ function accountEditModalHtml(){
       <div class="ai-field"><label for="account-edit-username">${t("account.username")}</label><input type="text" id="account-edit-username" class="ai-select" value="${escapeHtml(d.displayName)}" placeholder="${t("account.username_ph")}"></div>
       <div class="ai-field"><label for="account-edit-phone">${t("account.phone")}</label><input type="tel" id="account-edit-phone" class="ai-select" value="${escapeHtml(d.phone)}" placeholder="${t("account.phone_ph")}"></div>
       <div class="ai-field">
-        <label>${t("account.email")}</label>
-        <div class="account-modal-email-info">${escapeHtml(email)} <span class="muted">${t("account.email_readonly")}</span></div>
+        <label for="account-edit-email">${t("account.email")}</label>
+        <input type="email" id="account-edit-email" class="ai-select" value="${escapeHtml(email)}" autocomplete="email">
+        <!-- L'adresse ne change qu'après confirmation du lien envoyé à la
+             NOUVELLE adresse : c'est Supabase Auth qui l'impose, et c'est ce
+             qu'il faut. On ne prétend donc jamais que c'est fait tout de
+             suite — le message qui suit l'enregistrement le dit. -->
+        <p class="hint" style="margin:var(--space-2xs) 0 0;">${t("account.email_change_hint")}</p>
       </div>
 
       <div id="account-edit-msg">${d.error ? `<div class="auth-msg" style="color:var(--red-dark);"><span>${escapeHtml(d.error)}</span></div>` : ""}</div>
@@ -16788,9 +17281,17 @@ async function handleAccountModalSave(){
   const lastName = document.getElementById("account-edit-lastname").value.trim();
   const displayName = document.getElementById("account-edit-username").value.trim();
   const phone = document.getElementById("account-edit-phone").value.trim();
+  const emailField = document.getElementById("account-edit-email");
+  const newEmail = emailField ? emailField.value.trim() : "";
+  const currentEmail = (LyonAuth.state.user && LyonAuth.state.user.email) || "";
 
   if(phone && !/^[0-9+()\s.-]{6,20}$/.test(phone)){
     d.error = t("account.phone_invalid");
+    renderAccountEditModal();
+    return;
+  }
+  if(emailField && newEmail !== currentEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)){
+    d.error = t("auth.email_invalid");
     renderAccountEditModal();
     return;
   }
@@ -16811,6 +17312,16 @@ async function handleAccountModalSave(){
     if(res.error) err = res.error;
   }
 
+  /* L'adresse e-mail appartient à Supabase Auth, pas à la table `profiles` :
+     elle passe par son propre mécanisme, qui envoie une confirmation à la
+     NOUVELLE adresse. Elle ne change donc pas tout de suite, et on le dit au
+     lieu de laisser croire que c'est fait. */
+  let emailPending = false;
+  if(!err && emailField && newEmail && newEmail !== currentEmail){
+    const res = await LyonAuth.changeEmail(newEmail);
+    if(res.error) err = res.error; else emailPending = true;
+  }
+
   if(err){
     d.saving = false;
     d.error = err;
@@ -16819,7 +17330,7 @@ async function handleAccountModalSave(){
   }
 
   closeAccountEditModal();
-  showToast(t("account.info_saved"));
+  showToast(emailPending ? t("auth.change_email_pending") : t("account.info_saved"));
 }
 
 /* ============================================================
@@ -18681,6 +19192,14 @@ function openDocument(doc){
     window.open(doc.dataUrl, "_blank");
     return;
   }
+  /* Le fichier appartient bien à ce compte, mais son contenu est resté sur
+     l'appareil qui l'a importé : seules les métadonnées voyagent (le binaire
+     peut peser plusieurs mégaoctets). On le DIT, au lieu d'ouvrir un document
+     vide — ce qui laisserait croire que le fichier est corrompu. */
+  if(doc.contentMissing && doc.content === undefined){
+    showToast(t("cloud.doc_elsewhere"), "warning");
+    return;
+  }
   const blob = new Blob([doc.content || ""], {type:"text/plain;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank");
@@ -19225,14 +19744,63 @@ async function handleAuthUserChange(){
   const currentId = authed ? LyonAuth.state.user.id : null;
   const isFirstEvent = lastKnownAuthUserId === undefined;
   const changed = !isFirstEvent && currentId !== lastKnownAuthUserId;
+  const previousId = isFirstEvent ? null : lastKnownAuthUserId;
   lastKnownAuthUserId = currentId;
 
   if(isFirstEvent && currentId === null) return;
   if(!isFirstEvent && !changed){ render(); return; }
+
+  /* Un vrai changement de compte : on arrête la synchronisation du compte
+     PRÉCÉDENT avant toute chose. L'écriture en attente part d'abord ; le
+     cache de ce compte n'est effacé qu'une fois l'écriture confirmée. */
+  if(previousId) await cloudStop(previousId);
+
   if(currentId) claimGuestDataForUser(currentId);
-  state.tab = "dashboard";
+  /* Sauf si l'utilisateur vient de cliquer un lien reçu par e-mail : dans ce
+     cas l'écran qui lui explique ce qui s'est passé doit rester affiché. */
+  if(!state.accountUI.linkResult) state.tab = "dashboard";
   await loadDataAndRefreshUi();
+
+  /* Puis on branche le nouveau compte : lecture depuis Supabase, arbitrage
+     éventuel de la migration, hydratation. L'affichage local (déjà rendu
+     ci-dessus depuis le cache de CE compte) sert de premier écran — jamais
+     celui d'un autre compte, le cache étant cloisonné par identifiant. */
+  if(currentId) await cloudStart(currentId);
 }
+
+/* ── RETOUR D'UN LIEN REÇU PAR E-MAIL ──────────────────────────────────────
+   auth.js a capturé les paramètres de l'URL avant que le SDK ne les efface.
+   On les traduit ici en un état d'interface, une seule fois, puis on nettoie
+   la barre d'adresse : un jeton de confirmation n'a pas à y rester.
+
+   Les quatre situations demandées :
+     • lien valide, compte confirmé   → écran « ton compte est confirmé » ;
+     • lien de récupération           → formulaire de nouveau mot de passe ;
+     • changement d'adresse confirmé  → écran dédié ;
+     • lien déjà utilisé ou expiré    → on le dit, avec une porte de sortie.
+
+   Déjà connecté au moment du clic : le SDK remplace la session par celle du
+   compte confirmé, et handleAuthUserChange() bascule proprement d'espace —
+   c'est le même chemin qu'un changement de compte ordinaire. */
+(function handleEmailLinkReturn(){
+  const link = window.LyonAuth && LyonAuth.emailLink;
+  if(!link) return;
+
+  const expired = /expired|invalid|access_denied/i.test(
+    (link.error_code || "") + " " + (link.error || "") + " " + (link.error_description || ""));
+
+  if(expired) state.accountUI.linkResult = "expired";
+  else if(link.type === "recovery") state.accountUI.linkResult = "recovery";
+  else if(link.type === "email_change") state.accountUI.linkResult = "email_changed";
+  else if(link.type === "signup" || link.type === "magiclink" || link.hasToken) state.accountUI.linkResult = "confirmed";
+  else return;
+
+  /* Un lien d'e-mail mène toujours à l'espace personnel : c'est là que le
+     message le concernant s'affiche. L'onglet s'appelle « myspace » — il n'y
+     a pas d'onglet « account » dans render(). */
+  state.tab = "myspace";
+  LyonAuth.clearEmailLinkFromUrl();
+})();
 
 // Compte utilisateur : recharge les données du bon espace et re-rend l'UI à
 // chaque changement d'état d'auth (connexion/déconnexion/changement de

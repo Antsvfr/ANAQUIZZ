@@ -67,17 +67,21 @@ function createPostgrestClient(run, opts = {}) {
       const where = [];
       for (const f of st.filters) {
         if (f.kind === "is") { where.push(`${quoteIdent(f.col)} is null`); continue; }
+        /* `in` prend une LISTE : chaque élément devient son propre paramètre.
+           (L'implémentation précédente poussait d'abord le tableau entier puis
+           retirait le dernier élément, ce qui laissait un placeholder sans
+           valeur — le filtre échouait dès qu'il était réellement utilisé.) */
+        if (f.kind === "in") {
+          const list = (f.val || []).map(v => { params.push(v); return "$" + params.length; });
+          where.push(list.length ? `${quoteIdent(f.col)} = any(array[${list.join(",")}])` : "false");
+          continue;
+        }
         params.push(f.val);
         const p = "$" + params.length;
         if (f.kind === "eq") where.push(`${quoteIdent(f.col)} = ${p}`);
         else if (f.kind === "neq") where.push(`${quoteIdent(f.col)} <> ${p}`);
         else if (f.kind === "lt") where.push(`${quoteIdent(f.col)} < ${p}`);
         else if (f.kind === "gt") where.push(`${quoteIdent(f.col)} > ${p}`);
-        else if (f.kind === "in") {
-          const list = f.val.map(v => { params.push(v); return "$" + params.length; });
-          params.pop(); // la valeur agrégée poussée plus haut n'est pas utilisée
-          where.push(`${quoteIdent(f.col)} = any(array[${list.join(",")}])`);
-        }
       }
       for (const o of st.orFilters) where.push(parseOr(o, params));
       const whereSql = where.length ? " where " + where.join(" and ") : "";
@@ -89,13 +93,20 @@ function createPostgrestClient(run, opts = {}) {
         if (st.order) sql += ` order by ${quoteIdent(st.order.col)} ${st.order.asc ? "asc" : "desc"}`;
         if (st.limit) sql += ` limit ${Number(st.limit)}`;
       } else if (st.op === "insert" || st.op === "upsert") {
-        const row = st.payload;
-        const cols = Object.keys(row);
-        const vals = cols.map(c => { params.push(normalize(row[c])); return "$" + params.length; });
-        sql = `insert into ${rel} (${cols.map(quoteIdent).join(", ")}) values (${vals.join(", ")})`;
+        /* Le vrai client accepte une ligne OU un tableau de lignes, et REV-EM
+           écrit par paquets : on prend les deux. Toutes les lignes d'un même
+           appel doivent porter les mêmes colonnes — c'est le cas du code
+           appelant, qui construit ses lignes depuis un même gabarit. */
+        const rows = Array.isArray(st.payload) ? st.payload : [st.payload];
+        if (!rows.length) return { data: [], error: null, count: 0 };
+        const cols = Object.keys(rows[0]);
+        const tuples = rows.map(row =>
+          "(" + cols.map(c => { params.push(normalize(row[c], c)); return "$" + params.length; }).join(", ") + ")");
+        sql = `insert into ${rel} (${cols.map(quoteIdent).join(", ")}) values ${tuples.join(", ")}`;
         if (st.op === "upsert") {
-          const conflict = String(st.onConflict || "id").split(",").map(s => quoteIdent(s.trim())).join(", ");
-          const updatable = cols.filter(c => !String(st.onConflict || "id").split(",").map(s => s.trim()).includes(c));
+          const keys = String(st.onConflict || "id").split(",").map(s => s.trim());
+          const conflict = keys.map(quoteIdent).join(", ");
+          const updatable = cols.filter(c => !keys.includes(c));
           sql += ` on conflict (${conflict}) do update set ` +
                  (updatable.length ? updatable.map(c => `${quoteIdent(c)} = excluded.${quoteIdent(c)}`).join(", ")
                                    : `${quoteIdent(cols[0])} = excluded.${quoteIdent(cols[0])}`);
@@ -151,7 +162,7 @@ function createPostgrestClient(run, opts = {}) {
 async function executeUpdate(rel, st, run, returning) {
   const params = [];
   const sets = Object.keys(st.payload).map(c => {
-    params.push(normalize(st.payload[c]));
+    params.push(normalize(st.payload[c], c));
     return `${quoteIdent(c)} = $${params.length}`;
   });
   const where = [];
@@ -176,9 +187,17 @@ async function executeUpdate(rel, st, run, returning) {
   }
 }
 
-function normalize(v) {
+/* Les seules colonnes RÉELLEMENT de type tableau PostgreSQL (`text[]`) du
+   schéma. Partout ailleurs, un tableau JavaScript vise une colonne `jsonb` et
+   doit donc partir sérialisé : envoyé tel quel, node-postgres l'écrirait sous
+   la forme littérale `{a,b}` d'un tableau SQL, que `jsonb` refuse.
+   Se tromper de côté est silencieux à l'écriture et faux à la lecture —
+   d'où la liste explicite plutôt qu'une heuristique. */
+const SQL_ARRAY_COLUMNS = new Set(["scopes"]);
+
+function normalize(v, col) {
   if (v === undefined) return null;
-  if (Array.isArray(v)) return v;                       // text[] / jsonb
+  if (Array.isArray(v)) return SQL_ARRAY_COLUMNS.has(col) ? v : JSON.stringify(v);
   if (v && typeof v === "object") return JSON.stringify(v);
   return v;
 }
