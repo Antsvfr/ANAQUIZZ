@@ -6,7 +6,7 @@
      PostgreSQL local avec la base `revem_itest` :
        createdb revem_itest
        psql -d revem_itest -f supabase/tests/00_local_emulation.sql
-       psql -d revem_itest -f supabase/schema.sql
+       psql -d revem_itest -f supabase/migrations/000_schema.sql
        psql -d revem_itest -f supabase/migrations/001_brightspace.sql
        psql -d revem_itest -f supabase/migrations/002_centralisation.sql
        psql -d revem_itest -f supabase/migrations/003_sync_layer.sql

@@ -25,7 +25,7 @@ description: Authentification (auth.js), session, schéma Supabase réel, et le 
   courts en français, sans détail technique côté utilisateur (le détail
   reste en console) — réutiliser pour toute nouvelle erreur d'auth.
 
-## Schéma Supabase réel (`supabase/schema.sql`, 473 lignes, 13 tables)
+## Schéma Supabase réel (`supabase/migrations/000_schema.sql`, 473 lignes, 13 tables)
 
 `profiles`, `subjects`, `chapters`, `progress`, `question_stats`,
 `exam_history`, `badges`, `ai_cards`, `course_notes`, `planning_events`,
@@ -39,7 +39,14 @@ personnelles** : Supabase est la source de vérité pour un compte connecté,
 `localStorage` est devenu un cache. Voir `SYNC_UTILISATEUR.md` pour
 l'architecture complète (domaines, stratégie de conflit, suppressions).
 
-Migrations à appliquer dans l'ordre : `schema.sql`, puis `001` → `005`.
+Migrations : **tout est dans `supabase/migrations/`, dans l'ordre numérique
+à partir de `000_schema.sql`** (qui s'appelait `supabase/schema.sql` et
+vivait hors du dossier — invisible quand on parcourait `migrations/`, d'où
+des installations qui commençaient à `001` et échouaient sur un
+« relation public.subjects does not exist »). Chaque migration vérifie
+désormais ses prérequis et s'arrête avec un message qui nomme le fichier
+manquant. `supabase/tests/00_diagnostic.sql`, en lecture seule, dit où en
+est une base et quoi exécuter ensuite.
 La `005_user_sync.sql` ajoute les **clés naturelles** (`unique (user_id,
 local_id)` sur subjects/chapters/documents/planning_events,
 `(user_id, taken_at)` sur exam_history) sans lesquelles l'écriture

@@ -54,7 +54,7 @@ statistics.js               151 lignes — window.LyonStatistics (moteur pur)
 ai-worker.js                 23 lignes — Web Worker WebLLM (chargé à l'exécution, pas en <script src>)
 supabase-config.js          config locale (gitignored), URL + clé anon
 supabase-config.example.js  gabarit documenté de supabase-config.js
-supabase/schema.sql         473 lignes — schéma Postgres/RLS (13 tables, 1 seule réellement utilisée)
+supabase/migrations/000_schema.sql         473 lignes — schéma Postgres/RLS (13 tables, 1 seule réellement utilisée)
 SETUP_SUPABASE.md           guide de configuration Supabase
 ```
 
@@ -118,7 +118,7 @@ onglet a sa propre paire `renderX()`/`attachXEvents()`.
   géré par la librairie, jamais directement par le code du projet.
 - **Supabase** : une seule table réellement lue/écrite par le frontend —
   `profiles` (+ bucket Storage `avatars`), via `auth.js`. Les 12 autres
-  tables de `supabase/schema.sql` (subjects, chapters, progress,
+  tables de `supabase/migrations/000_schema.sql` (subjects, chapters, progress,
   question_stats, exam_history, badges, ai_cards, course_notes,
   planning_events, ai_history, preferences, documents) existent en base
   mais ne sont interrogées par AUCUN code frontend — vérifié par

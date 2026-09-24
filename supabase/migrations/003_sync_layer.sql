@@ -47,6 +47,38 @@
 -- ============================================================================
 -- 1. DATE DE MODIFICATION CÔTÉ SOURCE
 -- ============================================================================
+-- ============================================================================
+-- PRÉREQUIS — à lire si cette migration refuse de s'exécuter
+-- ----------------------------------------------------------------------------
+-- Les migrations s'appliquent DANS L'ORDRE NUMÉRIQUE, en commençant par
+-- 000_schema.sql, qui crée les tables de base. Ce bloc le vérifie et s'arrête
+-- avec un message qui dit QUOI FAIRE, plutôt que de laisser PostgreSQL
+-- échouer plus bas sur un « relation ... does not exist » qui ne dit rien.
+--
+-- Il ne modifie rien : il constate.
+-- ============================================================================
+do $prereq$
+declare
+  manquant text := null;
+begin
+  if to_regclass('public.user_stats') is not null then null; else manquant := '002_centralisation.sql'; end if;
+  if to_regclass('public.brightspace_connections') is not null then null; else manquant := '001_brightspace.sql'; end if;
+  if to_regclass('public.subjects') is not null then null; else manquant := '000_schema.sql'; end if;
+
+  if manquant is not null then
+    raise exception using
+      message = 'REV-EM : migration précédente manquante — ' || manquant,
+      detail  = 'Cette migration suppose que ' || manquant || ' a déjà été appliquée, '
+             || 'et la base montre que ce n''est pas le cas.',
+      hint    = 'Dans le SQL Editor, exécute les fichiers de supabase/migrations/ '
+             || 'dans cet ordre : 000_schema.sql → 001_brightspace.sql → 002_centralisation.sql → 003_sync_layer.sql. '
+             || 'Ils sont tous idempotents : relancer ceux déjà passés ne crée aucun doublon. '
+             || 'Pour savoir où tu en es, exécute supabase/tests/00_diagnostic.sql.';
+  end if;
+end
+$prereq$;
+
+
 alter table public.subjects add column if not exists source_updated_at timestamptz;
 alter table public.chapters add column if not exists source_updated_at timestamptz;
 

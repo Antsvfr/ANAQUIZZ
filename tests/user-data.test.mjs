@@ -76,7 +76,7 @@ console.log("Construction de la base de test…");
 execSync(`su postgres -c "dropdb --if-exists ${DB}; createdb ${DB}"`, { stdio: "pipe" });
 [
   "supabase/tests/00_local_emulation.sql",
-  "supabase/schema.sql",
+  "supabase/migrations/000_schema.sql",
   "supabase/migrations/001_brightspace.sql",
   "supabase/migrations/002_centralisation.sql",
   "supabase/migrations/003_sync_layer.sql",

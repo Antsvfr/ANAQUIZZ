@@ -49,6 +49,40 @@
 -- ============================================================================
 -- subjects / chapters : `local_id` existait déjà (schema.sql) « pour le
 -- rapprochement », sans contrainte. On le rend unique par utilisateur.
+-- ============================================================================
+-- PRÉREQUIS — à lire si cette migration refuse de s'exécuter
+-- ----------------------------------------------------------------------------
+-- Les migrations s'appliquent DANS L'ORDRE NUMÉRIQUE, en commençant par
+-- 000_schema.sql, qui crée les tables de base. Ce bloc le vérifie et s'arrête
+-- avec un message qui dit QUOI FAIRE, plutôt que de laisser PostgreSQL
+-- échouer plus bas sur un « relation ... does not exist » qui ne dit rien.
+--
+-- Il ne modifie rien : il constate.
+-- ============================================================================
+do $prereq$
+declare
+  manquant text := null;
+begin
+  if to_regclass('public.oauth_states') is not null then null; else manquant := '004_oauth_hardening.sql'; end if;
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='subjects' and column_name='source_updated_at') then null; else manquant := '003_sync_layer.sql'; end if;
+  if to_regclass('public.user_stats') is not null then null; else manquant := '002_centralisation.sql'; end if;
+  if to_regclass('public.brightspace_connections') is not null then null; else manquant := '001_brightspace.sql'; end if;
+  if to_regclass('public.subjects') is not null then null; else manquant := '000_schema.sql'; end if;
+
+  if manquant is not null then
+    raise exception using
+      message = 'REV-EM : migration précédente manquante — ' || manquant,
+      detail  = 'Cette migration suppose que ' || manquant || ' a déjà été appliquée, '
+             || 'et la base montre que ce n''est pas le cas.',
+      hint    = 'Dans le SQL Editor, exécute les fichiers de supabase/migrations/ '
+             || 'dans cet ordre : 000_schema.sql → 001_brightspace.sql → 002_centralisation.sql → 003_sync_layer.sql → 004_oauth_hardening.sql → 005_user_sync.sql. '
+             || 'Ils sont tous idempotents : relancer ceux déjà passés ne crée aucun doublon. '
+             || 'Pour savoir où tu en es, exécute supabase/tests/00_diagnostic.sql.';
+  end if;
+end
+$prereq$;
+
+
 create unique index if not exists uq_subjects_user_local
   on public.subjects(user_id, local_id);
 
@@ -154,7 +188,7 @@ begin
 
   if array_length(missing, 1) is not null then
     raise exception
-      'RLS désactivée sur : %. Rejouer supabase/schema.sql et 002_centralisation.sql avant cette migration.',
+      'RLS désactivée sur : %. Rejouer supabase/migrations/000_schema.sql et 002_centralisation.sql avant cette migration.',
       array_to_string(missing, ', ');
   end if;
 end $$;

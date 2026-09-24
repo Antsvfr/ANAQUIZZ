@@ -152,7 +152,7 @@ window.LyonAuth = (function(){
     if(error){
       // Ne JAMAIS avaler cette erreur en silence : si elle se produit, c'est
       // la cause la plus probable d'un profil qui "ne persiste pas" (colonne
-      // manquante si supabase/schema.sql n'a pas été rejoué, RLS SELECT trop
+      // manquante si supabase/migrations/000_schema.sql n'a pas été rejoué, RLS SELECT trop
       // restrictive, ligne absente...). Toujours visible en console, détail
       // complet (message/code/details/hint), pas juste un message générique.
       console.error("[PROFILE LOAD ERROR]", error);
@@ -181,7 +181,7 @@ window.LyonAuth = (function(){
      modifie 0 ligne et échoue ensuite sur .single(), donnant l'impression
      que "rien ne s'enregistre" sans jamais créer le profil. upsert() couvre
      les deux cas (création ET mise à jour) avec la même logique — nécessite
-     la policy RLS "profiles_insert_own" (voir supabase/schema.sql). Ne gère
+     la policy RLS "profiles_insert_own" (voir supabase/migrations/000_schema.sql). Ne gère
      pas state.busy/notify() elle-même : réservé aux fonctions publiques
      ci-dessous, qui l'appellent chacune une seule fois.
 

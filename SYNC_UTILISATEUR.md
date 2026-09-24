@@ -43,6 +43,7 @@ un état normal du produit, pas un cas dégradé.
 | `index.html` | +≈330 | le branchement : hook sur `lsSet`, hydratation, migration, indicateur |
 | `auth.js` | +≈150 | renvoi d'e-mail, changement d'adresse, nouveau mot de passe, lecture du lien |
 | `supabase/migrations/005_user_sync.sql` | 150 | les clés naturelles qui rendent l'écriture idempotente |
+| `supabase/tests/00_diagnostic.sql` | ~120 | en lecture seule : où en est une base, et quoi exécuter ensuite |
 | `tests/user-data.test.mjs` | ~560 | le moteur contre un **PostgreSQL réel**, RLS comprise |
 | `tests/account-sync.test.mjs` | ~640 | le branchement dans un **vrai navigateur**, deux appareils |
 | `supabase/tests/user_sync_tests.sql` | ~280 | les garanties de la base elle-même |

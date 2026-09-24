@@ -65,11 +65,12 @@ if [ "$DO_MIGRATIONS" = 1 ]; then
   step "Étape 2 — migrations SQL"
   if [ -n "${DATABASE_URL:-}" ]; then
     command -v psql >/dev/null 2>&1 || die "psql est absent (nécessaire quand DATABASE_URL est défini)."
-    for f in supabase/schema.sql \
+    for f in supabase/migrations/000_schema.sql \
              supabase/migrations/001_brightspace.sql \
              supabase/migrations/002_centralisation.sql \
              supabase/migrations/003_sync_layer.sql \
-             supabase/migrations/004_oauth_hardening.sql; do
+             supabase/migrations/004_oauth_hardening.sql \
+             supabase/migrations/005_user_sync.sql; do
       [ -f "$f" ] || die "Fichier manquant : $f"
       printf '  … %s\n' "$f"
       psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f" >/dev/null \
@@ -91,6 +92,18 @@ if [ "$DO_MIGRATIONS" = 1 ]; then
       select count(*) from pg_tables where schemaname='public' and not rowsecurity")"
     [ "$NO_RLS" = "0" ] || die "ARRÊT : $NO_RLS table(s) de public sans RLS."
     ok "RLS active sur toutes les tables de public"
+
+    # Les clés naturelles du multi-appareils. Sans elles, deux appareils qui
+    # écrivent en même temps créent des doublons au lieu de se fondre : on
+    # vérifie leur présence plutôt que de supposer que 005 est passée.
+    SYNC_KEYS="$(psql "$DATABASE_URL" -tAX -c "
+      select count(*) from pg_indexes where schemaname='public'
+         and indexname in ('uq_subjects_user_local','uq_chapters_user_local',
+                           'uq_documents_user_local','uq_planning_events_user_local',
+                           'uq_exam_history_user_taken')")"
+    [ "$SYNC_KEYS" = "5" ] \
+      || die "ARRÊT : $SYNC_KEYS/5 clés naturelles présentes. Applique supabase/migrations/005_user_sync.sql."
+    ok "Les clés naturelles du multi-appareils sont en place"
   else
     warn "DATABASE_URL n'est pas défini : les migrations ne peuvent pas être appliquées automatiquement."
     cat <<EOF
@@ -102,7 +115,7 @@ if [ "$DO_MIGRATIONS" = 1 ]; then
        (Dashboard → Project Settings → Database → Connection string → URI)
 
     b) coller manuellement, dans cet ordre, dans le SQL Editor du dashboard :
-         supabase/schema.sql
+         supabase/migrations/000_schema.sql
          supabase/migrations/001_brightspace.sql
          supabase/migrations/002_centralisation.sql
          supabase/migrations/003_sync_layer.sql

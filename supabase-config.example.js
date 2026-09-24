@@ -14,7 +14,7 @@
      ✅ SUPABASE_URL et la clé "anon" / "public" SONT CONÇUES pour être
         visibles côté navigateur. Ce ne sont pas des secrets : la sécurité
         réelle est assurée par les policies Row Level Security (RLS) côté
-        base de données (voir supabase/schema.sql), jamais par le fait que
+        base de données (voir supabase/migrations/000_schema.sql), jamais par le fait que
         cette clé serait cachée. Un utilisateur qui inspecte le code source
         de la page verra toujours cette clé — c'est normal et sans risque
         tant que RLS est bien activé sur toutes les tables.

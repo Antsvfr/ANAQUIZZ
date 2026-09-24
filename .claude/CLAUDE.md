@@ -87,12 +87,20 @@ timeout) — voir le mode simplifié déjà implémenté
 ## Règles Supabase et données utilisateur (voir `supabase-auth-data`)
 
 - `auth.js` gère exclusivement l'authentification/le profil (table
-  `profiles` + bucket `avatars`). Toutes les autres données produit
-  (progression, quiz, flashcards, IA, planning, documents) sont
-  actuellement 100% locales (`localStorage`, + `IndexedDB` pour les
-  fichiers PDF importés volumineux), même si `supabase/schema.sql`
-  prépare des tables pour elles — ne jamais présumer qu'elles sont
-  synchronisées.
+  `profiles` + bucket `avatars`). Les données produit (progression, quiz,
+  flashcards, planning, documents, statistiques) sont **synchronisées avec
+  Supabase par `user-data.js`** depuis l'étape « comptes multi-appareils » :
+  pour un compte connecté, **Supabase est la source de vérité** et
+  `localStorage` n'est plus qu'un cache. Voir `SYNC_UTILISATEUR.md`.
+- Restent volontairement locaux à l'appareil : le binaire des documents et
+  les PDF importés (`IndexedDB`), pour des raisons de volume.
+- Pour un **invité** (pas de compte, ou Supabase non configuré), rien de
+  tout cela ne s'active : `localStorage` reste la seule persistance. C'est
+  un état normal du produit, jamais un cas d'erreur.
+- Le schéma s'installe par `supabase/migrations/`, **dans l'ordre numérique
+  à partir de `000_schema.sql`**. Ne jamais supposer qu'une migration peut
+  s'appliquer seule : chacune vérifie ses prérequis et refuse de s'exécuter
+  sinon.
 - Depuis le correctif de cloisonnement par compte, `localStorage` est
   scopé par identifiant de compte connecté (`currentStorageNamespace()`
   dans `index.html`) : ne jamais contourner ce mécanisme en lisant/écrivant

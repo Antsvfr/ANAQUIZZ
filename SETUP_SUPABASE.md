@@ -5,7 +5,7 @@ cloud de Lyon Révision sur un projet Supabase. Il est écrit pour être suivi
 dans l'ordre, une seule fois, par la personne qui gère le déploiement.
 
 **État actuel du projet à la date de ce document** : le schéma SQL
-(`supabase/schema.sql`) et ce guide existent, mais **le code frontend
+(`supabase/migrations/000_schema.sql`) et ce guide existent, mais **le code frontend
 (`index.html`) n'appelle pas encore Supabase** — l'authentification et la
 synchronisation sont les étapes suivantes du chantier, une fois ce schéma
 validé et le projet Supabase créé. Le site continue de fonctionner
@@ -48,8 +48,21 @@ clé récupérées aux étapes 2-3. Ce fichier est ignoré par git
 
 ## 5. Créer les tables
 
+> **Tout le schéma vit dans `supabase/migrations/`, et s'applique dans
+> l'ordre numérique à partir de `000_schema.sql`.** Il n'y a rien à exécuter
+> ailleurs. Si tu ne sais pas où tu en es, exécute d'abord
+> [`supabase/tests/00_diagnostic.sql`](supabase/tests/00_diagnostic.sql) : il
+> ne modifie rien et te dit exactement quels fichiers lancer, dans quel ordre.
+>
+> *(Historique : ce fichier s'appelait `supabase/schema.sql` et se trouvait
+> hors du dossier des migrations. Comme on ne le voyait pas en parcourant
+> `migrations/`, on croyait pouvoir commencer à `001` — et on tombait sur un
+> `relation "public.subjects" does not exist` qui ne disait pas quoi faire.
+> Il a été renommé `000_schema.sql` et déplacé ; les migrations suivantes
+> vérifient désormais leurs prérequis et s'arrêtent avec un message clair.)*
+
 Dashboard Supabase → **SQL Editor** → **New query**. Colle l'intégralité du
-contenu de [`supabase/schema.sql`](supabase/schema.sql) et exécute ("Run").
+contenu de [`supabase/migrations/000_schema.sql`](supabase/migrations/000_schema.sql) et exécute ("Run").
 
 Ce script est idempotent (`if not exists`, `or replace`) : tu peux le relancer
 sans risque s'il y a une erreur au milieu, une fois le problème corrigé — et
@@ -197,18 +210,37 @@ Supabase**, que le code ne peut pas faire à ta place.
 
 ### 12.1 Appliquer les migrations, dans l'ordre
 
-SQL Editor → coller et exécuter, l'un après l'autre :
+**Commence par le diagnostic**, qui ne modifie rien :
+
+```
+supabase/tests/00_diagnostic.sql
+```
+
+Il liste les six migrations, dit lesquelles sont déjà appliquées, et te donne
+la liste exacte de celles qu'il te reste à exécuter. Il signale aussi le seul
+point destructif du schéma : si ta table `profiles` date de la v1 et contient
+encore une colonne `user_code`, `000_schema.sql` la **supprimera** avec son
+contenu (c'était voulu — ce code n'était utilisé par rien).
+
+Puis, SQL Editor → coller et exécuter, l'un après l'autre :
 
 | Fichier | Ce qu'il fait |
 |---|---|
-| `supabase/schema.sql` | les 13 tables de base, RLS, bucket `avatars` |
+| `supabase/migrations/000_schema.sql` | les 13 tables de base, RLS, bucket `avatars` |
 | `supabase/migrations/001_brightspace.sql` | provenance des contenus importés |
 | `supabase/migrations/002_centralisation.sql` | `user_stats`, `daily_stats`, `activities`, `chapter_visits`, `study_plans` |
 | `supabase/migrations/003_sync_layer.sql` | index d'import non partiels, journal |
 | `supabase/migrations/004_oauth_hardening.sql` | durcissement OAuth |
 | **`supabase/migrations/005_user_sync.sql`** | **les clés naturelles qui rendent l'écriture multi-appareils idempotente** |
 
-Toutes sont idempotentes et non destructives : tu peux les relancer.
+Toutes sont idempotentes : tu peux les relancer, y compris celles déjà
+passées, sans créer de doublon (vérifié — tables, index et policies restent
+au même nombre après un rejeu complet). La seule opération destructive de
+toute la série est la suppression de `profiles.user_code` signalée ci-dessus.
+
+**Si tu te trompes d'ordre, rien de grave** : chaque migration vérifie ses
+prérequis avant d'écrire quoi que ce soit et s'arrête avec un message qui
+nomme le fichier manquant et rappelle l'ordre complet.
 
 Puis, pour vérifier que tout est en place, exécute ces trois fichiers de test —
 chacun doit afficher `0 FAIL` sur sa ligne `RÉSUMÉ` :

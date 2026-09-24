@@ -237,7 +237,7 @@ répond comme prévu — elles ne disent rien de ce que répondra Brightspace.
 # base d'intégration
 createdb revem_itest
 psql -d revem_itest -f supabase/tests/00_local_emulation.sql
-psql -d revem_itest -f supabase/schema.sql
+psql -d revem_itest -f supabase/migrations/000_schema.sql
 for m in 001_brightspace 002_centralisation 003_sync_layer 004_oauth_hardening; do
   psql -d revem_itest -f supabase/migrations/$m.sql
 done

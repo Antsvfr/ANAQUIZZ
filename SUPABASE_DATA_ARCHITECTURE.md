@@ -8,7 +8,7 @@ Trois fichiers :
 
 | Fichier | Rôle |
 |---|---|
-| `supabase/schema.sql` | schéma d'origine (13 tables) — **inchangé** |
+| `supabase/migrations/000_schema.sql` | schéma d'origine (13 tables) — **inchangé** |
 | `supabase/migrations/001_brightspace.sql` | provenance + sources externes (2 tables) — **durci** (voir §4) |
 | `supabase/migrations/002_centralisation.sql` | centralisation des données restantes (5 tables) — **nouveau** |
 | `supabase/tests/rls_tests.sql` | 335 vérifications d'isolation A↔B — **nouveau** |

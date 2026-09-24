@@ -5,13 +5,13 @@
 -- le schéma `auth`, la fonction `auth.uid()` et les rôles y existent déjà, et ce
 -- fichier les écraserait par des versions simplifiées.
 --
--- Objectif : pouvoir appliquer réellement `supabase/schema.sql` puis les
+-- Objectif : pouvoir appliquer réellement `supabase/migrations/000_schema.sql` puis les
 -- migrations, et exécuter `rls_tests.sql`, sans dépendre d'un projet Supabase.
 --
 -- Usage :
 --   createdb revem_test
 --   psql -d revem_test -f supabase/tests/00_local_emulation.sql
---   psql -d revem_test -f supabase/schema.sql          -- storage.buckets échoue : normal
+--   psql -d revem_test -f supabase/migrations/000_schema.sql          -- storage.buckets échoue : normal
 --   psql -d revem_test -f supabase/migrations/001_brightspace.sql
 --   psql -d revem_test -f supabase/migrations/002_centralisation.sql
 --   psql -d revem_test -f supabase/tests/rls_tests.sql

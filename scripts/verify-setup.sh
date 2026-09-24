@@ -127,6 +127,20 @@ else
   [ "$n" = "0" ] && pass "RLS active sur toutes les tables de public" \
                  || fail "$n table(s) sans RLS"
 
+  # Les six migrations sont-elles réellement passées ? On cherche un objet que
+  # chacune est la seule à créer — même méthode que supabase/tests/00_diagnostic.sql.
+  n="$(q "select (to_regclass('public.subjects') is not null)::int
+               + (to_regclass('public.brightspace_connections') is not null)::int
+               + (to_regclass('public.user_stats') is not null)::int
+               + (exists (select 1 from information_schema.columns
+                           where table_schema='public' and table_name='subjects'
+                             and column_name='source_updated_at'))::int
+               + (to_regclass('public.oauth_states') is not null)::int
+               + (exists (select 1 from pg_indexes where schemaname='public'
+                           and indexname='uq_subjects_user_local'))::int")"
+  [ "$n" = "6" ] && pass "Les six migrations (000 → 005) sont appliquées" \
+                 || fail "$n/6 migrations appliquées — exécute supabase/tests/00_diagnostic.sql pour savoir lesquelles manquent"
+
   n="$(q "select count(*) from information_schema.role_table_grants
           where table_name='oauth_states' and grantee in ('anon','authenticated')")"
   [ "$n" = "0" ] && pass "oauth_states inaccessible au client" \
