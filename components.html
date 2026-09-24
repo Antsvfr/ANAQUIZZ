@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>REV-EM — Composants</title>
+<!--
+  Galerie de composants REV-EM.
+
+  Cette page NE DÉFINIT AUCUN STYLE : au chargement, elle lit le <style> de
+  index.html et l'injecte tel quel. Il n'existe donc qu'une seule source de
+  vérité visuelle — celle de l'application. Si un composant change dans
+  index.html, il change ici ; s'il casse ici, il est cassé dans l'application.
+
+  Elle sert à deux choses :
+    • vérifier tous les composants côte à côte, aux trois largeurs du système ;
+    • documenter visuellement ce que COMPOSANTS.md décrit en mots.
+-->
+<style>
+  /* Seuls styles propres à la galerie : la mise en page de la galerie
+     elle-même. Aucun d'eux ne touche à un composant. */
+  .gal-wrap{ max-width: 1100px; margin: 0 auto; padding: 32px 20px 96px; }
+  .gal-head{ margin-bottom: 40px; }
+  .gal-sec{ margin: 0 0 48px; }
+  .gal-demo{ display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .gal-demo.stack{ flex-direction: column; align-items: stretch; }
+  .gal-note{ font-size: 13px; color: #8A8A93; margin: 6px 0 14px; max-width: 70ch; line-height: 1.5; }
+  .gal-grid2{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .gal-loading{ padding: 48px 20px; font-family: system-ui, sans-serif; color: #8A8A93; }
+</style>
+</head>
+<body>
+<div class="gal-loading" id="gal-loading">Chargement des styles de l'application…</div>
+
+<div class="gal-wrap surface" id="gal" hidden>
+
+  <header class="gal-head page-head">
+    <span class="eyebrow">Design system</span>
+    <h1 class="t-page">Composants REV-EM</h1>
+    <p class="t-sub">Chaque composant ci-dessous est rendu avec les styles réels
+      de l'application : cette page lit le <code>&lt;style&gt;</code> de
+      <code>index.html</code> au chargement. Il n'y a pas de second système.</p>
+  </header>
+
+  <!-- ── 1. SURFACES ────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-surfaces">
+    <div class="section-head">
+      <span class="section-head-label">1 · Surfaces</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <p class="gal-note">Quatre catégories, et rien d'autre. Une carte représente
+      une vraie unité logique — jamais un paragraphe, jamais un bouton isolé.</p>
+
+    <div class="gal-grid2">
+      <div class="block block--feature">
+        <h3 class="t-block">Feature block</h3>
+        <p class="t-sub">Une unité fonctionnelle autonome : un formulaire, un
+          lecteur de quiz, une matière. C'est la seule catégorie qui a une boîte.</p>
+      </div>
+
+      <div class="block block--info">
+        <h3 class="t-block">Information block</h3>
+        <p>De l'information à lire. Pas de boîte : la typographie et l'espace
+          suffisent à la détacher. C'est le remplaçant par défaut de la carte
+          décorative.</p>
+      </div>
+    </div>
+
+    <div class="block block--info is-aside" style="margin-top:16px">
+      Variante mise à l'écart du flux : un filet de gauche, rien de plus.
+    </div>
+
+    <div class="block block--action" style="margin-top:16px">
+      <span class="t-sub">Action block — les actions ne se mélangent pas à l'information.</span>
+      <span class="is-spacer"></span>
+      <button class="btn btn--tertiary">Annuler</button>
+      <button class="btn btn--primary">Enregistrer</button>
+    </div>
+
+    <p class="gal-note" style="margin-top:20px">Garde-fou : un feature block
+      dans un feature block perd son relief ; au troisième niveau, il perd sa boîte.</p>
+    <div class="block block--feature">
+      <h3 class="t-block">Niveau 1</h3>
+      <div class="block block--feature" style="margin-top:12px">
+        <h3 class="t-block">Niveau 2 — plus d'ombre</h3>
+        <div class="block block--feature" style="margin-top:12px">
+          <h3 class="t-block">Niveau 3 — plus de boîte du tout</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. TITRES ──────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-titres">
+    <div class="section-head">
+      <span class="section-head-label">2 · Titres</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="gal-demo stack">
+      <span class="eyebrow">Sur-titre</span>
+      <h1 class="t-page">Titre de page</h1>
+      <h2 class="t-section">Titre de section</h2>
+      <h3 class="t-block">Titre de bloc</h3>
+      <p class="t-sub">Sous-titre : il explique le titre, il ne le répète pas.</p>
+    </div>
+  </section>
+
+  <!-- ── 3. ACTIONS ─────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-actions">
+    <div class="section-head">
+      <span class="section-head-label">3 · Actions</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <p class="gal-note">Cinq niveaux, aucun sixième. Une seule action PRIMARY par écran.</p>
+    <div class="gal-demo">
+      <button class="btn btn--primary">Primary</button>
+      <button class="btn btn--secondary">Secondary</button>
+      <button class="btn btn--tertiary">Tertiary</button>
+      <a class="link" href="#gal-actions">Link</a>
+      <button class="btn btn--destructive">Destructive</button>
+    </div>
+    <p class="gal-note" style="margin-top:20px">Tailles, états, chargement.</p>
+    <div class="gal-demo">
+      <button class="btn btn--primary small">Small</button>
+      <button class="btn btn--primary">Default</button>
+      <button class="btn btn--primary large">Large</button>
+      <button class="btn btn--primary" disabled title="Choisis d'abord un chapitre">Désactivé</button>
+      <button class="btn btn--primary is-loading">Chargement</button>
+      <button class="btn btn--secondary is-loading">Chargement</button>
+    </div>
+    <p class="gal-note" style="margin-top:20px">Liens.</p>
+    <div class="gal-demo">
+      <a class="link" href="#gal-actions">Lien standard</a>
+      <a class="link link--quiet" href="#gal-actions">Lien discret</a>
+      <a class="link link--external" href="#gal-actions">Lien sortant</a>
+    </div>
+  </section>
+
+  <!-- ── 4. BADGES ET STATUTS ───────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-badges">
+    <div class="section-head">
+      <span class="section-head-label">4 · Badges &amp; statuts</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <p class="gal-note">Un badge CLASSE l'objet (stable). Un statut dit son ÉTAT
+      (il évolue). La couleur ne porte jamais seule l'information : le libellé la double.</p>
+    <div class="gal-demo">
+      <span class="badge">Niveau 2</span>
+      <span class="badge badge--outline">Marketing</span>
+      <span class="badge badge--accent">Nouveau</span>
+      <span class="badge badge--count">12</span>
+    </div>
+    <div class="gal-demo" style="margin-top:12px">
+      <span class="status neutral">À commencer</span>
+      <span class="status warning">À réviser</span>
+      <span class="status success">Maîtrisé</span>
+      <span class="status error">Échec de l'import</span>
+    </div>
+  </section>
+
+  <!-- ── 5. SÉPARATEURS ─────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-separateurs">
+    <div class="section-head">
+      <span class="section-head-label">5 · Séparateurs</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <p class="gal-note">Un filet sépare deux choses de même nature. Entre deux
+      natures différentes, c'est l'espace qui sépare.</p>
+    <hr class="divider">
+    <div class="list-ruled">
+      <div style="padding:10px 0">Chapitre 1 — Fondamentaux</div>
+      <div style="padding:10px 0">Chapitre 2 — Segmentation</div>
+      <div style="padding:10px 0">Chapitre 3 — Positionnement</div>
+    </div>
+  </section>
+
+  <!-- ── 6. CHAMPS ──────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-champs">
+    <div class="section-head">
+      <span class="section-head-label">6 · Champs</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="block block--feature" style="max-width:560px">
+      <div class="field">
+        <label class="field-label" for="g-1">Nom du chapitre</label>
+        <input class="input" id="g-1" type="text" placeholder="Ex. Segmentation">
+        <span class="field-hint">Il apparaîtra dans ta bibliothèque.</span>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="g-2">Matière</label>
+          <select class="select" id="g-2"><option>Marketing</option><option>Finance</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="g-3">Niveau <span class="is-optional">(facultatif)</span></label>
+          <select class="select" id="g-3"><option>L1</option><option>L2</option><option>L3</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-4">Contenu du cours</label>
+        <textarea class="textarea" id="g-4" placeholder="Colle ton cours ici…"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-5">Échéance</label>
+        <input class="input is-invalid" id="g-5" type="text" aria-invalid="true" aria-describedby="g-5-err" value="32/13/2026">
+        <span class="field-error" id="g-5-err">Cette date n'existe pas. Format attendu : JJ/MM/AAAA.</span>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-6">Désactivé</label>
+        <input class="input" id="g-6" type="text" value="Non modifiable" disabled>
+      </div>
+      <label class="choice"><input type="checkbox" checked> Inclure les chapitres déjà maîtrisés</label>
+      <div class="block block--action is-end is-bare" style="margin-top:16px">
+        <button class="btn btn--tertiary">Annuler</button>
+        <button class="btn btn--primary">Créer le chapitre</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 7. ENCADRÉS ────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-encadres">
+    <div class="section-head">
+      <span class="section-head-label">7 · Encadrés</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="gal-demo stack">
+      <div class="callout info"><div><div class="callout-title">Information</div>Tes données de révision restent sur cet appareil tant que la synchronisation n'est pas activée.</div></div>
+      <div class="callout warning"><div><div class="callout-title">Attention</div>Ce chapitre n'a pas été révisé depuis 21 jours.</div></div>
+      <div class="callout success"><div><div class="callout-title">Terminé</div>12 flashcards ont été générées à partir de ton cours.</div></div>
+      <div class="callout error"><div><div class="callout-title">Import impossible</div>Le fichier dépasse 20 Mo. Découpe-le ou exporte-le en texte.</div></div>
+    </div>
+  </section>
+
+  <!-- ── 8. CHIFFRES, JAUGES, SEGMENTS ──────────────────────────────── -->
+  <section class="gal-sec" id="gal-mesures">
+    <div class="section-head">
+      <span class="section-head-label">8 · Mesures</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><span class="stat-label">Chapitres</span><span class="stat-value">18</span></div>
+      <div class="stat"><span class="stat-label">Maîtrise</span><span class="stat-value">64<span style="font-size:20px">%</span></span></div>
+      <div class="stat"><span class="stat-label">Série</span><span class="stat-value">7</span></div>
+    </div>
+    <div class="meter accent" style="margin-top:24px; max-width:360px"><div class="meter-fill" style="width:64%"></div></div>
+    <div class="segmented" style="margin-top:24px" role="tablist">
+      <button role="tab" aria-selected="true">Semaine</button>
+      <button role="tab" aria-selected="false">Mois</button>
+      <button role="tab" aria-selected="false">Semestre</button>
+    </div>
+  </section>
+
+  <!-- ── 9. MENUS ───────────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-menus">
+    <div class="section-head">
+      <span class="section-head-label">9 · Menus</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="menu" style="max-width:240px">
+      <div class="menu-label">Révision</div>
+      <button class="menu-item" aria-current="true">Quiz</button>
+      <button class="menu-item">Flashcards</button>
+      <button class="menu-item">Interrogation orale</button>
+      <hr class="menu-sep">
+      <button class="menu-item">Exporter mes cours</button>
+    </div>
+  </section>
+
+  <!-- ── 10. CHARGEMENT ─────────────────────────────────────────────── -->
+  <section class="gal-sec" id="gal-chargement">
+    <div class="section-head">
+      <span class="section-head-label">10 · Chargement</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="gal-demo" style="align-items:center">
+      <span class="spinner spinner--sm"></span>
+      <span class="spinner"></span>
+      <span class="spinner spinner--lg"></span>
+    </div>
+    <div class="loading-line"><span class="spinner spinner--sm"></span> Analyse du document (3 pages sur 12)…</div>
+    <div class="block block--feature" style="margin-top:12px; max-width:420px">
+      <div class="skeleton title"></div>
+      <div class="skeleton text" style="margin-top:12px"></div>
+      <div class="skeleton text" style="width:80%"></div>
+      <div class="skeleton block" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- ── 11. ÉTATS VIDES ET ERREURS ─────────────────────────────────── -->
+  <section class="gal-sec" id="gal-etats">
+    <div class="section-head">
+      <span class="section-head-label">11 · États vides &amp; erreurs</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <div class="empty">
+      <h3 class="empty-title">Aucun chapitre pour l'instant</h3>
+      <p class="empty-text">Importe un cours ou crée un chapitre à la main : REV-EM en tirera une fiche, un quiz et des flashcards.</p>
+      <div class="empty-actions">
+        <button class="btn btn--primary large">Importer un cours</button>
+        <button class="btn btn--tertiary">Créer à la main</button>
+      </div>
+    </div>
+    <div class="empty is-error empty--inline">
+      <h3 class="empty-title">La génération n'a pas abouti</h3>
+      <p class="empty-text">Le modèle local s'est arrêté après 40 secondes. Ton cours n'a pas été modifié.</p>
+      <div class="empty-actions"><button class="btn btn--secondary">Réessayer</button></div>
+    </div>
+  </section>
+
+  <!-- ── 12. MODALE, CONFIRMATION, TOAST ────────────────────────────── -->
+  <section class="gal-sec" id="gal-survols">
+    <div class="section-head">
+      <span class="section-head-label">12 · Survols de page</span>
+      <span class="section-head-rule"></span>
+    </div>
+    <p class="gal-note">Une confirmation nomme la conséquence, jamais « Êtes-vous sûr ? ».</p>
+    <div class="gal-demo">
+      <button class="btn btn--secondary" id="gal-open-modal">Ouvrir une modale</button>
+      <button class="btn btn--destructive" id="gal-open-confirm">Confirmation destructive</button>
+      <button class="btn btn--tertiary" id="gal-toast">Toast neutre</button>
+      <button class="btn btn--tertiary" id="gal-toast-ok">Toast succès</button>
+      <button class="btn btn--tertiary" id="gal-toast-ko">Toast erreur</button>
+    </div>
+
+    <!-- Rendu statique, pour que la modale soit mesurable sans interaction. -->
+    <p class="gal-note" style="margin-top:20px">Rendu statique de la modale (hors survol) :</p>
+    <div class="modal" id="gal-static-modal" style="position:static; animation:none; margin:0">
+      <div class="modal-head">
+        <h2 class="modal-title">Renommer la matière</h2>
+        <button class="modal-close" aria-label="Fermer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="field-label" for="g-7">Nouveau nom</label>
+          <input class="input" id="g-7" type="text" value="Marketing stratégique">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn--tertiary">Annuler</button>
+        <button class="btn btn--primary">Renommer</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* Les styles viennent de l'application, pas de cette page. */
+(async function(){
+  try{
+    const html = await (await fetch("index.html", {cache: "no-store"})).text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    /* Polices : on reprend les mêmes <link> que l'application. */
+    doc.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"]').forEach(function(l){
+      document.head.appendChild(l.cloneNode(true));
+    });
+    doc.querySelectorAll("style").forEach(function(s){
+      const el = document.createElement("style");
+      el.textContent = s.textContent;
+      document.head.appendChild(el);
+    });
+    /* dsConfirm/showToast sont définis dans index.html : on les recrée ici à
+       l'identique en réutilisant le code source de l'application, pour que la
+       galerie ne contienne aucune seconde implémentation. */
+    const src = [...doc.querySelectorAll("script:not([src])")].map(s => s.textContent).join("\n");
+    const grab = function(name){
+      const start = src.indexOf("function " + name + "(");
+      if(start < 0) return null;
+      let i = src.indexOf("{", start), depth = 0;
+      for(let j = i; j < src.length; j++){
+        if(src[j] === "{") depth++;
+        else if(src[j] === "}"){ depth--; if(depth === 0) return src.slice(start, j + 1); }
+      }
+      return null;
+    };
+    const fns = ["dsConfirm", "showToast"].map(grab).filter(Boolean).join("\n");
+    new Function("var toastHideTimer;\n" + fns + "\nwindow.dsConfirm=dsConfirm;window.showToast=showToast;")();
+  }catch(e){
+    document.getElementById("gal-loading").textContent =
+      "Impossible de lire index.html : " + e.message;
+    return;
+  }
+  document.getElementById("gal-loading").hidden = true;
+  document.getElementById("gal").hidden = false;
+
+  document.getElementById("gal-toast").onclick    = () => window.showToast("Fiche enregistrée.");
+  document.getElementById("gal-toast-ok").onclick = () => window.showToast("12 flashcards générées.", "success");
+  document.getElementById("gal-toast-ko").onclick = () => window.showToast("La génération a échoué.", "error");
+  document.getElementById("gal-open-confirm").onclick = () =>
+    window.dsConfirm({
+      title: "Supprimer 12 flashcards ?",
+      body: "Ce paquet et son historique de révision seront définitivement perdus. Tes quiz ne sont pas touchés.",
+      confirmLabel: "Supprimer le paquet",
+      cancelLabel: "Garder",
+      tone: "destructive",
+    }).then(ok => window.showToast(ok ? "Paquet supprimé." : "Rien n'a été supprimé.", ok ? "success" : undefined));
+  document.getElementById("gal-open-modal").onclick = () =>
+    window.dsConfirm({
+      title: "Reprendre la session interrompue ?",
+      body: "Tu avais répondu à 7 questions sur 15.",
+      confirmLabel: "Reprendre",
+      cancelLabel: "Recommencer",
+    }).then(ok => window.showToast(ok ? "Session reprise." : "Nouvelle session."));
+})();
+</script>
+</body>
+</html>

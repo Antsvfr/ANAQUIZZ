@@ -1,5 +1,5 @@
 /* ============================================================================
-   Lyon Révision — moteur de révision intelligente (couche métier, sans UI)
+   REV-EM — moteur de révision intelligente (couche métier, sans UI)
    ------------------------------------------------------------------------
    Fichier autonome, chargé comme auth.js/translations.js (voir index.html) :
    window.LyonSmartRevision n'a AUCUNE dépendance au DOM, à l'état de

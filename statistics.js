@@ -1,5 +1,5 @@
 /* ============================================================================
-   Lyon Révision — couche de calcul statistique (sans UI)
+   REV-EM — couche de calcul statistique (sans UI)
    ------------------------------------------------------------------------
    Fichier autonome, chargé comme translations.js/smart-revision.js (voir
    index.html), APRÈS smart-revision.js : window.LyonStatistics réutilise

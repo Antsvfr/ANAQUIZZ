@@ -1,5 +1,5 @@
 /* ============================================================================
-   Lyon Révision — configuration Supabase (frontend)
+   REV-EM — configuration Supabase (frontend)
    ------------------------------------------------------------------------
    Fichier local, non versionné par défaut (.gitignore) : voir
    supabase-config.example.js pour le gabarit documenté et le détail de ce
