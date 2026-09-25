@@ -414,6 +414,233 @@
      par un filet. C'est le seul élément qui parle de « moi ». */
   .topbar-right{ display:flex; align-items:center; gap:var(--space-xs); flex-shrink:0; }
 
+  /* ==========================================================================
+     COMMAND CENTER
+     --------------------------------------------------------------------------
+     Un panneau central, un fond assombri, et rien d'autre. Le premier
+     mouvement de l'œil doit aller au champ de saisie — c'est pour ça que le
+     panneau n'a ni titre, ni en-tête, ni bordure décorative : le curseur qui
+     clignote EST le titre.
+     ========================================================================== */
+
+  /* Le déclencheur, dans l'en-tête. Le raccourci est affiché : un raccourci
+     que personne ne connaît n'existe pas. */
+  .cc-trigger{
+    display: inline-flex; align-items: center; gap: var(--space-xs);
+    height: 32px; padding: 0 var(--space-xs) 0 var(--space-sm);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); cursor: pointer;
+    font-family: var(--font-ui); font-size: var(--text-metadata);
+    color: var(--text-muted);
+    transition: border-color var(--motion-micro) var(--ease-enter),
+                color var(--motion-micro) var(--ease-enter);
+  }
+  .cc-trigger:hover{ border-color: var(--border-strong); color: var(--text-secondary); }
+  .cc-trigger-icon{
+    width: 14px; height: 14px; flex-shrink: 0; border-radius: 50%;
+    border: 1.6px solid currentColor; position: relative;
+  }
+  .cc-trigger-icon::after{
+    content: ""; position: absolute; right: -4px; bottom: -3px;
+    width: 6px; height: 1.6px; background: currentColor; border-radius: 1px;
+    transform: rotate(45deg);
+  }
+  .cc-trigger-kbd{
+    font-family: var(--font-data); font-size: var(--text-label);
+    color: var(--text-muted); background: var(--surface-sunken);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px var(--space-2xs); white-space: nowrap;
+  }
+
+  #cc-root:empty{ display: none; }
+  /* Au-dessus de l'en-tête (100) et de la bulle IA (200), en dessous des
+     modales (300) : une modale ouverte au-dessus du Command Center doit
+     rester lisible. Mesuré sur l'inventaire réel des z-index du fichier —
+     à 91, l'en-tête recouvrait le champ de saisie sur mobile, où le panneau
+     occupe tout l'écran. */
+  .cc-backdrop{
+    position: fixed; inset: 0; z-index: 210;
+    background: rgba(22, 22, 26, .38);
+  }
+  .cc-panel{
+    position: fixed; z-index: 211;
+    top: 12vh; left: 50%; transform: translateX(-50%);
+    width: min(680px, calc(100vw - 2 * var(--space-lg)));
+    max-height: 72vh; display: flex; flex-direction: column;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-modal);
+    overflow: hidden;
+  }
+
+  /* ── LE CHAMP ─────────────────────────────────────────────────────────── */
+  .cc-field{
+    display: flex; align-items: center; gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .cc-field-icon{ display: inline-flex; color: var(--text-muted); flex-shrink: 0; }
+  .cc-field-icon svg{ width: 18px; height: 18px; }
+  .cc-input{
+    flex: 1; min-width: 0; border: 0; background: none; outline: none;
+    font-family: var(--font-ui); font-size: var(--text-h3);
+    color: var(--text-primary); padding: 0;
+  }
+  .cc-input::placeholder{ color: var(--text-muted); font-weight: var(--weight-regular); }
+  .cc-esc{
+    flex-shrink: 0; font-family: var(--font-data); font-size: var(--text-label);
+    color: var(--text-muted); background: var(--surface-sunken);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px var(--space-xs); cursor: pointer;
+  }
+  .cc-esc:hover{ color: var(--text-primary); border-color: var(--border-strong); }
+
+  /* ── LES RÉSULTATS ────────────────────────────────────────────────────── */
+  /* `flex: 1` et non la hauteur du contenu : sans ça, sur mobile où le
+     panneau fait toute la hauteur, le pied se retrouvait au milieu de
+     l'écran, flottant sous une liste courte. */
+  .cc-results{ flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-xs) 0; }
+  .cc-group + .cc-group{ margin-top: var(--space-2xs); }
+  .cc-group-label{
+    display: flex; align-items: center; gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-lg) var(--space-2xs);
+    font-family: var(--font-data); font-size: var(--text-label);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .cc-group-more{ color: var(--text-muted); opacity: .7; }
+  .cc-list{ list-style: none; margin: 0; padding: 0; }
+
+  .cc-item{
+    display: flex; align-items: center; gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-lg); min-height: 44px;
+    cursor: pointer; border-left: 2px solid transparent;
+  }
+  /* Une seule ligne est « active » à la fois, qu'on y soit venu à la souris
+     ou au clavier : deux surbrillances concurrentes feraient douter de ce
+     qu'Entrée va ouvrir. */
+  .cc-item.is-active{
+    background: var(--accent-wash);
+    border-left-color: var(--cc-color, var(--accent));
+  }
+  .cc-item-icon{
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-sm);
+    background: var(--surface-sunken); color: var(--text-secondary);
+  }
+  .cc-item.is-active .cc-item-icon{ background: var(--surface); color: var(--cc-color, var(--accent)); }
+  .cc-item-icon svg{ width: 16px; height: 16px; }
+  .cc-item-body{ flex: 1; min-width: 0; }
+  .cc-item-title{
+    display: block; font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cc-item-sub{
+    display: block; font-size: var(--text-label); color: var(--text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cc-item-meta{
+    flex-shrink: 0; font-family: var(--font-data); font-size: var(--text-label);
+    color: var(--text-muted); white-space: nowrap;
+  }
+  /* Le chevron d'entrée n'apparaît que sur la ligne active : sur toutes, ce
+     serait huit flèches qui ne disent rien. */
+  .cc-item-enter{
+    flex-shrink: 0; width: 14px; text-align: center;
+    font-family: var(--font-data); font-size: var(--text-label);
+    color: var(--accent); opacity: 0;
+  }
+  .cc-item.is-active .cc-item-enter{ opacity: 1; }
+
+  .cc-empty{ padding: var(--space-2xl) var(--space-lg); text-align: center; }
+  .cc-empty-title{
+    font-size: var(--text-small); font-weight: var(--weight-medium);
+    color: var(--text-primary); margin: 0;
+  }
+  .cc-empty-hint{ font-size: var(--text-metadata); color: var(--text-muted); margin: var(--space-2xs) 0 0; }
+
+  /* ── LE PIED : les raccourcis, affichés ───────────────────────────────── */
+  .cc-foot{
+    display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+    padding: var(--space-xs) var(--space-lg);
+    border-top: 1px solid var(--border); background: var(--surface-sunken);
+    flex-shrink: 0;
+  }
+  .cc-hint{
+    display: inline-flex; align-items: center; gap: var(--space-2xs);
+    font-size: var(--text-label); color: var(--text-muted);
+  }
+  .cc-foot kbd{
+    font-family: var(--font-data); font-size: var(--text-label);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 5px; color: var(--text-secondary);
+  }
+
+  /* Le fond ne défile plus quand le panneau est ouvert. */
+  body.cc-open{ overflow: hidden; }
+
+  /* ── APPARITION ───────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference){
+    .cc-backdrop{ animation: cc-fade var(--motion-enter) var(--ease-enter); }
+    .cc-panel{ animation: cc-rise var(--motion-enter) var(--ease-enter); }
+  }
+  @keyframes cc-fade{ from{ opacity: 0; } to{ opacity: 1; } }
+  /* Translation et opacité seulement : aucune propriété qui force un calcul
+     de mise en page pendant l'animation. */
+  @keyframes cc-rise{
+    from{ opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    to{   opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────────────────────────── */
+  /* ── POURQUOI LE BOUTON N'EST QU'UNE ICÔNE ────────────────────────────────
+     Mesuré, pas supposé : la barre de navigation ne disposait que de 46 px de
+     marge, et un bouton « Rechercher · Ctrl K » en fait 175. Elle débordait.
+
+     Un point qui m'a d'abord trompé : `.topbar-inner` est plafonné à
+     `--width-work`, donc la barre ne gagne JAMAIS de place au-delà de ce
+     plafond. Un point d'arrêt sur la largeur de la fenêtre ne sert donc à
+     rien ici — à 1600 px comme à 1280, le budget est le même. Le libellé est
+     retiré à toutes les largeurs, pas sous condition.
+
+     Le raccourci reste annoncé : dans l'attribut title du bouton, et en toutes
+     lettres dans le pied du panneau. */
+  .cc-trigger-label, .cc-trigger-kbd{ display: none; }
+  .cc-trigger{ width: 36px; padding: 0; justify-content: center; }
+  /* Les 44 px rendus à la navigation : la gouttière qui la précède, et deux
+     pixels de part et d'autre de chaque onglet. Invisible à l'œil, et c'est
+     ce qui permet à l'allemand — la langue la plus large — de tenir. */
+  .mainnav{ margin-left: var(--space-sm); }
+  .mainnav-link{ padding-left: 9px; padding-right: 9px; }
+  @media (max-width: 640px){
+    /* Sur mobile le panneau prend tout l'écran : un panneau flottant sur
+       375px de large, c'est une fenêtre dans une fenêtre. */
+    .cc-panel{
+      top: 0; left: 0; transform: none;
+      width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
+      border: 0; border-radius: 0;
+    }
+    .cc-field{ padding: var(--space-md); }
+    .cc-input{ font-size: var(--text-body); }
+    .cc-item, .cc-group-label{ padding-left: var(--space-md); padding-right: var(--space-md); }
+    .cc-item{ min-height: 48px; }
+    /* Les raccourcis clavier n'ont aucun sens au doigt : on garde seulement
+       « fermer », qui correspond à un vrai bouton à l'écran. */
+    .cc-foot{ padding: var(--space-xs) var(--space-md); }
+    .cc-hint:not(:last-child){ display: none; }
+    /* Le panneau n'est plus centré par translateX : son animation d'entrée
+       ne doit donc pas la réappliquer, sinon il part de travers. Une
+       animation distincte plutôt qu'une redéfinition de la même — on ne
+       redéfinit jamais des keyframes sous condition, c'est le genre de
+       subtilité qui se comporte différemment d'un moteur à l'autre. */
+    @media (prefers-reduced-motion: no-preference){
+      .cc-panel{ animation-name: cc-rise-sheet; }
+    }
+  }
+  @keyframes cc-rise-sheet{
+    from{ opacity: 0; transform: translateY(8px); }
+    to{   opacity: 1; transform: translateY(0); }
+  }
+
   /* Indicateur de synchronisation : 7 px, pas de texte, pas d'animation
      permanente. Il dit trois choses seulement — je lis, j'écris, ça n'a pas
      marché — et disparaît le reste du temps. Une pastille qui pulse en
@@ -4462,6 +4689,16 @@
       </nav>
 
       <div class="topbar-right">
+        <!-- Command Center : le raccourci est affiché, parce qu'un raccourci
+             qu'on ne connaît pas n'existe pas. Le libellé du raccourci est
+             adapté au système à l'exécution (⌘K sur Mac, Ctrl K ailleurs). -->
+        <button type="button" class="cc-trigger" id="cc-trigger"
+                data-i18n-attr="aria-label:cc.open_label,title:cc.open_label" aria-label="Rechercher"
+                title="Rechercher">
+          <span class="cc-trigger-icon" aria-hidden="true"></span>
+          <span class="cc-trigger-label" data-i18n="cc.search">Rechercher</span>
+          <kbd class="cc-trigger-kbd" id="cc-trigger-kbd" aria-hidden="true">Ctrl K</kbd>
+        </button>
         <!-- État de la synchronisation : un point, et rien de plus tant que
              tout va bien. Caché quand il n'y a rien à dire (compte absent, ou
              tout est enregistré) — mais jamais silencieux sur une erreur. -->
@@ -4499,6 +4736,9 @@
 <div id="content" class="wrap"></div>
 <div id="course-modal-root"></div>
 <div id="account-modal-root"></div>
+<!-- Command Center : vide tant qu'il n'est pas ouvert. Rien à rendre, rien
+     à écouter, aucun coût quand on ne s'en sert pas. -->
+<div id="cc-root"></div>
 
 <button type="button" class="ai-fab" id="ai-bubble" aria-label="Ouvrir l'assistant de révision" title="Assistant de révision" data-label="Assistant" data-i18n-attr="aria-label:nav.ai_open_aria,title:nav.ai_open_aria,data-label:nav.ai_short">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -4557,6 +4797,10 @@
      sans Supabase configuré), il n'est jamais appelé et rien ne change —
      voir user-data.js. -->
 <script src="user-data.js"></script>
+<!-- Moteur du Command Center (Ctrl/Cmd+K) : normalisation, score tolérant
+     aux fautes, classement, regroupement. Aucune dépendance au DOM ni à
+     l'état — les sources, elles, sont enregistrées depuis index.html. -->
+<script src="command-center.js"></script>
 
 <script>
 /* ============================================================
@@ -19887,11 +20131,451 @@ function updateCurrentTimeIndicator(){
   }
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   15septies. COMMAND CENTER — atteindre n'importe quoi en quelques secondes
+   ────────────────────────────────────────────────────────────────────────────
+   Deux moitiés, séparées exprès :
+
+     command-center.js   le MOTEUR — normalise, score, classe, regroupe.
+                         Il ne sait pas ce qu'est une matière.
+     ce bloc             les SOURCES et l'INTERFACE — eux seuls connaissent
+                         `state`, la navigation et le DOM.
+
+   Conséquence pratique : ajouter une source de recherche plus tard ne touche
+   ni le moteur ni l'interface. On écrit un `collect()` et on l'enregistre.
+
+   AUCUNE DONNÉE INVENTÉE : un quiz n'apparaît que si le chapitre en a
+   réellement un, une matière que si elle existe. Quand il n'y a rien, on le
+   dit — on ne remplit pas la liste pour qu'elle paraisse pleine.
+
+   LA NAVIGATION N'EST PAS RÉÉCRITE : chaque destination passe par
+   `handleNavGoto()`, le même aiguilleur que la barre de navigation. Un seul
+   endroit décide où mène quoi.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Combien de contenus un chapitre porte VRAIMENT. Même calcul que
+   renderCourseCard() — un chapitre intégré tire ses questions des thèmes,
+   un chapitre importé les porte en propre. */
+function ccChapterCounts(ch){
+  const isUser = isUserChapter(ch.id);
+  return {
+    isUser: isUser,
+    quiz: isUser ? (ch.aiQuiz ? ch.aiQuiz.length : 0)
+                 : QUESTIONS.filter(q => ch.themes && ch.themes.includes(q.theme)).length,
+    cards: isUser ? (ch.aiFlashcards ? ch.aiFlashcards.length : 0) : deckCards(ch.id).length,
+    fiche: isUser ? !!(ch.content && ch.content.trim()) : !!FICHES[ch.id],
+  };
+}
+
+function ccOpenChapter(ch){
+  libGoto("chapterDetail", { chapterId: ch.id });
+  switchTab("library");
+}
+
+/* Les destinations de l'application. `handleNavGoto` est l'aiguilleur de la
+   barre de navigation : on l'appelle, on ne le recopie pas. */
+function ccGoto(ds){ handleNavGoto(ds); }
+
+function ccRegisterSources(){
+  if(!window.LyonCommand) return;
+
+  /* ── ACTIONS ────────────────────────────────────────────────────────────
+     Ce qu'on veut FAIRE, par opposition à ce qu'on veut ouvrir. Elles sont
+     en tête parce qu'une intention est plus précise qu'une destination. */
+  LyonCommand.registerSource({
+    id: "actions", category: "actions", order: 10, limit: 5,
+    collect(){
+      const items = [
+        { key: "cc.act_start_revision", icon: "play",     suggested: true,
+          kw: ["reviser", "revision", "commencer", "start"],
+          run: () => ccGoto({ goto: "smart" }) },
+        { key: "cc.act_import",         icon: "upload",   suggested: true,
+          kw: ["importer", "pdf", "cours", "upload", "ajouter document"],
+          run: () => ccGoto({ goto: "import-course" }) },
+        { key: "cc.act_new_subject",    icon: "plus",     suggested: true,
+          kw: ["creer", "nouvelle", "matiere", "ajouter"],
+          run: () => ccGoto({ goto: "library-add" }) },
+        { key: "cc.act_quiz",           icon: "target",
+          kw: ["quiz", "lancer", "questions", "tester"],
+          run: () => ccGoto({ goto: "quiz" }) },
+        { key: "cc.act_flash",          icon: "layers",
+          kw: ["flashcards", "cartes", "memoriser"],
+          run: () => ccGoto({ goto: "flash" }) },
+        { key: "cc.act_oral",           icon: "spark",
+          kw: ["oral", "interrogation", "parler"],
+          run: () => ccGoto({ goto: "oral" }) },
+        { key: "cc.act_exam",           icon: "exam",
+          kw: ["examen", "blanc", "epreuve", "concours"],
+          run: () => ccGoto({ goto: "exam" }) },
+        { key: "cc.act_planning",       icon: "calendar",
+          kw: ["planning", "emploi du temps", "agenda", "calendrier"],
+          run: () => ccGoto({ goto: "planning" }) },
+        { key: "cc.act_stats",          icon: "chart",
+          kw: ["statistiques", "stats", "chiffres", "progression"],
+          run: () => ccGoto({ goto: "stats" }) },
+      ];
+      /* « Réviser mes erreurs » n'est proposée QUE s'il y a des erreurs :
+         une action qui ne mène nulle part n'a rien à faire dans la liste. */
+      if(poolWrong().length > 0){
+        items.splice(1, 0, { key: "cc.act_review_wrong", icon: "compass", suggested: true,
+          kw: ["erreurs", "rater", "faux", "revoir", "corriger"],
+          meta: t("cc.n_questions", { n: poolWrong().length }),
+          run: () => ccGoto({ goto: "review" }) });
+      }
+      /* Pas de sous-titre : l'en-tête du groupe dit déjà « Actions ». Le
+         répéter sur chaque ligne ferait huit fois le même mot. */
+      return items.map(a => ({
+        title: t(a.key), meta: a.meta || "",
+        icon: a.icon, keywords: a.kw, suggested: !!a.suggested, run: a.run,
+      }));
+    },
+  });
+
+  /* ── PAGES ──────────────────────────────────────────────────────────── */
+  LyonCommand.registerSource({
+    id: "pages", category: "pages", order: 20, limit: 5,
+    collect(){
+      const pages = [
+        ["nav.home",           "compass",  { goto: "dashboard" }, ["accueil", "dashboard", "tableau de bord"]],
+        ["nav.library",        "book",     { goto: "library" },   ["matieres", "bibliotheque", "cours"]],
+        ["nav.planning",       "calendar", { goto: "planning" },  ["planning", "emploi du temps"]],
+        ["nav.statistics",     "chart",    { goto: "stats" },     ["statistiques", "stats"]],
+        ["nav.progress",       "chart",    { goto: "progress" },  ["progression", "avancement"]],
+        ["nav.smart_revision", "target",   { goto: "smart" },     ["revision intelligente", "recommandation"]],
+        ["nav.exams",          "exam",     { goto: "exams" },     ["examens", "epreuves"]],
+        ["nav.resources",      "book",     { goto: "fiches" },    ["ressources", "fiches", "resumes"]],
+        ["nav.ai",             "spark",    { goto: "ai" },        ["assistant", "ia", "intelligence artificielle"]],
+        ["nav.settings",       "clock",    { goto: "settings" },  ["parametres", "reglages", "options", "langue"]],
+        ["nav.myspace",        "compass",  { goto: "myspace" },   ["mon espace", "compte", "profil"]],
+      ];
+      return pages.map(([key, icon, ds, kw]) => ({
+        title: t(key),
+        icon: icon, keywords: kw, run: () => ccGoto(ds),
+      }));
+    },
+  });
+
+  /* ── MATIÈRES ───────────────────────────────────────────────────────── */
+  LyonCommand.registerSource({
+    id: "subjects", category: "subjects", order: 30, limit: 5,
+    collect(){
+      return allSubjects().map(s => {
+        const n = chaptersOfSubject(s.id).length;
+        return {
+          title: s.name,
+          /* La description de la matière, quand elle existe — jamais le nom
+             de la catégorie, qui est déjà au-dessus. */
+          subtitle: s.description || "",
+          meta: t(n > 1 ? "dashboard.chapter_many" : "dashboard.chapter_one", { n: n }),
+          icon: "book",
+          keywords: [s.description || ""].filter(Boolean),
+          color: s.color || null,
+          run: () => ccGoto({ goto: "library-subject", subjectId: s.id }),
+        };
+      });
+    },
+  });
+
+  /* ── CHAPITRES, COURS ET FICHES ─────────────────────────────────────────
+     Le nom de la matière est un mot-clé du chapitre : chercher « maths »
+     ramène donc ses chapitres, pas seulement la matière elle-même. C'est
+     exactement le comportement attendu. */
+  LyonCommand.registerSource({
+    id: "chapters", category: "chapters", order: 40, limit: 6,
+    collect(){
+      return allChaptersFlat().map(ch => {
+        const subj = subjectOfChapter(ch);
+        const c = ccChapterCounts(ch);
+        const bits = [];
+        if(c.fiche) bits.push(t("dashboard.has_fiche"));
+        if(c.quiz)  bits.push(t("dashboard.has_quiz"));
+        if(c.cards) bits.push(t("dashboard.has_flashcards"));
+        return {
+          title: ch.title,
+          subtitle: subj ? subj.name : t("cc.cat_chapters"),
+          meta: bits.join(" · "),
+          icon: "book",
+          keywords: [subj ? subj.name : "", ch.desc || "", ch.num ? String(ch.num) : ""].filter(Boolean),
+          color: subj && subj.color ? subj.color : null,
+          run: () => ccOpenChapter(ch),
+        };
+      });
+    },
+  });
+
+  /* ── QUIZ ET FLASHCARDS ─────────────────────────────────────────────────
+     Un chapitre SANS quiz ne produit aucune entrée « Quiz ». C'est la
+     différence entre proposer et promettre. */
+  LyonCommand.registerSource({
+    id: "content", category: "content", order: 50, limit: 6,
+    collect(){
+      const out = [];
+      allChaptersFlat().forEach(ch => {
+        const subj = subjectOfChapter(ch);
+        const c = ccChapterCounts(ch);
+        const kw = [subj ? subj.name : "", ch.title].filter(Boolean);
+        if(c.quiz > 0){
+          out.push({
+            title: t("cc.quiz_of", { name: ch.title }),
+            subtitle: subj ? subj.name : "",
+            meta: t("cc.n_questions", { n: c.quiz }),
+            icon: "target", keywords: kw.concat(["quiz", "questions"]),
+            color: subj && subj.color ? subj.color : null,
+            run: () => {
+              if(c.isUser) startQuiz("chapter:" + ch.id, ch.title, null, ch.aiQuiz);
+              else startQuiz("chapter:" + ch.id, ch.title, ch.themes || []);
+            },
+          });
+        }
+        if(c.cards > 0){
+          out.push({
+            title: t("cc.flash_of", { name: ch.title }),
+            subtitle: subj ? subj.name : "",
+            meta: t("cc.n_cards", { n: c.cards }),
+            icon: "layers", keywords: kw.concat(["flashcards", "cartes"]),
+            color: subj && subj.color ? subj.color : null,
+            run: () => {
+              if(c.isUser) startFlashDeck(ch.id, ch.title, ch.aiFlashcards);
+              else startFlashDeck(ch.id, ch.title, deckCards(ch.id));
+            },
+          });
+        }
+      });
+      return out;
+    },
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   L'INTERFACE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const ccState = { open: false, query: "", active: 0, flat: [], lastFocus: null };
+
+function ccIsOpen(){ return ccState.open; }
+
+function ccOpen(){
+  if(ccState.open) return;
+  ccState.open = true;
+  ccState.query = "";
+  ccState.active = 0;
+  ccState.lastFocus = document.activeElement;
+  document.body.classList.add("cc-open");
+  ccRender();
+  const input = document.getElementById("cc-input");
+  if(input) input.focus();
+}
+
+function ccClose(){
+  if(!ccState.open) return;
+  ccState.open = false;
+  document.body.classList.remove("cc-open");
+  const root = document.getElementById("cc-root");
+  if(root) root.innerHTML = "";
+  /* On rend le focus à ce qui l'avait : rouvrir puis fermer ne doit pas
+     perdre la place de qui navigue au clavier. */
+  if(ccState.lastFocus && ccState.lastFocus.focus){
+    try{ ccState.lastFocus.focus(); }catch(e){ /* l'élément a pu disparaître */ }
+  }
+  ccState.lastFocus = null;
+}
+
+/* Le libellé d'une catégorie. Une catégorie inconnue retombe sur son
+   identifiant plutôt que sur une clé de traduction affichée telle quelle. */
+function ccCategoryLabel(cat){
+  const key = "cc.cat_" + cat;
+  const label = t(key);
+  return label === key ? cat : label;
+}
+
+function ccRender(){
+  const root = document.getElementById("cc-root");
+  if(!root) return;
+
+  const res = LyonCommand.search(ccState.query, { perGroup: 0, maxTotal: 40 });
+  ccState.flat = res.flat;
+  if(ccState.active >= res.flat.length) ccState.active = Math.max(0, res.flat.length - 1);
+
+  let i = 0;
+  const groupsHtml = res.groups.map(g => {
+    const rows = g.results.map(r => {
+      const idx = i++;
+      const it = r.item;
+      const color = it.color ? ` style="--cc-color:${escapeHtml(it.color)};"` : "";
+      return `<li class="cc-item${idx === ccState.active ? " is-active" : ""}"
+                  id="cc-opt-${idx}" role="option" aria-selected="${idx === ccState.active}"
+                  data-cc-index="${idx}"${color}>
+        <span class="cc-item-icon">${dashIcon(it.icon || "compass")}</span>
+        <span class="cc-item-body">
+          <span class="cc-item-title">${escapeHtml(it.title)}</span>
+          ${it.subtitle ? `<span class="cc-item-sub">${escapeHtml(it.subtitle)}</span>` : ""}
+        </span>
+        ${it.meta ? `<span class="cc-item-meta">${escapeHtml(it.meta)}</span>` : ""}
+        <span class="cc-item-enter" aria-hidden="true">↵</span>
+      </li>`;
+    }).join("");
+    return `<div class="cc-group">
+      <div class="cc-group-label">${escapeHtml(ccCategoryLabel(g.category))}${
+        g.truncated > 0 ? `<span class="cc-group-more">+${g.truncated}</span>` : ""
+      }</div>
+      <ul class="cc-list" role="group" aria-label="${escapeHtml(ccCategoryLabel(g.category))}">${rows}</ul>
+    </div>`;
+  }).join("");
+
+  /* Rien trouvé : on le dit, et on ne laisse pas l'écran vide sans issue. */
+  const empty = res.total === 0
+    ? `<div class="cc-empty">
+         <p class="cc-empty-title">${t("cc.no_result", { q: escapeHtml(ccState.query.trim()) })}</p>
+         <p class="cc-empty-hint">${t("cc.no_result_hint")}</p>
+       </div>`
+    : "";
+
+  root.innerHTML = `
+    <div class="cc-backdrop" data-cc-close></div>
+    <div class="cc-panel" role="dialog" aria-modal="true" aria-labelledby="cc-input">
+      <div class="cc-field">
+        <span class="cc-field-icon">${dashIcon("compass")}</span>
+        <input type="text" id="cc-input" class="cc-input" autocomplete="off" spellcheck="false"
+               role="combobox" aria-expanded="true" aria-controls="cc-results" aria-autocomplete="list"
+               ${res.flat.length ? `aria-activedescendant="cc-opt-${ccState.active}"` : ""}
+               placeholder="${t("cc.placeholder")}" value="${escapeHtml(ccState.query)}">
+        <button type="button" class="cc-esc" data-cc-close aria-label="${t("cc.close")}">${t("cc.key_esc")}</button>
+      </div>
+      <div class="cc-results" id="cc-results" role="listbox" aria-label="${t("cc.results")}">
+        ${groupsHtml}${empty}
+      </div>
+      <div class="cc-foot">
+        <span class="cc-hint"><kbd>↑</kbd><kbd>↓</kbd> ${t("cc.key_move")}</span>
+        <span class="cc-hint"><kbd>${t("cc.key_enter")}</kbd> ${t("cc.key_open")}</span>
+        <span class="cc-hint"><kbd>${t("cc.key_esc")}</kbd> ${t("cc.key_close")}</span>
+      </div>
+    </div>`;
+
+  const input = document.getElementById("cc-input");
+  if(input){
+    /* On repositionne le curseur en fin de saisie : re-rendre à chaque frappe
+       le remettrait sinon au début, et taper deviendrait impossible. */
+    const pos = ccState.query.length;
+    input.setSelectionRange(pos, pos);
+    input.addEventListener("input", ()=>{
+      ccState.query = input.value;
+      ccState.active = 0;
+      ccRender();
+      const again = document.getElementById("cc-input");
+      if(again) again.focus();
+    });
+  }
+  root.querySelectorAll("[data-cc-close]").forEach(el => el.addEventListener("click", ccClose));
+  root.querySelectorAll("[data-cc-index]").forEach(el => {
+    el.addEventListener("mousemove", ()=>{
+      const idx = Number(el.dataset.ccIndex);
+      if(idx !== ccState.active){ ccState.active = idx; ccSyncActive(); }
+    });
+    el.addEventListener("click", ()=> ccRun(Number(el.dataset.ccIndex)));
+  });
+}
+
+/* Déplacer la sélection ne re-rend PAS la liste : on déplace une classe. À
+   la vitesse où l'on tient ↓ enfoncé, re-construire le DOM à chaque pas se
+   verrait. */
+function ccSyncActive(){
+  const root = document.getElementById("cc-root");
+  if(!root) return;
+  root.querySelectorAll("[data-cc-index]").forEach(el => {
+    const on = Number(el.dataset.ccIndex) === ccState.active;
+    el.classList.toggle("is-active", on);
+    el.setAttribute("aria-selected", on ? "true" : "false");
+    if(on) el.scrollIntoView({ block: "nearest" });
+  });
+  const input = document.getElementById("cc-input");
+  if(input && ccState.flat.length) input.setAttribute("aria-activedescendant", "cc-opt-" + ccState.active);
+}
+
+function ccMove(delta){
+  if(!ccState.flat.length) return;
+  const n = ccState.flat.length;
+  /* La liste boucle : arrivé en bas, ↓ ramène en haut. */
+  ccState.active = (ccState.active + delta + n) % n;
+  ccSyncActive();
+}
+
+function ccRun(index){
+  const entry = ccState.flat[index];
+  if(!entry || !entry.item || typeof entry.item.run !== "function") return;
+  /* On ferme AVANT d'exécuter : l'action peut ouvrir une modale ou changer
+     d'écran, et le panneau resterait au-dessus. */
+  ccClose();
+  try{ entry.item.run(); }
+  catch(e){ console.error("[CommandCenter] action", e); showToast(t("cc.action_failed"), "error"); }
+}
+
+function ccOnKeydown(e){
+  /* Ctrl+K / Cmd+K : ouvre, et referme si déjà ouvert. On ne le capte jamais
+     pendant un examen en cours — le mode sans distraction est là pour ça. */
+  const isK = (e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey) && !e.altKey;
+  if(isK){
+    if(state.tab === "exam" && state.exam.screen === "running") return;
+    e.preventDefault();
+    if(ccState.open) ccClose(); else ccOpen();
+    return;
+  }
+  if(!ccState.open) return;
+
+  if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); ccClose(); return; }
+  if(e.key === "ArrowDown"){ e.preventDefault(); ccMove(1); return; }
+  if(e.key === "ArrowUp"){ e.preventDefault(); ccMove(-1); return; }
+  if(e.key === "Home"){ e.preventDefault(); ccState.active = 0; ccSyncActive(); return; }
+  if(e.key === "End"){ e.preventDefault(); ccState.active = Math.max(0, ccState.flat.length - 1); ccSyncActive(); return; }
+  if(e.key === "Enter"){ e.preventDefault(); ccRun(ccState.active); return; }
+  if(e.key === "Tab"){
+    /* Piège à focus : le clavier ne sort pas du panneau tant qu'il est
+       ouvert. Il n'y a que deux éléments focalisables, on alterne. */
+    e.preventDefault();
+    const input = document.getElementById("cc-input");
+    const esc = document.querySelector(".cc-esc");
+    if(document.activeElement === input && esc) esc.focus();
+    else if(input) input.focus();
+  }
+}
+
+function ccInit(){
+  if(!window.LyonCommand) return;
+  ccRegisterSources();
+  /* Capture : on passe avant les écouteurs de la page (Échap de la fiche de
+     cours, raccourcis du quiz) tant que le panneau est ouvert. */
+  document.addEventListener("keydown", ccOnKeydown, true);
+  const btn = document.getElementById("cc-trigger");
+  if(btn) btn.addEventListener("click", ccOpen);
+  /* Les libellés sont traduits à la construction : si la langue change alors
+     que le panneau est ouvert, on le reconstruit. */
+  if(window.LyonI18n) LyonI18n.onChange(()=>{ if(ccState.open) ccRender(); });
+}
+
 /* ============================================================
    16. INIT
    ============================================================ */
 attachMainNavEvents();
 initAIBubble();
+ccInit();
+
+/* Le libellé du raccourci suit le clavier de qui regarde : « ⌘K » sur Mac,
+   « Ctrl K » ailleurs. Afficher Ctrl à un utilisateur Mac, c'est lui donner
+   un raccourci qui ne marche pas. */
+(function(){
+  const kbd = document.getElementById("cc-trigger-kbd");
+  if(!kbd) return;
+  const mac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || "");
+  const combo = mac ? "⌘K" : "Ctrl K";
+  kbd.textContent = combo;
+  /* Le libellé du bouton est masqué faute de place dans la barre : le
+     raccourci est donc annoncé au survol, sinon personne ne l'apprendrait. */
+  const btn = document.getElementById("cc-trigger");
+  if(btn){
+    const say = () => { btn.title = btn.getAttribute("aria-label") + " · " + combo; };
+    say();
+    if(window.LyonI18n) LyonI18n.onChange(say);
+  }
+})();
 
 // Traduction de l'interface : applique tout de suite la langue restaurée
 // (localStorage, cf. translations.js) sur la navigation statique, puis à
